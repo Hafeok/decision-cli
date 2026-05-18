@@ -13,7 +13,10 @@ repository = "https://github.com/Hafeok/decision-cli"
 
 [workspace.dependencies]
 # Substrate (oxi-events depends on these)
-oxigraph = "0.4"
+# rocksdb feature is disabled until FT-009 (orchestration store + persistence) lands.
+# RocksDB requires libclang at build time; install via `sudo apt install libclang-dev cmake`
+# and switch back to `default-features = true` when implementing on-disk persistence.
+oxigraph = { version = "0.4", default-features = false }
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1"
 axum = "0.7"

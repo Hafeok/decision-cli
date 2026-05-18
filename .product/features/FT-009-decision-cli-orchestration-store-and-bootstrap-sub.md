@@ -14,7 +14,10 @@ adrs:
 - ADR-001
 - ADR-004
 - ADR-008
-tests: []
+tests:
+- TC-001
+- TC-002
+- TC-015
 domains: []
 domains-acknowledged: {}
 ---
@@ -73,3 +76,16 @@ See `decision-cli-slice-1-bounds.md` §3.5, §5.3, §6.1.
 - Cross-machine store sync / replication.
 - Store backup / restore commands.
 - Multi-stream operation in a single process.
+
+## Build-environment prerequisite
+
+Implementing on-disk persistence requires the `rocksdb` feature on `oxigraph`, which the slice 1 scaffold disabled to keep the workspace building without system deps. Before opening a `Store::open(path)`:
+
+1. Install system deps: `sudo apt install libclang-dev cmake` (Ubuntu/Debian) or equivalent for your distro.
+2. In the workspace root `Cargo.toml`, change the `oxigraph` line back to default features:
+   ```toml
+   oxigraph = "0.4"   # was: { version = "0.4", default-features = false }
+   ```
+3. Re-run `cargo check --workspace` to confirm the build still passes.
+
+The in-memory `Store::new()` API is available without the feature flag and is sufficient for unit tests that don't need persistence. The slice 1 scaffold's Cargo.toml comment names this same step.

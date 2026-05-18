@@ -2,3 +2,9 @@
 .product/graph/
 .product/sessions/
 .product/checklist.md
+
+# Rust
+/target/
+
+# WSL/NTFS metadata streams
+*:Zone.Identifier

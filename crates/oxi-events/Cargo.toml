@@ -1,0 +1,23 @@
+[package]
+name = "oxi-events"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0 OR MIT"
+repository.workspace = true
+description = "Graph-native event substrate for Oxigraph. SDP boundary — depends only on substrates more stable than itself."
+
+[dependencies]
+oxigraph = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+[lints]
+workspace = true

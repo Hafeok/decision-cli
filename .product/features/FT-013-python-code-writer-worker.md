@@ -12,7 +12,10 @@ adrs:
 - ADR-004
 - ADR-005
 - ADR-012
-tests: []
+tests:
+- TC-008
+- TC-011
+- TC-013
 domains: []
 domains-acknowledged: {}
 ---
