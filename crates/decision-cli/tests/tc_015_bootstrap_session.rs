@@ -1,4 +1,4 @@
-//! TC-015 — Bootstrap session reachable from ValueStream via PROV-O.
+//! TC-015 — Bootstrap session reachable from `ValueStream` via PROV-O.
 //! Validates: FT-008, FT-009 · ADR-004.
 //! Spec: .product/tests/TC-015-bootstrap-session-reachable-from-valuestream-via-p.md
 

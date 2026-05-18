@@ -2,7 +2,7 @@
 id: FT-006
 title: 'decision-cli: Embedded base ontology and SHACL shapes'
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-007

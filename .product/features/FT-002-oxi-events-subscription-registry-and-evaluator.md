@@ -2,7 +2,7 @@
 id: FT-002
 title: 'oxi-events: Subscription registry and evaluator'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-001
 adrs:

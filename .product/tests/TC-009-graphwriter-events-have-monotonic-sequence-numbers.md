@@ -2,7 +2,7 @@
 id: TC-009
 title: graphwriter_events_have_monotonic_sequence_numbers
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p oxi-events --test tc_009_monotonic_events
 runner-timeout: 60
+last-run: 2026-05-18T18:23:38.378348108+00:00
+last-run-duration: 0.9s
 ---
 
 ## Purpose

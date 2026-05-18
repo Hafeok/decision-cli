@@ -2,7 +2,7 @@
 id: TC-011
 title: sse_dispatch_event_delivered_within_one_second
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-011-sse-latency.sh
 runner-timeout: 120
+last-run: 2026-05-18T13:39:34.963391006+00:00
+last-run-duration: 0.6s
 ---
 
 ## Purpose

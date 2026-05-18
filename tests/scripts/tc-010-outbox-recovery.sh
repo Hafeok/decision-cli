@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
-# TC-010
-# Spec: .product/tests/TC-010-*.md
+# TC-010 — outbox crash recovery (FT-003)
+# Spec: .product/tests/TC-010-outbox-resumes-in-flight-dispatch-after-crash.md
+#
+# Slice 1 stand-in: the chaos scenario (SIGKILL of `dec` then restart) is
+# realised inside the oxi-events crate by dropping a writer mid-flight,
+# re-opening over the same store, and asserting the outbox publisher's
+# initial sweep delivers every stranded event. The runner config will
+# graduate to a full process-supervised SIGKILL once the FT-009 / FT-011
+# binary path lands and `dec implement` can drive a real dispatch.
 set -euo pipefail
 
-cat >&2 <<MSG
-TC-010 not yet implemented.
+cd "$(dirname "$0")/../.."
 
-SIGKILL of dec mid-dispatch then restart must cause the outbox publisher to resume in-flight events on startup.
-
-The dec binary, oxi-events crate, and code-writer worker are not yet
-built. This script is a placeholder so `product verify` finds a failing
-runner and the implementation pipeline can pick the TC up.
-MSG
-exit 1
+exec cargo test \
+    --quiet \
+    -p oxi-events \
+    --test tc_010_outbox_recovery \
+    -- --nocapture --test-threads=1

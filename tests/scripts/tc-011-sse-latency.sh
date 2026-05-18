@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# TC-011
-# Spec: .product/tests/TC-011-*.md
+# TC-011 — SSE dispatch event delivered within one second (FT-003 / FT-004)
+# Spec: .product/tests/TC-011-sse-dispatch-event-delivered-within-one-second.md
+#
+# Drives the axum SSE router through a real HTTP client (reqwest) so the
+# measured latency includes chunked-transfer framing and TCP delivery —
+# not just an in-process broadcast. For N >= 10 successive dispatches we
+# assert `t_recv - t_emit < 1.000 s`. The Python worker hop will be
+# bolted on once FT-013 lands and the slice-1 binary surface exists.
 set -euo pipefail
 
-cat >&2 <<MSG
-TC-011 not yet implemented.
+cd "$(dirname "$0")/../.."
 
-Remote Python worker must receive every dispatch event within 1.000s of emission across N>=10 successive dispatches.
-
-The dec binary, oxi-events crate, and code-writer worker are not yet
-built. This script is a placeholder so `product verify` finds a failing
-runner and the implementation pipeline can pick the TC up.
-MSG
-exit 1
+exec cargo test \
+    --quiet \
+    -p oxi-events \
+    --test tc_011_sse_latency \
+    -- --nocapture --test-threads=1

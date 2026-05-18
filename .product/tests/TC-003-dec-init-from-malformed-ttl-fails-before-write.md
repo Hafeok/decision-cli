@@ -2,7 +2,7 @@
 id: TC-003
 title: dec_init_from_malformed_ttl_fails_before_write
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-003-malformed-ttl.sh
 runner-timeout: 30
+last-run: 2026-05-18T18:43:13.528130585+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

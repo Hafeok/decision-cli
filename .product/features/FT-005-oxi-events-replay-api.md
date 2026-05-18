@@ -2,7 +2,7 @@
 id: FT-005
 title: 'oxi-events: Replay API'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-003
 adrs:

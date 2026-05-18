@@ -2,7 +2,7 @@
 id: FT-001
 title: 'oxi-events: GraphWriter mutation chokepoint'
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-001

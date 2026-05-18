@@ -2,7 +2,7 @@
 id: FT-004
 title: 'oxi-events: SSE delivery transport'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-003
 adrs:

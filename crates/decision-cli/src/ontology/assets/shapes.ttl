@@ -1,0 +1,87 @@
+# SHACL shapes for the decision-cli base ontology.
+#
+# FT-006 / ADR-007: shipped embedded in the binary and exposed via
+# `OntologyHandle::shapes_graph()` for the FT-008 init validation
+# pipeline. The shapes encode the §5.3 invariants:
+#
+#   dec:ValueStream  → dec:name, dec:title, dec:terminalValueAction,
+#                      dec:authorizedGoals (≥1)
+#   dec:ValueAction  → dec:name, dec:description, dec:exitCriterion,
+#                      dec:expectedOutputType, dec:compatibleGoals (≥1)
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# --- ValueStream shape -------------------------------------------------------
+
+dec:ValueStreamShape a sh:NodeShape ;
+    sh:targetClass dec:ValueStream ;
+
+    sh:property [
+        sh:path     dec:name ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:ValueStream requires exactly one dec:name (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:title ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:ValueStream requires exactly one dec:title (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:terminalValueAction ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:ValueStream requires exactly one dec:terminalValueAction (IRI)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:authorizedGoals ;
+        sh:minCount 1 ;
+        sh:message  "dec:ValueStream requires at least one dec:authorizedGoals entry."
+    ] .
+
+# --- ValueAction shape -------------------------------------------------------
+
+dec:ValueActionShape a sh:NodeShape ;
+    sh:targetClass dec:ValueAction ;
+
+    sh:property [
+        sh:path     dec:name ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:ValueAction requires exactly one dec:name (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:description ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:ValueAction requires at least one dec:description."
+    ] ;
+
+    sh:property [
+        sh:path     dec:exitCriterion ;
+        sh:minCount 1 ;
+        sh:message  "dec:ValueAction requires at least one dec:exitCriterion."
+    ] ;
+
+    sh:property [
+        sh:path     dec:expectedOutputType ;
+        sh:minCount 1 ;
+        sh:message  "dec:ValueAction requires at least one dec:expectedOutputType."
+    ] ;
+
+    sh:property [
+        sh:path     dec:compatibleGoals ;
+        sh:minCount 1 ;
+        sh:message  "dec:ValueAction requires at least one dec:compatibleGoals entry."
+    ] .

@@ -2,7 +2,7 @@
 id: TC-014
 title: orchestration_artifacts_carry_dec_in_stream
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_014_in_stream_invariant
 runner-timeout: 60
+last-run: 2026-05-18T12:38:46.012932234+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose

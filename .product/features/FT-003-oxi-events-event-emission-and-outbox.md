@@ -2,7 +2,7 @@
 id: FT-003
 title: 'oxi-events: Event emission and outbox'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-001
 - FT-002

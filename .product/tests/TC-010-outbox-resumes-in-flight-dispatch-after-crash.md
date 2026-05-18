@@ -2,7 +2,7 @@
 id: TC-010
 title: outbox_resumes_in_flight_dispatch_after_crash
 type: chaos
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-010-outbox-recovery.sh
 runner-timeout: 180
+last-run: 2026-05-18T13:25:09.077772362+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

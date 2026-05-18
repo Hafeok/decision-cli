@@ -24,7 +24,7 @@ Source: `decision-cli-slice-1-bounds.md` §11.2 exit-criteria #8.
 - product-cli installed and reachable as a subprocess (`product` on PATH).
 - A target feature `FT-XXX` exists in product-cli's graph, ready for implementation, with a meaningful context bundle.
 - The Python code-writer worker (FT-013) is running and subscribed to the dispatch event channel.
-- `ANTHROPIC_API_KEY` configured.
+- Claude Code CLI (`claude`) installed and reachable as a subprocess with an authenticated subscription session on the host (run `claude login` once during operator setup). No `ANTHROPIC_API_KEY` is required.
 
 ## When
 

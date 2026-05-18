@@ -19,5 +19,12 @@ thiserror = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 
+[dev-dependencies]
+# TC-011 drives the SSE endpoint through a real HTTP client so the
+# delivery latency includes chunked-transfer framing and TCP delivery.
+# Dev-deps only; runtime deps stay SDP-clean per ADR-001.
+reqwest = { workspace = true, features = ["stream"] }
+futures-util = "0.3"
+
 [lints]
 workspace = true
