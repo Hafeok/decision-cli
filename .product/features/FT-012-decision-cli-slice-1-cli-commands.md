@@ -2,7 +2,7 @@
 id: FT-012
 title: 'decision-cli: Slice 1 CLI commands'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-004
 - FT-005

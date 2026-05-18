@@ -12,9 +12,12 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use decision_cli::bundled;
+use decision_cli::events as events_cmd;
+use decision_cli::health as health_cmd;
 use decision_cli::implement::{self as implement, ImplementArgs};
 use decision_cli::init::{self, DefinitionSource, InitError};
 use decision_cli::scope::{ActiveScope, ScopeError};
+use decision_cli::session_inspect;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -52,6 +55,13 @@ enum Command {
     /// bundle for the target feature, dispatch the code-writer role,
     /// record the Session + CodeChange with PROV-O lineage.
     Implement(ImplementCmdArgs),
+    /// Liveness check (FT-012): ontology parses, store opens, writer
+    /// is operational. Runs even outside an initialised working tree.
+    Health,
+    /// Inspect persisted events (FT-012). Backed by FT-005 replay
+    /// (`since`) and the FT-004 SSE endpoint (`tail`).
+    #[command(subcommand)]
+    Events(EventsCmd),
     /// Session inspection commands (FT-012).
     #[command(subcommand)]
     Session(SessionCmd),
@@ -104,12 +114,60 @@ struct ImplementCmdArgs {
 enum SessionCmd {
     /// Show one Session by IRI (FT-012 / TC-008 step 5).
     Show(SessionShowArgs),
+    /// List recent Sessions, oldest-first by start time (FT-012).
+    List(SessionListArgs),
+    /// Walk the PROV-O chain anchored on a Session (ADR-004 / FT-012).
+    Log(SessionLogArgs),
 }
 
 #[derive(Debug, clap::Args)]
 struct SessionShowArgs {
     /// Full IRI of the Session to display.
     iri: String,
+}
+
+#[derive(Debug, clap::Args)]
+struct SessionListArgs {
+    /// Maximum rows to return.
+    #[arg(long, default_value_t = 20)]
+    limit: usize,
+    /// Rows to skip from the top of the ascending list.
+    #[arg(long, default_value_t = 0)]
+    offset: usize,
+}
+
+#[derive(Debug, clap::Args)]
+struct SessionLogArgs {
+    /// Full IRI of the Session whose PROV-O chain to walk.
+    iri: String,
+}
+
+#[derive(Debug, Subcommand)]
+enum EventsCmd {
+    /// Replay events with `oxi:seq >= <seq>` from the persisted store
+    /// (FT-005).
+    Since(EventsSinceArgs),
+    /// Stream events live from the SSE endpoint of a running `dec`
+    /// daemon (FT-004).
+    Tail(EventsTailArgs),
+}
+
+#[derive(Debug, clap::Args)]
+struct EventsSinceArgs {
+    /// Inclusive lower bound on `oxi:seq`. Pass `0` to replay from the
+    /// beginning of recorded history.
+    seq: u64,
+    /// Maximum rows to return; absent means unbounded.
+    #[arg(long)]
+    limit: Option<usize>,
+}
+
+#[derive(Debug, clap::Args)]
+struct EventsTailArgs {
+    /// Override the SSE endpoint. Defaults to `DEC_EVENTS_URL` if set,
+    /// otherwise `http://127.0.0.1:7878/events`.
+    #[arg(long)]
+    url: Option<String>,
 }
 
 fn main() -> ExitCode {
@@ -124,7 +182,57 @@ fn main() -> ExitCode {
         Command::Sparql(args) => run_sparql(&workdir, args),
         Command::CheckGoal(args) => run_check_goal(&workdir, args),
         Command::Implement(args) => run_implement(&workdir, args),
+        Command::Health => run_health(&workdir),
+        Command::Events(cmd) => run_events(&workdir, cmd),
         Command::Session(cmd) => run_session(&workdir, cmd),
+    }
+}
+
+/// `dec health` — ontology / store / writer liveness gates (FT-012).
+///
+/// All three gates run; failures aggregate so the operator sees the
+/// full picture. Exit code 0 iff every applicable gate passed.
+fn run_health(workdir: &std::path::Path) -> ExitCode {
+    let report = health_cmd::check(workdir);
+    print!("{}", report.render());
+    if report.is_healthy() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
+}
+
+/// `dec events {since,tail}` — read-only event inspection (FT-012).
+fn run_events(workdir: &std::path::Path, cmd: EventsCmd) -> ExitCode {
+    match cmd {
+        EventsCmd::Since(args) => match events_cmd::since(workdir, args.seq, args.limit) {
+            Ok(events) => {
+                if events.is_empty() {
+                    println!("(no events with seq >= {})", args.seq);
+                }
+                for e in &events {
+                    println!("{}", events_cmd::format_event_line(e));
+                }
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec events since: {err:#}");
+                ExitCode::from(1)
+            }
+        },
+        EventsCmd::Tail(args) => {
+            let url = args
+                .url
+                .or_else(|| std::env::var("DEC_EVENTS_URL").ok())
+                .unwrap_or_else(|| events_cmd::DEFAULT_EVENTS_URL.to_string());
+            match events_cmd::tail(&url) {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(err) => {
+                    eprintln!("dec events tail: {err:#}");
+                    ExitCode::from(1)
+                }
+            }
+        }
     }
 }
 
@@ -179,6 +287,49 @@ fn run_session(workdir: &std::path::Path, cmd: SessionCmd) -> ExitCode {
             }
             Err(err) => {
                 eprintln!("dec session show: {err:#}");
+                ExitCode::from(1)
+            }
+        },
+        SessionCmd::List(args) => match session_inspect::list(workdir, args.limit, args.offset) {
+            Ok(rows) => {
+                if rows.is_empty() {
+                    println!("(no sessions)");
+                }
+                for row in &rows {
+                    let started = if row.started_at.is_empty() {
+                        "(unknown-time)"
+                    } else {
+                        row.started_at.as_str()
+                    };
+                    let feature = if row.feature_id.is_empty() {
+                        "(no-feature)"
+                    } else {
+                        row.feature_id.as_str()
+                    };
+                    let status = if row.status.is_empty() {
+                        "(pending)"
+                    } else {
+                        row.status.as_str()
+                    };
+                    println!(
+                        "{started}  feature={feature}  status={status}  iri={}",
+                        row.iri
+                    );
+                }
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec session list: {err:#}");
+                ExitCode::from(1)
+            }
+        },
+        SessionCmd::Log(args) => match session_inspect::log(workdir, &args.iri) {
+            Ok(log) => {
+                print!("{}", session_inspect::format_log(&log));
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec session log: {err:#}");
                 ExitCode::from(1)
             }
         },

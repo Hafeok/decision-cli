@@ -10,7 +10,7 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-007-unauthorized-goal.sh
 runner-timeout: 30
-last-run: 2026-05-18T19:09:23.003157084+00:00
+last-run: 2026-05-18T19:38:26.971613703+00:00
 last-run-duration: 0.2s
 ---
 
