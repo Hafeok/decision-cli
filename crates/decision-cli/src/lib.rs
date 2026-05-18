@@ -9,8 +9,10 @@
 pub mod bundled;
 pub mod init;
 pub mod ontology;
+pub mod scope;
 pub mod stream_writer;
 pub mod vocab;
 
 pub use ontology::{OntologyError, OntologyHandle, ONTOLOGY_VERSION};
+pub use scope::{ActiveScope, ScopeError};
 pub use stream_writer::StreamWriter;

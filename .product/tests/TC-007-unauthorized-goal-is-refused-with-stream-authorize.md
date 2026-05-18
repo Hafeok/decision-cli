@@ -2,7 +2,7 @@
 id: TC-007
 title: unauthorized_goal_is_refused_with_stream_authorized_list
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-007-unauthorized-goal.sh
 runner-timeout: 30
+last-run: 2026-05-18T19:09:23.003157084+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

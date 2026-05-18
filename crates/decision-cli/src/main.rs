@@ -13,6 +13,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 use decision_cli::bundled;
 use decision_cli::init::{self, DefinitionSource, InitError};
+use decision_cli::scope::{ActiveScope, ScopeError};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -40,6 +41,12 @@ enum Command {
     /// persisted orchestration store.
     #[command(name = "_sparql", hide = true)]
     Sparql(SparqlArgs),
+    /// Hidden helper for tests/CI (FT-010 / TC-007): exercise the goal
+    /// validation gate. Slice 1 does not ship `dec drive`, so this is
+    /// the surface that drives the same code path any dispatch-
+    /// initiating command will use.
+    #[command(name = "_check-goal", hide = true)]
+    CheckGoal(CheckGoalArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -59,6 +66,12 @@ struct SparqlArgs {
     query: String,
 }
 
+#[derive(Debug, clap::Args)]
+struct CheckGoalArgs {
+    /// Goal verb to validate against the active stream's authorized-goals list.
+    goal: String,
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let workdir = cli
@@ -69,7 +82,49 @@ fn main() -> ExitCode {
         Command::Init(args) => run_init(&workdir, args),
         Command::Status => run_status(&workdir),
         Command::Sparql(args) => run_sparql(&workdir, args),
+        Command::CheckGoal(args) => run_check_goal(&workdir, args),
     }
+}
+
+/// `dec _check-goal <goal>` — load the active stream from the persisted
+/// store (FT-009 / ADR-012) and call [`ActiveScope::validate_goal`].
+///
+/// Per ADR-005 this is the chokepoint every dispatch-initiating command
+/// (`dec implement`, future `dec drive`) must run **before** writing any
+/// Session / Goal / Dispatch artifact. The refusal carries the
+/// unauthorized goal, the authorized list, and the terminal ValueAction
+/// (in both prefixed and full-IRI form) so operators / TC-007 can
+/// reproduce the §3.4 message shape.
+fn run_check_goal(workdir: &std::path::Path, args: CheckGoalArgs) -> ExitCode {
+    let scope = match ActiveScope::load(workdir) {
+        Ok(s) => s,
+        Err(err) => {
+            eprintln!("dec _check-goal: {err}");
+            return ExitCode::from(1);
+        }
+    };
+    match scope.validate_goal(&args.goal) {
+        Ok(()) => {
+            println!(
+                "goal `{}` is authorized on stream <{}>",
+                args.goal, scope.stream_iri
+            );
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            // Slice 1 has no Session / Goal / Dispatch artifacts to
+            // refuse to write here — the validation **is** the refusal
+            // (ADR-005). Future call sites in `dec implement` /
+            // `dec drive` will perform this same call before any
+            // mutation routes through StreamWriter (FT-010 / TC-014).
+            print_scope_error(&err);
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn print_scope_error(err: &ScopeError) {
+    eprintln!("dec: {err}");
 }
 
 fn run_init(workdir: &std::path::Path, args: InitArgs) -> ExitCode {

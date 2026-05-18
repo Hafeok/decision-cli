@@ -2,7 +2,7 @@
 id: FT-010
 title: 'decision-cli: Value stream scope enforcement'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-008
 - FT-009

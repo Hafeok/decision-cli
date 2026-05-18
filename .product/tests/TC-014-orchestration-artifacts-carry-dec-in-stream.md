@@ -10,8 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_014_in_stream_invariant
 runner-timeout: 60
-last-run: 2026-05-18T12:38:46.012932234+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-18T19:09:23.003157084+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
