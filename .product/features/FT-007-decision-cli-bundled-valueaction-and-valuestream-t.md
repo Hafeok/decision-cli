@@ -2,7 +2,7 @@
 id: FT-007
 title: 'decision-cli: Bundled ValueAction and ValueStream template library'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-006
 adrs:

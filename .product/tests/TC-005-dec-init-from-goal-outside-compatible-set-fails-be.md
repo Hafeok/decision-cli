@@ -2,7 +2,7 @@
 id: TC-005
 title: dec_init_from_goal_outside_compatible_set_fails_before_write
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-005-goal-outside-compatible-set.sh
 runner-timeout: 30
+last-run: 2026-05-18T18:51:56.950529262+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

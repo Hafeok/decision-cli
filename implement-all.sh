@@ -63,9 +63,6 @@ while true; do
 
 Automated headless implementation via product implement --headless."
             echo "Committed $feature_id."
-
-            git push origin "$BRANCH"
-            echo "Pushed $feature_id to origin/$BRANCH."
         else
             echo "No changes to commit for $feature_id."
         fi
