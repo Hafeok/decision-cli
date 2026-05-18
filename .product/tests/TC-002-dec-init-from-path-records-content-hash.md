@@ -2,7 +2,7 @@
 id: TC-002
 title: dec_init_from_path_records_content_hash
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-002-init-from-path.sh
 runner-timeout: 60
+last-run: 2026-05-18T18:57:44.649825655+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

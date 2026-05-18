@@ -2,7 +2,7 @@
 id: FT-009
 title: 'decision-cli: Orchestration store and bootstrap subscriptions'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-001
 - FT-002
