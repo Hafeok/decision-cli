@@ -1,0 +1,55 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/oxi-events",
+    "crates/decision-cli",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.78"
+license = "Apache-2.0"
+repository = "https://github.com/Hafeok/decision-cli"
+
+[workspace.dependencies]
+# Substrate (oxi-events depends on these)
+oxigraph = "0.4"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+axum = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Errors
+thiserror = "1"
+anyhow = "1"
+
+# Time and IDs
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
+
+# CLI (decision-cli only)
+clap = { version = "4", features = ["derive"] }
+
+# HTTP client (for subprocess + MCP wrappers in decision-cli)
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# Internal
+oxi-events = { path = "crates/oxi-events" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Common allows for application code; oxi-events may want to be stricter
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

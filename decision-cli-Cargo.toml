@@ -1,0 +1,30 @@
+[package]
+name = "decision-cli"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The orchestration system for Decision-Driven Design — dispatches roles, records sessions, routes artifacts via a graph-native event substrate."
+
+[[bin]]
+name = "dec"
+path = "src/main.rs"
+
+[dependencies]
+oxi-events = { workspace = true }
+oxigraph = { workspace = true }
+tokio = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+clap = { workspace = true }
+reqwest = { workspace = true }
+
+[lints]
+workspace = true

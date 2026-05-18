@@ -1,0 +1,49 @@
+name = "decision-cli"
+schema-version = "1"
+checklist-in-gitignore = true
+
+[product]
+responsibility = "The orchestration system for Decision-Driven Design — drives product-cli through the engineering process by dispatching LLM-backed roles, recording sessions, and routing artifacts via a graph-native event substrate. Installs as the dec binary."
+
+[paths]
+features = ".product/features"
+adrs = ".product/adrs"
+tests = ".product/tests"
+graph = ".product/graph"
+checklist = ".product/checklist.md"
+dependencies = ".product/dependencies"
+requests = ".product/requests.jsonl"
+prompts = ".product/prompts"
+gaps = ".product/gaps.json"
+
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+
+[phases]
+1 = "Phase 1"
+
+[domains]
+"security" = "Authentication, authorisation, secrets, trust boundaries"
+"error-handling" = "Error model, diagnostics, exit codes, recovery"
+"storage" = "Persistence, durability, backup"
+"networking" = "DNS, mTLS, service discovery, port allocation"
+"api" = "CLI surface, MCP tools, event schema"
+"observability" = "Metrics, tracing, logging, telemetry"
+"data-model" = "RDF, SPARQL, ontology, event sourcing"
+
+[mcp]
+write = true
+port = 7777
+
+[author]
+cli = "claude"
+
+# FT-055 / ADR-047 — feature body completeness check (W030).
+# Defaults are listed explicitly to future-proof against changes upstream.
+[features]
+required-sections = ["Description", "Functional Specification", "Out of scope"]
+functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
+required-from-phase = 1
+completeness-severity = "warning"
