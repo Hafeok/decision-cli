@@ -12,6 +12,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use decision_cli::bundled;
+use decision_cli::implement::{self as implement, ImplementArgs};
 use decision_cli::init::{self, DefinitionSource, InitError};
 use decision_cli::scope::{ActiveScope, ScopeError};
 
@@ -47,6 +48,13 @@ enum Command {
     /// initiating command will use.
     #[command(name = "_check-goal", hide = true)]
     CheckGoal(CheckGoalArgs),
+    /// Implement a feature end-to-end (FT-011 + FT-013): assemble a
+    /// bundle for the target feature, dispatch the code-writer role,
+    /// record the Session + CodeChange with PROV-O lineage.
+    Implement(ImplementCmdArgs),
+    /// Session inspection commands (FT-012).
+    #[command(subcommand)]
+    Session(SessionCmd),
 }
 
 #[derive(Debug, clap::Args)]
@@ -72,6 +80,38 @@ struct CheckGoalArgs {
     goal: String,
 }
 
+#[derive(Debug, clap::Args)]
+struct ImplementCmdArgs {
+    /// Feature id (e.g. `FT-007`).
+    feature: String,
+    /// Override the workspace directory the worker writes into.
+    #[arg(long)]
+    workspace: Option<PathBuf>,
+    /// Override the path to product-cli's root (defaults to walking up
+    /// from the working dir looking for `.product/`).
+    #[arg(long)]
+    product_root: Option<PathBuf>,
+    /// Override the worker command (shell-quoted). Defaults to
+    /// `code-writer` on $PATH, falling back to `python3 -m code_writer.main`.
+    #[arg(long)]
+    worker: Option<String>,
+    /// Bundle assembly depth handed to `product context`.
+    #[arg(long, default_value_t = 1)]
+    bundle_depth: usize,
+}
+
+#[derive(Debug, Subcommand)]
+enum SessionCmd {
+    /// Show one Session by IRI (FT-012 / TC-008 step 5).
+    Show(SessionShowArgs),
+}
+
+#[derive(Debug, clap::Args)]
+struct SessionShowArgs {
+    /// Full IRI of the Session to display.
+    iri: String,
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let workdir = cli
@@ -83,6 +123,65 @@ fn main() -> ExitCode {
         Command::Status => run_status(&workdir),
         Command::Sparql(args) => run_sparql(&workdir, args),
         Command::CheckGoal(args) => run_check_goal(&workdir, args),
+        Command::Implement(args) => run_implement(&workdir, args),
+        Command::Session(cmd) => run_session(&workdir, cmd),
+    }
+}
+
+/// `dec implement <FT-XXX>` — slice-1 implementer dispatch (FT-011 + FT-013).
+///
+/// Wires bundle assembly, worker dispatch, Session/Dispatch minting with
+/// PROV-O lineage (ADR-004), `dec:inStream` enforcement (ADR-005), and
+/// CodeChange registration in the product-cli graph slice. Errors are
+/// printed structurally so TC-008 can surface them on red runs.
+fn run_implement(workdir: &std::path::Path, args: ImplementCmdArgs) -> ExitCode {
+    let mut implement_args = ImplementArgs::new(args.feature);
+    implement_args.workspace = args.workspace;
+    implement_args.product_root = args.product_root;
+    implement_args.worker_command = args.worker;
+    implement_args.bundle_depth = args.bundle_depth;
+    match implement::run(workdir, &implement_args) {
+        Ok(outcome) => {
+            println!("dec implement: success");
+            println!("  Feature:        {}", implement_args.feature_id);
+            println!("  Session:        {}", outcome.session_iri);
+            println!("  Dispatch:       {}", outcome.dispatch_iri);
+            println!("  CodeChange:     {}", outcome.code_change_iri);
+            let short = &outcome.bundle_hash[..outcome.bundle_hash.len().min(12)];
+            println!("  Bundle hash:    sha256:{short}…");
+            println!("  Workspace:      {}", outcome.workspace_dir.display());
+            println!(
+                "  product graph:  {}",
+                outcome.product_codechange_path.display()
+            );
+            for f in &outcome.files_written {
+                println!("  wrote:          {}", f.display());
+            }
+            println!(
+                "  Worker:         status={} turns={} latency={:.3}s",
+                outcome.worker_status, outcome.turn_count, outcome.latency_seconds
+            );
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec implement failed: {err:#}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn run_session(workdir: &std::path::Path, cmd: SessionCmd) -> ExitCode {
+    match cmd {
+        SessionCmd::Show(args) => match implement::session_show(workdir, &args.iri) {
+            Ok(report) => {
+                print!("{report}");
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec session show: {err:#}");
+                ExitCode::from(1)
+            }
+        },
     }
 }
 

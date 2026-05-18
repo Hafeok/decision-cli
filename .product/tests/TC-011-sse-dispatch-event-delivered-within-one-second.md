@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-011-sse-latency.sh
 runner-timeout: 120
-last-run: 2026-05-18T13:39:34.963391006+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-18T19:29:00.425979119+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

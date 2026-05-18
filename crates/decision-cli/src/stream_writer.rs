@@ -96,8 +96,14 @@ impl StreamWriter {
     }
 
     fn ensure_stream_present(store: &Store, stream: &NamedNode) -> Result<()> {
+        // The stream may live in the default graph (FT-008 persistence
+        // path) or a named graph (FT-001 bootstrap path); accept both.
         let q = format!(
-            "ASK {{ GRAPH ?g {{ <{stream}> a <{vs}> }} }}",
+            "ASK {{ \
+              {{ <{stream}> a <{vs}> }} \
+              UNION \
+              {{ GRAPH ?g {{ <{stream}> a <{vs}> }} }} \
+            }}",
             stream = stream.as_str(),
             vs = IRI_DEC_VALUE_STREAM,
         );

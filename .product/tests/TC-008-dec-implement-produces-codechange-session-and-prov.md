@@ -2,7 +2,7 @@
 id: TC-008
 title: dec_implement_produces_codechange_session_and_provenance
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-008-implement-e2e.sh
 runner-timeout: 180
+last-run: 2026-05-18T19:29:00.425979119+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose

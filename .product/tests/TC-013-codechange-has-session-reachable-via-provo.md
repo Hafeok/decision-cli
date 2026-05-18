@@ -2,7 +2,7 @@
 id: TC-013
 title: codechange_has_session_reachable_via_provo
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-013-codechange-session-provo.sh
 runner-timeout: 120
+last-run: 2026-05-18T19:29:00.425979119+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose
