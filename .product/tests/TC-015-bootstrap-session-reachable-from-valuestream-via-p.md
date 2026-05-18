@@ -10,7 +10,7 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_015_bootstrap_session
 runner-timeout: 60
-last-run: 2026-05-18T18:57:44.649825655+00:00
+last-run: 2026-05-18T19:02:15.368687079+00:00
 last-run-duration: 0.2s
 ---
 

@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-002-init-from-path.sh
 runner-timeout: 60
-last-run: 2026-05-18T18:57:44.649825655+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-18T19:02:15.368687079+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose

@@ -2,7 +2,7 @@
 id: FT-008
 title: 'decision-cli: Init validation logic'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-006
 - FT-007

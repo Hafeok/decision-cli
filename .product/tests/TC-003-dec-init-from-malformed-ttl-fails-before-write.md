@@ -10,7 +10,7 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-003-malformed-ttl.sh
 runner-timeout: 30
-last-run: 2026-05-18T18:43:13.528130585+00:00
+last-run: 2026-05-18T19:02:15.368687079+00:00
 last-run-duration: 0.2s
 ---
 

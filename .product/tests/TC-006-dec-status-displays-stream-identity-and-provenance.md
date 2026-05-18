@@ -2,7 +2,7 @@
 id: TC-006
 title: dec_status_displays_stream_identity_and_provenance
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-006-status.sh
 runner-timeout: 30
+last-run: 2026-05-18T19:02:15.368687079+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
