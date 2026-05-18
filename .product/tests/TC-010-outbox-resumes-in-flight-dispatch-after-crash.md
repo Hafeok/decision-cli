@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-010-outbox-recovery.sh
 runner-timeout: 180
-last-run: 2026-05-18T13:25:09.077772362+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-18T19:29:56.166506176+00:00
+last-run-duration: 0.1s
 ---
 
 ## Purpose

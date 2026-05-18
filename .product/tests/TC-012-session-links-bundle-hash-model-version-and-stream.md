@@ -2,7 +2,7 @@
 id: TC-012
 title: session_links_bundle_hash_model_version_and_stream_via_provo
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,6 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_012_session_invariants
 runner-timeout: 120
+last-run: 2026-05-18T19:29:56.166506176+00:00
+last-run-duration: 0.6s
 ---
 
 ## Purpose

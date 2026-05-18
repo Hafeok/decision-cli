@@ -2,7 +2,7 @@
 id: FT-011
 title: 'decision-cli: Implementer role end-to-end'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-003
 - FT-004
