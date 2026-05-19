@@ -248,6 +248,7 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
         "-p",
         "--output-format",
         "stream-json",
+        "--verbose",
         "--max-turns",
         str(payload.max_turns),
     ]
