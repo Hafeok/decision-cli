@@ -1,0 +1,26 @@
+<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/ns/prov#wasDerivedFrom> "template:engineering-development" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/init-001> .
+<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/init-001> .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/ns/prov#atTime> "2026-05-19T03:54:21.282204836+00:00" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionForm> "template" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#ontologyVersion> "0.1.0" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionHash> "3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f" .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/ns/prov#wasDerivedFrom> "template:engineering-development" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionSource> "template:engineering-development" .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/prov#Activity> .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Session> .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueAction> .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#name> "shipped-feature" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#description> "A feature is shipped when its code is on the trunk branch, all tests pass, and consumers can use it." .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#exitCriterion> "tests-pass" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#exitCriterion> "merged-to-trunk" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#expectedOutputType> "CodeChange" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#compatibleGoals> "ship" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#compatibleGoals> "land" .
+<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueStream> .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#name> "engineering-development" .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#title> "Engineering Development" .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#description> "Generic engineering-development value stream — terminates in shipped-feature." .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#terminalValueAction> <https://decision-cli.dev/ns/value-actions/shipped-feature> .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#authorizedGoals> "ship" .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#authorizedGoals> "land" .
