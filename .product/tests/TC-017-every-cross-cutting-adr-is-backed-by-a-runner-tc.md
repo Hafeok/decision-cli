@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/cross-cutting-rules-have-checks.sh
 runner-timeout: 60
-last-run: 2026-05-19T12:13:19.277116267+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-19T12:28:18.809541785+00:00
+last-run-duration: 0.6s
 failure-message: ""
 ---
 
@@ -65,3 +65,22 @@ scripts/checks/cross-cutting-rules-have-checks.sh
 - The convention assumes one source of truth for "is this a mechanical
   rule" — namely, whether the author chose to pair the ADR with a runner
   TC. Non-mechanical cross-cutting ADRs accept the warning and move on.
+
+## Formal specification
+
+⟦Σ:Types⟧{
+  Adr ≜ ⟨id:IRI, scope:Scope, source:Path⟩
+  Tc ≜ ⟨id:IRI, validates_adrs:Set[IRI], runner:String?, source:Path⟩
+  Scope ≜ feature-specific | cross-cutting
+  CrossCuttingAdrs ≜ {a:Adr | a.scope = cross-cutting}
+  RunnerTcs ≜ {t:Tc | defined(t.runner) ∧ t.runner ≠ ""}
+}
+
+⟦Γ:Invariants⟧{
+  ∀a:CrossCuttingAdrs:
+    ∃t:RunnerTcs: a.id ∈ t.validates_adrs
+  ¬(∃a:CrossCuttingAdrs: ∄t:RunnerTcs: a.id ∈ t.validates_adrs)
+    ⇒ exit_code = 2  -- warning, not block, per ADR-014 §Enforcement
+}
+
+⟦Ε⟧⟨δ≜0.85;φ≜90;τ≜◊⁺⟩

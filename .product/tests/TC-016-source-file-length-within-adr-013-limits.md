@@ -11,7 +11,7 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/file-length.sh
 runner-timeout: 60
-last-run: 2026-05-19T12:13:19.277116267+00:00
+last-run: 2026-05-19T12:28:18.809541785+00:00
 last-run-duration: 0.0s
 failure-message: ""
 ---
@@ -59,3 +59,22 @@ scripts/checks/file-length.sh
   (FT-015). Subsequent rules (function length, module structure,
   single-responsibility doc comments) land as part of FT-014 and each adds
   its own TC pointing to the same parent ADR (ADR-013).
+
+## Formal specification
+
+⟦Σ:Types⟧{
+  SourceFile ≜ ⟨path:Path, line_count:ℕ⟩
+  FirstPartySource ≜ {f:SourceFile | f.path matches "crates/*/src/**/*.rs"
+                                   ∨ (f.path matches "workers/**/*.py"
+                                      ∧ ¬(f.path matches "**/tests/**")
+                                      ∧ ¬(f.path matches "**/__pycache__/**"))}
+  HardLimit ≜ ℕ where HardLimit ≜ env(FILE_LENGTH_HARD, default=400)
+  WarnLimit ≜ ℕ where WarnLimit ≜ env(FILE_LENGTH_WARN, default=300)
+}
+
+⟦Γ:Invariants⟧{
+  ∀f:FirstPartySource: f.line_count ≤ HardLimit
+  ∀f:FirstPartySource: f.line_count > WarnLimit ⇒ produces_warning(f)
+}
+
+⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩
