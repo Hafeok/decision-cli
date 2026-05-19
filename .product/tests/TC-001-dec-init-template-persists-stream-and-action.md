@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-001-init-template.sh
 runner-timeout: 60
-last-run: 2026-05-18T19:02:15.368687079+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-19T12:13:07.298280911+00:00
+last-run-duration: 1.9s
 ---
 
 ## Purpose

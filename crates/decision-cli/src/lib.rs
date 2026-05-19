@@ -8,6 +8,7 @@
 
 pub mod bundled;
 pub mod events;
+pub mod finalize;
 pub mod health;
 pub mod implement;
 pub mod init;
@@ -17,6 +18,7 @@ pub mod session_inspect;
 pub mod stream_writer;
 pub mod vocab;
 
+pub use finalize::{finalize_run, FinalizeError, FinalizeInput, FinalizeOutcome};
 pub use health::{check as health_check, HealthReport};
 pub use implement::{ImplementArgs, ImplementOutcome};
 pub use ontology::{OntologyError, OntologyHandle, ONTOLOGY_VERSION};

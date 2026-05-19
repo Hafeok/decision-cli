@@ -269,6 +269,26 @@ fn run_implement(workdir: &std::path::Path, args: ImplementCmdArgs) -> ExitCode 
                 "  Worker:         status={} turns={} latency={:.3}s",
                 outcome.worker_status, outcome.turn_count, outcome.latency_seconds
             );
+            if let Some(fin) = &outcome.finalize {
+                match &fin.commit_sha {
+                    Some(sha) => println!("  Commit:         {sha}"),
+                    None => println!("  Commit:         (no working-tree changes)"),
+                }
+                if fin.status_transitioned {
+                    println!(
+                        "  Status:         {} → complete",
+                        implement_args.feature_id
+                    );
+                } else {
+                    println!(
+                        "  Status:         {} → (not transitioned)",
+                        implement_args.feature_id
+                    );
+                }
+                for note in &fin.notes {
+                    println!("  Note:           {note}");
+                }
+            }
             ExitCode::SUCCESS
         }
         Err(err) => {

@@ -1,0 +1,99 @@
+# Runs the cross-cutting rule checks codified in `.product/` against every
+# pull request and every push to main. Governed by ADR-014 (rules-as-ADRs +
+# checks-as-TCs) and operationalised by FT-015.
+#
+# What this workflow does:
+#
+#   1. Installs `product-cli` (the binary the orchestration system depends
+#      on) into the runner.
+#   2. Runs `product verify --platform`, which executes every TC linked to
+#      a cross-cutting ADR. Today that includes:
+#        - TC-016 → ADR-013 Rule 1 (file length)
+#        - TC-017 → ADR-014 (every rule has a runner TC — meta-check)
+#      As FT-014 lands the remaining ADR-013 rule scripts (function length,
+#      module structure, single-responsibility doc comments) each new TC
+#      is picked up here automatically — no edits to this workflow needed.
+#   3. Captures per-script exit codes to honor ADR-014's three-tier exit
+#      contract: 0 clean / 1 block / 2 warn.
+#
+# Per ADR-014 §"Enforcement is automated":
+#   exit 0 — every cross-cutting TC passes. Merge.
+#   exit 1 — at least one cross-cutting TC fails (hard limit). Block.
+#   exit 2 — warnings only (e.g. a file is in the 300–400 line warning
+#            zone). Allow merge, surface in the PR comment.
+#
+# product-cli's `verify --platform` collapses 1 and 2 into a single "FAIL"
+# at the moment. To preserve the warning-vs-block distinction, this
+# workflow runs the cross-cutting scripts directly in a second step and
+# uploads their stdout for the PR comment bot. Once product-cli grows
+# native exit-code propagation (tracked upstream), the second step
+# collapses into the first.
+name: product verify --platform
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify-platform:
+    name: Cross-cutting rule checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (for product-cli build cache)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install product-cli
+        run: |
+          set -euo pipefail
+          cargo install --locked --git https://github.com/Hafeok/product-cli product-cli || \
+            cargo install --locked product-cli || \
+            { echo "::error::could not install product-cli"; exit 1; }
+          product --version
+
+      # Primary gate: product verify --platform. Aggregates every TC linked
+      # to a cross-cutting ADR. Exits non-zero on any TC failure.
+      - name: product verify --platform
+        id: verify
+        run: |
+          set -o pipefail
+          product verify --platform | tee verify-platform.out
+        continue-on-error: false
+
+      # Secondary pass: run each cross-cutting script directly so we can
+      # distinguish exit 1 (block) from exit 2 (warn) per ADR-014. This
+      # is informational — the primary gate above is what fails the build.
+      - name: Classify rule-script exit codes (ADR-014 §Enforcement)
+        if: always()
+        run: |
+          set -uo pipefail
+          fail=0
+          warn=0
+          for script in scripts/checks/*.sh; do
+            [ -x "$script" ] || continue
+            echo "=== running $script ==="
+            "$script" || rc=$?
+            : "${rc:=0}"
+            case "$rc" in
+              0) echo "  [PASS] $script (exit 0)" ;;
+              1) echo "  [FAIL] $script (exit 1 — hard limit; merge blocked)"; fail=$((fail+1)) ;;
+              2) echo "  [WARN] $script (exit 2 — warning band; merge allowed)"; warn=$((warn+1)) ;;
+              *) echo "  [????] $script (exit $rc — unexpected; treating as FAIL)"; fail=$((fail+1)) ;;
+            esac
+            unset rc
+          done
+          echo "--- summary ---"
+          echo "blocking failures: $fail"
+          echo "warnings:          $warn"
+
+      - name: Upload verify output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-verify-platform-output
+          path: verify-platform.out
+          if-no-files-found: ignore

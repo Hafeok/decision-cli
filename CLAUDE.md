@@ -145,6 +145,86 @@ Commits that don't trace to an artifact should be rare and explainable (typos, f
 
 Every feature_spec exits with at least one test criterion (TC). The TC's success criteria are the acceptance test. Failing TCs block release per fitness function policy. When implementing a feature, the TCs are the definition of done — not "the code compiles" or "I think it works."
 
+## Rules live in `.product/`
+
+Code-quality rules and other architectural fitness functions for decision-cli are tracked **inside this repository's `.product/` graph** — not in a CONTRIBUTING.md, not in a CI yaml fragment, not in tribal knowledge. The convention is governed by [ADR-014](.product/adrs/ADR-014-architectural-fitness-functions-tracked-as-product.md) and operationalised by [FT-015](.product/features/FT-015-use-the-internal-product-cli-graph-as-the-source-o.md). The first rule landed under this convention is [ADR-013](.product/adrs/ADR-013-code-structure-and-quality-standards.md) (code structure and quality), with its initial mechanical check shipping as [TC-016](.product/tests/TC-016-source-file-length-within-adr-013-limits.md) running `scripts/checks/file-length.sh`.
+
+### The contract in one paragraph
+
+A rule is an ADR with `scope: cross-cutting`. Its mechanical check is a TC with `runner: bash` (or `pytest` / `cargo-test`) and `validates.adrs: [ADR-XXX]`. Both surface in every feature's `product context FT-XXX` bundle automatically. `product verify --platform` runs every cross-cutting TC on every PR. **Exit 0 = merge, exit 1 = block, exit 2 = warn** (see ADR-014 §"Enforcement is automated"). There is no second registry, no separate "fitness functions" config, no rules DSL — only ADRs, TCs, and the existing `product verify --platform` pipeline.
+
+### Worked example — landing a new rule end-to-end
+
+Suppose you want to add a rule: *"Cargo dependencies must not introduce a new GPL-licensed transitive crate."* The flow:
+
+1. **Author the rule ADR.**
+
+    ```bash
+    product author adr
+    # → describe the rule; product-cli scaffolds the ADR. Or, scripted:
+    product adr new "No GPL-licensed Cargo transitive dependencies"
+    product adr scope ADR-NNN cross-cutting
+    product adr domain ADR-NNN --add security
+    # Edit .product/adrs/ADR-NNN-*.md to fill in the rule body — what it
+    # forbids, why, the threshold, the script path, the rationale.
+    ```
+
+2. **Write the enforcement script.** Land `scripts/checks/no-gpl-deps.sh`. It exits 0 on a clean tree, 1 on a hard violation, 2 in a warning band (if applicable). Diagnostics go to stdout so `product verify` captures them. Dependencies are limited to what is universally available on a CI runner.
+
+3. **Author the rule TC.**
+
+    ```bash
+    product test new "no GPL-licensed transitive Cargo dependencies" --type invariant
+    product test runner TC-NNN --runner bash \
+      --args scripts/checks/no-gpl-deps.sh --timeout 60s
+    # Then edit the TC front-matter so validates.adrs lists the parent ADR
+    # (and validates.features stays empty — rules are cross-cutting).
+    ```
+
+4. **Couple the script to the ADR for drift detection.**
+
+    ```bash
+    product adr source-files ADR-NNN --add scripts/checks/no-gpl-deps.sh
+    # `product drift check` will now flag changes to the script that
+    # aren't paired with an ADR amendment.
+    ```
+
+5. **Apply atomically and verify.**
+
+    ```bash
+    # If you authored through `product request`:
+    product request apply
+    # Validate the graph and run the platform pipeline:
+    product graph check
+    product verify --platform
+    ```
+
+6. **Push.** CI's `product verify --platform` job runs the new TC against the PR. Exit 0 → merge. Exit 1 → block. Exit 2 → warn.
+
+### Changing a rule
+
+Rule ADRs use the standard accepted-ADR amend flow:
+
+```bash
+product adr amend ADR-NNN --reason "Bump the file-length hard limit from 400 to 500 lines for Rust generated code"
+```
+
+The amendment is recorded with a previous-hash in `.product/requests.jsonl`; if the enforcement script changes too, both land in the same request so the audit trail is atomic.
+
+### Retiring a rule
+
+```bash
+product adr status ADR-NNN superseded --by ADR-MMM   # replaced by a new rule
+# or
+product adr status ADR-NNN abandoned                 # withdrawn outright
+```
+
+Orphan TCs (cross-cutting TCs whose parent rule was abandoned) surface in `product graph check` as W002 until they are deleted or relinked. Don't delete the TC pre-emptively — `graph check` is the right place to discover and triage them.
+
+### What this means for you, the implementing agent
+
+Every implementation session in decision-cli — yours included — pulls a context bundle that already contains every cross-cutting ADR. That includes the code-quality rules. If your edits violate one, `product verify --platform` will catch it on the PR; if your edits are *about* one (changing the threshold, replacing the script), the request log will demand the corresponding ADR amendment in the same atomic write. Don't write rules into comments, READMEs, or commit messages. Write them as ADR + TC and let the convention do the work.
+
 ## When something is unclear
 
 If a feature_spec's context doesn't contain enough to act on confidently:
@@ -162,3 +242,4 @@ Do not improvise on architectural decisions. Architectural choices belong in ADR
 - [`docs/ddd/Implementing_DDD.md`](docs/ddd/Implementing_DDD.md) — implementation architecture (primary reference).
 - [`decision-cli-slice-1-bounds.md`](decision-cli-slice-1-bounds.md) — what slice 1 is and is not.
 - [product-cli](https://github.com/Hafeok/product-cli) — the engineering process system.
+- [`.product/adrs/ADR-014-architectural-fitness-functions-tracked-as-product.md`](.product/adrs/ADR-014-architectural-fitness-functions-tracked-as-product.md) — the convention codified by the "Rules live in `.product/`" section above.

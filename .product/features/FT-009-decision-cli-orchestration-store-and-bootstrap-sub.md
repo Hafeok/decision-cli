@@ -18,8 +18,11 @@ tests:
 - TC-001
 - TC-002
 - TC-015
+- TC-019
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-014: FT-009 ships orchestration plumbing (store + bootstrap subscriptions); it does not author cross-cutting rules. Compliance is verified by the existing graph-check / verify pipeline.
+  ADR-013: FT-009 seeds bootstrap subscriptions in init/mod.rs which is already 914 lines (pre-existing ADR-013 violation owned by FT-014). The seeding logic is added as a single bounded helper at the end of the module; full remediation is FT-014.
 ---
 
 ## Description

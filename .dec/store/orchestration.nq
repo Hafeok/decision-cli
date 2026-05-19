@@ -1,26 +1,56 @@
-<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/ns/prov#wasDerivedFrom> "template:engineering-development" .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/init-001> .
-<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/init-001> .
-<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/ns/prov#atTime> "2026-05-19T03:54:21.282204836+00:00" .
-<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionForm> "template" .
-<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#ontologyVersion> "0.1.0" .
-<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionHash> "3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f" .
-<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/ns/prov#wasDerivedFrom> "template:engineering-development" .
-<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionSource> "template:engineering-development" .
-<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/prov#Activity> .
-<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Session> .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueAction> .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#name> "shipped-feature" .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#description> "A feature is shipped when its code is on the trunk branch, all tests pass, and consumers can use it." .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#exitCriterion> "tests-pass" .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#exitCriterion> "merged-to-trunk" .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#expectedOutputType> "CodeChange" .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#compatibleGoals> "ship" .
-<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#compatibleGoals> "land" .
-<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueStream> .
-<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#name> "engineering-development" .
-<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#title> "Engineering Development" .
-<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#description> "Generic engineering-development value stream — terminates in shipped-feature." .
-<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#terminalValueAction> <https://decision-cli.dev/ns/value-actions/shipped-feature> .
-<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#authorizedGoals> "ship" .
+<https://decision-cli.dev/oxi-events/ns#seq-counter> <https://decision-cli.dev/oxi-events/ns#current> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/0038d8b1-a514-426c-aa81-8457bec201b6> <https://decision-cli.dev/oxi-events/ns#cause> "dec implement: worker complete" <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/0038d8b1-a514-426c-aa81-8457bec201b6> <https://decision-cli.dev/oxi-events/ns#committedAt> "2026-05-19T09:46:45.747146817Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/0038d8b1-a514-426c-aa81-8457bec201b6> <https://decision-cli.dev/oxi-events/ns#seq> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/0038d8b1-a514-426c-aa81-8457bec201b6> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/oxi-events/ns#Mutation> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <http://www.w3.org/ns/prov#endedAtTime> "2026-05-19T09:46:45.747138307+00:00" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#status> "complete" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#outputRef> <https://decision-cli.dev/ns/dispatch/code-change/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/oxi-events/ns/mutation/882c3f5c-82e4-4ca1-9293-9fc96b16ec8c> <https://decision-cli.dev/oxi-events/ns#cause> "dec implement FT-015" <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/882c3f5c-82e4-4ca1-9293-9fc96b16ec8c> <https://decision-cli.dev/oxi-events/ns#committedAt> "2026-05-19T09:31:49.908468181Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/882c3f5c-82e4-4ca1-9293-9fc96b16ec8c> <https://decision-cli.dev/oxi-events/ns#seq> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/oxi-events/ns/mutation/882c3f5c-82e4-4ca1-9293-9fc96b16ec8c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/oxi-events/ns#Mutation> <https://decision-cli.dev/oxi-events/ns/meta> .
+<https://decision-cli.dev/ns/dispatch/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <https://decision-cli.dev/ns#inStream> <https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#inStream> <https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/dispatch/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <http://www.w3.org/ns/prov#atTime> "2026-05-19T09:31:49.908449122+00:00" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/dispatch/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <https://decision-cli.dev/ns#role> "code-writer" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/dispatch/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/dispatch/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Dispatch> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#role> "code-writer" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#dispatch> <https://decision-cli.dev/ns/dispatch/be1b1d12-e12c-47f1-b04b-d3b9a0f1af34> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <http://www.w3.org/ns/prov#atTime> "2026-05-19T09:31:49.908449122+00:00" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#modelRef> <urn:dec:model:claude-sonnet-4-5> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#bundleRef> <urn:dec:bundle:FT-015:694d14c37649e3a1> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <https://decision-cli.dev/ns#featureId> "FT-015" <https://decision-cli.dev/ns/orchestration> .
+<urn:dec:model:claude-sonnet-4-5> <https://decision-cli.dev/ns#modelVersion> "claude-sonnet-4-5" <https://decision-cli.dev/ns/orchestration> .
+<urn:dec:bundle:FT-015:694d14c37649e3a1> <https://decision-cli.dev/ns#contentHash> "694d14c37649e3a17aba6d5c9ffef16c60ba83ec13e1311b462b6d6a36c8fe1d" <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <http://www.w3.org/ns/prov#used> <urn:dec:model:claude-sonnet-4-5> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <http://www.w3.org/ns/prov#used> <urn:dec:bundle:FT-015:694d14c37649e3a1> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/prov#Activity> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/session/15331f38-7b36-42b0-ab9f-be8d0e25b375> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Session> <https://decision-cli.dev/ns/orchestration> .
 <https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#authorizedGoals> "land" .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#authorizedGoals> "ship" .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#terminalValueAction> <https://decision-cli.dev/ns/value-actions/shipped-feature> .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#description> "Generic engineering-development value stream — terminates in shipped-feature." .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#title> "Engineering Development" .
+<https://decision-cli.dev/ns/streams/engineering-development> <https://decision-cli.dev/ns#name> "engineering-development" .
+<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueStream> .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#compatibleGoals> "land" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#compatibleGoals> "ship" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#expectedOutputType> "CodeChange" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#exitCriterion> "merged-to-trunk" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#exitCriterion> "tests-pass" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#description> "A feature is shipped when its code is on the trunk branch, all tests pass, and consumers can use it." .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <https://decision-cli.dev/ns#name> "shipped-feature" .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueAction> .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Session> .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/prov#Activity> .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionSource> "template:engineering-development" .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/ns/prov#wasDerivedFrom> "template:engineering-development" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionHash> "3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#ontologyVersion> "0.1.0" .
+<https://decision-cli.dev/ns/session/init-001> <https://decision-cli.dev/ns#definitionForm> "template" .
+<https://decision-cli.dev/ns/session/init-001> <http://www.w3.org/ns/prov#atTime> "2026-05-19T03:54:21.282204836+00:00" .
+<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/init-001> .
+<https://decision-cli.dev/ns/value-actions/shipped-feature> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/init-001> .
+<https://decision-cli.dev/ns/streams/engineering-development> <http://www.w3.org/ns/prov#wasDerivedFrom> "template:engineering-development" .

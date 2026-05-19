@@ -10,8 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p oxi-events --test tc_009_monotonic_events
 runner-timeout: 60
-last-run: 2026-05-18T18:23:38.378348108+00:00
-last-run-duration: 0.9s
+last-run: 2026-05-19T09:46:00.510201278+00:00
+last-run-duration: 0.1s
 ---
 
 ## Purpose

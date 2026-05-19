@@ -347,6 +347,14 @@ pub fn run(workdir: &Path, source: DefinitionSource) -> Result<InitOutcome, Init
         })
         .map_err(|e| InitError::Internal(e.to_string()))?;
 
+    // FT-009 §Behaviour step 4: persist the v0 bootstrap subscriptions
+    // ("dispatch available for code-writer" and "code-writer dispatch
+    // completed"). The slice-1 bounds doc §6.1 names these explicitly;
+    // they enable `dec events since` to surface events from the first
+    // `dec implement` run.
+    seed_bootstrap_subscriptions(&orchestration)
+        .map_err(|e| InitError::Internal(e.to_string()))?;
+
     // -- 6. Serialise the orchestration graph to disk (atomic-ish):
     //       write to a temp path, then rename. Only after the rename
     //       does `.dec/` become observable — preserves the "no state
@@ -903,4 +911,69 @@ fn json_escape(s: &str) -> String {
 #[allow(dead_code)]
 fn _retain_subject_import() -> Option<Subject> {
     None
+}
+
+/// Seed the v0 bootstrap subscriptions (FT-009 §Behaviour step 4).
+///
+/// The two subscriptions ("dispatch available for code-writer" and
+/// "code-writer dispatch completed") are SELECT subscriptions so the
+/// evaluator emits one event per new Dispatch / completed Session
+/// rather than firing on every commit (FT-002 semantics).
+fn seed_bootstrap_subscriptions(store: &Store) -> Result<(), oxigraph::store::StorageError> {
+    let subs_graph: GraphName = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_GRAPH_SUBSCRIPTIONS).into();
+    let rdf_type = NamedNode::new_unchecked(RDF_TYPE);
+    let sub_class = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
+    let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
+    let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
+    let rdfs_label = NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
+
+    let entries: &[(&str, &str, &str)] = &[
+        (
+            "https://decision-cli.dev/ns/subscription/dispatch-available-code-writer",
+            "dispatch available for code-writer",
+            "PREFIX dec: <https://decision-cli.dev/ns#> \
+             SELECT ?d WHERE { GRAPH ?g { ?d a dec:Dispatch ; dec:role \"code-writer\" } }",
+        ),
+        (
+            "https://decision-cli.dev/ns/subscription/dispatch-completed-code-writer",
+            "code-writer dispatch completed",
+            "PREFIX dec: <https://decision-cli.dev/ns#> \
+             SELECT ?s WHERE { GRAPH ?g { ?s a dec:Session ; dec:role \"code-writer\" ; dec:status \"complete\" } }",
+        ),
+    ];
+
+    store.transaction(|mut tx| {
+        for (iri, label, query) in entries {
+            let sub = NamedNode::new_unchecked(*iri);
+            tx.insert(Quad::new(sub.clone(), rdf_type.clone(), sub_class.clone(), subs_graph.clone()).as_ref())?;
+            tx.insert(
+                Quad::new(
+                    sub.clone(),
+                    select_pred.clone(),
+                    Literal::new_simple_literal(*query),
+                    subs_graph.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    sub.clone(),
+                    mode_pred.clone(),
+                    Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_INLINE),
+                    subs_graph.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    sub,
+                    rdfs_label.clone(),
+                    Literal::new_simple_literal(*label),
+                    subs_graph.clone(),
+                )
+                .as_ref(),
+            )?;
+        }
+        Ok::<_, oxigraph::store::StorageError>(())
+    })
 }

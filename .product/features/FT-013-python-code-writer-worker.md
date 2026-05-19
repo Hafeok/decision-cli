@@ -34,30 +34,32 @@ See `decision-cli-slice-1-bounds.md` §7.
 
 ### Inputs
 
-- A dispatch event payload over SSE (FT-004): dispatch id, bundle markdown, target workspace path, model id, run parameters (max turns, timeout, allowed tools, etc.).
+- A dispatch event payload over SSE (FT-004): dispatch id, bundle markdown, target workspace path, model id, optional run parameters (timeout; max_turns/allowed_tools deferred — see below).
 - A working Claude Code installation on `$PATH` (`claude` binary) with an authenticated subscription session on the host.
 - No Anthropic API key is required or read.
 
 ### Outputs
 
 - A structured `CodeChange` (Pydantic model): file paths written, per-file diff summary, optional summary message.
-- Session telemetry: turn count, latency, tool-call history (parsed from `claude -p --output-format stream-json`), errors.
+- Session telemetry: turn count, latency, tool-call history (parsed from `claude -p --output-format stream-json --verbose`), errors.
 - Files written directly to the configured workspace directory — written by Claude Code's tool calls inside the headless session and observed by the worker.
 
 ### State
 
-- Per-dispatch ephemeral state only — turn counters, retry counters, the subprocess handle. Nothing persisted between dispatches (ADR-008).
+- Per-dispatch ephemeral state only — turn counters, retry counters, the subprocess handle, and a temp file holding the bundle (system-prompt-file). Nothing persisted between dispatches (ADR-008).
 - Each dispatch spawns a fresh `claude -p` subprocess scoped to the configured workspace; no Claude Code session state is reused across dispatches in slice 1.
 
 ### Behaviour
 
 1. Subscribe to SSE; filter for "dispatch available for code-writer" events targeting this worker.
-2. On receipt, parse the bundle payload.
+2. On receipt, parse the bundle payload and write the bundle markdown to a per-dispatch temp file.
 3. Spawn `claude -p` as a subprocess with:
-   - the bundle markdown supplied as the prompt (via stdin or `--prompt`),
-   - `--output-format stream-json` so tool-call and result events can be parsed deterministically,
+   - `--system-prompt-file <tempfile>` so the bundle is the model's system prompt (matches product-cli's `product implement --headless` invocation),
+   - a short user message instructing the model to implement the feature and run verification when done,
+   - `--dangerously-skip-permissions` so tool-call permission gates do not stall the headless session,
+   - `--output-format stream-json --verbose` so tool-call and result events can be parsed deterministically,
    - working directory set to the configured workspace path so file edits land in the right place,
-   - `--max-turns`, `--allowedTools`, and timeout values derived from the dispatch payload.
+   - `--max-turns` is **not** set — the agent runs to completion (matches product-cli's headless pattern). The dispatch payload's `timeout_seconds` provides the upper bound.
 4. Stream stdout, parse the structured events into per-turn telemetry and a final result block.
 5. Build a `CodeChange` from the observed file writes (Edit / Write tool calls) and the model's final summary.
 6. Publish a "dispatch completed" payload via the harness response channel (harness handles graph mutation per FT-011).
@@ -73,9 +75,10 @@ See `decision-cli-slice-1-bounds.md` §7.
 ### Error handling
 
 - `claude` binary missing on `$PATH`, or unauthenticated session → structured error (category `subscription_unavailable`); harness surfaces to operator.
-- Subprocess exit non-zero / unparseable stream-json → structured error with stderr capture and retry hint; harness decides retry.
+- Subprocess exit non-zero → structured error (category `subprocess_failed`). `claude -p` emits its terminal error as a JSON `result` event on stdout (not stderr); when stderr is empty the worker scrapes the final `result` event from stdout and includes `subtype`, `terminal_reason`, `num_turns`, and `errors[]` in `error.detail` so failures are diagnosable instead of mystery exit codes.
+- Unparseable stream-json → structured error with stdout/stderr capture; harness decides retry.
 - File write rejected (outside workspace) → abort dispatch, report error; no partial state reported as success.
-- Timeout (configurable) → terminate the `claude -p` subprocess cleanly (SIGTERM, then SIGKILL); report timeout.
+- Timeout (configurable via dispatch payload) → terminate the `claude -p` subprocess cleanly (SIGTERM, then SIGKILL); report timeout.
 
 ### Boundaries
 
@@ -91,3 +94,4 @@ See `decision-cli-slice-1-bounds.md` §7.
 - Persisted Claude Code session resumption (`--resume`) — deferred.
 - Git operations — slice 1 writes files directly via Claude Code's tools.
 - Structured feedback emission (ADR-008 defers to slice 2).
+- Capping turns or restricting tool allowlists in slice 1 — the headless agent runs unbounded under `--dangerously-skip-permissions` to match product-cli's working `--headless` flow. Re-introducing turn/tool caps is deferred to a later slice once policy artifacts (ADR-010) land.

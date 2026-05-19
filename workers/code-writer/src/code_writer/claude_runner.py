@@ -24,6 +24,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -243,114 +244,164 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
 
     workspace = Path(payload.workspace_path)
     workspace.mkdir(parents=True, exist_ok=True)
+
+    # FT-013: align with product-cli's `product implement --headless` flow.
+    # The bundle is passed as `--system-prompt-file` (not stdin), permission
+    # gates are skipped so tool calls don't stall the headless session, and
+    # we set no `--max-turns` cap — the agent runs to completion under the
+    # dispatch payload's `timeout_seconds`. We keep stream-json+verbose so
+    # the worker can still parse tool calls into CodeChange telemetry.
+    prompt_fd, prompt_path = tempfile.mkstemp(
+        prefix=f"dec-bundle-{payload.feature_id}-",
+        suffix=".md",
+    )
+    with os.fdopen(prompt_fd, "w", encoding="utf-8") as fh:
+        fh.write(payload.bundle_markdown)
+    user_message = (
+        f"Implement feature {payload.feature_id} described in the system "
+        "prompt. Follow all constraints and run `product verify` when done."
+    )
     args = [
         binary,
         "-p",
+        "--dangerously-skip-permissions",
+        "--system-prompt-file",
+        prompt_path,
         "--output-format",
         "stream-json",
         "--verbose",
-        "--max-turns",
-        str(payload.max_turns),
+        user_message,
     ]
-    if payload.allowed_tools:
-        args.extend(["--allowedTools", ",".join(payload.allowed_tools)])
 
     started = time.monotonic()
     try:
-        completed = subprocess.run(
-            args,
-            input=payload.bundle_markdown,
-            capture_output=True,
-            text=True,
-            timeout=payload.timeout_seconds,
-            cwd=str(workspace),
-            check=False,
-        )
-    except subprocess.TimeoutExpired as exc:
-        return WorkerResponse(
-            dispatch_id=payload.dispatch_id,
-            session_id=payload.session_id,
-            status="error",
-            error=WorkerError(
-                category="timeout",
-                message=f"`claude -p` exceeded {payload.timeout_seconds}s",
-                detail=str(exc),
-                retryable=True,
-            ),
-        )
-
-    latency = time.monotonic() - started
-    if completed.returncode != 0:
-        return WorkerResponse(
-            dispatch_id=payload.dispatch_id,
-            session_id=payload.session_id,
-            status="error",
-            error=WorkerError(
-                category="subprocess_failed",
-                message=f"`claude -p` exited with status {completed.returncode}",
-                detail=completed.stderr[-2000:],
-                retryable=False,
-            ),
-            telemetry=WorkerTelemetry(
-                latency_seconds=latency,
-                stdout_excerpt=completed.stdout[-2000:],
-                stderr_excerpt=completed.stderr[-2000:],
-                errors=[completed.stderr[-2000:]] if completed.stderr else [],
-            ),
-        )
-
-    tool_calls, file_writes, final_summary, parse_errors = _parse_stream_json(
-        completed.stdout
-    )
-
-    # Workspace confinement enforcement (ADR-008 invariant).
-    confined: list[FileWrite] = []
-    for fw in file_writes:
         try:
-            _safe_join(workspace, fw.path)
-        except ValueError as exc:
+            completed = subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                timeout=payload.timeout_seconds,
+                cwd=str(workspace),
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
             return WorkerResponse(
                 dispatch_id=payload.dispatch_id,
                 session_id=payload.session_id,
                 status="error",
                 error=WorkerError(
-                    category="workspace_violation",
-                    message=str(exc),
-                    detail=f"file path {fw.path!r} escapes {workspace!s}",
+                    category="timeout",
+                    message=f"`claude -p` exceeded {payload.timeout_seconds}s",
+                    detail=str(exc),
+                    retryable=True,
+                ),
+            )
+
+        latency = time.monotonic() - started
+        if completed.returncode != 0:
+            # claude -p emits its terminal error as a JSON `result` event on
+            # stdout, not stderr. When stderr is empty, scrape the final
+            # event so the harness can report a real reason instead of a
+            # mystery "exited with status 1".
+            detail = completed.stderr.strip()
+            if not detail:
+                for raw in reversed(completed.stdout.splitlines()):
+                    line = raw.strip()
+                    if not line:
+                        continue
+                    try:
+                        event = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(event, dict) and event.get("type") == "result":
+                        pieces = [
+                            f"subtype={event.get('subtype')}",
+                            f"terminal_reason={event.get('terminal_reason')}",
+                            f"num_turns={event.get('num_turns')}",
+                        ]
+                        if event.get("errors"):
+                            pieces.append(f"errors={event['errors']}")
+                        if event.get("result"):
+                            pieces.append(f"result={str(event['result'])[:500]}")
+                        detail = "; ".join(pieces)
+                        break
+                if not detail:
+                    detail = completed.stdout[-2000:]
+            return WorkerResponse(
+                dispatch_id=payload.dispatch_id,
+                session_id=payload.session_id,
+                status="error",
+                error=WorkerError(
+                    category="subprocess_failed",
+                    message=f"`claude -p` exited with status {completed.returncode}",
+                    detail=detail,
                     retryable=False,
                 ),
                 telemetry=WorkerTelemetry(
                     latency_seconds=latency,
                     stdout_excerpt=completed.stdout[-2000:],
+                    stderr_excerpt=completed.stderr[-2000:],
+                    errors=[completed.stderr[-2000:]] if completed.stderr else [],
                 ),
             )
-        confined.append(fw)
 
-    code_change = CodeChange(
-        iri=_make_code_change_iri(payload.dispatch_id),
-        feature_id=payload.feature_id,
-        session_id=payload.session_id,
-        files=confined,
-        summary=final_summary,
-    )
-    telemetry = WorkerTelemetry(
-        turn_count=len(
-            [tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]
+        tool_calls, file_writes, final_summary, parse_errors = _parse_stream_json(
+            completed.stdout
         )
-        or 1,
-        latency_seconds=latency,
-        tool_calls=tool_calls,
-        errors=parse_errors,
-        stdout_excerpt=completed.stdout[-2000:],
-        stderr_excerpt=completed.stderr[-2000:],
-    )
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="ok",
-        code_change=code_change,
-        telemetry=telemetry,
-    )
+
+        # Workspace confinement enforcement (ADR-008 invariant).
+        confined: list[FileWrite] = []
+        for fw in file_writes:
+            try:
+                _safe_join(workspace, fw.path)
+            except ValueError as exc:
+                return WorkerResponse(
+                    dispatch_id=payload.dispatch_id,
+                    session_id=payload.session_id,
+                    status="error",
+                    error=WorkerError(
+                        category="workspace_violation",
+                        message=str(exc),
+                        detail=f"file path {fw.path!r} escapes {workspace!s}",
+                        retryable=False,
+                    ),
+                    telemetry=WorkerTelemetry(
+                        latency_seconds=latency,
+                        stdout_excerpt=completed.stdout[-2000:],
+                    ),
+                )
+            confined.append(fw)
+
+        code_change = CodeChange(
+            iri=_make_code_change_iri(payload.dispatch_id),
+            feature_id=payload.feature_id,
+            session_id=payload.session_id,
+            files=confined,
+            summary=final_summary,
+        )
+        telemetry = WorkerTelemetry(
+            turn_count=len(
+                [tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]
+            )
+            or 1,
+            latency_seconds=latency,
+            tool_calls=tool_calls,
+            errors=parse_errors,
+            stdout_excerpt=completed.stdout[-2000:],
+            stderr_excerpt=completed.stderr[-2000:],
+        )
+        return WorkerResponse(
+            dispatch_id=payload.dispatch_id,
+            session_id=payload.session_id,
+            status="ok",
+            code_change=code_change,
+            telemetry=telemetry,
+        )
+    finally:
+        try:
+            os.unlink(prompt_path)
+        except OSError:
+            pass
 
 
 def run_dispatch(payload: DispatchPayload, *, force_stub: bool | None = None) -> WorkerResponse:

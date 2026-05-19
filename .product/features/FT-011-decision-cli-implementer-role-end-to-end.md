@@ -66,13 +66,22 @@ See `decision-cli-slice-1-bounds.md` §6.1, §7, §8.
 4. Mint a `Dispatch`; emit "dispatch available for code-writer" event.
 5. Wait for the worker's structured response (configurable timeout) — worker conforms to ADR-008.
 6. On success: write `CodeChange` via product-cli's MCP write tool (ADR-009); update Session with token counts, duration, output ref; mark Dispatch complete; emit "dispatch completed".
-7. On worker error: record on Session; mark Dispatch failed; emit completion event with failure.
+7. On worker error: record on Session, include the worker's `error.detail` so the failure reason is visible to the operator (not just the category); mark Dispatch failed; emit completion event with failure.
+
+### Dispatch payload shape
+
+The harness passes the worker a JSON payload containing:
+
+- `dispatch_id`, `session_id`, `feature_id`, `bundle_markdown`, `bundle_hash`, `workspace_path`, `model_id`.
+- `timeout_seconds` — the only upper bound on the headless agent's runtime in slice 1.
+- `max_turns` and `allowed_tools` are **omitted in slice 1**. The worker invokes `claude -p --dangerously-skip-permissions` with no turn cap so the headless agent runs to completion, matching `product-cli`'s working `product implement --headless` invocation. Re-introducing turn caps and tool allowlists is deferred until policy artifacts (ADR-010) land.
 
 ### Invariants
 
 - Every `Session` links to bundle hash, model version, and ValueStream via PROV-O (ADR-004, ADR-005).
 - Every `CodeChange` has a corresponding `Session` reachable via PROV-O (ADR-004).
 - Failed dispatches still produce a Session record — no silent failures.
+- A worker failure's `error.detail` is preserved on the Session and surfaced in the CLI failure message.
 
 ### Error handling
 

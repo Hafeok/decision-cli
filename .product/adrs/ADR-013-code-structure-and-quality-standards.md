@@ -8,6 +8,8 @@ superseded-by: []
 domains: []
 scope: cross-cutting
 content-hash: sha256:d42ad20a72f8e2191c5caf67c078bc2cf19f3b477a123d3e017787a59750a3f1
+source-files:
+- scripts/checks/file-length.sh
 ---
 
 **Status:** Proposed

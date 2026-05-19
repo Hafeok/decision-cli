@@ -145,6 +145,9 @@ pub struct ImplementOutcome {
     pub worker_status: String,
     pub turn_count: u64,
     pub latency_seconds: f64,
+    /// FT-017 finalisation: commit + status transition. `None` when the
+    /// run errored before finalisation could run.
+    pub finalize: Option<crate::finalize::FinalizeOutcome>,
 }
 
 /// Run the implementer dispatch end-to-end.
@@ -224,6 +227,9 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     fs::create_dir_all(&workspace_dir)
         .with_context(|| format!("preparing workspace {}", workspace_dir.display()))?;
 
+    // FT-011: max_turns and allowed_tools are omitted in slice 1. The
+    // worker invokes `claude -p --dangerously-skip-permissions` with no
+    // turn cap; timeout_seconds is the sole upper bound on runtime.
     let dispatch_payload = DispatchPayloadJson {
         dispatch_id: dispatch_iri.as_str().to_string(),
         session_id: session_iri.as_str().to_string(),
@@ -232,16 +238,7 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         bundle_hash: bundle_hash.clone(),
         workspace_path: workspace_dir.canonicalize().unwrap_or(workspace_dir.clone()).to_string_lossy().into_owned(),
         model_id: SLICE1_MODEL_ID.to_string(),
-        max_turns: 8,
-        timeout_seconds: 300,
-        allowed_tools: vec![
-            "Read".into(),
-            "Write".into(),
-            "Edit".into(),
-            "Glob".into(),
-            "Grep".into(),
-            "Bash".into(),
-        ],
+        timeout_seconds: 1800,
     };
     let response = run_worker(args.worker_command.as_deref(), &dispatch_payload)
         .context("running code-writer worker")?;
@@ -250,7 +247,13 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         let detail = response
             .error
             .as_ref()
-            .map(|e| format!("{}: {}", e.category, e.message))
+            .map(|e| {
+                if e.detail.is_empty() {
+                    format!("{}: {}", e.category, e.message)
+                } else {
+                    format!("{}: {}\n--- worker detail ---\n{}", e.category, e.message, e.detail)
+                }
+            })
             .unwrap_or_else(|| "(no error detail)".into());
         // Persist the failure on the Session and bail. Slice 1 still
         // records the Session so audits never see a silent failure.
@@ -320,6 +323,23 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     // -- 7. Persist the updated store. ----------------------------------
     persist_store(&store, &dump_path)?;
 
+    // -- 8. FT-017 finalisation: commit + feature status transition. ----
+    // Runs only after the orchestration record is durable on disk so a
+    // commit/status failure surfaces as a finalisation error without
+    // invalidating the Session record.
+    let finalize_input = crate::finalize::FinalizeInput {
+        repo_root: workdir,
+        product_root: &product_root,
+        feature_id: &args.feature_id,
+        session_iri: session_iri.as_str(),
+        dispatch_iri: dispatch_iri.as_str(),
+        code_change_iri: code_change.iri.as_str(),
+        bundle_hash: &bundle_hash,
+        worker_summary: &code_change.summary,
+    };
+    let finalize_outcome = crate::finalize::finalize_run(&finalize_input)
+        .context("finalising dec implement run (FT-017)")?;
+
     let files_written: Vec<PathBuf> = code_change
         .files
         .iter()
@@ -336,6 +356,7 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         worker_status: response.status.clone(),
         turn_count: response.telemetry.turn_count,
         latency_seconds: response.telemetry.latency_seconds,
+        finalize: Some(finalize_outcome),
     })
 }
 
@@ -639,9 +660,7 @@ struct DispatchPayloadJson {
     bundle_hash: String,
     workspace_path: String,
     model_id: String,
-    max_turns: u32,
     timeout_seconds: u32,
-    allowed_tools: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -692,6 +711,8 @@ struct TelemetryJson {
 struct ErrorJson {
     category: String,
     message: String,
+    #[serde(default)]
+    detail: String,
 }
 
 fn run_worker(
