@@ -1,0 +1,19 @@
+---
+id: TC-034
+title: Feedback class is in the controlled vocabulary
+type: invariant
+status: failing
+validates:
+  features:
+  - FT-028
+  adrs:
+  - ADR-023
+phase: 2
+runner: cargo-test
+runner-args: --package decision-cli --test feedback_class_vocab
+runner-timeout: 120
+---
+
+## Description
+
+[Describe test here.]

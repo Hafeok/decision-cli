@@ -1,7 +1,7 @@
 # decision-cli — Slice 1 Bounds Document
 
 **Status:** Draft
-**Version:** 0.3
+**Version:** 0.4
 **Companion:** Structured specification authored in product-cli (`docs/features/`, `docs/adrs/`, `docs/tests/`).
 
 ---
@@ -140,7 +140,7 @@ For slice 1, the integration is one-directional: decision-cli invokes product-cl
 
 The event substrate is extracted as a separate, independently-versioned Rust crate: **oxi-events**. It is the only piece of decision-cli intended for community contribution.
 
-The Stable Dependency Principle is the architectural rule: oxi-events depends only on substrates more stable than itself (oxigraph, tokio, tokio-stream, axum, serde, tracing). It has no dependency on decision-cli and no awareness of DDD-specific concepts (roles, bundles, sessions, policies). The framework's vocabulary is *mutations, subscriptions, events, delivery*. Everything else is application territory.
+The Stable Dependency Principle is the architectural rule at the crate boundary: oxi-events depends only on substrates more stable than itself (oxigraph, tokio, tokio-stream, axum, serde, tracing). It has no dependency on decision-cli and no awareness of DDD-specific concepts (roles, bundles, sessions, policies). The framework's vocabulary is *mutations, subscriptions, events, delivery*. Everything else is application territory.
 
 The framework crate lives inside decision-cli's workspace initially. Separate-repo extraction is deferred until the API has been pressure-tested by more than one consumer.
 
@@ -168,7 +168,54 @@ The framework crate lives inside decision-cli's workspace initially. Separate-re
 - Subprocess integration with product-cli.
 - A small CLI surface for human-triggered operations in slice 1.
 
-### 5.4 The graph is the state
+### 5.4 Internal organization: vertical slices with SDP
+
+decision-cli's internal structure mirrors product-cli's: vertical slice architecture with the Stable Dependency Principle applied at the slice boundary. Every feature_spec authored in product-cli maps 1:1 to a vertical slice in the codebase. The factory pattern continues — `FeatureSpec` is the unit of authoring, the unit of code organization, and the unit of testing.
+
+```
+crates/decision-cli/src/
+├── core/                          # stable substrate (depended on by everything)
+│   ├── graph/                     # Oxigraph wrapper, named graph management
+│   ├── ontology/                  # base types (Session, Goal, Dispatch)
+│   ├── bundle/                    # SPARQL CONSTRUCT execution framework
+│   ├── harness/                   # generic dispatch loop
+│   └── observability/             # tracing, error types
+└── features/                      # vertical slices (volatile, depend on core)
+    ├── ft_001_init/               # dec init, end-to-end
+    │   ├── command.rs             # CLI handler
+    │   ├── validation.rs          # SHACL specific to init
+    │   ├── query.rs               # SPARQL specific to init
+    │   └── tests.rs               # TCs for this slice
+    ├── ft_002_status/
+    ├── ft_003_implement/
+    └── ...
+```
+
+The SDP stack inside the workspace, from bottom (most stable) to top (most volatile):
+
+```
+oxigraph, tokio, axum, serde      ← external substrate
+    ↑
+oxi-events                        ← graph event substrate
+    ↑
+decision-cli::core                ← decision-cli's stable core
+    ↑
+decision-cli::features::*         ← vertical slices
+    ↑
+main.rs                           ← thinnest wiring layer
+```
+
+Each layer depends only on layers below. Features cannot import other features. `core` cannot import features. `oxi-events` cannot import either. Module visibility (`pub(crate)`, module privacy) enforces the boundaries structurally rather than by convention; lint rules and CI checks tighten the enforcement.
+
+Discipline checks that govern this organization:
+
+- **When two slices grow similar code, the shared pattern migrates to `core`.** Vertical slice tolerates some redundancy for slice independence; vigilance against drift is required. Migrations are themselves feature_specs.
+- **Cross-cutting changes extend `core` first.** Adding a new artifact type or edge predicate is an extension of `core`; slices adopt it as needed. No silent cross-cutting through feature-to-feature edges.
+- **The binary (`main.rs`) is wiring only.** Compose feature handlers, route CLI invocations, nothing else. If business logic creeps into main.rs, it belongs in a feature or core.
+
+The mapping makes the meta-loop's later work mechanical: when bundle queries evolve in Phase C, "where does code for this feature live" answers from the feature_spec ID without further deliberation.
+
+### 5.5 The graph is the state
 
 Graph-as-state over event-sourced. The current graph is the truth; events are derived signals that fire as side-effects of mutations. Named graphs preserve mutation history for audit; PROV-O links events back to their causing mutations and forward to the artifacts they triggered. There is no separate event log; there is one substrate, the graph.
 
@@ -186,6 +233,7 @@ Consequences:
 
 - The oxi-events crate, as described in §5.2, with both delivery transports working.
 - decision-cli binary (`dec`) with its own Oxigraph store for orchestration state.
+- Internal organization: `core/` and `features/` directories established per §5.4; module visibility enforced.
 - Embedded base ontology with SHACL shapes for `dec:ValueStream`, `dec:ValueAction`, and related entities.
 - Bundled definitions: `va:shipped-feature` ValueAction, `engineering-development` ValueStream template.
 - `dec init --template engineering-development` and `dec init --from <path>`: parse, SHACL-validate, resolve, cross-validate, persist, and record provenance per §3.3.
@@ -222,7 +270,7 @@ Consequences:
 
 ### 6.3 Why this scope
 
-Slice 1 proves the riskiest mechanical claims of the architecture: that Rust + Oxigraph carries the harness load, that the bundle-as-SPARQL-CONSTRUCT pattern is natural to author and maintain, that the stateless worker contract holds, that named-graph-per-session gives the audit story we want, that value stream scoping with schema-validated definitions enforces meaningful boundaries from the bootstrap moment, and that oxi-events can be cleanly extracted under SDP. Everything else is value added to a working foundation.
+Slice 1 proves the riskiest mechanical claims of the architecture: that Rust + Oxigraph carries the harness load, that the bundle-as-SPARQL-CONSTRUCT pattern is natural to author and maintain, that the stateless worker contract holds, that named-graph-per-session gives the audit story we want, that value stream scoping with schema-validated definitions enforces meaningful boundaries from the bootstrap moment, that vertical slice organization with SDP scales as more features land, and that oxi-events can be cleanly extracted under SDP. Everything else is value added to a working foundation.
 
 Slice 1 is also the last slice built entirely by humans. Slice 2 onward, the system processes its own feature_specs.
 
@@ -346,11 +394,12 @@ Using `product author` mode with Claude as collaborator, seed feature_specs for 
 Seed ADRs for the structural decisions named in this document:
 
 - oxi-events as a separate crate under SDP
+- **Vertical slice architecture with SDP for decision-cli internals** — every feature_spec maps 1:1 to a feature directory; features depend on `core`, never on each other; `core` is the stable substrate; the binary is wiring only. Cites product-cli's existing precedent.
 - Graph-as-state over event-sourced
 - Subscriptions as first-class graph artifacts
 - PROV-O for events and sessions
 - Value stream as a graph-resident scope, enforced at command time
-- **Definition documents over raw strings for value stream init** — references canonical, schema-validated ValueAction and ValueStream definitions; raw `--stream`/`--value-action` strings are explicitly rejected as a design choice
+- Definition documents over raw strings for value stream init — references canonical, schema-validated ValueAction and ValueStream definitions; raw `--stream`/`--value-action` strings are explicitly rejected as a design choice
 - Embedded base ontology + bundled templates as the slice 1 distribution model
 - Worker contract: stateless bundle-in / artifact-out
 - product-cli integration via subprocess + MCP for slice 1
@@ -371,6 +420,8 @@ Seed test criteria for what "working" means at the slice boundary:
 - exit-criteria: events emitted by GraphWriter are queryable in the graph with monotonic sequence numbers.
 - exit-criteria: outbox crash recovery — kill decision-cli mid-dispatch, restart, the in-flight dispatch resumes.
 - exit-criteria: SSE delivery — a remote Python worker receives a dispatch event within one second of emission.
+- **invariant: every feature_spec implemented in slice 1 has a corresponding `crates/decision-cli/src/features/ft_NNN_*/` directory; no business logic lives in `main.rs` or outside `core/` and `features/`.**
+- **invariant: `cargo deps` or equivalent shows no edges from `features::*` to other `features::*` modules; all feature-to-feature interaction goes through `core`.**
 - invariant: every `Session` record links to its bundle hash, model version, and value stream via PROV-O.
 - invariant: every `CodeChange` has a corresponding `Session` record reachable via PROV-O.
 - invariant: every artifact in decision-cli's graph (Session, Goal, Dispatch, Event) carries a `dec:inStream` link.

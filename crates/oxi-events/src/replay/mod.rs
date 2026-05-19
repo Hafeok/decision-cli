@@ -33,17 +33,15 @@
 //!   caller decides whether to persist the highest seq it has
 //!   processed and how to resume.
 
-use std::fmt::Write as _;
+mod sparql;
 
 use oxigraph::sparql::{Query, QueryResults};
 use oxigraph::store::Store;
 use serde::{Deserialize, Serialize};
 
 use crate::error::ReplayError;
-use crate::vocab::{
-    IRI_OXI_EMITTED_AT, IRI_OXI_EVENT, IRI_OXI_GRAPH_EVENTS, IRI_OXI_MATCHED_SUBSCRIPTION,
-    IRI_OXI_PUBLISHED, IRI_OXI_SEQ, IRI_OXI_STATUS, IRI_PROV_WAS_GENERATED_BY,
-};
+
+use sparql::{build_query, literal_value, named_node_iri, parse_bool_literal, parse_u64_literal};
 
 /// A SPARQL `FILTER` body fragment, applied to each candidate event row.
 ///
@@ -192,10 +190,6 @@ pub struct ReplayedEvent {
 pub fn replay(store: &Store, request: &ReplayRequest) -> Result<Vec<ReplayedEvent>, ReplayError> {
     let sparql = build_query(request);
 
-    // Pre-parse the query so an invalid filter is reported as
-    // ReplayError::InvalidFilter rather than a store-side evaluation
-    // error. FT-005 §Error handling requires the filter check to happen
-    // "at request time" — i.e. before we read the store.
     if let Err(err) = Query::parse(&sparql, None) {
         return Err(match &request.filter {
             Some(_) => ReplayError::InvalidFilter(err.to_string()),
@@ -244,10 +238,8 @@ pub fn replay(store: &Store, request: &ReplayRequest) -> Result<Vec<ReplayedEven
         let published_bool = parse_bool_literal(published, "published")?;
         let status_str = literal_value(status, "status")?;
 
-        // Defence-in-depth: SPARQL ORDER BY guarantees ascending, but
-        // re-assert the strict-monotonic invariant so a future schema
-        // mistake (e.g. duplicate seq) surfaces as a clear error rather
-        // than as silently mis-ordered output (FT-005 §Invariants).
+        // Defence-in-depth: re-assert strict-monotonic so a future
+        // schema mistake surfaces as a clear error.
         if let Some(prev) = last_seq {
             if seq <= prev {
                 return Err(ReplayError::Internal(format!(
@@ -269,79 +261,4 @@ pub fn replay(store: &Store, request: &ReplayRequest) -> Result<Vec<ReplayedEven
     }
 
     Ok(out)
-}
-
-fn build_query(request: &ReplayRequest) -> String {
-    let mut q = String::with_capacity(512);
-    q.push_str("SELECT ?event ?seq ?mutation ?subscription ?emittedAt ?published ?status FROM <");
-    q.push_str(IRI_OXI_GRAPH_EVENTS);
-    q.push_str("> WHERE { ?event a <");
-    q.push_str(IRI_OXI_EVENT);
-    q.push_str("> ; <");
-    q.push_str(IRI_OXI_SEQ);
-    q.push_str("> ?seq ; <");
-    q.push_str(IRI_PROV_WAS_GENERATED_BY);
-    q.push_str("> ?mutation ; <");
-    q.push_str(IRI_OXI_MATCHED_SUBSCRIPTION);
-    q.push_str("> ?subscription ; <");
-    q.push_str(IRI_OXI_EMITTED_AT);
-    q.push_str("> ?emittedAt ; <");
-    q.push_str(IRI_OXI_PUBLISHED);
-    q.push_str("> ?published ; <");
-    q.push_str(IRI_OXI_STATUS);
-    q.push_str("> ?status .");
-
-    // since_seq is inclusive; omit the filter when 0 to keep the query
-    // compact and the optimiser happy.
-    if request.since_seq > 0 {
-        let _ = write!(q, " FILTER(?seq >= {}) ", request.since_seq);
-    }
-    if let Some(until) = request.until_seq {
-        let _ = write!(q, " FILTER(?seq <= {until}) ");
-    }
-    if let Some(filter) = request.filter.as_ref() {
-        q.push_str(" FILTER(");
-        q.push_str(filter.as_str());
-        q.push_str(") ");
-    }
-    q.push_str("} ORDER BY ?seq");
-    if let Some(limit) = request.limit {
-        let _ = write!(q, " LIMIT {limit}");
-    }
-    q
-}
-
-fn named_node_iri(term: &oxigraph::model::Term, name: &str) -> Result<String, ReplayError> {
-    match term {
-        oxigraph::model::Term::NamedNode(n) => Ok(n.as_str().to_string()),
-        _ => Err(ReplayError::Internal(format!(
-            "replay row ?{name} is not a named node"
-        ))),
-    }
-}
-
-fn literal_value(term: &oxigraph::model::Term, name: &str) -> Result<String, ReplayError> {
-    match term {
-        oxigraph::model::Term::Literal(lit) => Ok(lit.value().to_string()),
-        _ => Err(ReplayError::Internal(format!(
-            "replay row ?{name} is not a literal"
-        ))),
-    }
-}
-
-fn parse_u64_literal(term: &oxigraph::model::Term, name: &str) -> Result<u64, ReplayError> {
-    let s = literal_value(term, name)?;
-    s.parse::<u64>()
-        .map_err(|e| ReplayError::Internal(format!("replay row ?{name} parse u64: {e}")))
-}
-
-fn parse_bool_literal(term: &oxigraph::model::Term, name: &str) -> Result<bool, ReplayError> {
-    let s = literal_value(term, name)?;
-    match s.as_str() {
-        "true" | "1" => Ok(true),
-        "false" | "0" => Ok(false),
-        other => Err(ReplayError::Internal(format!(
-            "replay row ?{name} unrecognised boolean literal: {other}"
-        ))),
-    }
 }

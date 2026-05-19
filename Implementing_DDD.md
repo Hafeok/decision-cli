@@ -229,13 +229,54 @@ decision-cli (binary `dec`) follows the single-command pattern of `az`, `gcloud`
 
 Goals correspond to value actions in DDD vocabulary. The mature CLI vocabulary describes work in DDD terms (decision, role, session, goal, value action) rather than in CLI mechanics (pipeline, job, task).
 
-### Stable Dependency Principle
+### Stable Dependency Principle at two layers
 
-Governs the dependency direction:
+SDP governs dependency direction at both the **crate boundary** and the **slice boundary inside decision-cli**.
+
+**At the crate boundary:**
 
 - oxi-events depends only on substrates more stable than itself (oxigraph, tokio, tokio-stream, axum, serde, tracing). No dependency on decision-cli; no awareness of DDD concepts.
 - decision-cli depends on oxi-events and on product-cli (initially via subprocess invocation).
 - The framework crate lives inside decision-cli's workspace initially; separate-repo extraction is deferred until the API has been pressure-tested by more than one consumer.
+
+**At the slice boundary inside decision-cli** (see "Internal organization" below):
+
+- `decision-cli::core` is the stable substrate within the crate; features depend on it.
+- `decision-cli::features::*` are vertical slices; they depend on `core` but never on each other.
+- The binary (`main.rs`) is wiring only.
+
+The two levels of SDP compose: stability flows up the stack from external substrates → oxi-events → decision-cli::core → decision-cli::features::* → main.rs. Each layer depends only on layers below.
+
+### Internal organization: vertical slices with SDP
+
+decision-cli's internal structure follows vertical slice architecture, mirroring product-cli's organization. Every feature_spec authored in product-cli maps 1:1 to a vertical slice in the codebase. This makes `FeatureSpec` the unit of authoring, the unit of code organization, and the unit of testing — the factory pattern continues into the source tree.
+
+```
+crates/decision-cli/src/
+├── core/                          # stable substrate
+│   ├── graph/                     # Oxigraph wrapper, named graph management
+│   ├── ontology/                  # base types (Session, Goal, Dispatch)
+│   ├── bundle/                    # SPARQL CONSTRUCT execution framework
+│   ├── harness/                   # generic dispatch loop
+│   └── observability/             # tracing, error types
+└── features/                      # vertical slices
+    ├── ft_001_init/               # dec init, end-to-end
+    │   ├── command.rs             # CLI handler
+    │   ├── validation.rs          # SHACL specific to init
+    │   ├── query.rs               # SPARQL specific to init
+    │   └── tests.rs               # TCs for this slice
+    └── ...
+```
+
+Each `features/ft_NNN_<title>/` directory contains everything the slice needs: command handler, feature-specific queries, validation logic, tests. Slices depend on `core`; they cannot import from other features (module visibility enforces this).
+
+Discipline checks that govern this organization:
+
+- **Pattern migration to core.** When two slices grow similar code, the shared pattern migrates to `core`. Vertical slice tolerates some redundancy for slice independence; vigilance against drift is required. Migrations are themselves feature_specs.
+- **Cross-cutting changes extend core first.** Adding a new artifact type or edge predicate is an extension of `core`; slices adopt it. No silent cross-cutting through feature-to-feature edges.
+- **Binary is wiring only.** `main.rs` composes feature handlers and routes CLI invocations. No business logic.
+
+The feature_spec ↔ vertical slice mapping makes the meta-loop's later work mechanical: when bundle queries evolve in Phase C, "where does code for this feature live" answers from the feature_spec ID without further deliberation.
 
 ### The platform property
 
@@ -259,6 +300,7 @@ The temptation with a complete architecture is to build Phase 0 perfectly (full 
 - One Python worker calling Claude with structured output
 - Named-graph-per-session with PROV-O annotations
 - Hardcoded model binding, hardcoded routing
+- Internal organization with `core/` and `features/` directories established from the first commit
 - CLI: `dec init`, `dec implement FT-XXX`, `dec events tail`, `dec session show`, `dec health`
 
 **Deliberately deferred:** interpretation pairing, feedback flow lifecycle, audits beyond SHACL, model catalog as artifact, policy as artifact, multi-role flow, human checkpoints, the meta-loop, multi-product orchestration, the full `dec drive`/`watch`/`schedule` vocabulary.

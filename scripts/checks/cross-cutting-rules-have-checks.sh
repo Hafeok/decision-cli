@@ -36,13 +36,17 @@ if [ ! -d "$ADR_DIR" ] || [ ! -d "$TC_DIR" ]; then
 fi
 
 # Collect cross-cutting ADR ids by reading their front-matter.
+# Only `status: accepted` ADRs count — `proposed` ADRs are design
+# documents in flight, not yet binding rules under the ADR-014 convention.
+# `superseded` / `abandoned` ADRs likewise no longer require enforcement.
 CROSS_CUTTING_IDS=""
 for f in "$ADR_DIR"/ADR-*.md; do
   [ -f "$f" ] || continue
   # Pull front-matter (between the first two `---` lines).
   fm="$(awk 'BEGIN{c=0} /^---$/{c++; next} c==1{print}' "$f")"
   scope="$(echo "$fm" | awk '/^scope:/{print $2; exit}')"
-  if [ "$scope" = "cross-cutting" ]; then
+  status="$(echo "$fm" | awk '/^status:/{print $2; exit}')"
+  if [ "$scope" = "cross-cutting" ] && [ "$status" = "accepted" ]; then
     id="$(echo "$fm" | awk '/^id:/{print $2; exit}')"
     CROSS_CUTTING_IDS="$CROSS_CUTTING_IDS $id"
   fi

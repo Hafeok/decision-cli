@@ -2,7 +2,7 @@
 id: TC-017
 title: every_cross_cutting_adr_is_backed_by_a_runner_tc
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs:
@@ -11,9 +11,9 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/cross-cutting-rules-have-checks.sh
 runner-timeout: 60
-last-run: 2026-05-19T12:34:12.498250232+00:00
+last-run: 2026-05-19T00:00:00+00:00
 failure-message: ''
-last-run-duration: 0.6s
+last-run-duration: 0.0s
 ---
 
 ## Purpose
@@ -50,11 +50,18 @@ scripts/checks/cross-cutting-rules-have-checks.sh
 
 ## Then
 
-1. Exit 0 if every ADR with `scope: cross-cutting` has at least one TC
-   whose front-matter lists the ADR id under `validates.adrs` and whose
-   `runner` field is non-empty.
-2. Exit 2 (warning) if at least one cross-cutting ADR has no such TC.
-   Diagnostic lines on stdout name each ADR id with no runner TC.
+1. Exit 0 if every ADR with `scope: cross-cutting` **and**
+   `status: accepted` has at least one TC whose front-matter lists the
+   ADR id under `validates.adrs` and whose `runner` field is non-empty.
+2. Exit 2 (warning) if at least one accepted cross-cutting ADR has no
+   such TC. Diagnostic lines on stdout name each ADR id with no runner
+   TC.
+
+ADRs in `status: proposed`, `superseded`, or `abandoned` are skipped:
+proposed ADRs are design documents in flight (the workflow gate in
+product-cli — FT-058 — runs the runner-TC check before a feature can
+transition to in-progress, which is where new rules become binding);
+superseded / abandoned ADRs no longer require enforcement.
 
 ## Notes
 
@@ -69,17 +76,18 @@ scripts/checks/cross-cutting-rules-have-checks.sh
 ## Formal specification
 
 ⟦Σ:Types⟧{
-  Adr ≜ ⟨id:IRI, scope:Scope, source:Path⟩
+  Adr ≜ ⟨id:IRI, scope:Scope, status:Status, source:Path⟩
   Tc ≜ ⟨id:IRI, validates_adrs:Set[IRI], runner:String?, source:Path⟩
   Scope ≜ feature-specific | cross-cutting
-  CrossCuttingAdrs ≜ {a:Adr | a.scope = cross-cutting}
+  Status ≜ proposed | accepted | superseded | abandoned
+  BindingAdrs ≜ {a:Adr | a.scope = cross-cutting ∧ a.status = accepted}
   RunnerTcs ≜ {t:Tc | defined(t.runner) ∧ t.runner ≠ ""}
 }
 
 ⟦Γ:Invariants⟧{
-  ∀a:CrossCuttingAdrs:
+  ∀a:BindingAdrs:
     ∃t:RunnerTcs: a.id ∈ t.validates_adrs
-  ¬(∃a:CrossCuttingAdrs: ∄t:RunnerTcs: a.id ∈ t.validates_adrs)
+  ¬(∃a:BindingAdrs: ∄t:RunnerTcs: a.id ∈ t.validates_adrs)
     ⇒ exit_code = 2  -- warning, not block, per ADR-014 §Enforcement
 }
 

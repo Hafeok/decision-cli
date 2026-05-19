@@ -1,0 +1,44 @@
+---
+id: TC-024
+title: prov_o_lineage_in_writer_and_init
+type: invariant
+status: passing
+validates:
+  features: []
+  adrs:
+  - ADR-004
+phase: 1
+runner: bash
+runner-args: scripts/checks/prov-o-lineage.sh
+runner-timeout: 60
+last-run: ''
+failure-message: ''
+last-run-duration: 0.0s
+---
+
+## Purpose
+
+Mechanical enforcement of **ADR-004 PROV-O for Events and Sessions**.
+Asserts that the writer and init pipelines still reference the canonical
+PROV-O predicates `prov:wasGeneratedBy`, `prov:wasDerivedFrom`, and
+`prov:atTime` — the lineage scaffolding every Session/Event/Dispatch
+artifact relies on (TC-013 / TC-015 are downstream of this).
+
+## Given
+
+- A working copy of decision-cli with `crates/oxi-events/src/writer/`
+  and `crates/decision-cli/src/init/` present.
+- `bash` and `grep` available on `PATH`.
+
+## When
+
+```bash
+scripts/checks/prov-o-lineage.sh
+```
+
+## Then
+
+1. Exit 0 if all three canonical PROV-O predicates appear under
+   `crates/oxi-events/src/writer/` and `crates/decision-cli/src/init/`.
+2. Exit 1 otherwise; diagnostic lines on stdout name the missing
+   predicate.

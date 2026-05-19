@@ -8,6 +8,8 @@ superseded-by: []
 domains: []
 scope: cross-cutting
 content-hash: sha256:7887f03ab2c496f653c1403c2380eb6e986cca2aa98da0bfcc1919035173b53f
+source-files:
+- scripts/checks/prov-o-lineage.sh
 ---
 
 ## Context

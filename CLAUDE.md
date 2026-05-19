@@ -15,21 +15,38 @@ For the full architectural picture, read [`docs/ddd/Implementing_DDD.md`](docs/d
 ```
 .
 ├── crates/
-│   ├── oxi-events/          # Graph-native event substrate. SDP boundary: depends only on
-│   │                        # oxigraph, tokio, tokio-stream, axum, serde, tracing. NEVER
-│   │                        # imports from decision-cli or references DDD concepts.
-│   └── decision-cli/        # The orchestration crate (binary name `dec`).
-│                            # Depends on oxi-events.
+│   ├── oxi-events/                # Graph-native event substrate. SDP boundary at the crate
+│   │                              # level: depends only on oxigraph, tokio, tokio-stream,
+│   │                              # axum, serde, tracing. NEVER imports from decision-cli
+│   │                              # or references DDD concepts.
+│   └── decision-cli/              # The orchestration crate (binary name `dec`).
+│       └── src/
+│           ├── core/              # SDP boundary at the slice level: stable substrate
+│           │                      # within decision-cli. Depended on by all features.
+│           │                      # NEVER imports from features::*.
+│           │   ├── graph/         # Oxigraph wrapper, named graph management
+│           │   ├── ontology/      # base types (Session, Goal, Dispatch)
+│           │   ├── bundle/        # SPARQL CONSTRUCT execution
+│           │   ├── harness/       # generic dispatch loop
+│           │   └── observability/ # tracing, error types
+│           ├── features/          # Vertical slices, one per feature_spec.
+│           │   ├── ft_001_init/   # dec init, end-to-end (command, validation, query, tests)
+│           │   ├── ft_002_status/
+│           │   ├── ft_003_implement/
+│           │   └── ...            # NEVER import from other features::*
+│           └── main.rs            # Wiring only. No business logic.
 ├── workers/
-│   └── code-writer/         # Python worker for the implementer role. Stateless: receives
-│                            # bundles, calls Claude, returns structured CodeChange artifacts.
+│   └── code-writer/               # Python worker for the implementer role. Stateless:
+│                                  # receives bundles, calls Claude, returns CodeChange.
 ├── docs/
-│   ├── ddd/                 # DDD foundational docs (read-only reference).
-│   ├── features/            # product-cli features for decision-cli's own engineering work.
-│   ├── adrs/                # product-cli ADRs.
-│   ├── tests/               # product-cli test criteria.
-│   └── product.toml         # product-cli configuration for this repo.
-├── decision-cli-slice-1-bounds.md   # Current scope and boundaries.
+│   ├── ddd/                       # DDD foundational docs (read-only reference).
+│   ├── features/                  # product-cli features for decision-cli's engineering work.
+│   ├── adrs/                      # product-cli ADRs.
+│   ├── tests/                     # product-cli test criteria.
+│   └── product.toml               # product-cli configuration for this repo.
+├── streams/
+│   └── decision-cli-development.ttl  # ValueStream definition for `dec init --from`
+├── decision-cli-slice-1-bounds.md    # Current scope and boundaries.
 └── README.md
 ```
 
@@ -44,11 +61,25 @@ For the full architectural picture, read [`docs/ddd/Implementing_DDD.md`](docs/d
 
 Direct file edits in `crates/` and `workers/` should happen only as the *implementation* of an existing feature_spec, after the spec has been authored in product-cli and any required ADRs are in place. If you find yourself wanting to make a structural change with no corresponding feature_spec or ADR, stop and author one first.
 
-## The line that must not be crossed
+## The line that must not be crossed (crate-level SDP)
 
-`crates/oxi-events/` cannot depend on `crates/decision-cli/`. It cannot reference DDD concepts (roles, bundles, sessions, policies, model bindings, autonomy levels). Its public API speaks only of mutations, subscriptions, events, and delivery. This is the Stable Dependency Principle — see [`decision-cli-slice-1-bounds.md`](decision-cli-slice-1-bounds.md) §4.1.
+`crates/oxi-events/` cannot depend on `crates/decision-cli/`. It cannot reference DDD concepts (roles, bundles, sessions, policies, model bindings, autonomy levels). Its public API speaks only of mutations, subscriptions, events, and delivery. This is the Stable Dependency Principle at the crate boundary — see [`decision-cli-slice-1-bounds.md`](decision-cli-slice-1-bounds.md) §5.1.
 
 If a feature_spec asks for something in oxi-events that requires DDD vocabulary, that's a smell. The feature belongs in decision-cli, with oxi-events providing only the generic substrate it needs.
+
+## Discipline within decision-cli (slice-level SDP)
+
+decision-cli follows vertical slice architecture with SDP applied inside the crate as well. Two boundaries here are as load-bearing as the oxi-events boundary above:
+
+**`core/` is depended on; never depends on `features/`.** Pure substrate. Graph access, base ontology types, the bundle assembly framework, the harness dispatch loop, observability scaffolding. When you find yourself wanting to import from `features::*` inside `core/`, that's the smell — the abstraction belongs in core or the feature needs different shape. The compile fails if you try; module visibility enforces this structurally.
+
+**Features depend on `core/`; never on other features.** Each `features/ft_NNN_<title>/` directory is self-contained: command handler, feature-specific SPARQL, feature-specific validation, feature-specific tests. The 1:1 mapping with product-cli feature_specs is the convention — when product-cli says implement FT-007, the code goes in `features/ft_007_<title>/`. Cross-feature dependencies are not allowed; if two features need shared logic, that logic lives in `core/`.
+
+**The binary (`main.rs`) is wiring only.** It composes feature handlers and routes CLI invocations. No business logic in main.rs; if you're tempted, the logic belongs in a feature or core.
+
+**When patterns recur across features, migrate to core.** Vertical slice tolerates some redundancy in exchange for slice independence. When two slices grow similar code, that pattern is a candidate for `core` — author a feature_spec for the core extension, then individual slices adopt it. Migrations are themselves feature_specs, not silent refactors.
+
+**Cross-cutting changes (new artifact types, new edge predicates) extend `core` first.** The slice introducing the change authors a feature_spec for the core extension; subsequent slices adopt it as needed. No silent cross-cutting through feature/feature edges.
 
 ## Common tasks
 
@@ -77,7 +108,7 @@ product feature new FT-007 --title "Subscription registry"
 
 ```bash
 # First-time setup: create orchestration store, seed v0 subscriptions
-dec init
+dec init --from ./streams/decision-cli-development.ttl
 
 # Once a feature_spec exists and is ready for implementation:
 dec implement FT-007
@@ -112,17 +143,18 @@ Slice 1 exposes a minimal subset of the `dec` command surface. The full vocabula
 - `dec product <subcommand>` — engineering artifact authoring (folds in once product-cli is absorbed into the workspace).
 - `dec events`, `dec session`, `dec goal`, `dec role`, `dec model`, `dec policy`, `dec subscription`, `dec checkpoint` — inspection and management of graph entities.
 
-Slice 1 implements only `dec init`, `dec implement`, `dec events`, `dec session`, and `dec health`. Later slices add the rest as the corresponding architectural pieces land (interpretation pairing, feedback flow, policy artifacts, the meta-loop).
+Slice 1 implements only `dec init`, `dec status`, `dec implement`, `dec events`, `dec session`, and `dec health`. Later slices add the rest as the corresponding architectural pieces land (interpretation pairing, feedback flow, policy artifacts, the meta-loop).
 
 ## Conventions
 
 ### Rust
 
 - Edition 2021. Format with `cargo fmt`. Lint with `cargo clippy --workspace -- -D warnings`.
-- Errors: `thiserror` for libraries (including `oxi-events`), `anyhow` for binaries (`decision-cli`).
+- Errors: `thiserror` for libraries (including `oxi-events` and `core/`), `anyhow` for binaries and features (`features/*`).
 - Async: tokio. Tracing: the `tracing` crate.
 - Public APIs in `oxi-events` are documented with rustdoc; private items optional.
-- Tests live alongside the code (`#[cfg(test)] mod tests`) for unit tests; integration tests in each crate's `tests/` directory.
+- `core/` exposes minimal `pub` surface (use `pub(crate)` aggressively); features access only what core deliberately exports.
+- Each feature directory has its own integration test file (`features/ft_NNN_*/tests.rs`); cross-feature integration tests live in `crates/decision-cli/tests/`.
 
 ### Python (workers)
 
@@ -145,86 +177,6 @@ Commits that don't trace to an artifact should be rare and explainable (typos, f
 
 Every feature_spec exits with at least one test criterion (TC). The TC's success criteria are the acceptance test. Failing TCs block release per fitness function policy. When implementing a feature, the TCs are the definition of done — not "the code compiles" or "I think it works."
 
-## Rules live in `.product/`
-
-Code-quality rules and other architectural fitness functions for decision-cli are tracked **inside this repository's `.product/` graph** — not in a CONTRIBUTING.md, not in a CI yaml fragment, not in tribal knowledge. The convention is governed by [ADR-014](.product/adrs/ADR-014-architectural-fitness-functions-tracked-as-product.md) and operationalised by [FT-015](.product/features/FT-015-use-the-internal-product-cli-graph-as-the-source-o.md). The first rule landed under this convention is [ADR-013](.product/adrs/ADR-013-code-structure-and-quality-standards.md) (code structure and quality), with its initial mechanical check shipping as [TC-016](.product/tests/TC-016-source-file-length-within-adr-013-limits.md) running `scripts/checks/file-length.sh`.
-
-### The contract in one paragraph
-
-A rule is an ADR with `scope: cross-cutting`. Its mechanical check is a TC with `runner: bash` (or `pytest` / `cargo-test`) and `validates.adrs: [ADR-XXX]`. Both surface in every feature's `product context FT-XXX` bundle automatically. `product verify --platform` runs every cross-cutting TC on every PR. **Exit 0 = merge, exit 1 = block, exit 2 = warn** (see ADR-014 §"Enforcement is automated"). There is no second registry, no separate "fitness functions" config, no rules DSL — only ADRs, TCs, and the existing `product verify --platform` pipeline.
-
-### Worked example — landing a new rule end-to-end
-
-Suppose you want to add a rule: *"Cargo dependencies must not introduce a new GPL-licensed transitive crate."* The flow:
-
-1. **Author the rule ADR.**
-
-    ```bash
-    product author adr
-    # → describe the rule; product-cli scaffolds the ADR. Or, scripted:
-    product adr new "No GPL-licensed Cargo transitive dependencies"
-    product adr scope ADR-NNN cross-cutting
-    product adr domain ADR-NNN --add security
-    # Edit .product/adrs/ADR-NNN-*.md to fill in the rule body — what it
-    # forbids, why, the threshold, the script path, the rationale.
-    ```
-
-2. **Write the enforcement script.** Land `scripts/checks/no-gpl-deps.sh`. It exits 0 on a clean tree, 1 on a hard violation, 2 in a warning band (if applicable). Diagnostics go to stdout so `product verify` captures them. Dependencies are limited to what is universally available on a CI runner.
-
-3. **Author the rule TC.**
-
-    ```bash
-    product test new "no GPL-licensed transitive Cargo dependencies" --type invariant
-    product test runner TC-NNN --runner bash \
-      --args scripts/checks/no-gpl-deps.sh --timeout 60s
-    # Then edit the TC front-matter so validates.adrs lists the parent ADR
-    # (and validates.features stays empty — rules are cross-cutting).
-    ```
-
-4. **Couple the script to the ADR for drift detection.**
-
-    ```bash
-    product adr source-files ADR-NNN --add scripts/checks/no-gpl-deps.sh
-    # `product drift check` will now flag changes to the script that
-    # aren't paired with an ADR amendment.
-    ```
-
-5. **Apply atomically and verify.**
-
-    ```bash
-    # If you authored through `product request`:
-    product request apply
-    # Validate the graph and run the platform pipeline:
-    product graph check
-    product verify --platform
-    ```
-
-6. **Push.** CI's `product verify --platform` job runs the new TC against the PR. Exit 0 → merge. Exit 1 → block. Exit 2 → warn.
-
-### Changing a rule
-
-Rule ADRs use the standard accepted-ADR amend flow:
-
-```bash
-product adr amend ADR-NNN --reason "Bump the file-length hard limit from 400 to 500 lines for Rust generated code"
-```
-
-The amendment is recorded with a previous-hash in `.product/requests.jsonl`; if the enforcement script changes too, both land in the same request so the audit trail is atomic.
-
-### Retiring a rule
-
-```bash
-product adr status ADR-NNN superseded --by ADR-MMM   # replaced by a new rule
-# or
-product adr status ADR-NNN abandoned                 # withdrawn outright
-```
-
-Orphan TCs (cross-cutting TCs whose parent rule was abandoned) surface in `product graph check` as W002 until they are deleted or relinked. Don't delete the TC pre-emptively — `graph check` is the right place to discover and triage them.
-
-### What this means for you, the implementing agent
-
-Every implementation session in decision-cli — yours included — pulls a context bundle that already contains every cross-cutting ADR. That includes the code-quality rules. If your edits violate one, `product verify --platform` will catch it on the PR; if your edits are *about* one (changing the threshold, replacing the script), the request log will demand the corresponding ADR amendment in the same atomic write. Don't write rules into comments, READMEs, or commit messages. Write them as ADR + TC and let the convention do the work.
-
 ## When something is unclear
 
 If a feature_spec's context doesn't contain enough to act on confidently:
@@ -242,4 +194,3 @@ Do not improvise on architectural decisions. Architectural choices belong in ADR
 - [`docs/ddd/Implementing_DDD.md`](docs/ddd/Implementing_DDD.md) — implementation architecture (primary reference).
 - [`decision-cli-slice-1-bounds.md`](decision-cli-slice-1-bounds.md) — what slice 1 is and is not.
 - [product-cli](https://github.com/Hafeok/product-cli) — the engineering process system.
-- [`.product/adrs/ADR-014-architectural-fitness-functions-tracked-as-product.md`](.product/adrs/ADR-014-architectural-fitness-functions-tracked-as-product.md) — the convention codified by the "Rules live in `.product/`" section above.
