@@ -216,6 +216,13 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         .commit(mint)
         .context("committing Session + Dispatch artifacts")?;
 
+    // Flush the in-memory store to disk immediately so the
+    // dispatch-available event is observable by `dec events since` while
+    // the worker is still running. Without this, all events would land
+    // only after step 7 (potentially 30 minutes later), defeating the
+    // point of having a live event substrate.
+    persist_store(&store, &dump_path)?;
+
     // -- 4. Spawn the code-writer worker (one-shot mode). ---------------
     let workspace_dir = match args.workspace.clone() {
         Some(p) => p,
@@ -256,7 +263,10 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
             })
             .unwrap_or_else(|| "(no error detail)".into());
         // Persist the failure on the Session and bail. Slice 1 still
-        // records the Session so audits never see a silent failure.
+        // records the Session so audits never see a silent failure
+        // (FT-011 §Invariants). The persist_store call must run before
+        // the early return — otherwise the failure record dies with the
+        // process and the on-disk Session is stuck at "(pending)".
         let mut fail = Mutation::default();
         let g: GraphName = orchestration_graph().into_owned().into();
         fail.inserts.push(Quad::new(
@@ -268,6 +278,7 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         writer
             .commit(fail.with_cause("dec implement: worker failure"))
             .ok();
+        let _ = persist_store(&store, &dump_path);
         return Err(anyhow!("code-writer worker reported failure: {detail}"));
     }
 

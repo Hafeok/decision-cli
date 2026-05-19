@@ -2,6 +2,7 @@
 .product/graph/
 .product/sessions/
 .product/checklist.md
+.product.lock
 
 # Rust
 /target/

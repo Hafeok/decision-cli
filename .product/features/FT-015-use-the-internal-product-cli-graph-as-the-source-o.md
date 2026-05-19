@@ -13,10 +13,10 @@ tests:
 domains: []
 domains-acknowledged:
   ADR-012: FT-015 ships no dec command surface; per-stream working directories are not exercised by this feature's deliverables.
+  ADR-005: FT-015 modifies the .product/ graph and scripts/ — both repo-level, not value-stream-scoped artifacts. ValueStream enforcement does not apply.
   ADR-001: FT-015 ships convention and documentation only — no oxi-events code changes, so the SDP boundary is not exercised by this feature.
   ADR-004: FT-015 is documentation and scaffolding — no Session, Event, or Bundle artifact is produced, so PROV-O linkage does not apply.
   ADR-002: FT-015 ships scripts, TCs, and CLAUDE.md edits — no orchestration store mutations, so the graph-as-state principle is not exercised.
-  ADR-005: FT-015 modifies the .product/ graph and scripts/ — both repo-level, not value-stream-scoped artifacts. ValueStream enforcement does not apply.
 ---
 
 ## Description
