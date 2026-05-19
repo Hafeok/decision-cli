@@ -1,12 +1,13 @@
 ---
 id: ADR-023
 title: Feedback controlled vocabulary
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:fb5297f1fdcf485abb02cc5c25c294f3b6983adfa2d96b24e9f34c703b8193c1
 source-files:
 - crates/decision-cli/src/core/feedback/class.rs
 ---

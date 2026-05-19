@@ -1,12 +1,13 @@
 ---
 id: ADR-027
 title: Authority declarations in the role catalog
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:906cf71e668e17f2b48b0f7d3c1095ee5443b8813b9b033f4432bdd73968a62f
 source-files:
 - crates/decision-cli/src/core/role_catalog/seeds/implementer-authority.ttl
 - crates/decision-cli/src/core/role_catalog/seeds/verifier-authority.ttl

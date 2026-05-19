@@ -1,12 +1,13 @@
 ---
 id: ADR-022
 title: Feedback as a first-class flow class
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:ec662e4e6c682bf2caa17b40631533d3b68a78af7f2b5b7cc56838ac92e2a31d
 source-files:
 - crates/decision-cli/src/core/feedback/mod.rs
 - crates/decision-cli/src/core/ontology/feedback.ttl

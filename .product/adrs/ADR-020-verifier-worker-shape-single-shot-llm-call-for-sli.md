@@ -1,12 +1,13 @@
 ---
 id: ADR-020
 title: 'Verifier worker shape: single-shot LLM call for slice 2'
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:8ccc04528970449ed6309622b27462ec167383888592308d1607d788b8ed7fa4
 ---
 
 ## Context
