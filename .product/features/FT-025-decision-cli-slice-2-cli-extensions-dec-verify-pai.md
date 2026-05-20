@@ -2,7 +2,7 @@
 id: FT-025
 title: 'decision-cli: Slice 2 CLI extensions (dec verify, paired session display)'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-012
 - FT-021
@@ -16,20 +16,20 @@ tests:
 - TC-031
 domains: []
 domains-acknowledged:
-  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-025 runs after the working directory is resolved and does not re-discover it.
-  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-025 does not introduce or modify a role catalog entry.
+  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-025 does not author or modify a fitness-function artifact.
+  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-025 neither emits nor routes feedback.
   ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-025 produces no new Session or event type and inherits lineage from the harness.
   ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-025 runs inside an already-scoped command and does not introduce a new scope check.
-  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-025's code conforms to cargo/clippy/rustfmt and the module-size convention. ADR-013 itself is owned by FT-014.
-  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-025 has no feedback to gate.
+  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-025 neither emits nor consumes verdicts.
   ADR-001: ADR-001 governs the oxi-events crate boundary; FT-025 does not cross or alter that boundary.
+  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-025 produces no feedback artifacts.
+  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-025 does not introduce or modify a role catalog entry.
+  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-025's code conforms to cargo/clippy/rustfmt and the module-size convention. ADR-013 itself is owned by FT-014.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-025's code is reorganised under that migration, not by this feature.
+  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-025 runs after the working directory is resolved and does not re-discover it.
+  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-025 has no feedback to gate.
   ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-025 produces no feedback artifacts.
   ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-025 reads/writes via the GraphWriter chokepoint and does not introduce event-sourced state.
-  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-025 neither emits nor consumes verdicts.
-  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-025 does not author or modify a fitness-function artifact.
-  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-025 produces no feedback artifacts.
-  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-025 neither emits nor routes feedback.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-025's code is reorganised under that migration, not by this feature.
 ---
 
 ## Description

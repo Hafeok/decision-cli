@@ -2,7 +2,7 @@
 id: TC-043
 title: python_function_length_within_adr_013_limits
 type: invariant
-status: passing
+status: failing
 validates:
   features: []
   adrs:
@@ -11,8 +11,9 @@ phase: 1
 runner: bash
 runner-args: python3 scripts/checks/function-length.py
 runner-timeout: 60
-last-run: 2026-05-20T08:39:57.378014998+00:00
+last-run: 2026-05-20T11:41:36.841111001+00:00
 last-run-duration: 0.1s
+failure-message: ""
 ---
 
 ## Purpose
