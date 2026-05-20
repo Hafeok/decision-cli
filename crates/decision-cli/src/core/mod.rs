@@ -10,6 +10,7 @@
 
 pub mod bundled;
 pub mod dispatch;
+pub mod metrics;
 pub mod ontology;
 pub mod role_catalog;
 pub mod scope;
