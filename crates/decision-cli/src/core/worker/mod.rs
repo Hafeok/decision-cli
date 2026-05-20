@@ -11,10 +11,15 @@
 //! Invariant TC-050 enforces structurally that no second copy of the
 //! resolution chain lives anywhere else in `crates/decision-cli/src/`.
 
+pub mod ipc;
 pub mod manifest;
 pub mod report;
 pub mod resolve;
 
+pub use ipc::feedback::{
+    apply as apply_feedback_emission, parse_records as parse_feedback_records, FeedbackApplyError,
+    FeedbackEmission, ParseRecordError, FEEDBACK_RECORD_SENTINEL,
+};
 pub use manifest::{
     manifest_sha256_hex, role_entry, ACTIVE_ROLES_ENGINEERING_DEVELOPMENT, MANIFEST, MANIFEST_RAW,
 };
