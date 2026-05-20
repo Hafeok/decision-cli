@@ -1,13 +1,20 @@
 //! One-shot subprocess invocation of the code-writer worker (ADR-008).
 //!
-//! Spawns the worker, pipes the bundle in, parses the response on stdout.
+//! Resolution is delegated to [`crate::worker::resolve`] (FT-016 /
+//! TC-050) — this module owns only the spawn / stdin / stdout-parse
+//! plumbing. Inline `which`, `CODE_WRITER_CMD` reads, and Python module
+//! probes have been removed in favour of the shared chain.
 
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::Path;
 use std::process::{Command, Stdio};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
+
+use crate::worker::{
+    self, format_report_text, role_entry, ResolveInputs, Resolution, WorkerReport,
+};
 
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct DispatchPayloadJson {
@@ -73,11 +80,67 @@ pub(super) struct ErrorJson {
     pub detail: String,
 }
 
+/// Look up the implementer role and run the shared resolution chain.
+/// Returns a fully-built `argv` on success, or a renderable report on
+/// missing-worker so `dec implement` can abort pre-session (TC-049).
+pub(super) fn preflight_implementer(
+    workdir: &Path,
+    override_command: Option<&str>,
+) -> Result<Vec<String>, WorkerPreflightFailure> {
+    let entry = role_entry(crate::implement::IMPLEMENTER_ROLE)
+        .expect("code-writer role is in the embedded manifest");
+    let res = worker::resolve(
+        entry,
+        ResolveInputs {
+            override_command,
+            workdir: Some(workdir),
+        },
+    );
+    match res {
+        Resolution::Resolved { mut argv, .. } => {
+            // The implementer worker exposes its single-shot mode under
+            // the `run-once` subcommand (FT-013). The shared resolver
+            // returns the bare invocation; we append the subcommand
+            // here so the call site stays role-agnostic.
+            argv.push("run-once".to_string());
+            Ok(argv)
+        }
+        Resolution::Missing { .. } => {
+            let report = worker::build_report(
+                worker::ACTIVE_ROLES_ENGINEERING_DEVELOPMENT,
+                Some(workdir),
+                override_command,
+                Some(crate::implement::IMPLEMENTER_ROLE),
+            );
+            Err(WorkerPreflightFailure {
+                rendered: format_report_text(&report),
+                _report: report,
+            })
+        }
+    }
+}
+
+/// Carrier for a missing-worker diagnostic. `Display` is the
+/// install-hint block; `dec implement` writes it to stderr.
+#[derive(Debug)]
+pub(super) struct WorkerPreflightFailure {
+    pub rendered: String,
+    pub _report: WorkerReport,
+}
+
+impl std::fmt::Display for WorkerPreflightFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.rendered)
+    }
+}
+
+impl std::error::Error for WorkerPreflightFailure {}
+
 pub(super) fn run_worker(
-    worker_command: Option<&str>,
+    argv: &[String],
     payload: &DispatchPayloadJson,
 ) -> Result<WorkerResponseJson> {
-    let mut cmd = build_worker_command(worker_command);
+    let mut cmd = build_command_from_argv(argv)?;
     cmd.stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -99,20 +162,13 @@ pub(super) fn run_worker(
     parse_worker_response(&output.stdout)
 }
 
-fn build_worker_command(worker_command: Option<&str>) -> Command {
-    if let Some(custom) = worker_command {
-        build_shell_command(custom)
-    } else if let Ok(env_cmd) = std::env::var("CODE_WRITER_CMD") {
-        build_shell_command(&env_cmd)
-    } else if which("code-writer").is_some() {
-        let mut c = Command::new("code-writer");
-        c.arg("run-once");
-        c
-    } else {
-        let mut c = Command::new("python3");
-        c.arg("-m").arg("code_writer.main").arg("run-once");
-        c
-    }
+fn build_command_from_argv(argv: &[String]) -> Result<Command> {
+    let (head, tail) = argv
+        .split_first()
+        .ok_or_else(|| anyhow!("resolved worker argv was empty"))?;
+    let mut c = Command::new(head);
+    c.args(tail);
+    Ok(c)
 }
 
 fn write_payload_to_stdin(
@@ -140,23 +196,6 @@ fn parse_worker_response(stdout_bytes: &[u8]) -> Result<WorkerResponseJson> {
     let response: WorkerResponseJson =
         serde_json::from_str(line).with_context(|| format!("parsing worker response: {line}"))?;
     Ok(response)
-}
-
-fn build_shell_command(custom: &str) -> Command {
-    let mut c = Command::new("sh");
-    c.arg("-c").arg(format!("{custom} run-once"));
-    c
-}
-
-fn which(bin: &str) -> Option<PathBuf> {
-    let path = std::env::var_os("PATH")?;
-    for dir in std::env::split_paths(&path) {
-        let candidate = dir.join(bin);
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-    }
-    None
 }
 
 /// Build the failure detail string surfaced when a worker reports

@@ -1,0 +1,42 @@
+============================================================
+  Iteration 1: implementing FT-016 — decision-cli: Worker preflight audit at dec init
+  Wed May 20 09:46:17 CEST 2026
+============================================================
+product implement FT-016
+
+  Step 0: Preflight... OK (all domains and cross-cutting ADRs covered)
+  Step 1: Gap gate... OK (no high-severity gaps)
+  Step 2: Drift check... (advisory, skipped — no drift config)
+  Step 3: Context assembly... OK
+  Context file: /tmp/product-impl-FT-016-1779263178.md
+  Step 4: Invoking agent (headless)...
+FT-016 is complete. Here's a summary of what was implemented:
+
+## Summary
+
+**New worker module** (`crates/decision-cli/src/worker/`) is the single source of truth for worker resolution (TC-050):
+- `manifest.rs` — embedded `manifest.toml` asset + runtime `WorkerEntry` table for the `code-writer` role; exposes `manifest_sha256_hex()` for fingerprinting.
+- `resolve.rs` — the shared resolution chain: override → `$<ROLE>_CMD` env → `which` on `$PATH` → sibling-workspace probe → `python3 -c "import …"` import probe. Side-effect free (no stdin to probed binaries).
+- `report.rs` — preflight report assembly + text + JSON renderers; install hints derived from `install_kind` + `source_hint`.
+
+**`dec init`** (FT-016 / TC-046): after a successful bootstrap, prints the preflight report. Exits **0** when workers resolve, **advisory 2** when missing. Bootstrap is never rolled back. The manifest SHA-256 is now recorded on the bootstrap session (`dec:manifestSha256` predicate).
+
+**`dec doctor`** new subcommand (TC-047 / TC-048): authoritative on-demand audit. Read-only — does not mutate the store or workspace. Supports `--format {text,json}` and `--role <role>`. Exits **0** all-OK, **2** any-missing.
+
+**`dec implement`** (TC-049): now calls `worker::resolve` **before** opening a session. On miss, aborts with the same install-hint block `dec doctor` prints — the graph is left unchanged.
+
+**`scripts/checks/worker-resolution-single-source.sh`** (TC-050): mechanical invariant that `fn resolve`, `CODE_WRITER_CMD`, and `python3 -c "import code_writer"` only appear inside `crates/decision-cli/src/worker/`.
+
+**Test scripts** for TC-046 / TC-047 / TC-048 / TC-049 live under `tests/scripts/`.
+
+`product verify FT-016` reports all 5 TCs passing and FT-016 transitions to `complete`.
+  Agent completed successfully.
+  Step 5: Running verify...
+  TC-046 dec init prints worker preflight after bootstrap PASS (0.2s)
+  TC-047 dec doctor exit code mirrors worker resolution outcome PASS (0.2s)
+  TC-048 dec doctor format json emits structured worker report PASS (0.3s)
+  TC-049 dec implement aborts before session open on worker resolution failure PASS (0.3s)
+  TC-050 worker resolution chain has a single shared implementation PASS (0.0s)
+  ✓ Tagged: product/FT-016/complete-v2
+    Run `git push --tags` to share.
+FT-016 completed successfully.

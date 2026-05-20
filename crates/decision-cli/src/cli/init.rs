@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use decision_cli::init::{self, DefinitionSource, InitError};
+use decision_cli::worker;
 
 #[derive(Debug, clap::Args)]
 pub struct InitArgs {
@@ -23,7 +24,22 @@ pub fn run(workdir: &Path, args: InitArgs) -> ExitCode {
     match init::run(workdir, source) {
         Ok(outcome) => {
             print_init_success(&outcome);
-            ExitCode::SUCCESS
+            // FT-016: advisory worker preflight after bootstrap. Init
+            // never rolls back on a missing worker — exit 2 is the
+            // "store initialised but workers missing" advisory status.
+            let report = worker::build_report(
+                worker::ACTIVE_ROLES_ENGINEERING_DEVELOPMENT,
+                Some(workdir),
+                None,
+                None,
+            );
+            println!();
+            print!("{}", worker::format_report_text(&report));
+            if report.is_all_ok() {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::from(2)
+            }
         }
         Err(err) => {
             print_init_error(&err);

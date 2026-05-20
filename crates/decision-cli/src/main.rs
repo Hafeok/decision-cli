@@ -11,6 +11,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 use cli::check_goal::CheckGoalArgs;
+use cli::doctor::DoctorArgs;
 use cli::events::EventsCmd;
 use cli::implement::ImplementCmdArgs;
 use cli::init::InitArgs;
@@ -48,6 +49,8 @@ enum Command {
     Implement(ImplementCmdArgs),
     /// Liveness check (FT-012). Runs outside an initialised working tree.
     Health,
+    /// Worker preflight audit (FT-016 / TC-047).
+    Doctor(DoctorArgs),
     /// Inspect persisted events (FT-012; FT-005 replay, FT-004 SSE tail).
     #[command(subcommand)]
     Events(EventsCmd),
@@ -68,6 +71,7 @@ fn main() -> ExitCode {
         Command::CheckGoal(args) => cli::check_goal::run(&workdir, args),
         Command::Implement(args) => cli::implement::run(&workdir, args),
         Command::Health => cli::health::run(&workdir),
+        Command::Doctor(args) => cli::doctor::run(&workdir, args),
         Command::Events(cmd) => cli::events::run(&workdir, cmd),
         Command::Session(cmd) => cli::session::run(&workdir, cmd),
     }

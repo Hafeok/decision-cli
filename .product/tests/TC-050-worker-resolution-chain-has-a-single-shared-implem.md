@@ -2,7 +2,7 @@
 id: TC-050
 title: worker resolution chain has a single shared implementation
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-016
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/worker-resolution-single-source.sh
 runner-timeout: 30
+last-run: 2026-05-20T08:03:50.124890079+00:00
+last-run-duration: 0.0s
 ---
 
 ## Description

@@ -17,6 +17,7 @@ pub mod scope;
 pub mod session_inspect;
 pub mod stream_writer;
 pub mod vocab;
+pub mod worker;
 
 pub use finalize::{finalize_run, FinalizeError, FinalizeInput, FinalizeOutcome};
 pub use health::{check as health_check, HealthReport};

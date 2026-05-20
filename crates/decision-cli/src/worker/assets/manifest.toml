@@ -1,0 +1,15 @@
+# Embedded worker manifest (FT-016 / ADR-007).
+#
+# Static table of role → expected worker identity. Read-only at runtime;
+# `dec doctor` / `dec init` consult this to know what to look for, the
+# resolution chain in `worker::resolve` consumes it, and slice-2's
+# graph-native worker bindings (ADR-015) will use it as the install
+# catalogue rather than the resolver.
+
+[[worker]]
+role           = "code-writer"
+console_script = "code-writer"
+python_module  = "code_writer.main"
+install_kind   = "uv-tool"
+source_hint    = "./workers/code-writer"
+env_var        = "CODE_WRITER_CMD"

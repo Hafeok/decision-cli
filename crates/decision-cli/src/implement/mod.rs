@@ -53,7 +53,7 @@ use lifecycle::{
 };
 use quads::{build_dispatch_quads, build_failure_quad, build_session_quads};
 use vocab::{DISPATCH_PREFIX, SESSION_PREFIX};
-use worker::{format_worker_failure, run_worker};
+use worker::{format_worker_failure, preflight_implementer, run_worker};
 
 /// Goal verb the implementer role always pursues (ADR-005 / §3.4).
 pub const IMPLEMENT_GOAL: &str = "ship";
@@ -118,10 +118,21 @@ struct DispatchContext {
     dump_path: PathBuf,
     store: Arc<Store>,
     writer: StreamWriter,
+    worker_argv: Vec<String>,
 }
 
 fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchContext> {
     validate_scope(workdir)?;
+    // FT-016 / TC-049: worker preflight runs BEFORE any session is
+    // opened. A missing worker aborts here with the install-hint block
+    // and never touches the orchestration graph.
+    let worker_argv =
+        preflight_implementer(workdir, args.worker_command.as_deref()).map_err(|fail| {
+            anyhow!(
+                "no worker found for role `{}`. Pre-flight aborted before session open.\n\n{fail}",
+                IMPLEMENTER_ROLE
+            )
+        })?;
     let bundle = prepare_bundle(workdir, args)?;
     let (store, writer, dump_path) = load_store_and_writer(workdir)?;
     let iris = mint_dispatch_iris(args, &bundle)?;
@@ -137,6 +148,7 @@ fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchCont
         dump_path,
         store,
         writer,
+        worker_argv,
     })
 }
 
@@ -271,8 +283,8 @@ fn record_worker_failure(ctx: &DispatchContext, detail: &str) {
 pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     let ctx = prepare_dispatch(workdir, args)?;
     let dispatch_payload = build_dispatch_payload(&ctx, args);
-    let response = run_worker(args.worker_command.as_deref(), &dispatch_payload)
-        .context("running code-writer worker")?;
+    let response =
+        run_worker(&ctx.worker_argv, &dispatch_payload).context("running code-writer worker")?;
     if response.status != "ok" {
         let detail = format_worker_failure(response.error.as_ref());
         record_worker_failure(&ctx, &detail);

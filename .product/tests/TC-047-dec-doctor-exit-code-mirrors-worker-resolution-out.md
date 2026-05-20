@@ -2,7 +2,7 @@
 id: TC-047
 title: dec doctor exit code mirrors worker resolution outcome
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-016
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-047-dec-doctor-exit-code.sh
 runner-timeout: 60
+last-run: 2026-05-20T08:03:50.124890079+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

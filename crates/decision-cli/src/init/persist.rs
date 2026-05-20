@@ -10,9 +10,11 @@ use oxigraph::store::Store;
 use sha2::{Digest, Sha256};
 
 use super::vocab::{
-    DEC_DEFINITION_FORM, DEC_DEFINITION_HASH, DEC_DEFINITION_SOURCE, DEC_ONTOLOGY_VERSION,
-    DEC_SESSION_CLASS, PROV_ACTIVITY, PROV_AT_TIME, PROV_DERIVED_FROM, RDF_TYPE,
+    DEC_DEFINITION_FORM, DEC_DEFINITION_HASH, DEC_DEFINITION_SOURCE, DEC_MANIFEST_SHA256,
+    DEC_ONTOLOGY_VERSION, DEC_SESSION_CLASS, PROV_ACTIVITY, PROV_AT_TIME, PROV_DERIVED_FROM,
+    RDF_TYPE,
 };
+use crate::worker::manifest_sha256_hex;
 use super::InitError;
 
 pub(super) fn copy_triples_default(
@@ -107,11 +109,13 @@ fn build_session_metadata_quads(
     form: &str,
     started_at: &str,
 ) -> Vec<Quad> {
+    let manifest_hash = manifest_sha256_hex();
     vec![
         session_literal_quad(session_iri, graph, DEC_DEFINITION_HASH, definition_hash),
         session_literal_quad(session_iri, graph, DEC_ONTOLOGY_VERSION, ontology_version),
         session_literal_quad(session_iri, graph, DEC_DEFINITION_FORM, form),
         session_literal_quad(session_iri, graph, PROV_AT_TIME, started_at),
+        session_literal_quad(session_iri, graph, DEC_MANIFEST_SHA256, &manifest_hash),
     ]
 }
 

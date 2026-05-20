@@ -2,7 +2,7 @@
 id: TC-048
 title: dec doctor format json emits structured worker report
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-016
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-048-dec-doctor-json.sh
 runner-timeout: 60
+last-run: 2026-05-20T08:03:50.124890079+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

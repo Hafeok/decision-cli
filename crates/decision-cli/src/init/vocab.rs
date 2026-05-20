@@ -21,5 +21,6 @@ pub(super) const DEC_DEFINITION_SOURCE: &str = "https://decision-cli.dev/ns#defi
 pub(super) const DEC_DEFINITION_HASH: &str = "https://decision-cli.dev/ns#definitionHash";
 pub(super) const DEC_ONTOLOGY_VERSION: &str = "https://decision-cli.dev/ns#ontologyVersion";
 pub(super) const DEC_DEFINITION_FORM: &str = "https://decision-cli.dev/ns#definitionForm";
+pub(super) const DEC_MANIFEST_SHA256: &str = "https://decision-cli.dev/ns#manifestSha256";
 pub(super) const DEC_VALUE_STREAM_CLASS: &str = "https://decision-cli.dev/ns#ValueStream";
 pub(super) const DEC_SESSION_CLASS: &str = "https://decision-cli.dev/ns#Session";
