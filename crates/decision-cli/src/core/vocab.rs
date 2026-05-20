@@ -292,6 +292,12 @@ pub const IRI_DEC_DISPOSITION_OVERRIDE: &str = "https://decision-cli.dev/ns#disp
 /// `dec:dispositionRationale` predicate — operator rationale for an override.
 pub const IRI_DEC_DISPOSITION_RATIONALE: &str = "https://decision-cli.dev/ns#dispositionRationale";
 
+/// `dec:routingOverride` predicate — manual target-role override (FT-033 / ADR-026).
+pub const IRI_DEC_ROUTING_OVERRIDE: &str = "https://decision-cli.dev/ns#routingOverride";
+/// `dec:routingOverrideActor` predicate — operator identity for an override (FT-033).
+pub const IRI_DEC_ROUTING_OVERRIDE_ACTOR: &str =
+    "https://decision-cli.dev/ns#routingOverrideActor";
+
 #[must_use]
 pub fn feedback_class() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_FEEDBACK)
@@ -370,6 +376,16 @@ pub fn disposition_override() -> NamedNodeRef<'static> {
 #[must_use]
 pub fn disposition_rationale() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_DISPOSITION_RATIONALE)
+}
+
+#[must_use]
+pub fn routing_override() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_ROUTING_OVERRIDE)
+}
+
+#[must_use]
+pub fn routing_override_actor() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_ROUTING_OVERRIDE_ACTOR)
 }
 
 /// Default lifecycle state for a freshly-emitted feedback (ADR-024).

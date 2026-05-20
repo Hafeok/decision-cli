@@ -12,8 +12,8 @@ phase: 2
 runner: bash
 runner-args: scripts/checks/dec-feedback-list.sh
 runner-timeout: 60
-last-run: 2026-05-20T12:38:54.890652155+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-20T13:34:02.442203519+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
