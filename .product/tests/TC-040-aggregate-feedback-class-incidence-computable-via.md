@@ -2,7 +2,7 @@
 id: TC-040
 title: aggregate feedback class incidence computable via SPARQL
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-026
@@ -11,6 +11,8 @@ phase: 2
 runner: bash
 runner-args: scripts/checks/feedback-incidence-sparql.sh
 runner-timeout: 60
+last-run: 2026-05-20T11:54:33.785198123+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description

@@ -226,6 +226,7 @@ mod tests {
             "https://decision-cli.dev/ns#ActionSession",
             "https://decision-cli.dev/ns#InterpretationSession",
             "https://decision-cli.dev/ns#DispatchGroup",
+            "https://decision-cli.dev/ns#Feedback",
         ] {
             assert!(h.declares_class(c), "missing class declaration: {c}");
         }

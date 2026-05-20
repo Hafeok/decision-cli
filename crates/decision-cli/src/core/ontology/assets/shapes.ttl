@@ -213,3 +213,109 @@ dec:VerificationVerdictShape a sh:NodeShape ;
         sh:maxCount 1 ;
         sh:message  "dec:VerificationVerdict carries at most one dec:amendmentGuidance (required iff verdict = amendment-required, enforced separately)."
     ] .
+
+# --- Feedback shape (FT-026 / ADR-022) ---------------------------------------
+# Enforces required-field cardinality per ADR-022. Class-specific vocabulary
+# (sh:in for dec:feedbackClass) lands in FT-028; state-machine transitions
+# land in FT-027.
+
+dec:FeedbackShape a sh:NodeShape ;
+    sh:targetClass dec:Feedback ;
+
+    sh:property [
+        sh:path     dec:feedbackClass ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:Feedback requires exactly one dec:feedbackClass (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:lifecycleState ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:Feedback requires exactly one dec:lifecycleState (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:targetRole ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:Feedback requires exactly one dec:targetRole (string, mirrors dec:roleId)."
+    ] ;
+
+    sh:property [
+        sh:path      dec:evidence ;
+        sh:datatype  xsd:string ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:minLength 1 ;
+        sh:message   "dec:Feedback requires exactly one non-empty dec:evidence (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:sourceSession ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:Feedback requires exactly one dec:sourceSession (IRI)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:inStream ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:Feedback requires exactly one dec:inStream link (ADR-005)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:severity ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:severity (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:recommendation ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:recommendation (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:sourceArtifact ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:sourceArtifact (IRI)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:addressingArtifact ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:addressingArtifact (IRI)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:rejectionReason ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:rejectionReason (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:supersededBy ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:supersededBy (IRI)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:dispositionOverride ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Feedback carries at most one dec:dispositionOverride (string)."
+    ] .

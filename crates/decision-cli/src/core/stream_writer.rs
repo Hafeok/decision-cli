@@ -16,6 +16,7 @@ use oxi_events::{CommitResult, GraphWriter, Mutation};
 use oxigraph::model::{GraphName, NamedNode, NamedNodeRef, Quad, Term};
 use oxigraph::store::Store;
 
+use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::vocab::{
     in_stream, orchestration_graph, value_stream_class, IRI_DEC_GRAPH_ORCHESTRATION,
@@ -84,6 +85,7 @@ impl StreamWriter {
     pub fn commit(&self, mutation: Mutation) -> Result<CommitResult> {
         let mutation = self.augment(mutation);
         validate_verdicts(&mutation.inserts)?;
+        validate_feedback(&mutation.inserts)?;
         self.inner
             .commit(mutation)
             .context("committing mutation through oxi-events writer")
@@ -135,6 +137,19 @@ fn validate_verdicts(quads: &[Quad]) -> Result<()> {
     validate_verdict_quads(quads).map_err(|err| {
         anyhow!(
             "SHACL violation: verification verdict mutation refused\n{}",
+            err.report
+        )
+    })
+}
+
+/// SHACL-validate every `dec:Feedback` subject present in `quads`
+/// (FT-026 / ADR-022). The error message keeps the `SHACL violation`
+/// prefix used by [`validate_verdicts`] so existing callers that match
+/// on the prefix continue to work uniformly.
+fn validate_feedback(quads: &[Quad]) -> Result<()> {
+    validate_feedback_quads(quads).map_err(|err| {
+        anyhow!(
+            "SHACL violation: feedback mutation refused\n{}",
             err.report
         )
     })

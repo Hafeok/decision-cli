@@ -77,6 +77,7 @@ pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), On
         "InterpretationSession",
         "DispatchGroup",
         "VerificationVerdict",
+        "Feedback",
     ] {
         let iri = format!("https://decision-cli.dev/ns#{class}");
         let q = format!(
@@ -141,6 +142,15 @@ const DISPATCH_GROUP_PROPS: &[&str] = &[
     "https://decision-cli.dev/ns#inStream",
 ];
 
+const FEEDBACK_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#feedbackClass",
+    "https://decision-cli.dev/ns#lifecycleState",
+    "https://decision-cli.dev/ns#targetRole",
+    "https://decision-cli.dev/ns#evidence",
+    "https://decision-cli.dev/ns#sourceSession",
+    "https://decision-cli.dev/ns#inStream",
+];
+
 fn required_shape_properties() -> &'static [(&'static str, &'static [&'static str])] {
     &[
         ("https://decision-cli.dev/ns#ValueStream", VALUE_STREAM_PROPS),
@@ -154,6 +164,7 @@ fn required_shape_properties() -> &'static [(&'static str, &'static [&'static st
             "https://decision-cli.dev/ns#DispatchGroup",
             DISPATCH_GROUP_PROPS,
         ),
+        ("https://decision-cli.dev/ns#Feedback", FEEDBACK_PROPS),
     ]
 }
 

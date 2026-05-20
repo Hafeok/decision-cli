@@ -180,3 +180,86 @@ dec:amendmentGuidance a rdf:Property ;
     rdfs:domain dec:VerificationVerdict ;
     rdfs:range  xsd:string ;
     rdfs:comment "Free-form text consumed by the next action when verdict = amendment-required (ADR-018)." .
+
+# --- FT-026 / ADR-022: Feedback artifact -------------------------------------
+
+dec:Feedback a rdfs:Class ;
+    rdfs:label "Feedback" ;
+    rdfs:comment "A first-class feedback artifact emitted by a session about its bundle or its own output (ADR-022)." .
+
+dec:feedbackClass a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Controlled-vocabulary class tag (ADR-023). Domain values land in FT-028; here we only mandate cardinality." .
+
+dec:severity a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Severity hint (info | warning | error). Defaults to \"warning\"." .
+
+dec:targetRole a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Role id the feedback is routed to (mirrors dec:roleId on Role catalog entries)." .
+
+dec:evidence a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form citation back into the originating bundle or artifact." .
+
+dec:recommendation a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Optional suggested fix the target role may consult." .
+
+dec:lifecycleState a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Lifecycle state per ADR-024 (FT-027 lands the state machine; FT-026 only enforces cardinality)." .
+
+dec:sourceSession a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  dec:Session ;
+    rdfs:comment "PROV-O-linked session that emitted the feedback." .
+
+dec:sourceArtifact a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:comment "Optional: the bundled artifact the feedback is about." .
+
+dec:addressingArtifact a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:comment "The artifact that resolves the feedback (set on lifecycle transition to addressed)." .
+
+dec:closedBy a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:comment "Actor (session or human) that closed the loop." .
+
+dec:rejectionReason a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form rationale recorded when the target role rejected the feedback." .
+
+dec:supersededBy a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  dec:Feedback ;
+    rdfs:comment "Newer feedback artifact that subsumes this one (terminal supersession per ADR-024)." .
+
+dec:routedAt a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:dateTime ;
+    rdfs:comment "Wall-clock timestamp the orchestrator transitioned this feedback to routed." .
+
+dec:receivingSession a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  dec:Session ;
+    rdfs:comment "Session that picked up the routed feedback (terminal step receive)." .
+
+dec:dispositionOverride a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Per-emission blocking / non-blocking override (ADR-025). Either \"blocking\" or \"non-blocking\"." .
+
+dec:dispositionRationale a rdf:Property ;
+    rdfs:domain dec:Feedback ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Operator-facing rationale for dec:dispositionOverride." .

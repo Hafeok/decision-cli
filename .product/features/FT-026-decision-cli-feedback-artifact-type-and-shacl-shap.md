@@ -2,7 +2,7 @@
 id: FT-026
 title: 'decision-cli: Feedback artifact type and SHACL shape'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-001
 - FT-006
@@ -14,19 +14,19 @@ tests:
 - TC-040
 domains: []
 domains-acknowledged:
-  ADR-001: ADR-001 governs the oxi-events crate boundary; FT-026 does not cross or alter that boundary.
-  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-026 does not author or modify a fitness-function artifact.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-026 produces no action/interpretation pair.
-  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-026 reads/writes via the GraphWriter chokepoint and does not introduce event-sourced state.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-026's code is reorganised under that migration, not by this feature.
+  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-026 does not introduce or modify a role catalog entry.
+  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-026 runs after the working directory is resolved and does not re-discover it.
   ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-026 neither emits nor consumes verdicts.
+  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-026 does not author or modify a fitness-function artifact.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-026's code is reorganised under that migration, not by this feature.
+  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-026 reads/writes via the GraphWriter chokepoint and does not introduce event-sourced state.
   ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-026 produces no new Session or event type and inherits lineage from the harness.
   ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-026 has no feedback to gate.
-  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-026 runs after the working directory is resolved and does not re-discover it.
-  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-026 produces no feedback artifacts.
   ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-026 is out of scope for the pairing.
-  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-026 does not introduce or modify a role catalog entry.
   ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-026 produces no feedback artifacts.
+  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-026 produces no feedback artifacts.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-026 produces no action/interpretation pair.
+  ADR-001: ADR-001 governs the oxi-events crate boundary; FT-026 does not cross or alter that boundary.
 ---
 
 ## Description
