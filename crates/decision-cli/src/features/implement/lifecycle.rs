@@ -15,8 +15,11 @@ use oxigraph::model::NamedNode;
 use super::bundle::{persist_store, product_codechange_path};
 use super::codechange::write_codechange_to_product_graph;
 use super::quads::build_completion_quads;
-use super::worker::{CodeChangeJson, DispatchPayloadJson, WorkerResponseJson};
-use super::{DispatchContext, ImplementArgs, ImplementOutcome, SLICE1_MODEL_ID};
+use super::worker::{
+    AuthorityJson, CodeChangeJson, DispatchPayloadJson, EscalationHintJson, WorkerResponseJson,
+};
+use super::{DispatchContext, ImplementArgs, ImplementOutcome, IMPLEMENTER_ROLE, SLICE1_MODEL_ID};
+use crate::core::role_catalog;
 
 /// Build the JSON payload streamed to the code-writer worker's stdin.
 pub(super) fn build_dispatch_payload(
@@ -29,6 +32,7 @@ pub(super) fn build_dispatch_payload(
         .unwrap_or_else(|_| ctx.workspace_dir.clone())
         .to_string_lossy()
         .into_owned();
+    let authority = lookup_role_authority(&ctx.store, IMPLEMENTER_ROLE);
     DispatchPayloadJson {
         dispatch_id: ctx.dispatch_iri.as_str().to_string(),
         session_id: ctx.session_iri.as_str().to_string(),
@@ -38,7 +42,34 @@ pub(super) fn build_dispatch_payload(
         workspace_path,
         model_id: SLICE1_MODEL_ID.to_string(),
         timeout_seconds: 1800,
+        authority,
     }
+}
+
+/// FT-030: look up `role_id` in the orchestration store and project its
+/// `dec:Authority` declaration into the wire shape consumed by workers.
+/// Returns `None` on legacy stores that haven't been re-seeded.
+fn lookup_role_authority(
+    store: &oxigraph::store::Store,
+    role_id: &str,
+) -> Option<AuthorityJson> {
+    let role = role_catalog::lookup(store, role_id).ok().flatten()?;
+    let authority = role.authority?;
+    Some(AuthorityJson {
+        iri: authority.iri,
+        may_decide: authority.may_decide,
+        must_escalate: authority.must_escalate,
+        escalate_via: authority
+            .escalate_via
+            .into_iter()
+            .map(|h| EscalationHintJson {
+                category: h.category,
+                class: h.class.as_iri_value().to_string(),
+                target_role: h.target_role,
+            })
+            .collect(),
+        rationale: authority.rationale,
+    })
 }
 
 /// Persist the worker's CodeChange into the product-cli graph slice.

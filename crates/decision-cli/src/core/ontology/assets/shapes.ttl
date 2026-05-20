@@ -120,6 +120,68 @@ dec:RoleShape a sh:NodeShape ;
         sh:maxCount 1 ;
         sh:datatype xsd:string ;
         sh:message  "dec:Role requires exactly one dec:roleModelBinding (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:authority ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Role requires exactly one dec:authority link to a dec:Authority (ADR-027 / FT-030)."
+    ] .
+
+# --- Authority shape (FT-030 / ADR-027) --------------------------------------
+
+dec:AuthorityShape a sh:NodeShape ;
+    sh:targetClass dec:Authority ;
+
+    sh:property [
+        sh:path     dec:mayDecide ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:Authority requires at least one dec:mayDecide category (ADR-027)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:mustEscalate ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:Authority requires at least one dec:mustEscalate category (ADR-027)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:rationale ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Authority requires exactly one dec:rationale (string, ADR-027)."
+    ] ;
+
+    # mayDecide and mustEscalate must be disjoint (ADR-027 invariant).
+    sh:sparql [
+        sh:message "dec:mayDecide and dec:mustEscalate categories must be disjoint (ADR-027)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:mayDecide ?cat .
+              $this dec:mustEscalate ?cat .
+            }
+        """
+    ] ;
+
+    # Every mustEscalate category must have at least one dec:escalateVia
+    # entry naming it (ADR-027 invariant).
+    sh:sparql [
+        sh:message "every dec:mustEscalate category must have at least one dec:escalateVia entry (ADR-027)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:mustEscalate ?cat .
+              FILTER NOT EXISTS {
+                $this dec:escalateVia ?hint .
+                ?hint dec:escalateCategory ?cat .
+              }
+            }
+        """
     ] .
 
 # --- DispatchGroup shape (FT-021 / ADR-017) ----------------------------------

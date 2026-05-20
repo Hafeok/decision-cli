@@ -1,0 +1,26 @@
+# Verifier Authority declaration (FT-030 / ADR-027).
+#
+# The verifier judges artifacts against feature_specs and TCs. It may
+# decide on what verdict to issue, the rationale wording, and which
+# references it cites. Structural changes (feature_spec, ADRs, policies)
+# must be escalated via feedback rather than decided in the verdict.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+
+<https://decision-cli.dev/ns/authority/verifier> a dec:Authority ;
+    dec:mayDecide     "verdict-classification" ,
+                      "rationale-content" ,
+                      "cited-references" ;
+    dec:mustEscalate  "feature-spec-changes" ,
+                      "adr-changes" ,
+                      "cross-cutting-policy" ;
+    dec:escalateVia   [ dec:escalateCategory "feature-spec-changes" ;
+                        dec:escalateClass    "gap" ;
+                        dec:escalateTargetRole "spec-author" ] ,
+                      [ dec:escalateCategory "adr-changes" ;
+                        dec:escalateClass    "contradiction" ;
+                        dec:escalateTargetRole "architect" ] ,
+                      [ dec:escalateCategory "cross-cutting-policy" ;
+                        dec:escalateClass    "contradiction" ;
+                        dec:escalateTargetRole "architect" ] ;
+    dec:rationale     "Verifier issues a verdict on whether the produced artifact satisfies the feature_spec and TCs. Verdict classification, rationale wording, and cited references are within authority. Changes to the feature_spec, ADRs, or cross-cutting policy must be escalated via feedback rather than encoded in the verdict." .

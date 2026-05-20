@@ -1,0 +1,35 @@
+# Implementer Authority declaration (FT-030 / ADR-027).
+#
+# Mirrors the ADR-027 example: the implementer writes code from a
+# feature_spec; structural changes to the spec or to ADRs go through
+# their authoring roles. The implementer self-decides anything that
+# does not survive the file boundary of the feature.
+#
+# Invariant (ADR-027): `mayDecide` and `mustEscalate` are non-empty and
+# disjoint. Every `mustEscalate` category has at least one
+# `escalateVia` entry naming a feedback class and target role.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+
+<https://decision-cli.dev/ns/authority/implementer> a dec:Authority ;
+    dec:mayDecide     "code-style" ,
+                      "naming-within-feature" ,
+                      "internal-data-shape" ,
+                      "test-cases-for-this-feature" ;
+    dec:mustEscalate  "feature-spec-changes" ,
+                      "adr-changes" ,
+                      "new-artifact-types" ,
+                      "cross-cutting-policy" ;
+    dec:escalateVia   [ dec:escalateCategory "feature-spec-changes" ;
+                        dec:escalateClass    "gap" ;
+                        dec:escalateTargetRole "spec-author" ] ,
+                      [ dec:escalateCategory "adr-changes" ;
+                        dec:escalateClass    "contradiction" ;
+                        dec:escalateTargetRole "architect" ] ,
+                      [ dec:escalateCategory "new-artifact-types" ;
+                        dec:escalateClass    "capability-request" ;
+                        dec:escalateTargetRole "architect" ] ,
+                      [ dec:escalateCategory "cross-cutting-policy" ;
+                        dec:escalateClass    "contradiction" ;
+                        dec:escalateTargetRole "architect" ] ;
+    dec:rationale     "Implementer writes code from a feature_spec; structural changes to the spec or to ADRs go through their authoring roles. Implementer self-decides anything that does not survive the file boundary of the feature." .

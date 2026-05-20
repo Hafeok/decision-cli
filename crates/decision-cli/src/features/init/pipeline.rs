@@ -206,11 +206,13 @@ pub(super) fn build_orchestration_store(
     Ok(orchestration)
 }
 
-/// FT-019: seed the verifier role catalog entry alongside the bundled
-/// ValueAction definition. Slice 2 ships exactly one catalog entry
-/// (verifier); the implementer remains hardcoded inline pending FT-030.
+/// FT-019 + FT-030: seed both roles (implementer + verifier) alongside
+/// their ADR-027 authority declarations. The implementer's previously-
+/// hardcoded configuration is now a graph artifact; the verifier entry
+/// is extended with its `dec:authority` link.
 fn seed_role_catalog(orchestration: &Store) -> Result<(), InitError> {
-    let quads = role_catalog::verifier_seed_quads();
+    let mut quads = role_catalog::verifier_seed_quads();
+    quads.extend(role_catalog::implementer_seed_quads());
     orchestration
         .transaction(|mut tx| {
             for q in &quads {

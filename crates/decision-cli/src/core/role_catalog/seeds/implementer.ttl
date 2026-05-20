@@ -1,0 +1,27 @@
+# Implementer role catalog entry (FT-030 / ADR-027).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs).
+# Forms part of the bootstrap baseline alongside the verifier role and
+# the bundled ValueStream.
+#
+# - dec:roleId            : stable identifier the dispatch loop matches against.
+#                            Mirrors the manifest entry (`code-writer`) used
+#                            by the worker preflight chain.
+# - dec:roleInputType     : artifact classes the implementer consumes
+#                            (FeatureSpec + BundleHash).
+# - dec:roleOutputType    : the artifact type the implementer produces
+#                            (CodeChange).
+# - dec:roleModelBinding  : Phase A keeps model bindings inline per ADR-020.
+# - dec:authority         : Authority declaration per ADR-027. The seed
+#                            triples for the linked Authority blank-node
+#                            live in `implementer-authority.ttl`.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+
+<https://decision-cli.dev/ns/role/implementer> a dec:Role ;
+    dec:roleId            "code-writer" ;
+    dec:roleInputType     <https://decision-cli.dev/ns#FeatureSpec> ,
+                          <https://decision-cli.dev/ns#BundleHash> ;
+    dec:roleOutputType    <https://decision-cli.dev/ns#CodeChange> ;
+    dec:roleModelBinding  "claude-sonnet-4-5" ;
+    dec:authority         <https://decision-cli.dev/ns/authority/implementer> .

@@ -1,0 +1,24 @@
+[project]
+name = "decision-cli-shared"
+version = "0.1.0"
+description = "Shared Python SDK consumed by decision-cli workers (FT-030 bundle authority, FT-031 emit_feedback)."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/_shared"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

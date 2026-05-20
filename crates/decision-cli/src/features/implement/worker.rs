@@ -26,6 +26,28 @@ pub(super) struct DispatchPayloadJson {
     pub workspace_path: String,
     pub model_id: String,
     pub timeout_seconds: u32,
+    /// FT-030 / ADR-027: role authority declaration. `None` when the
+    /// orchestration store predates FT-030 (legacy slice-1 stores).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authority: Option<AuthorityJson>,
+}
+
+/// Serialisable view of a `dec:Authority` for the worker bundle (FT-030).
+#[derive(Debug, Clone, Serialize)]
+pub(super) struct AuthorityJson {
+    pub iri: String,
+    pub may_decide: Vec<String>,
+    pub must_escalate: Vec<String>,
+    pub escalate_via: Vec<EscalationHintJson>,
+    pub rationale: String,
+}
+
+/// One entry of `escalate_via` — mirrors `core::role_catalog::EscalationHint`.
+#[derive(Debug, Clone, Serialize)]
+pub(super) struct EscalationHintJson {
+    pub category: String,
+    pub class: String,
+    pub target_role: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

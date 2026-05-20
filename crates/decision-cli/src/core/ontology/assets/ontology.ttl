@@ -140,6 +140,39 @@ dec:roleAuthority a rdf:Property ;
     rdfs:range  dec:Authority ;
     rdfs:comment "Optional authority declaration carried by the role (ADR-027 — landed by FT-030)." .
 
+dec:authority a rdf:Property ;
+    rdfs:domain dec:Role ;
+    rdfs:range  dec:Authority ;
+    rdfs:comment "Authority declaration for a role (ADR-027 / FT-030). Each dec:Role MUST carry exactly one dec:authority link to a dec:Authority node." .
+
+# --- FT-030 / ADR-027: Authority properties ----------------------------------
+
+dec:mayDecide a rdf:Property ;
+    rdfs:domain dec:Authority ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Category names the role's worker MAY decide unilaterally (ADR-027). Multi-valued." .
+
+dec:mustEscalate a rdf:Property ;
+    rdfs:domain dec:Authority ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Category names the role's worker MUST escalate via feedback (ADR-027). Multi-valued, disjoint from dec:mayDecide." .
+
+dec:escalateVia a rdf:Property ;
+    rdfs:domain dec:Authority ;
+    rdfs:comment "Routing hint per mustEscalate category — links to a blank-node descriptor carrying dec:escalateCategory, dec:escalateClass, dec:escalateTargetRole (ADR-027)." .
+
+dec:escalateCategory a rdf:Property ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "The mustEscalate category name this routing hint applies to." .
+
+dec:escalateClass a rdf:Property ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Feedback class (ADR-023) the escalation should be emitted as." .
+
+dec:escalateTargetRole a rdf:Property ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Default target role for the escalation (ADR-027)." .
+
 dec:hasActionSession a rdf:Property ;
     rdfs:domain dec:DispatchGroup ;
     rdfs:range  dec:ActionSession ;
