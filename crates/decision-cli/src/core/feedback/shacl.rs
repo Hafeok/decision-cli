@@ -12,6 +12,7 @@ use crate::core::vocab::{
 };
 
 use super::artifact::RDF_TYPE;
+use super::class::FeedbackClass;
 use super::lifecycle_shacl::{check_lifecycle_companion_fields, check_lifecycle_state_in};
 
 /// One SHACL violation observed against a candidate feedback mutation.
@@ -80,9 +81,30 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<FeedbackViolatio
     check_required_fields(quads, subject, &mut violations);
     check_optional_literal_cardinality(quads, subject, &mut violations);
     check_optional_iri_cardinality(quads, subject, &mut violations);
+    check_feedback_class_in(quads, subject, &mut violations);
     check_lifecycle_state_in(quads, subject, &mut violations);
     check_lifecycle_companion_fields(quads, subject, &mut violations);
     violations
+}
+
+/// `sh:in` on `dec:feedbackClass` — the literal must be one of the six
+/// values defined in ADR-023 (FT-028).
+fn check_feedback_class_in(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<FeedbackViolation>,
+) {
+    for raw in literal_values(quads, subject, IRI_DEC_FEEDBACK_CLASS) {
+        if FeedbackClass::from_iri_value(&raw).is_none() {
+            violations.push(violation(
+                subject,
+                IRI_DEC_FEEDBACK_CLASS,
+                &format!(
+                    "dec:feedbackClass must be one of {{gap, contradiction, unimplementable, scope-issue, defect, capability-request}}, got {raw:?}"
+                ),
+            ));
+        }
+    }
 }
 
 fn check_required_fields(

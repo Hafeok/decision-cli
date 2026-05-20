@@ -227,7 +227,9 @@ dec:FeedbackShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:datatype xsd:string ;
-        sh:message  "dec:Feedback requires exactly one dec:feedbackClass (string)."
+        sh:in       ( "gap" "contradiction" "unimplementable"
+                      "scope-issue" "defect" "capability-request" ) ;
+        sh:message  "dec:Feedback requires exactly one dec:feedbackClass from the ADR-023 enumeration."
     ] ;
 
     sh:property [

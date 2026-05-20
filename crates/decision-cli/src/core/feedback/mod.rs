@@ -13,6 +13,7 @@
 //! on top of the contract defined here.
 
 pub mod artifact;
+pub mod class;
 pub mod lifecycle;
 mod lifecycle_shacl;
 pub mod read;
@@ -23,6 +24,7 @@ pub mod transition;
 mod tests;
 
 pub use artifact::{Feedback, Severity};
+pub use class::{Disposition, FeedbackClass};
 pub use lifecycle::{
     next_states, validate_transition, LifecycleState, TransitionError,
 };
