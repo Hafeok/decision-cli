@@ -9,9 +9,10 @@
 #   dec:ValueAction  → dec:name, dec:description, dec:exitCriterion,
 #                      dec:expectedOutputType, dec:compatibleGoals (≥1)
 
-@prefix dec: <https://decision-cli.dev/ns#> .
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 # --- ValueStream shape -------------------------------------------------------
 
@@ -119,4 +120,53 @@ dec:RoleShape a sh:NodeShape ;
         sh:maxCount 1 ;
         sh:datatype xsd:string ;
         sh:message  "dec:Role requires exactly one dec:roleModelBinding (string)."
+    ] .
+
+# --- VerificationVerdict shape (FT-020 / ADR-018) ---------------------------
+
+dec:VerificationVerdictShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationVerdict ;
+
+    sh:property [
+        sh:path     dec:verdict ;
+        sh:in       ( "approved" "rejected" "amendment-required" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationVerdict requires exactly one dec:verdict in {approved, rejected, amendment-required}."
+    ] ;
+
+    sh:property [
+        sh:path      dec:rationale ;
+        sh:datatype  xsd:string ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:minLength 20 ;
+        sh:message   "dec:VerificationVerdict requires exactly one dec:rationale (string, ≥ 20 chars)."
+    ] ;
+
+    sh:property [
+        sh:path     prov:wasGeneratedBy ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationVerdict requires exactly one prov:wasGeneratedBy (the InterpretationSession)."
+    ] ;
+
+    sh:property [
+        sh:path     prov:used ;
+        sh:minCount 1 ;
+        sh:message  "dec:VerificationVerdict requires at least one prov:used (the action artifacts consumed)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:inStream ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationVerdict requires exactly one dec:inStream link (ADR-005)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:amendmentGuidance ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationVerdict carries at most one dec:amendmentGuidance (required iff verdict = amendment-required, enforced separately)."
     ] .

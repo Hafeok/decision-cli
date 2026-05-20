@@ -16,6 +16,7 @@ use oxi_events::{CommitResult, GraphWriter, Mutation};
 use oxigraph::model::{GraphName, NamedNode, NamedNodeRef, Quad, Term};
 use oxigraph::store::Store;
 
+use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::vocab::{
     in_stream, orchestration_graph, value_stream_class, IRI_DEC_GRAPH_ORCHESTRATION,
     IRI_DEC_IN_STREAM, IRI_DEC_VALUE_STREAM, SCOPED_CLASSES,
@@ -72,8 +73,17 @@ impl StreamWriter {
 
     /// Commit a mutation through the underlying writer, augmenting it
     /// with `dec:inStream` quads for any scoped artifact being declared.
+    ///
+    /// Verdict mutations (FT-020): every `dec:VerificationVerdict` subject
+    /// in `mutation.inserts` is validated against the ADR-018 SHACL shape
+    /// **after** the `dec:inStream` augmentation and **before** the
+    /// underlying writer sees the mutation. A failing shape is converted
+    /// to an `anyhow` error whose message starts with `SHACL violation`
+    /// so callers can match on the prefix without depending on the
+    /// internal error type.
     pub fn commit(&self, mutation: Mutation) -> Result<CommitResult> {
         let mutation = self.augment(mutation);
+        validate_verdicts(&mutation.inserts)?;
         self.inner
             .commit(mutation)
             .context("committing mutation through oxi-events writer")
@@ -115,6 +125,19 @@ impl StreamWriter {
             )),
         }
     }
+}
+
+/// SHACL-validate every VerificationVerdict subject present in `quads`,
+/// converting a failure into an `anyhow` error tagged with the
+/// `SHACL violation` prefix so callers can detect verdict failures
+/// without depending on the verdict module's error type.
+fn validate_verdicts(quads: &[Quad]) -> Result<()> {
+    validate_verdict_quads(quads).map_err(|err| {
+        anyhow!(
+            "SHACL violation: verification verdict mutation refused\n{}",
+            err.report
+        )
+    })
 }
 
 fn scoped_subjects(mutation: &Mutation) -> Vec<NamedNode> {

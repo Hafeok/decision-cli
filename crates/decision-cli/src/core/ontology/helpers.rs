@@ -76,6 +76,7 @@ pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), On
         "ActionSession",
         "InterpretationSession",
         "DispatchGroup",
+        "VerificationVerdict",
     ] {
         let iri = format!("https://decision-cli.dev/ns#{class}");
         let q = format!(
@@ -103,35 +104,44 @@ pub(super) fn invariant_shapes_present(store: &Store) -> Result<(), OntologyErro
     Ok(())
 }
 
+const VALUE_STREAM_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#name",
+    "https://decision-cli.dev/ns#title",
+    "https://decision-cli.dev/ns#terminalValueAction",
+    "https://decision-cli.dev/ns#authorizedGoals",
+];
+
+const VALUE_ACTION_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#name",
+    "https://decision-cli.dev/ns#description",
+    "https://decision-cli.dev/ns#exitCriterion",
+    "https://decision-cli.dev/ns#expectedOutputType",
+    "https://decision-cli.dev/ns#compatibleGoals",
+];
+
+const ROLE_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#roleId",
+    "https://decision-cli.dev/ns#roleInputType",
+    "https://decision-cli.dev/ns#roleOutputType",
+    "https://decision-cli.dev/ns#roleModelBinding",
+];
+
+const VERIFICATION_VERDICT_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#verdict",
+    "https://decision-cli.dev/ns#rationale",
+    "http://www.w3.org/ns/prov#wasGeneratedBy",
+    "http://www.w3.org/ns/prov#used",
+    "https://decision-cli.dev/ns#inStream",
+];
+
 fn required_shape_properties() -> &'static [(&'static str, &'static [&'static str])] {
     &[
+        ("https://decision-cli.dev/ns#ValueStream", VALUE_STREAM_PROPS),
+        ("https://decision-cli.dev/ns#ValueAction", VALUE_ACTION_PROPS),
+        ("https://decision-cli.dev/ns#Role", ROLE_PROPS),
         (
-            "https://decision-cli.dev/ns#ValueStream",
-            &[
-                "https://decision-cli.dev/ns#name",
-                "https://decision-cli.dev/ns#title",
-                "https://decision-cli.dev/ns#terminalValueAction",
-                "https://decision-cli.dev/ns#authorizedGoals",
-            ],
-        ),
-        (
-            "https://decision-cli.dev/ns#ValueAction",
-            &[
-                "https://decision-cli.dev/ns#name",
-                "https://decision-cli.dev/ns#description",
-                "https://decision-cli.dev/ns#exitCriterion",
-                "https://decision-cli.dev/ns#expectedOutputType",
-                "https://decision-cli.dev/ns#compatibleGoals",
-            ],
-        ),
-        (
-            "https://decision-cli.dev/ns#Role",
-            &[
-                "https://decision-cli.dev/ns#roleId",
-                "https://decision-cli.dev/ns#roleInputType",
-                "https://decision-cli.dev/ns#roleOutputType",
-                "https://decision-cli.dev/ns#roleModelBinding",
-            ],
+            "https://decision-cli.dev/ns#VerificationVerdict",
+            VERIFICATION_VERDICT_PROPS,
         ),
     ]
 }

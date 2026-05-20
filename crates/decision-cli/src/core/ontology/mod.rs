@@ -18,6 +18,7 @@
 //!   persist any triples into the orchestration store (FT-009).
 
 mod helpers;
+pub mod verdict;
 
 use std::sync::OnceLock;
 

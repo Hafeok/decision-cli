@@ -71,6 +71,12 @@ dec:DispatchGroup a rdfs:Class ;
     rdfs:label "DispatchGroup" ;
     rdfs:comment "Pairs an ActionSession with its InterpretationSession (ADR-017)." .
 
+# --- FT-020 / ADR-018: VerificationVerdict ------------------------------------
+
+dec:VerificationVerdict a rdfs:Class ;
+    rdfs:label "VerificationVerdict" ;
+    rdfs:comment "The verdict the verifier role produces on an action artifact (ADR-018). Gates dispatch completion per ADR-017." .
+
 # --- Properties --------------------------------------------------------------
 
 dec:name a rdf:Property ;
@@ -143,3 +149,24 @@ dec:hasInterpretationSession a rdf:Property ;
     rdfs:domain dec:DispatchGroup ;
     rdfs:range  dec:InterpretationSession ;
     rdfs:comment "Links a DispatchGroup to its paired InterpretationSession (ADR-017)." .
+
+# --- FT-020 / ADR-018: VerificationVerdict properties -----------------------
+
+dec:verdict a rdf:Property ;
+    rdfs:domain dec:VerificationVerdict ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "One of \"approved\", \"rejected\", \"amendment-required\" (ADR-018)." .
+
+dec:rationale a rdf:Property ;
+    rdfs:domain dec:VerificationVerdict ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form prose, sh:minLength 20 (ADR-018)." .
+
+dec:violates a rdf:Property ;
+    rdfs:domain dec:VerificationVerdict ;
+    rdfs:comment "References to TCs or ADRs that the action artifact violated (ADR-018). Required for rejected/amendment-required verdicts." .
+
+dec:amendmentGuidance a rdf:Property ;
+    rdfs:domain dec:VerificationVerdict ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form text consumed by the next action when verdict = amendment-required (ADR-018)." .
