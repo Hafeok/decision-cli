@@ -25,3 +25,6 @@ __pycache__/
 
 # Claude Code state (subagent worktrees, local settings)
 .claude/
+
+# Local run logs (implement-all.sh, etc.)
+.logs/
