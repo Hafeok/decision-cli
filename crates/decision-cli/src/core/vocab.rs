@@ -120,6 +120,61 @@ pub const VERDICT_APPROVED: &str = "approved";
 pub const VERDICT_REJECTED: &str = "rejected";
 pub const VERDICT_AMENDMENT_REQUIRED: &str = "amendment-required";
 
+// --- FT-022 / ADR-017: VerifierDispatchEvent vocabulary -----------------------
+
+/// Class IRI for `dec:VerifierDispatchEvent` (FT-022 §Outputs).
+pub const IRI_DEC_VERIFIER_DISPATCH_EVENT: &str =
+    "https://decision-cli.dev/ns#VerifierDispatchEvent";
+
+/// `dec:eventClass` predicate — short tag for the event payload class.
+pub const IRI_DEC_EVENT_CLASS: &str = "https://decision-cli.dev/ns#eventClass";
+
+/// `dec:targetRole` predicate — `dec:roleId` the event is routed to.
+pub const IRI_DEC_TARGET_ROLE: &str = "https://decision-cli.dev/ns#targetRole";
+
+/// `dec:dispatchGroup` predicate — link back to the originating DispatchGroup.
+pub const IRI_DEC_DISPATCH_GROUP_REF: &str = "https://decision-cli.dev/ns#dispatchGroup";
+
+/// `dec:bundleSeed` predicate — IRI of the action artifact/session seeding the
+/// downstream bundle (consumed by the verifier worker harness in FT-023).
+pub const IRI_DEC_BUNDLE_SEED: &str = "https://decision-cli.dev/ns#bundleSeed";
+
+/// `dec:emittedAt` predicate — RFC3339 timestamp of event emission.
+pub const IRI_DEC_EMITTED_AT: &str = "https://decision-cli.dev/ns#emittedAt";
+
+/// Stable `dec:eventClass` literal for verifier-dispatch events.
+pub const EVENT_CLASS_VERIFIER_DISPATCH: &str = "verifier-dispatch";
+
+#[must_use]
+pub fn verifier_dispatch_event_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_VERIFIER_DISPATCH_EVENT)
+}
+
+#[must_use]
+pub fn event_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_EVENT_CLASS)
+}
+
+#[must_use]
+pub fn target_role() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_TARGET_ROLE)
+}
+
+#[must_use]
+pub fn dispatch_group_ref() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_DISPATCH_GROUP_REF)
+}
+
+#[must_use]
+pub fn bundle_seed() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_BUNDLE_SEED)
+}
+
+#[must_use]
+pub fn emitted_at() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_EMITTED_AT)
+}
+
 #[must_use]
 pub fn verification_verdict_class() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_VERIFICATION_VERDICT)

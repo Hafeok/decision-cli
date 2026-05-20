@@ -1,0 +1,35 @@
+# Verifier dispatch subscription seed (FT-022 / ADR-017).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs).
+# Forms part of the bootstrap baseline alongside the slice-1 v0
+# subscriptions and the verifier role catalog entry.
+#
+# - oxi:selectQuery   : DispatchGroup in `awaiting-interpretation` that
+#                       has not yet been paired with an interpretation
+#                       session (idempotency clause via `FILTER NOT EXISTS`).
+# - oxi:mode "async"  : the verifier worker is out-of-process; deliveries
+#                       flow through the outbox / SSE transport
+#                       (FT-002 §SubscriptionMode::Async).
+# - oxi:handler       : opaque tag the slice-2 harness binds to the
+#                       verifier-dispatch delivery handler
+#                       (core::subscriptions::verifier_dispatch).
+#
+# Idempotency: the `FILTER NOT EXISTS { ?group dec:hasInterpretationSession ?ses }`
+# clause ensures exactly one verifier dispatch event per DispatchGroup
+# in `awaiting-interpretation`, per FT-022 §Invariants.
+
+@prefix oxi:  <https://decision-cli.dev/oxi-events/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://decision-cli.dev/ns/subscription/verifier-dispatch>
+    a oxi:Subscription ;
+    rdfs:label "verifier dispatch (action complete, no verifier yet)" ;
+    oxi:selectQuery """PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?group ?actionSession WHERE {
+  ?group a dec:DispatchGroup ;
+         dec:dispatchStatus \"awaiting-interpretation\" ;
+         dec:hasActionSession ?actionSession .
+  FILTER NOT EXISTS { ?group dec:hasInterpretationSession ?interpretationSession }
+}""" ;
+    oxi:mode "async" ;
+    oxi:handler "verifier-dispatch" .

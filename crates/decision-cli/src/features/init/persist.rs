@@ -161,7 +161,9 @@ pub(super) fn json_escape(s: &str) -> String {
     out
 }
 
-/// Seed the v0 bootstrap subscriptions (FT-009 §Behaviour step 4).
+/// Seed the v0 bootstrap subscriptions (FT-009 §Behaviour step 4) plus
+/// the FT-022 verifier-dispatch subscription (lives alongside the v0
+/// pair so the slice-2 substrate is available from the first dispatch).
 pub(super) fn seed_bootstrap_subscriptions(
     store: &Store,
 ) -> Result<(), oxigraph::store::StorageError> {
@@ -172,6 +174,11 @@ pub(super) fn seed_bootstrap_subscriptions(
     for (iri, label, query) in entries {
         quads.extend(build_subscription_quads(iri, label, query, &subs_graph));
     }
+    // FT-022: verifier-dispatch subscription owns its own quad builder
+    // because it carries `oxi:handler` + `oxi:mode "async"`, which the
+    // slice-1 v0 subscriptions do not. Reusing
+    // `build_subscription_quads` would lose those fields.
+    quads.extend(crate::core::subscriptions::verifier_dispatch::seed_quads());
     store.transaction(|mut tx| {
         for q in &quads {
             tx.insert(q.as_ref())?;

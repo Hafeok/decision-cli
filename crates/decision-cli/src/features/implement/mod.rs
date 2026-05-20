@@ -42,6 +42,9 @@ use oxigraph::store::Store;
 
 use crate::core::dispatch::{DispatchEvent, DispatchGroup, DispatchStatus};
 use crate::core::scope::ActiveScope;
+use crate::core::subscriptions::verifier_dispatch::{
+    emit_verifier_dispatch_event, VerifierDispatchSeed,
+};
 use crate::core::StreamWriter;
 
 pub use bundle::resolve_product_root;
@@ -337,6 +340,12 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     // verifier dispatch itself is FT-022 / FT-023; from FT-021's point
     // of view the group is now ready for that subscription to fire.
     let _final_status = transition_after_action(&mut ctx)?;
+    // FT-022 / ADR-017: now that the group is `awaiting-interpretation`,
+    // run the verifier-dispatch subscription's delivery handler so the
+    // outbox carries the `dec:VerifierDispatchEvent` for FT-023 to pick
+    // up. The handler is idempotent — a stale event from a previous run
+    // is not duplicated.
+    emit_verifier_dispatch_for_group(&mut ctx)?;
     let finalize_outcome = finalize_implement_run(workdir, &ctx, args, code_change)?;
     Ok(assemble_implement_outcome(
         ctx,
@@ -363,4 +372,25 @@ fn transition_after_action(ctx: &mut DispatchContext) -> Result<DispatchStatus> 
         })?;
     persist_store(&ctx.store, &ctx.dump_path)?;
     Ok(status)
+}
+
+/// FT-022 / ADR-017 — fire the verifier-dispatch handler for the
+/// just-transitioned `DispatchGroup`. Idempotent: a previous emission
+/// for the same group suppresses the second one. Persists the store
+/// snapshot so a fresh `dec` process picks the event up after a crash.
+fn emit_verifier_dispatch_for_group(ctx: &mut DispatchContext) -> Result<()> {
+    if ctx.group.status != DispatchStatus::AwaitingInterpretation {
+        return Ok(());
+    }
+    let seed = VerifierDispatchSeed {
+        group: ctx.group.iri.clone(),
+        action_session: ctx.group.action_session.clone(),
+    };
+    let emitted_at = Utc::now().to_rfc3339();
+    let emitted = emit_verifier_dispatch_event(&ctx.writer, &ctx.store, &seed, &emitted_at)
+        .map_err(|e| anyhow!("verifier dispatch handler: {e}"))?;
+    if emitted.is_some() {
+        persist_store(&ctx.store, &ctx.dump_path)?;
+    }
+    Ok(())
 }
