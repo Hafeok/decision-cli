@@ -40,6 +40,7 @@ use oxigraph::io::RdfFormat;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
 
+use crate::core::dispatch::{DispatchEvent, DispatchGroup, DispatchStatus};
 use crate::core::scope::ActiveScope;
 use crate::core::StreamWriter;
 
@@ -119,6 +120,8 @@ struct DispatchContext {
     store: Arc<Store>,
     writer: StreamWriter,
     worker_argv: Vec<String>,
+    /// FT-021 / ADR-017: the paired DispatchGroup minted at command entry.
+    group: DispatchGroup,
 }
 
 fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchContext> {
@@ -137,6 +140,10 @@ fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchCont
     let (store, writer, dump_path) = load_store_and_writer(workdir)?;
     let iris = mint_dispatch_iris(args, &bundle)?;
     commit_initial_session(&writer, &store, &dump_path, args, &bundle, &iris)?;
+    // FT-021 / ADR-017: mint the DispatchGroup at command entry, status
+    // `awaiting-action`. The state machine transitions on the action
+    // worker's terminal outcome below.
+    let group = mint_dispatch_group(&writer, &store, &dump_path, args, &iris)?;
     let workspace_dir = resolve_workspace_dir(workdir, args)?;
     Ok(DispatchContext {
         session_iri: iris.session,
@@ -149,7 +156,34 @@ fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchCont
         store,
         writer,
         worker_argv,
+        group,
     })
+}
+
+/// Mint a fresh `dec:DispatchGroup` paired with the action session
+/// (FT-021 §Behaviour). Persists the store snapshot so the new artifact
+/// shows up in subsequent `dec` invocations even if the worker crashes.
+fn mint_dispatch_group(
+    writer: &StreamWriter,
+    store: &Store,
+    dump_path: &Path,
+    args: &ImplementArgs,
+    iris: &MintedIris,
+) -> Result<DispatchGroup> {
+    let group_uuid = uuid::Uuid::new_v4();
+    let group_iri = NamedNode::new(format!(
+        "https://decision-cli.dev/ns/dispatch-group/{group_uuid}"
+    ))
+    .context("minting DispatchGroup IRI")?;
+    let group = DispatchGroup::mint(
+        writer,
+        group_iri,
+        iris.session.clone(),
+        args.feature_id.clone(),
+    )
+    .with_context(|| format!("minting DispatchGroup for {}", args.feature_id))?;
+    persist_store(store, dump_path)?;
+    Ok(group)
 }
 
 /// Load the active scope and reject the dispatch if the stream does not
@@ -269,30 +303,40 @@ fn resolve_workspace_dir(workdir: &Path, args: &ImplementArgs) -> Result<PathBuf
     Ok(workspace_dir)
 }
 
-fn record_worker_failure(ctx: &DispatchContext, detail: &str) {
+fn record_worker_failure(ctx: &mut DispatchContext, detail: &str) {
     let mut fail = Mutation::default();
     fail.inserts
         .push(build_failure_quad(&ctx.session_iri, detail));
     ctx.writer
         .commit(fail.with_cause("dec implement: worker failure"))
         .ok();
+    // FT-021 / ADR-017: action failure transitions the DispatchGroup
+    // into `action-failed`. The verifier is NOT dispatched.
+    let _ = ctx
+        .group
+        .transition(&ctx.writer, DispatchEvent::ActionFailed);
     let _ = persist_store(&ctx.store, &ctx.dump_path);
 }
 
 /// Run the implementer dispatch end-to-end. See module docs.
 pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
-    let ctx = prepare_dispatch(workdir, args)?;
+    let mut ctx = prepare_dispatch(workdir, args)?;
     let dispatch_payload = build_dispatch_payload(&ctx, args);
     let response =
         run_worker(&ctx.worker_argv, &dispatch_payload).context("running code-writer worker")?;
     if response.status != "ok" {
         let detail = format_worker_failure(response.error.as_ref());
-        record_worker_failure(&ctx, &detail);
+        record_worker_failure(&mut ctx, &detail);
         return Err(anyhow!("code-writer worker reported failure: {detail}"));
     }
     let code_change = extract_code_change(&response)?;
     let codechange_path = persist_code_change(&ctx, args, code_change)?;
     commit_session_completion(&ctx, code_change)?;
+    // FT-021 / ADR-017: action terminated with a produced artifact.
+    // Transition the DispatchGroup to `awaiting-interpretation`. The
+    // verifier dispatch itself is FT-022 / FT-023; from FT-021's point
+    // of view the group is now ready for that subscription to fire.
+    let _final_status = transition_after_action(&mut ctx)?;
     let finalize_outcome = finalize_implement_run(workdir, &ctx, args, code_change)?;
     Ok(assemble_implement_outcome(
         ctx,
@@ -301,4 +345,22 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         codechange_path,
         finalize_outcome,
     ))
+}
+
+/// Advance the DispatchGroup after the action session has terminated
+/// with a produced artifact. Returns the resulting status (typically
+/// [`DispatchStatus::AwaitingInterpretation`]) so callers can decide
+/// whether to block on the verifier.
+fn transition_after_action(ctx: &mut DispatchContext) -> Result<DispatchStatus> {
+    let status = ctx
+        .group
+        .transition(&ctx.writer, DispatchEvent::ActionCompleted)
+        .with_context(|| {
+            format!(
+                "transitioning DispatchGroup {} to awaiting-interpretation",
+                ctx.group.iri_str()
+            )
+        })?;
+    persist_store(&ctx.store, &ctx.dump_path)?;
+    Ok(status)
 }

@@ -150,6 +150,16 @@ dec:hasInterpretationSession a rdf:Property ;
     rdfs:range  dec:InterpretationSession ;
     rdfs:comment "Links a DispatchGroup to its paired InterpretationSession (ADR-017)." .
 
+dec:dispatchedFor a rdf:Property ;
+    rdfs:domain dec:DispatchGroup ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "The feature_spec id (e.g. \"FT-021\") this DispatchGroup is acting on (ADR-017 / FT-021)." .
+
+dec:dispatchStatus a rdf:Property ;
+    rdfs:domain dec:DispatchGroup ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Lifecycle state of the DispatchGroup: awaiting-action | awaiting-interpretation | interpretation-running | interpretation-rejected | awaiting-amendment | action-failed | interpretation-failed | complete (FT-021)." .
+
 # --- FT-020 / ADR-018: VerificationVerdict properties -----------------------
 
 dec:verdict a rdf:Property ;

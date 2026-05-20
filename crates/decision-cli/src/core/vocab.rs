@@ -20,6 +20,84 @@ pub const IRI_DEC_EVENT: &str = "https://decision-cli.dev/ns#Event";
 pub const IRI_DEC_IN_STREAM: &str = "https://decision-cli.dev/ns#inStream";
 pub const IRI_DEC_GRAPH_ORCHESTRATION: &str = "https://decision-cli.dev/ns/orchestration";
 
+// --- FT-021 / ADR-017: DispatchGroup vocabulary ------------------------------
+
+/// Class IRI for `dec:DispatchGroup` (ADR-017).
+pub const IRI_DEC_DISPATCH_GROUP: &str = "https://decision-cli.dev/ns#DispatchGroup";
+
+/// Class IRI for `dec:ActionSession` (ADR-017).
+pub const IRI_DEC_ACTION_SESSION: &str = "https://decision-cli.dev/ns#ActionSession";
+
+/// Class IRI for `dec:InterpretationSession` (ADR-017).
+pub const IRI_DEC_INTERPRETATION_SESSION: &str =
+    "https://decision-cli.dev/ns#InterpretationSession";
+
+/// `dec:hasActionSession` predicate — DispatchGroup → ActionSession.
+pub const IRI_DEC_HAS_ACTION_SESSION: &str = "https://decision-cli.dev/ns#hasActionSession";
+
+/// `dec:hasInterpretationSession` predicate — DispatchGroup → InterpretationSession.
+pub const IRI_DEC_HAS_INTERPRETATION_SESSION: &str =
+    "https://decision-cli.dev/ns#hasInterpretationSession";
+
+/// `dec:dispatchedFor` predicate — DispatchGroup → feature_spec string.
+pub const IRI_DEC_DISPATCHED_FOR: &str = "https://decision-cli.dev/ns#dispatchedFor";
+
+/// `dec:dispatchStatus` predicate — DispatchGroup → status literal.
+pub const IRI_DEC_DISPATCH_STATUS: &str = "https://decision-cli.dev/ns#dispatchStatus";
+
+/// `prov:wasInformedBy` predicate — Activity → Activity.
+pub const IRI_PROV_WAS_INFORMED_BY: &str = "http://www.w3.org/ns/prov#wasInformedBy";
+
+/// DispatchGroup lifecycle states per FT-021 §Outputs.
+pub const DISPATCH_STATUS_AWAITING_ACTION: &str = "awaiting-action";
+pub const DISPATCH_STATUS_AWAITING_INTERPRETATION: &str = "awaiting-interpretation";
+pub const DISPATCH_STATUS_INTERPRETATION_RUNNING: &str = "interpretation-running";
+pub const DISPATCH_STATUS_INTERPRETATION_REJECTED: &str = "interpretation-rejected";
+pub const DISPATCH_STATUS_AWAITING_AMENDMENT: &str = "awaiting-amendment";
+pub const DISPATCH_STATUS_ACTION_FAILED: &str = "action-failed";
+pub const DISPATCH_STATUS_INTERPRETATION_FAILED: &str = "interpretation-failed";
+pub const DISPATCH_STATUS_COMPLETE: &str = "complete";
+
+#[must_use]
+pub fn dispatch_group_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_DISPATCH_GROUP)
+}
+
+#[must_use]
+pub fn action_session_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_ACTION_SESSION)
+}
+
+#[must_use]
+pub fn interpretation_session_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_INTERPRETATION_SESSION)
+}
+
+#[must_use]
+pub fn has_action_session() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_HAS_ACTION_SESSION)
+}
+
+#[must_use]
+pub fn has_interpretation_session() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_HAS_INTERPRETATION_SESSION)
+}
+
+#[must_use]
+pub fn dispatched_for() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_DISPATCHED_FOR)
+}
+
+#[must_use]
+pub fn dispatch_status() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_DISPATCH_STATUS)
+}
+
+#[must_use]
+pub fn was_informed_by() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_PROV_WAS_INFORMED_BY)
+}
+
 // --- FT-020 / ADR-018: VerificationVerdict vocabulary -------------------------
 
 /// Class IRI for `dec:VerificationVerdict` (ADR-018).
@@ -71,8 +149,11 @@ pub fn amendment_guidance() -> NamedNodeRef<'static> {
 /// active `dec:ValueStream` (TC-014, ADR-005).
 pub const SCOPED_CLASSES: &[&str] = &[
     IRI_DEC_SESSION,
+    IRI_DEC_ACTION_SESSION,
+    IRI_DEC_INTERPRETATION_SESSION,
     IRI_DEC_GOAL,
     IRI_DEC_DISPATCH,
+    IRI_DEC_DISPATCH_GROUP,
     IRI_DEC_EVENT,
 ];
 

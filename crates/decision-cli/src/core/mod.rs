@@ -9,6 +9,7 @@
 //! library, and the worker resolution chain.
 
 pub mod bundled;
+pub mod dispatch;
 pub mod ontology;
 pub mod role_catalog;
 pub mod scope;

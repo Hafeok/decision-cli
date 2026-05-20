@@ -122,6 +122,49 @@ dec:RoleShape a sh:NodeShape ;
         sh:message  "dec:Role requires exactly one dec:roleModelBinding (string)."
     ] .
 
+# --- DispatchGroup shape (FT-021 / ADR-017) ----------------------------------
+
+dec:DispatchGroupShape a sh:NodeShape ;
+    sh:targetClass dec:DispatchGroup ;
+
+    sh:property [
+        sh:path     dec:dispatchStatus ;
+        sh:in       ( "awaiting-action"
+                      "awaiting-interpretation"
+                      "interpretation-running"
+                      "interpretation-rejected"
+                      "awaiting-amendment"
+                      "action-failed"
+                      "interpretation-failed"
+                      "complete" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:DispatchGroup requires exactly one dec:dispatchStatus from the enumerated lifecycle set (FT-021 / ADR-017)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:dispatchedFor ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:DispatchGroup requires exactly one dec:dispatchedFor (the feature_spec id)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:hasActionSession ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:DispatchGroup requires exactly one dec:hasActionSession link (ADR-017)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:inStream ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:DispatchGroup requires exactly one dec:inStream link (ADR-005)."
+    ] .
+
 # --- VerificationVerdict shape (FT-020 / ADR-018) ---------------------------
 
 dec:VerificationVerdictShape a sh:NodeShape ;

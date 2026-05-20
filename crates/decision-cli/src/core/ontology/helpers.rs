@@ -134,6 +134,13 @@ const VERIFICATION_VERDICT_PROPS: &[&str] = &[
     "https://decision-cli.dev/ns#inStream",
 ];
 
+const DISPATCH_GROUP_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#dispatchStatus",
+    "https://decision-cli.dev/ns#dispatchedFor",
+    "https://decision-cli.dev/ns#hasActionSession",
+    "https://decision-cli.dev/ns#inStream",
+];
+
 fn required_shape_properties() -> &'static [(&'static str, &'static [&'static str])] {
     &[
         ("https://decision-cli.dev/ns#ValueStream", VALUE_STREAM_PROPS),
@@ -142,6 +149,10 @@ fn required_shape_properties() -> &'static [(&'static str, &'static [&'static st
         (
             "https://decision-cli.dev/ns#VerificationVerdict",
             VERIFICATION_VERDICT_PROPS,
+        ),
+        (
+            "https://decision-cli.dev/ns#DispatchGroup",
+            DISPATCH_GROUP_PROPS,
         ),
     ]
 }

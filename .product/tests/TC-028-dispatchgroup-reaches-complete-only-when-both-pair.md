@@ -2,7 +2,7 @@
 id: TC-028
 title: DispatchGroup reaches complete only when both paired sessions are terminal
 type: invariant
-status: failing
+status: passing
 validates:
   features:
   - FT-021
@@ -13,9 +13,8 @@ phase: 2
 runner: bash
 runner-args: scripts/checks/dispatch-complete-paired-terminal.sh
 runner-timeout: 60
-last-run: 2026-05-20T08:39:57.378014998+00:00
+last-run: 2026-05-20T09:16:16.323338598+00:00
 last-run-duration: 0.0s
-failure-message: "bash: line 1: scripts/checks/dispatch-complete-paired-terminal.sh: No such file or directory\n"
 ---
 
 ## Description

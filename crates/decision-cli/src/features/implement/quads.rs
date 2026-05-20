@@ -2,7 +2,9 @@
 
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 
-use crate::core::vocab::{orchestration_graph, IRI_DEC_DISPATCH, IRI_DEC_SESSION};
+use crate::core::vocab::{
+    orchestration_graph, IRI_DEC_ACTION_SESSION, IRI_DEC_DISPATCH, IRI_DEC_SESSION,
+};
 
 use super::vocab::{
     DEC_BUNDLE_REF, DEC_CONTENT_HASH, DEC_DISPATCH_PROP, DEC_FEATURE_ID, DEC_MODEL_REF,
@@ -46,10 +48,14 @@ fn session_typing_quads(
 ) -> Vec<Quad> {
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
     let session_class = NamedNodeRef::new_unchecked(IRI_DEC_SESSION).into_owned();
+    let action_class = NamedNodeRef::new_unchecked(IRI_DEC_ACTION_SESSION).into_owned();
     let activity = NamedNodeRef::new_unchecked(PROV_ACTIVITY).into_owned();
     let used = NamedNodeRef::new_unchecked(PROV_USED).into_owned();
     vec![
         Quad::new(session.clone(), rdf_type.clone(), session_class, g.clone()),
+        // FT-021 / ADR-017: implementer session is also typed as
+        // dec:ActionSession so it can be paired by a DispatchGroup.
+        Quad::new(session.clone(), rdf_type.clone(), action_class, g.clone()),
         Quad::new(session.clone(), rdf_type, activity, g.clone()),
         Quad::new(session.clone(), used.clone(), bundle.clone(), g.clone()),
         Quad::new(session.clone(), used, model.clone(), g.clone()),
