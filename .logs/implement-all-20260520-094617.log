@@ -40,3 +40,61 @@ FT-016 is complete. Here's a summary of what was implemented:
   ✓ Tagged: product/FT-016/complete-v2
     Run `git push --tags` to share.
 FT-016 completed successfully.
+[main ea69e44] Implement FT-016: decision-cli: Worker preflight audit at dec init
+ 29 files changed, 1568 insertions(+), 60 deletions(-)
+ create mode 100644 .logs/implement-all-20260520-094617.log
+ create mode 100644 crates/decision-cli/src/cli/doctor.rs
+ create mode 100644 crates/decision-cli/src/worker/assets/manifest.toml
+ create mode 100644 crates/decision-cli/src/worker/manifest.rs
+ create mode 100644 crates/decision-cli/src/worker/mod.rs
+ create mode 100644 crates/decision-cli/src/worker/report.rs
+ create mode 100644 crates/decision-cli/src/worker/resolve.rs
+ create mode 100755 scripts/checks/worker-resolution-single-source.sh
+ create mode 100755 tests/scripts/tc-046-dec-init-preflight.sh
+ create mode 100755 tests/scripts/tc-047-dec-doctor-exit-code.sh
+ create mode 100755 tests/scripts/tc-048-dec-doctor-json.sh
+ create mode 100755 tests/scripts/tc-049-implement-aborts-pre-session.sh
+ create mode 100644 workers/code-writer/.logs/implement-all-20260520-094421.log
+ create mode 100644 workers/code-writer/.logs/implement-all-20260520-094516.log
+Committed FT-016.
+
+============================================================
+  Iteration 2: implementing FT-017 — decision-cli: Implementer finalizes its run
+  Wed May 20 10:03:51 CEST 2026
+============================================================
+product implement FT-017
+
+  Step 0: Preflight... OK (all domains and cross-cutting ADRs covered)
+  Step 1: Gap gate... OK (no high-severity gaps)
+  Step 2: Drift check... (advisory, skipped — no drift config)
+  Step 3: Context assembly... OK
+  Context file: /tmp/product-impl-FT-017-1779264231.md
+  Step 4: Invoking agent (headless)...
+FT-017 implementation complete. Here's a summary of the changes:
+
+## Summary
+
+**FT-017 — decision-cli: Implementer finalizes its run (commit + status transition)** is now wired and verified.
+
+### Findings on entry
+The Rust-side machinery (`finalize/mod.rs`, `implement/lifecycle.rs`, `cli/implement.rs`, `ImplementOutcome.finalize`) was already mostly in place from prior work — but TC-018 had no test asset and there was a latent ordering bug.
+
+### Changes
+
+1. **`crates/decision-cli/src/finalize/mod.rs`** — Reordered `finalize_run` so the feature_spec status transition runs **before** `git add -A`. Otherwise the post-commit status transition would leave `.product/features/FT-XXX-*.md` modified, and TC-018 #1 (clean working tree) and #5 (`status: complete`) cannot both hold. The FT-017 invariant "status transition is the last observable side-effect" still holds in the user-visible sense: the feature lands at `complete`, committed, and is the operator's terminal observation.
+
+2. **`crates/decision-cli/tests/tc_018_finalize_commit_and_status.rs`** — New integration test, hermetic fixture: tempdir git repo (with initial commit) + `dec init` template + minimal `.product/` seeded via raw markdown + `CODE_WRITER_STUB=1`. Asserts each of TC-018's six acceptance criteria including the failing-pre-commit-hook → `CommitFailed` path.
+
+3. **`.product/tests/TC-018-...md`** — Added `runner: cargo-test` / `runner-args: -p decision-cli --test tc_018_finalize_commit_and_status` / `runner-timeout: 120` so `product verify` actually executes the TC.
+
+### Verification
+
+- `cargo test --workspace` → all 60+ tests pass.
+- `workers/code-writer` pytest → 12 passed.
+- `product verify FT-017` → `TC-018 PASS (1.1s)`; feature transitioned to `complete`; git tag `product/FT-017/complete` created.
+  Agent completed successfully.
+  Step 5: Running verify...
+  TC-018 dec implement commits the working tree and flips feature status PASS (1.0s)
+  ✓ Tagged: product/FT-017/complete-v2
+    Run `git push --tags` to share.
+FT-017 completed successfully.

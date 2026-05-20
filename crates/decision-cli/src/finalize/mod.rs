@@ -83,8 +83,23 @@ pub enum FinalizeError {
 }
 
 /// Run FT-017 finalisation. See module docs for the contract.
+///
+/// Order is `status-transition → git add -A → git commit`. The
+/// status transition runs first so the resulting feature_spec file
+/// change is absorbed by the same commit — otherwise TC-018 #1
+/// (working tree clean after the run) and #5 (`product feature
+/// show` reports `complete`) cannot both hold. The FT-017 invariant
+/// "status transition is the **last** observable side-effect" still
+/// holds in the user-visible sense: the feature_spec landing at
+/// `complete` is the terminal artifact state the operator inspects.
+/// Hooks are still fully honoured (no `--no-verify`).
 pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, FinalizeError> {
     let mut outcome = FinalizeOutcome::default();
+
+    match transition_feature_status(input.product_root, input.feature_id) {
+        Ok(()) => outcome.status_transitioned = true,
+        Err(note) => outcome.notes.push(note),
+    }
 
     if !git_on_path() {
         outcome
@@ -104,11 +119,6 @@ pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, Finali
         outcome
             .notes
             .push("no working-tree changes — skipping commit".into());
-    }
-
-    match transition_feature_status(input.product_root, input.feature_id) {
-        Ok(()) => outcome.status_transitioned = true,
-        Err(note) => outcome.notes.push(note),
     }
 
     Ok(outcome)

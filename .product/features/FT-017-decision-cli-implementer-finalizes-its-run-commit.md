@@ -2,7 +2,7 @@
 id: FT-017
 title: 'decision-cli: Implementer finalizes its run (commit + status transition)'
 phase: 1
-status: planned
+status: complete
 depends-on:
 - FT-011
 adrs:
@@ -13,22 +13,22 @@ tests:
 - TC-018
 domains: []
 domains-acknowledged:
-  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-017 produces no feedback artifacts.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-017's code is reorganised under that migration, not by this feature.
   ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-017 runs inside an already-scoped command and does not introduce a new scope check.
   ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-017 produces no feedback artifacts.
-  ADR-002: FT-017 writes to git and shells out to product-cli; the orchestration store is already finalized by FT-011 step 6, so no graph-as-state mutation happens here.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-017 produces no action/interpretation pair.
-  ADR-014: FT-017 is a behavior-level feature; it does not author or modify any cross-cutting rule. Compliance is verified by the existing CI gates.
   ADR-013: FT-017 lands new functions in implement.rs (already at 916 lines). Implementation will extract a finalize submodule to keep the host file under the 400-line hard limit.
-  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-017 is out of scope for the pairing.
-  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-017 neither emits nor routes feedback.
+  ADR-002: FT-017 writes to git and shells out to product-cli; the orchestration store is already finalized by FT-011 step 6, so no graph-as-state mutation happens here.
+  ADR-004: FT-017 produces no new Session/Event/CodeChange artifact; PROV-O links are emitted in the commit message body as plain references rather than as new graph quads.
+  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-017 produces no feedback artifacts.
+  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-017 does not introduce or modify a role catalog entry.
   ADR-001: FT-017 is harness-side post-run automation in the decision-cli crate; it never touches the oxi-events SDP boundary.
   ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-017 neither emits nor consumes verdicts.
-  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-017 runs after the working directory is resolved and does not re-discover it.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-017's code is reorganised under that migration, not by this feature.
-  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-017 does not introduce or modify a role catalog entry.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-017 produces no action/interpretation pair.
+  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-017 is out of scope for the pairing.
+  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-017 neither emits nor routes feedback.
   ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-017 has no feedback to gate.
-  ADR-004: FT-017 produces no new Session/Event/CodeChange artifact; PROV-O links are emitted in the commit message body as plain references rather than as new graph quads.
+  ADR-014: FT-017 is a behavior-level feature; it does not author or modify any cross-cutting rule. Compliance is verified by the existing CI gates.
+  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-017 runs after the working directory is resolved and does not re-discover it.
 ---
 
 ## Description
