@@ -98,3 +98,20 @@ The Rust-side machinery (`finalize/mod.rs`, `implement/lifecycle.rs`, `cli/imple
   ✓ Tagged: product/FT-017/complete-v2
     Run `git push --tags` to share.
 FT-017 completed successfully.
+[main f7d7788] Implement FT-017: decision-cli: Implementer finalizes its run
+ 6 files changed, 471 insertions(+), 17 deletions(-)
+ create mode 100644 crates/decision-cli/tests/tc_018_finalize_commit_and_status.rs
+Committed FT-017.
+
+============================================================
+  Iteration 3: implementing FT-018 — decision-cli: Migrate to vertical-slice layout under SDP
+  Wed May 20 10:13:42 CEST 2026
+============================================================
+product implement FT-018
+
+  Step 0: Preflight... OK (all domains and cross-cutting ADRs covered)
+  Step 1: Gap gate... OK (no high-severity gaps)
+  Step 2: Drift check... (advisory, skipped — no drift config)
+  Step 3: Context assembly... OK
+  Context file: /tmp/product-impl-FT-018-1779264822.md
+  Step 4: Invoking agent (headless)...

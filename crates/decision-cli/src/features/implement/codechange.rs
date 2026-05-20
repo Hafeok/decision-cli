@@ -9,7 +9,7 @@ use oxigraph::io::RdfFormat;
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 use oxigraph::store::Store;
 
-use crate::vocab::IRI_DEC_GRAPH_ORCHESTRATION;
+use crate::core::vocab::IRI_DEC_GRAPH_ORCHESTRATION;
 
 use super::vocab::{
     DEC_CHANGED_FILE, DEC_CODE_CHANGE_CLASS, DEC_DISPATCH_PROP, DEC_FEATURE_ID, DEC_FILE_PATH_PROP,

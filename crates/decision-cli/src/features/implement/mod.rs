@@ -40,8 +40,8 @@ use oxigraph::io::RdfFormat;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
 
-use crate::scope::ActiveScope;
-use crate::StreamWriter;
+use crate::core::scope::ActiveScope;
+use crate::core::StreamWriter;
 
 pub use bundle::resolve_product_root;
 pub use session_show::session_show;

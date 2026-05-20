@@ -2,7 +2,7 @@
 
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 
-use crate::vocab::{orchestration_graph, IRI_DEC_DISPATCH, IRI_DEC_SESSION};
+use crate::core::vocab::{orchestration_graph, IRI_DEC_DISPATCH, IRI_DEC_SESSION};
 
 use super::vocab::{
     DEC_BUNDLE_REF, DEC_CONTENT_HASH, DEC_DISPATCH_PROP, DEC_FEATURE_ID, DEC_MODEL_REF,

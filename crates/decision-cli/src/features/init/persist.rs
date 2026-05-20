@@ -14,7 +14,7 @@ use super::vocab::{
     DEC_ONTOLOGY_VERSION, DEC_SESSION_CLASS, PROV_ACTIVITY, PROV_AT_TIME, PROV_DERIVED_FROM,
     RDF_TYPE,
 };
-use crate::worker::manifest_sha256_hex;
+use crate::core::worker::manifest_sha256_hex;
 use super::InitError;
 
 pub(super) fn copy_triples_default(

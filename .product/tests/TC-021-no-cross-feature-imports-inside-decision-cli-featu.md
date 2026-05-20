@@ -2,7 +2,7 @@
 id: TC-021
 title: no cross-feature imports inside decision-cli features
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs:
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/vertical-slice-imports.sh
 runner-timeout: 60
+last-run: 2026-05-20T08:26:41.315265110+00:00
+last-run-duration: 0.1s
 ---
 
 ## Purpose

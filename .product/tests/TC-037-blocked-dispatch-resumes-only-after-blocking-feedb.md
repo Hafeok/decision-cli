@@ -12,6 +12,9 @@ phase: 2
 runner: bash
 runner-args: scripts/checks/feedback-resume-on-addressed.sh
 runner-timeout: 180
+last-run: 2026-05-20T08:26:41.315265110+00:00
+last-run-duration: 0.0s
+failure-message: "bash: line 1: scripts/checks/feedback-resume-on-addressed.sh: No such file or directory\n"
 ---
 
 ## Description

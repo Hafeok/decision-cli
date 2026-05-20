@@ -12,7 +12,7 @@ use std::process::{Command, Stdio};
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::worker::{
+use crate::core::worker::{
     self, format_report_text, role_entry, ResolveInputs, Resolution, WorkerReport,
 };
 

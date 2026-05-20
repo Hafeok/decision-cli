@@ -2,7 +2,7 @@
 id: TC-024
 title: prov_o_lineage_in_writer_and_init
 type: invariant
-status: passing
+status: failing
 validates:
   features: []
   adrs:
@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/prov-o-lineage.sh
 runner-timeout: 60
-last-run: ''
-failure-message: ''
+last-run: 2026-05-20T08:26:41.315265110+00:00
+failure-message: "ERROR: expected crates/decision-cli/src/init (ADR-004 anchor)\n"
 last-run-duration: 0.0s
 ---
 

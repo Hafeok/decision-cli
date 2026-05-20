@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 use oxigraph::store::Store;
 
-use crate::bundled;
+use crate::core::bundled;
 
 use super::parse::parse_into_graph;
 use super::persist::{build_session_quads, copy_triples_default, seed_bootstrap_subscriptions};

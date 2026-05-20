@@ -304,7 +304,7 @@ fn python_import_probe(module: &str) -> PythonProbe {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::worker::manifest::role_entry;
+    use crate::core::worker::manifest::role_entry;
 
     #[test]
     fn override_resolves_first() {

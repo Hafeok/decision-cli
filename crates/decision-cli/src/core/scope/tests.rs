@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use crate::bundled;
-use crate::init::{self, DefinitionSource};
+use crate::core::bundled;
+use crate::features::init::{self, DefinitionSource};
 
 use super::{ActiveScope, ScopeError};
 

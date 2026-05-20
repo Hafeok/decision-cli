@@ -7,7 +7,7 @@ use oxigraph::io::{RdfFormat, RdfParser};
 use oxigraph::model::{GraphName, NamedNode};
 use oxigraph::store::Store;
 
-use crate::bundled;
+use crate::core::bundled;
 
 use super::{DefinitionSource, InitError};
 

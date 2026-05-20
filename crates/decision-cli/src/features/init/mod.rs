@@ -27,7 +27,7 @@ use std::path::{Path, PathBuf};
 use chrono::Utc;
 use thiserror::Error;
 
-use crate::ontology::{OntologyError, OntologyHandle};
+use crate::core::ontology::{OntologyError, OntologyHandle};
 
 use parse::read_definition_bytes;
 use persist::{finalise_orchestration_dir, json_escape, sha256_hex};

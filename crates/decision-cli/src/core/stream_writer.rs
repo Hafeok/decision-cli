@@ -16,7 +16,7 @@ use oxi_events::{CommitResult, GraphWriter, Mutation};
 use oxigraph::model::{GraphName, NamedNode, NamedNodeRef, Quad, Term};
 use oxigraph::store::Store;
 
-use crate::vocab::{
+use crate::core::vocab::{
     in_stream, orchestration_graph, value_stream_class, IRI_DEC_GRAPH_ORCHESTRATION,
     IRI_DEC_IN_STREAM, IRI_DEC_VALUE_STREAM, SCOPED_CLASSES,
 };

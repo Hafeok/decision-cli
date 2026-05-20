@@ -25,9 +25,9 @@ use oxigraph::io::RdfFormat;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
 
-use crate::ontology::OntologyHandle;
-use crate::scope::ActiveScope;
-use crate::StreamWriter;
+use crate::core::ontology::OntologyHandle;
+use crate::core::scope::ActiveScope;
+use crate::core::StreamWriter;
 
 /// Outcome of one of the three gates.
 #[derive(Debug, Clone, PartialEq, Eq)]

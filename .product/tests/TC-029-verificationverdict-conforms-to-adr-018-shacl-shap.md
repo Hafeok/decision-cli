@@ -13,6 +13,9 @@ phase: 2
 runner: cargo-test
 runner-args: --package decision-cli --test verdict_shacl
 runner-timeout: 180
+last-run: 2026-05-20T08:26:41.315265110+00:00
+last-run-duration: 0.1s
+failure-message: "error: no test target named `verdict_shacl` in `decision-cli` package\nhelp: available test targets:\n    tc_012_session_invariants\n    tc_014_in_stream_invariant\n    tc_015_bootstrap_session\n    tc_018_finalize_commit_and_status\n    tc_019_bootstrap_subscriptions\n"
 ---
 
 ## Description

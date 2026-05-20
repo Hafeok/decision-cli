@@ -11,8 +11,7 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/oxi-events-sdp-boundary.sh
 runner-timeout: 60
-last-run: ''
-failure-message: ''
+last-run: 2026-05-20T08:26:41.315265110+00:00
 last-run-duration: 0.0s
 ---
 

@@ -36,7 +36,16 @@ FAILED=0
 # crates can split a module into a directory without tripping the check.
 module_present() {
   local crate="$1" name="$2"
-  [ -f "crates/$crate/src/$name.rs" ] || [ -f "crates/$crate/src/$name/mod.rs" ]
+  # Accept the canonical flat layout first.
+  [ -f "crates/$crate/src/$name.rs" ] && return 0
+  [ -f "crates/$crate/src/$name/mod.rs" ] && return 0
+  # Post-FT-018 / ADR-016 layout: canonical modules may live under
+  # `core/` (stable substrate) or `features/<name>/` (vertical slices).
+  [ -f "crates/$crate/src/core/$name.rs" ] && return 0
+  [ -f "crates/$crate/src/core/$name/mod.rs" ] && return 0
+  [ -f "crates/$crate/src/features/$name.rs" ] && return 0
+  [ -f "crates/$crate/src/features/$name/mod.rs" ] && return 0
+  return 1
 }
 
 check_crate_modules() {

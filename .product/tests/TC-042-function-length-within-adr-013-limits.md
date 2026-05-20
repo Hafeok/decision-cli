@@ -2,7 +2,7 @@
 id: TC-042
 title: function_length_within_adr_013_limits
 type: invariant
-status: passing
+status: failing
 validates:
   features: []
   adrs:
@@ -11,8 +11,9 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/function-length.sh
 runner-timeout: 60
-last-run: 2026-05-19T19:32:17.840852562+00:00
+last-run: 2026-05-20T08:26:41.315265110+00:00
 last-run-duration: 0.1s
+failure-message: ""
 ---
 
 ## Purpose

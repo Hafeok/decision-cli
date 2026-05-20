@@ -1,25 +1,21 @@
 //! `dec status` — report the active value stream's bootstrap provenance.
 //!
-//! FT-012 / TC-006.
+//! FT-012 / TC-006. Thin shim: opens the orchestration store via
+//! `core::store`, decodes SPARQL rows via `core::sparql`, formats the
+//! report. Per ADR-016, the helpers themselves live in `core/`.
 
 use std::path::Path;
 use std::process::ExitCode;
 
 use decision_cli::bundled;
-use oxigraph::io::RdfFormat;
+use decision_cli::core::sparql::{term_iri_string, term_literal_string};
+use decision_cli::core::store::open_orchestration_store;
 use oxigraph::sparql::QueryResults;
 use oxigraph::store::Store;
 
 pub fn run(workdir: &Path) -> ExitCode {
     let dec_dir = workdir.join(".dec");
-    if !dec_dir.exists() {
-        eprintln!(
-            "dec status: not inside an initialised decision-cli working dir.\n  \
-             Run `dec init --template engineering-development` first."
-        );
-        return ExitCode::from(1);
-    }
-    let store = match open_store(&dec_dir.join("store").join("orchestration.nq")) {
+    let store = match load_store_or_print_hint(&dec_dir, workdir) {
         Ok(s) => s,
         Err(code) => return code,
     };
@@ -42,26 +38,21 @@ pub fn run(workdir: &Path) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn open_store(dump_path: &Path) -> Result<Store, ExitCode> {
-    let bytes = match std::fs::read(dump_path) {
-        Ok(b) => b,
-        Err(e) => {
-            eprintln!("dec status: failed to read {}: {e}", dump_path.display());
-            return Err(ExitCode::from(1));
-        }
-    };
-    let store = match Store::new() {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("dec status: failed to open store: {e}");
-            return Err(ExitCode::from(1));
-        }
-    };
-    if let Err(e) = store.load_from_reader(RdfFormat::NQuads, bytes.as_slice()) {
-        eprintln!("dec status: failed to load store: {e}");
+/// Verify the working dir was initialised and load the orchestration
+/// store. Prints the operator-facing hint on the un-initialised path so
+/// the caller can stay short.
+fn load_store_or_print_hint(dec_dir: &Path, workdir: &Path) -> Result<Store, ExitCode> {
+    if !dec_dir.exists() {
+        eprintln!(
+            "dec status: not inside an initialised decision-cli working dir.\n  \
+             Run `dec init --template engineering-development` first."
+        );
         return Err(ExitCode::from(1));
     }
-    Ok(store)
+    open_orchestration_store(workdir).map_err(|e| {
+        eprintln!("dec status: {e:#}");
+        ExitCode::from(1)
+    })
 }
 
 fn read_stream_identity(store: &Store) -> Result<(String, String, String), ExitCode> {
@@ -218,20 +209,6 @@ fn display_stream_name(stream_iri: &str, stream_name: &str) -> String {
         shorten_stream(stream_iri)
     } else {
         stream_name.to_string()
-    }
-}
-
-fn term_iri_string(t: &oxigraph::model::Term) -> String {
-    match t {
-        oxigraph::model::Term::NamedNode(n) => n.as_str().to_string(),
-        other => other.to_string(),
-    }
-}
-
-fn term_literal_string(t: &oxigraph::model::Term) -> String {
-    match t {
-        oxigraph::model::Term::Literal(lit) => lit.value().to_string(),
-        other => other.to_string(),
     }
 }
 
