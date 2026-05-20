@@ -4,13 +4,15 @@ use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_ADDRESSING_ARTIFACT, IRI_DEC_DISPOSITION_OVERRIDE, IRI_DEC_EVIDENCE, IRI_DEC_FEEDBACK,
-    IRI_DEC_FEEDBACK_CLASS, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE, IRI_DEC_RECOMMENDATION,
-    IRI_DEC_REJECTION_REASON, IRI_DEC_SEVERITY, IRI_DEC_SOURCE_ARTIFACT, IRI_DEC_SOURCE_SESSION,
-    IRI_DEC_SUPERSEDED_BY, IRI_DEC_TARGET_ROLE,
+    IRI_DEC_ADDRESSING_ARTIFACT, IRI_DEC_CLOSED_BY, IRI_DEC_DISPOSITION_OVERRIDE, IRI_DEC_EVIDENCE,
+    IRI_DEC_FEEDBACK, IRI_DEC_FEEDBACK_CLASS, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE,
+    IRI_DEC_RECEIVING_SESSION, IRI_DEC_RECOMMENDATION, IRI_DEC_REJECTION_REASON, IRI_DEC_ROUTED_AT,
+    IRI_DEC_SEVERITY, IRI_DEC_SOURCE_ARTIFACT, IRI_DEC_SOURCE_SESSION, IRI_DEC_SUPERSEDED_BY,
+    IRI_DEC_TARGET_ROLE,
 };
 
 use super::artifact::RDF_TYPE;
+use super::lifecycle_shacl::{check_lifecycle_companion_fields, check_lifecycle_state_in};
 
 /// One SHACL violation observed against a candidate feedback mutation.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -78,6 +80,8 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<FeedbackViolatio
     check_required_fields(quads, subject, &mut violations);
     check_optional_literal_cardinality(quads, subject, &mut violations);
     check_optional_iri_cardinality(quads, subject, &mut violations);
+    check_lifecycle_state_in(quads, subject, &mut violations);
+    check_lifecycle_companion_fields(quads, subject, &mut violations);
     violations
 }
 
@@ -114,6 +118,7 @@ fn check_optional_literal_cardinality(
         (IRI_DEC_RECOMMENDATION, "dec:recommendation"),
         (IRI_DEC_REJECTION_REASON, "dec:rejectionReason"),
         (IRI_DEC_DISPOSITION_OVERRIDE, "dec:dispositionOverride"),
+        (IRI_DEC_ROUTED_AT, "dec:routedAt"),
     ];
     for (predicate, label) in optional_literals {
         check_optional_literal_max_one(quads, subject, predicate, label, violations);
@@ -129,6 +134,8 @@ fn check_optional_iri_cardinality(
         (IRI_DEC_SOURCE_ARTIFACT, "dec:sourceArtifact"),
         (IRI_DEC_ADDRESSING_ARTIFACT, "dec:addressingArtifact"),
         (IRI_DEC_SUPERSEDED_BY, "dec:supersededBy"),
+        (IRI_DEC_CLOSED_BY, "dec:closedBy"),
+        (IRI_DEC_RECEIVING_SESSION, "dec:receivingSession"),
     ];
     for (predicate, label) in optional_iris {
         check_optional_iri_max_one(quads, subject, predicate, label, violations);
@@ -274,7 +281,7 @@ fn subject_matches(q: &Quad, subject: &NamedNode) -> bool {
     }
 }
 
-fn violation(subject: &NamedNode, path: &str, detail: &str) -> FeedbackViolation {
+pub(super) fn violation(subject: &NamedNode, path: &str, detail: &str) -> FeedbackViolation {
     FeedbackViolation {
         subject: subject.as_str().to_string(),
         path: path.to_string(),

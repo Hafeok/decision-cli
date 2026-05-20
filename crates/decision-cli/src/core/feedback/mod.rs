@@ -13,12 +13,19 @@
 //! on top of the contract defined here.
 
 pub mod artifact;
+pub mod lifecycle;
+mod lifecycle_shacl;
 pub mod read;
 pub mod shacl;
+pub mod transition;
 
 #[cfg(test)]
 mod tests;
 
 pub use artifact::{Feedback, Severity};
+pub use lifecycle::{
+    next_states, validate_transition, LifecycleState, TransitionError,
+};
 pub use read::{get, list_by_class, list_by_target, list_open, FeedbackReadError};
 pub use shacl::{validate_quads, FeedbackShaclError, FeedbackViolation};
+pub use transition::{apply, read_prior_state, ApplyError, Evidence};

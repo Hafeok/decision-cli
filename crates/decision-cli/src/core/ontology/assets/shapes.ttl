@@ -235,7 +235,9 @@ dec:FeedbackShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:datatype xsd:string ;
-        sh:message  "dec:Feedback requires exactly one dec:lifecycleState (string)."
+        sh:in       ( "produced" "routed" "received"
+                      "addressed" "closed" "rejected" "superseded" ) ;
+        sh:message  "dec:Feedback requires exactly one dec:lifecycleState from the ADR-024 enumeration."
     ] ;
 
     sh:property [
@@ -318,4 +320,73 @@ dec:FeedbackShape a sh:NodeShape ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
         sh:message  "dec:Feedback carries at most one dec:dispositionOverride (string)."
+    ] ;
+
+    # --- Lifecycle companion-field constraints (ADR-024) ---------------
+    # Each state requires its companion fields per ADR-024 §SHACL fragment.
+
+    sh:sparql [
+        sh:message "routed state requires dec:routedAt and dec:targetRole" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:lifecycleState "routed" .
+              FILTER NOT EXISTS { $this dec:routedAt ?t . $this dec:targetRole ?r }
+            }
+        """
+    ] ;
+
+    sh:sparql [
+        sh:message "received state requires dec:receivingSession" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:lifecycleState "received" .
+              FILTER NOT EXISTS { $this dec:receivingSession ?r }
+            }
+        """
+    ] ;
+
+    sh:sparql [
+        sh:message "addressed state requires dec:addressingArtifact" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:lifecycleState "addressed" .
+              FILTER NOT EXISTS { $this dec:addressingArtifact ?a }
+            }
+        """
+    ] ;
+
+    sh:sparql [
+        sh:message "closed state requires dec:closedBy AND dec:addressingArtifact (PROV-O)" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:lifecycleState "closed" .
+              FILTER NOT EXISTS { $this dec:closedBy ?c . $this dec:addressingArtifact ?a }
+            }
+        """
+    ] ;
+
+    sh:sparql [
+        sh:message "rejected state requires dec:rejectionReason" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:lifecycleState "rejected" .
+              FILTER NOT EXISTS { $this dec:rejectionReason ?r }
+            }
+        """
+    ] ;
+
+    sh:sparql [
+        sh:message "superseded state requires dec:supersededBy" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:lifecycleState "superseded" .
+              FILTER NOT EXISTS { $this dec:supersededBy ?s }
+            }
+        """
     ] .

@@ -13,14 +13,16 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use oxi_events::{CommitResult, GraphWriter, Mutation};
-use oxigraph::model::{GraphName, NamedNode, NamedNodeRef, Quad, Term};
+use oxigraph::model::{GraphName, NamedNode, NamedNodeRef, Quad, Subject, Term};
 use oxigraph::store::Store;
 
+use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::vocab::{
-    in_stream, orchestration_graph, value_stream_class, IRI_DEC_GRAPH_ORCHESTRATION,
-    IRI_DEC_IN_STREAM, IRI_DEC_VALUE_STREAM, SCOPED_CLASSES,
+    in_stream, lifecycle_state, orchestration_graph, value_stream_class, IRI_DEC_FEEDBACK,
+    IRI_DEC_GRAPH_ORCHESTRATION, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE, IRI_DEC_VALUE_STREAM,
+    SCOPED_CLASSES,
 };
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -86,9 +88,58 @@ impl StreamWriter {
         let mutation = self.augment(mutation);
         validate_verdicts(&mutation.inserts)?;
         validate_feedback(&mutation.inserts)?;
+        self.validate_feedback_transitions(&mutation)?;
         self.inner
             .commit(mutation)
             .context("committing mutation through oxi-events writer")
+    }
+
+    /// FT-027 / ADR-024: when a mutation updates `dec:lifecycleState` on a
+    /// `dec:Feedback` that already exists in the store, the prior state
+    /// is read and the transition is validated against
+    /// [`validate_transition`]. New feedback (no prior state) is exempt;
+    /// `produced` is the seed.
+    fn validate_feedback_transitions(&self, mutation: &Mutation) -> Result<()> {
+        let store = self.inner.store();
+        for (subject, raw_to) in lifecycle_updates(&mutation.inserts) {
+            // Skip subjects that are being created in this same mutation —
+            // an inserted `rdf:type dec:Feedback` triple means there is no
+            // prior state to transition from.
+            if subject_being_created(&mutation.inserts, &subject) {
+                continue;
+            }
+            let Some(prior_raw) = read_stored_lifecycle(store, &subject) else {
+                // No prior state and no new-creation declaration in this
+                // mutation: SHACL has already caught the malformed write
+                // (rdf:type missing); skip transition validation.
+                continue;
+            };
+            let from = LifecycleState::parse(&prior_raw).ok_or_else(|| {
+                anyhow!(
+                    "SHACL violation: prior dec:lifecycleState for <{subj}> is malformed: {prior_raw:?}",
+                    subj = subject.as_str(),
+                )
+            })?;
+            let to = LifecycleState::parse(&raw_to).ok_or_else(|| {
+                anyhow!(
+                    "SHACL violation: feedback mutation refused — unknown target lifecycle state {raw_to:?}",
+                )
+            })?;
+            if from == to {
+                // No-op transitions are dropped here: the mutation simply
+                // re-asserts the same state. The underlying writer is
+                // free to commit it, but we don't run the transition
+                // validator on a self-loop.
+                continue;
+            }
+            validate_transition(from, to).map_err(|err| {
+                anyhow!(
+                    "SHACL violation: feedback mutation refused — invalid lifecycle transition for <{subj}>: {err}",
+                    subj = subject.as_str(),
+                )
+            })?;
+        }
+        Ok(())
     }
 
     fn augment(&self, mut mutation: Mutation) -> Mutation {
@@ -153,6 +204,73 @@ fn validate_feedback(quads: &[Quad]) -> Result<()> {
             err.report
         )
     })
+}
+
+/// Walk a mutation's inserts and yield every `(subject, new_state)`
+/// pair declared by a `dec:lifecycleState` literal triple. Only `Feedback`
+/// subjects are returned (filtered by inspecting either the inserted
+/// `rdf:type` triples or the prior store state in the caller).
+fn lifecycle_updates(inserts: &[Quad]) -> Vec<(NamedNode, String)> {
+    let pred = IRI_DEC_LIFECYCLE_STATE;
+    let mut out: Vec<(NamedNode, String)> = Vec::new();
+    for q in inserts {
+        if q.predicate.as_str() != pred {
+            continue;
+        }
+        let Subject::NamedNode(s) = &q.subject else {
+            continue;
+        };
+        let Term::Literal(lit) = &q.object else {
+            continue;
+        };
+        let pair = (s.clone(), lit.value().to_string());
+        if !out.iter().any(|(p, _)| p == &pair.0) {
+            out.push(pair);
+        }
+    }
+    out
+}
+
+/// True if `subject` is being declared as a new `dec:Feedback` artifact
+/// in the same mutation (an `rdf:type dec:Feedback` insert triple).
+fn subject_being_created(inserts: &[Quad], subject: &NamedNode) -> bool {
+    for q in inserts {
+        if q.predicate.as_str() != RDF_TYPE {
+            continue;
+        }
+        let Subject::NamedNode(s) = &q.subject else {
+            continue;
+        };
+        if s != subject {
+            continue;
+        }
+        if let Term::NamedNode(cls) = &q.object {
+            if cls.as_str() == IRI_DEC_FEEDBACK {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Read the current `dec:lifecycleState` literal for `subject` from any
+/// graph in `store`. Returns `None` if no such literal exists yet.
+fn read_stored_lifecycle(store: &Store, subject: &NamedNode) -> Option<String> {
+    let pred = lifecycle_state();
+    for quad in store
+        .quads_for_pattern(
+            Some(Subject::NamedNode(subject.clone()).as_ref()),
+            Some(pred),
+            None,
+            None,
+        )
+        .filter_map(Result::ok)
+    {
+        if let Term::Literal(lit) = quad.object {
+            return Some(lit.value().to_string());
+        }
+    }
+    None
 }
 
 fn scoped_subjects(mutation: &Mutation) -> Vec<NamedNode> {
