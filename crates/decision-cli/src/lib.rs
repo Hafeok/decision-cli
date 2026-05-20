@@ -19,6 +19,7 @@ pub use crate::core::scope;
 pub use crate::core::vocab;
 pub use crate::core::worker;
 pub use features::events;
+pub use features::feedback;
 pub use features::finalize;
 pub use features::health;
 pub use features::implement;

@@ -13,6 +13,7 @@ use clap::{Parser, Subcommand};
 use cli::check_goal::CheckGoalArgs;
 use cli::doctor::DoctorArgs;
 use cli::events::EventsCmd;
+use cli::feedback::FeedbackCmd;
 use cli::implement::ImplementCmdArgs;
 use cli::init::InitArgs;
 use cli::session::SessionCmd;
@@ -57,6 +58,9 @@ enum Command {
     /// Session inspection commands (FT-012).
     #[command(subcommand)]
     Session(SessionCmd),
+    /// Feedback inspection commands (FT-029 / FT-033).
+    #[command(subcommand)]
+    Feedback(FeedbackCmd),
 }
 
 fn main() -> ExitCode {
@@ -74,5 +78,6 @@ fn main() -> ExitCode {
         Command::Doctor(args) => cli::doctor::run(&workdir, args),
         Command::Events(cmd) => cli::events::run(&workdir, cmd),
         Command::Session(cmd) => cli::session::run(&workdir, cmd),
+        Command::Feedback(cmd) => cli::feedback::run(&workdir, cmd),
     }
 }

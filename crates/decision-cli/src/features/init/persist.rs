@@ -179,6 +179,11 @@ pub(super) fn seed_bootstrap_subscriptions(
     // slice-1 v0 subscriptions do not. Reusing
     // `build_subscription_quads` would lose those fields.
     quads.extend(crate::core::subscriptions::verifier_dispatch::seed_quads());
+    // FT-029: feedback-routing subscription seed lives alongside the
+    // verifier-dispatch seed so the routing handler is wired from the
+    // first `dec init`. Same pattern as FT-022 — own quad builder
+    // because it carries `oxi:handler`.
+    quads.extend(crate::core::feedback::routing::seed_quads());
     store.transaction(|mut tx| {
         for q in &quads {
             tx.insert(q.as_ref())?;

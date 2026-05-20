@@ -6,6 +6,7 @@
 //! Rust's module visibility rules.
 
 pub mod events;
+pub mod feedback;
 pub mod finalize;
 pub mod health;
 pub mod implement;

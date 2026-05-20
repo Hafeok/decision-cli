@@ -1,0 +1,36 @@
+# Feedback routing subscription seed (FT-029 / ADR-026).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs)
+# alongside the slice-1 v0 subscriptions and the FT-022 verifier-dispatch
+# seed.
+#
+# - oxi:selectQuery   : every dec:Feedback whose dec:lifecycleState is
+#                       "produced" — the routing handler transitions
+#                       each row to "routed" (or records a rejection
+#                       reason when the target role cannot be resolved).
+# - oxi:mode "inline" : routing decisions are synchronous against the
+#                       post-commit store snapshot; the handler lives
+#                       in core::feedback::routing::handler.
+# - oxi:handler       : opaque tag the slice-3 harness binds to the
+#                       feedback-routing delivery handler.
+#
+# Idempotency: lifecycle transitions read the prior state via
+# StreamWriter and refuse `routed → routed` (ADR-024). Re-evaluating
+# the subscription against an already-routed corpus is a no-op.
+
+@prefix oxi:  <https://decision-cli.dev/oxi-events/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://decision-cli.dev/ns/subscription/feedback-routing>
+    a oxi:Subscription ;
+    rdfs:label "feedback routing (produced → routed)" ;
+    oxi:selectQuery """PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?feedback ?class ?targetOverride ?sourceSession WHERE {
+  ?feedback a dec:Feedback ;
+            dec:lifecycleState \"produced\" ;
+            dec:feedbackClass ?class ;
+            dec:sourceSession ?sourceSession .
+  OPTIONAL { ?feedback dec:routingOverride ?targetOverride }
+}""" ;
+    oxi:mode "inline" ;
+    oxi:handler "feedback-routing" .

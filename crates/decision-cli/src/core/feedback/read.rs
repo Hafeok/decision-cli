@@ -50,8 +50,14 @@ pub fn get(store: &Store, iri: &NamedNode) -> Result<Feedback, FeedbackReadError
     parse_feedback(iri, &quads)
 }
 
-/// Return every open feedback (lifecycle state ∉ closed/rejected/superseded)
-/// scoped to the given stream IRI. Order is by IRI lexicographic ascending.
+/// Return every open feedback (lifecycle state ∉ closed/rejected/superseded
+/// AND no routing-time `dec:rejectionReason` recorded) scoped to the
+/// given stream IRI. Order is by IRI lexicographic ascending.
+///
+/// The routing handler (FT-029) records `dec:rejectionReason` directly
+/// on feedback whose routing failed without progressing the lifecycle
+/// out of `produced`. Those rows are equivalent to terminal for the
+/// "still-open queue" — filter them here.
 pub fn list_open(store: &Store, stream: &NamedNode) -> Result<Vec<Feedback>, FeedbackReadError> {
     let iris = list_feedback_iris(store, Some(stream))?;
     let mut out: Vec<Feedback> = Vec::with_capacity(iris.len());
@@ -59,9 +65,13 @@ pub fn list_open(store: &Store, stream: &NamedNode) -> Result<Vec<Feedback>, Fee
         let node = NamedNode::new(&iri).map_err(|e| FeedbackReadError::Store(e.to_string()))?;
         match get(store, &node) {
             Ok(fb) => {
-                if !FEEDBACK_TERMINAL_STATES.contains(&fb.lifecycle_state.as_str()) {
-                    out.push(fb);
+                if FEEDBACK_TERMINAL_STATES.contains(&fb.lifecycle_state.as_str()) {
+                    continue;
                 }
+                if fb.rejection_reason.is_some() {
+                    continue;
+                }
+                out.push(fb);
             }
             Err(FeedbackReadError::NotFound { .. }) => continue,
             Err(e) => return Err(e),

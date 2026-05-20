@@ -3,6 +3,7 @@
 pub mod check_goal;
 pub mod doctor;
 pub mod events;
+pub mod feedback;
 pub mod health;
 pub mod implement;
 pub mod init;

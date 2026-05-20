@@ -17,6 +17,7 @@ pub mod class;
 pub mod lifecycle;
 mod lifecycle_shacl;
 pub mod read;
+pub mod routing;
 pub mod shacl;
 pub mod transition;
 
