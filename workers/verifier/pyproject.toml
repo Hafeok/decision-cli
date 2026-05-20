@@ -1,0 +1,38 @@
+[project]
+name = "verifier"
+version = "0.1.0"
+description = "Python verifier worker for decision-cli's interpretation role (ADR-008, ADR-020)."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+]
+
+[project.scripts]
+verifier = "verifier.__main__:main"
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.34"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/verifier"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.6",
+]
