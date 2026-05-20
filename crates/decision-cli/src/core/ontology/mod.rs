@@ -36,7 +36,7 @@ use helpers::{
 /// and is intentionally tied to a binary release.
 ///
 /// Recorded on every bootstrap session (ADR-007).
-pub const ONTOLOGY_VERSION: &str = "0.1.0";
+pub const ONTOLOGY_VERSION: &str = "0.2.0";
 
 /// Named graph the embedded ontology is loaded into. Exposed so FT-008
 /// can run shapes / queries against the same graph the handle parses.
@@ -220,6 +220,11 @@ mod tests {
             "https://decision-cli.dev/ns#Session",
             "https://decision-cli.dev/ns#Dispatch",
             "https://decision-cli.dev/ns#Event",
+            "https://decision-cli.dev/ns#Role",
+            "https://decision-cli.dev/ns#Authority",
+            "https://decision-cli.dev/ns#ActionSession",
+            "https://decision-cli.dev/ns#InterpretationSession",
+            "https://decision-cli.dev/ns#DispatchGroup",
         ] {
             assert!(h.declares_class(c), "missing class declaration: {c}");
         }

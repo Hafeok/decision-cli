@@ -10,6 +10,7 @@
 
 pub mod bundled;
 pub mod ontology;
+pub mod role_catalog;
 pub mod scope;
 pub mod sparql;
 pub mod store;

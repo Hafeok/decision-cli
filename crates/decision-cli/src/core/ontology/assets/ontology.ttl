@@ -19,7 +19,7 @@
 
 <https://decision-cli.dev/ns> a owl:Ontology ;
     rdfs:label       "decision-cli base ontology" ;
-    owl:versionInfo  "0.1.0" .
+    owl:versionInfo  "0.2.0" .
 
 # --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
 
@@ -46,6 +46,30 @@ dec:Dispatch a rdfs:Class ;
 dec:Event a rdfs:Class ;
     rdfs:label "Event" ;
     rdfs:comment "A graph-native event derived from a mutation (ADR-002)." .
+
+# --- Slice-2 classes: roles, authority, dispatch pairing (FT-019, ADR-017) ---
+
+dec:Role a rdfs:Class ;
+    rdfs:label "Role" ;
+    rdfs:comment "A catalog entry naming an LLM-backed role, its input and output artifact types, and (per ADR-027) its authority declaration." .
+
+dec:Authority a rdfs:Class ;
+    rdfs:label "Authority" ;
+    rdfs:comment "A role's bounded authority declaration (ADR-027)." .
+
+dec:ActionSession a rdfs:Class ;
+    rdfs:subClassOf dec:Session ;
+    rdfs:label "ActionSession" ;
+    rdfs:comment "A session that produces an action artifact (e.g. the implementer's CodeChange) — ADR-017." .
+
+dec:InterpretationSession a rdfs:Class ;
+    rdfs:subClassOf dec:Session ;
+    rdfs:label "InterpretationSession" ;
+    rdfs:comment "A session that produces a verdict on an action artifact (the verifier's VerificationVerdict) — ADR-017." .
+
+dec:DispatchGroup a rdfs:Class ;
+    rdfs:label "DispatchGroup" ;
+    rdfs:comment "Pairs an ActionSession with its InterpretationSession (ADR-017)." .
 
 # --- Properties --------------------------------------------------------------
 
@@ -84,3 +108,38 @@ dec:basePolicy a rdf:Property ;
 dec:inStream a rdf:Property ;
     rdfs:range dec:ValueStream ;
     rdfs:comment "Every scoped artifact (Session, Goal, Dispatch, Event) carries dec:inStream → dec:ValueStream (ADR-005)." .
+
+# --- Slice-2 properties: Role + DispatchGroup (FT-019, ADR-017) --------------
+
+dec:roleId a rdf:Property ;
+    rdfs:domain dec:Role ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Stable identifier the orchestrator dispatches against (e.g. \"verifier\")." .
+
+dec:roleInputType a rdf:Property ;
+    rdfs:domain dec:Role ;
+    rdfs:comment "An artifact type the role consumes (multi-valued)." .
+
+dec:roleOutputType a rdf:Property ;
+    rdfs:domain dec:Role ;
+    rdfs:comment "The artifact type the role produces (typically single-valued)." .
+
+dec:roleModelBinding a rdf:Property ;
+    rdfs:domain dec:Role ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Slice-2 hardcoded model id used to dispatch this role (ADR-020 keeps Phase A bindings inline)." .
+
+dec:roleAuthority a rdf:Property ;
+    rdfs:domain dec:Role ;
+    rdfs:range  dec:Authority ;
+    rdfs:comment "Optional authority declaration carried by the role (ADR-027 — landed by FT-030)." .
+
+dec:hasActionSession a rdf:Property ;
+    rdfs:domain dec:DispatchGroup ;
+    rdfs:range  dec:ActionSession ;
+    rdfs:comment "Links a DispatchGroup to its paired ActionSession (ADR-017)." .
+
+dec:hasInterpretationSession a rdf:Property ;
+    rdfs:domain dec:DispatchGroup ;
+    rdfs:range  dec:InterpretationSession ;
+    rdfs:comment "Links a DispatchGroup to its paired InterpretationSession (ADR-017)." .

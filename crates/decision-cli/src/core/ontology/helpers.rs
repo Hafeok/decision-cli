@@ -71,6 +71,11 @@ pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), On
         "Session",
         "Dispatch",
         "Event",
+        "Role",
+        "Authority",
+        "ActionSession",
+        "InterpretationSession",
+        "DispatchGroup",
     ] {
         let iri = format!("https://decision-cli.dev/ns#{class}");
         let q = format!(
@@ -117,6 +122,15 @@ fn required_shape_properties() -> &'static [(&'static str, &'static [&'static st
                 "https://decision-cli.dev/ns#exitCriterion",
                 "https://decision-cli.dev/ns#expectedOutputType",
                 "https://decision-cli.dev/ns#compatibleGoals",
+            ],
+        ),
+        (
+            "https://decision-cli.dev/ns#Role",
+            &[
+                "https://decision-cli.dev/ns#roleId",
+                "https://decision-cli.dev/ns#roleInputType",
+                "https://decision-cli.dev/ns#roleOutputType",
+                "https://decision-cli.dev/ns#roleModelBinding",
             ],
         ),
     ]

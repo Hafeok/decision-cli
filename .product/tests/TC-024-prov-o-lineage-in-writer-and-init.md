@@ -11,7 +11,7 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/prov-o-lineage.sh
 runner-timeout: 60
-last-run: 2026-05-20T08:26:41.315265110+00:00
+last-run: 2026-05-20T08:39:57.378014998+00:00
 failure-message: "ERROR: expected crates/decision-cli/src/init (ADR-004 anchor)\n"
 last-run-duration: 0.0s
 ---

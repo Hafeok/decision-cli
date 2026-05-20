@@ -6,6 +6,7 @@ use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 use oxigraph::store::Store;
 
 use crate::core::bundled;
+use crate::core::role_catalog;
 
 use super::parse::parse_into_graph;
 use super::persist::{build_session_quads, copy_triples_default, seed_bootstrap_subscriptions};
@@ -200,8 +201,24 @@ pub(super) fn build_orchestration_store(
     )?;
 
     seed_bootstrap_subscriptions(&orchestration).map_err(|e| InitError::Internal(e.to_string()))?;
+    seed_role_catalog(&orchestration)?;
 
     Ok(orchestration)
+}
+
+/// FT-019: seed the verifier role catalog entry alongside the bundled
+/// ValueAction definition. Slice 2 ships exactly one catalog entry
+/// (verifier); the implementer remains hardcoded inline pending FT-030.
+fn seed_role_catalog(orchestration: &Store) -> Result<(), InitError> {
+    let quads = role_catalog::verifier_seed_quads();
+    orchestration
+        .transaction(|mut tx| {
+            for q in &quads {
+                tx.insert(q.as_ref())?;
+            }
+            Ok::<_, oxigraph::store::StorageError>(())
+        })
+        .map_err(|e| InitError::Internal(e.to_string()))
 }
 
 fn copy_staging_graphs(

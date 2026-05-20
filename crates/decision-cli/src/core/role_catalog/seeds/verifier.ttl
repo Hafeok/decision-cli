@@ -1,0 +1,23 @@
+# Verifier role catalog entry (FT-019).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs).
+# Forms part of the bootstrap baseline alongside the bundled ValueStream
+# and v0 subscriptions. Schema is constrained by `dec:RoleShape` in the
+# embedded shapes graph (FT-006 / ADR-007).
+#
+# - dec:roleId            : stable identifier the dispatch loop matches against.
+# - dec:roleInputType     : artifact classes the verifier consumes.
+#                            CodeChange + FeatureSpec + BundleHash per FT-019.
+# - dec:roleOutputType    : the verdict artifact type the verifier produces
+#                            (FT-020 / ADR-018).
+# - dec:roleModelBinding  : Phase A keeps model bindings inline per ADR-020.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+
+<https://decision-cli.dev/ns/role/verifier> a dec:Role ;
+    dec:roleId            "verifier" ;
+    dec:roleInputType     <https://decision-cli.dev/ns#CodeChange> ,
+                          <https://decision-cli.dev/ns#FeatureSpec> ,
+                          <https://decision-cli.dev/ns#BundleHash> ;
+    dec:roleOutputType    <https://decision-cli.dev/ns#VerificationVerdict> ;
+    dec:roleModelBinding  "claude-sonnet-4-5" .
