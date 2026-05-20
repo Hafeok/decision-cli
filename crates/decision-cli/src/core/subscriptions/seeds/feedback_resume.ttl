@@ -1,0 +1,40 @@
+# Feedback-resume subscription seed (FT-032 / ADR-025).
+#
+# Seeded into the orchestration store by `dec init` alongside the
+# verifier-dispatch subscription. Triggers a `resume_check` call for
+# every paused `dec:DispatchGroup` whose `dec:blockedBy` references a
+# `dec:Feedback` that has just reached a terminal lifecycle state
+# (`addressed`, `rejected`, or `closed`).
+#
+# - oxi:selectQuery : every (group, feedback) pair where the group is
+#                     parked in `paused-for-feedback` and the linked
+#                     feedback's `dec:lifecycleState` is terminal. The
+#                     handler dispatches `core::dispatch::resume_check`
+#                     per row; resume_check itself is idempotent.
+# - oxi:mode "sync" : the handler runs in-process — the resume call
+#                     either advances the group back to `awaiting-action`
+#                     (retry path) or to `feedback-rejected-action-blocked`
+#                     (terminal failure mode).
+# - oxi:handler     : opaque tag the harness binds to
+#                     `core::subscriptions::feedback_resume::handle`.
+#
+# Idempotency: `resume_check` reads the group's current status and is a
+# typed no-op when the group is not in `paused-for-feedback`, so repeated
+# evaluations of this subscription cannot produce duplicate transitions.
+
+@prefix oxi:  <https://decision-cli.dev/oxi-events/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://decision-cli.dev/ns/subscription/feedback-resume>
+    a oxi:Subscription ;
+    rdfs:label "feedback resume check (terminal feedback unblocks paused dispatch)" ;
+    oxi:selectQuery """PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?group ?feedback WHERE {
+  ?group a dec:DispatchGroup ;
+         dec:dispatchStatus \"paused-for-feedback\" ;
+         dec:blockedBy ?feedback .
+  ?feedback dec:lifecycleState ?state .
+  FILTER(?state IN (\"addressed\", \"rejected\", \"closed\"))
+}""" ;
+    oxi:mode "sync" ;
+    oxi:handler "feedback-resume" .

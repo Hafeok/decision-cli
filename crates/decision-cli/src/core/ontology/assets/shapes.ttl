@@ -198,10 +198,12 @@ dec:DispatchGroupShape a sh:NodeShape ;
                       "awaiting-amendment"
                       "action-failed"
                       "interpretation-failed"
-                      "complete" ) ;
+                      "complete"
+                      "paused-for-feedback"
+                      "feedback-rejected-action-blocked" ) ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:message  "dec:DispatchGroup requires exactly one dec:dispatchStatus from the enumerated lifecycle set (FT-021 / ADR-017)."
+        sh:message  "dec:DispatchGroup requires exactly one dec:dispatchStatus from the enumerated lifecycle set (FT-021 / ADR-017 / FT-032 / ADR-025)."
     ] ;
 
     sh:property [
@@ -225,6 +227,21 @@ dec:DispatchGroupShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:message  "dec:DispatchGroup requires exactly one dec:inStream link (ADR-005)."
+    ] ;
+
+    # FT-032 / ADR-025 — paused-for-feedback groups MUST carry at least
+    # one dec:blockedBy link to the gating dec:Feedback. The constraint
+    # only fires when dispatchStatus = "paused-for-feedback"; other
+    # states are unaffected.
+    sh:sparql [
+        sh:message  "paused-for-feedback DispatchGroup requires at least one dec:blockedBy (FT-032 / ADR-025)" ;
+        sh:select   """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:dispatchStatus "paused-for-feedback" .
+              FILTER NOT EXISTS { $this dec:blockedBy ?fb }
+            }
+        """
     ] .
 
 # --- VerificationVerdict shape (FT-020 / ADR-018) ---------------------------

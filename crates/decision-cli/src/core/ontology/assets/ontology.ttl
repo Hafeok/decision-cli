@@ -191,7 +191,12 @@ dec:dispatchedFor a rdf:Property ;
 dec:dispatchStatus a rdf:Property ;
     rdfs:domain dec:DispatchGroup ;
     rdfs:range  xsd:string ;
-    rdfs:comment "Lifecycle state of the DispatchGroup: awaiting-action | awaiting-interpretation | interpretation-running | interpretation-rejected | awaiting-amendment | action-failed | interpretation-failed | complete (FT-021)." .
+    rdfs:comment "Lifecycle state of the DispatchGroup: awaiting-action | awaiting-interpretation | interpretation-running | interpretation-rejected | awaiting-amendment | action-failed | interpretation-failed | complete | paused-for-feedback | feedback-rejected-action-blocked (FT-021 / FT-032 / ADR-025)." .
+
+dec:blockedBy a rdf:Property ;
+    rdfs:domain dec:DispatchGroup ;
+    rdfs:range  dec:Feedback ;
+    rdfs:comment "Each blocking dec:Feedback that gates resumption of a paused DispatchGroup (FT-032 / ADR-025). The dispatch refuses to advance to awaiting-interpretation while any linked feedback is non-terminal." .
 
 # --- FT-020 / ADR-018: VerificationVerdict properties -----------------------
 

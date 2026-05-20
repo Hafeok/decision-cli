@@ -3,7 +3,7 @@
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 
 use crate::core::vocab::{
-    dispatch_status, dispatched_for, dispatch_group_class, has_action_session,
+    blocked_by, dispatch_status, dispatched_for, dispatch_group_class, has_action_session,
     has_interpretation_session, orchestration_graph, IRI_DEC_DISPATCH_STATUS,
 };
 
@@ -89,6 +89,19 @@ pub fn build_interpretation_session_link_quad(
         group_iri.clone(),
         has_interpretation_session().into_owned(),
         interpretation_session.clone(),
+        g,
+    )
+}
+
+/// Build a `dec:blockedBy` quad linking a paused DispatchGroup to a
+/// blocking `dec:Feedback` artifact (FT-032 §Behaviour, ADR-025).
+#[must_use]
+pub fn build_blocked_by_quad(group_iri: &NamedNode, feedback_iri: &NamedNode) -> Quad {
+    let g: GraphName = orchestration_graph().into_owned().into();
+    Quad::new(
+        group_iri.clone(),
+        blocked_by().into_owned(),
+        feedback_iri.clone(),
         g,
     )
 }

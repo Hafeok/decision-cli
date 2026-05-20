@@ -158,10 +158,20 @@ impl std::fmt::Display for WorkerPreflightFailure {
 
 impl std::error::Error for WorkerPreflightFailure {}
 
+/// Wrapper carrying the parsed worker response plus the raw stdout
+/// stream the harness needs for FT-031 feedback record scanning (the
+/// scanner is invoked by `super::run` so the `paused-for-feedback`
+/// branch can fire before the action artifact is persisted — FT-032).
+#[derive(Debug, Clone)]
+pub(super) struct WorkerRun {
+    pub response: WorkerResponseJson,
+    pub raw_stdout: String,
+}
+
 pub(super) fn run_worker(
     argv: &[String],
     payload: &DispatchPayloadJson,
-) -> Result<WorkerResponseJson> {
+) -> Result<WorkerRun> {
     let mut cmd = build_command_from_argv(argv)?;
     cmd.stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -181,7 +191,12 @@ pub(super) fn run_worker(
             output.status
         ));
     }
-    parse_worker_response(&output.stdout)
+    let raw_stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let response = parse_worker_response(&output.stdout)?;
+    Ok(WorkerRun {
+        response,
+        raw_stdout,
+    })
 }
 
 fn build_command_from_argv(argv: &[String]) -> Result<Command> {

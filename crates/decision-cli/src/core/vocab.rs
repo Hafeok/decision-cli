@@ -58,6 +58,21 @@ pub const DISPATCH_STATUS_ACTION_FAILED: &str = "action-failed";
 pub const DISPATCH_STATUS_INTERPRETATION_FAILED: &str = "interpretation-failed";
 pub const DISPATCH_STATUS_COMPLETE: &str = "complete";
 
+/// FT-032 / ADR-025: DispatchGroup paused while blocking feedback is open.
+pub const DISPATCH_STATUS_PAUSED_FOR_FEEDBACK: &str = "paused-for-feedback";
+
+/// FT-032 / ADR-025: terminal status when a blocking feedback is rejected.
+pub const DISPATCH_STATUS_FEEDBACK_REJECTED_ACTION_BLOCKED: &str =
+    "feedback-rejected-action-blocked";
+
+/// FT-032 / ADR-025: `dec:blockedBy` predicate — DispatchGroup → blocking Feedback IRIs.
+pub const IRI_DEC_BLOCKED_BY: &str = "https://decision-cli.dev/ns#blockedBy";
+
+#[must_use]
+pub fn blocked_by() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_BLOCKED_BY)
+}
+
 #[must_use]
 pub fn dispatch_group_class() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_DISPATCH_GROUP)

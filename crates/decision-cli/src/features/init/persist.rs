@@ -184,6 +184,13 @@ pub(super) fn seed_bootstrap_subscriptions(
     // first `dec init`. Same pattern as FT-022 — own quad builder
     // because it carries `oxi:handler`.
     quads.extend(crate::core::feedback::routing::seed_quads());
+    // FT-032 / ADR-025: feedback-resume subscription seed. Watches for
+    // dec:Feedback artifacts whose lifecycle reaches a terminal state
+    // (addressed / rejected / closed) when referenced by a paused
+    // DispatchGroup via dec:blockedBy. The handler advances the group
+    // back to awaiting-action (retry) or feedback-rejected-action-blocked
+    // (terminal failure).
+    quads.extend(crate::core::subscriptions::feedback_resume::seed_quads());
     store.transaction(|mut tx| {
         for q in &quads {
             tx.insert(q.as_ref())?;

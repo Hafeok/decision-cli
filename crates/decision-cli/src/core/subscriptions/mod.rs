@@ -23,8 +23,13 @@
 //! outbox (FT-003) and SSE transport (FT-004) deliver it to the verifier
 //! worker.
 
+pub mod feedback_resume;
 pub mod verifier_dispatch;
 
+pub use feedback_resume::{
+    handle_pending as handle_feedback_resume, FeedbackResumeError, HandledGroup,
+    FEEDBACK_RESUME_HANDLER, FEEDBACK_RESUME_SEED_TTL, FEEDBACK_RESUME_SUBSCRIPTION_IRI,
+};
 pub use verifier_dispatch::{
     already_dispatched, dispatch_pending_groups, emit_verifier_dispatch_event,
     VerifierDispatchError, VerifierDispatchEvent, VerifierDispatchSeed,
