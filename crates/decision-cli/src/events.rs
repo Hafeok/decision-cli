@@ -1,4 +1,4 @@
-//! `dec events` subcommands — replay (FT-005) and live tail (FT-004).
+//! `dec events` subcommands — event inspection over replay or live tail.
 //!
 //! Slice 1 surface for FT-012:
 //!
@@ -42,8 +42,8 @@ pub fn since(workdir: &Path, since_seq: u64, limit: Option<usize>) -> Result<Vec
             dump_path.display()
         ));
     }
-    let bytes = std::fs::read(&dump_path)
-        .with_context(|| format!("reading {}", dump_path.display()))?;
+    let bytes =
+        std::fs::read(&dump_path).with_context(|| format!("reading {}", dump_path.display()))?;
     let store = Store::new().context("opening in-memory orchestration store")?;
     store
         .load_from_reader(RdfFormat::NQuads, bytes.as_slice())
@@ -95,10 +95,12 @@ async fn tail_async(url: &str) -> Result<()> {
         .header("accept", "text/event-stream")
         .send()
         .await
-        .map_err(|e| anyhow!(
-            "could not connect to {url}: {e}. Is the dec daemon running? \
+        .map_err(|e| {
+            anyhow!(
+                "could not connect to {url}: {e}. Is the dec daemon running? \
              (Override the URL with --url or `DEC_EVENTS_URL`.)"
-        ))?;
+            )
+        })?;
     if !resp.status().is_success() {
         return Err(anyhow!(
             "SSE endpoint {url} returned HTTP {}",
@@ -127,10 +129,7 @@ mod tests {
     fn since_errors_when_workdir_uninitialized() {
         // Pick a deterministic non-existent path so the test never
         // accidentally hits a real store.
-        let base = std::env::temp_dir().join(format!(
-            "dec-events-test-{}",
-            std::process::id()
-        ));
+        let base = std::env::temp_dir().join(format!("dec-events-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
         let res = since(&base, 0, None);
         assert!(res.is_err(), "expected error for uninitialized workdir");

@@ -1,4 +1,4 @@
-//! SPARQL building and row-decoding helpers for the replay API.
+//! SPARQL row builder/decoder helpers used by the replay API.
 
 use std::fmt::Write as _;
 
@@ -12,11 +12,27 @@ use super::ReplayRequest;
 
 pub(super) fn build_query(request: &ReplayRequest) -> String {
     let mut q = String::with_capacity(512);
+    push_select_header(&mut q);
+    push_where_pattern(&mut q);
+    push_filters(&mut q, request);
+    q.push_str("} ORDER BY ?seq");
+    if let Some(limit) = request.limit {
+        let _ = write!(q, " LIMIT {limit}");
+    }
+    q
+}
+
+/// SELECT projection plus FROM clause naming the events graph.
+fn push_select_header(q: &mut String) {
     q.push_str("SELECT ?event ?seq ?mutation ?subscription ?emittedAt ?published ?status FROM <");
     q.push_str(IRI_OXI_GRAPH_EVENTS);
     q.push_str("> WHERE { ?event a <");
     q.push_str(IRI_OXI_EVENT);
     q.push_str("> ; <");
+}
+
+/// Predicate triples binding the projected variables onto each event.
+fn push_where_pattern(q: &mut String) {
     q.push_str(IRI_OXI_SEQ);
     q.push_str("> ?seq ; <");
     q.push_str(IRI_PROV_WAS_GENERATED_BY);
@@ -29,7 +45,10 @@ pub(super) fn build_query(request: &ReplayRequest) -> String {
     q.push_str("> ?published ; <");
     q.push_str(IRI_OXI_STATUS);
     q.push_str("> ?status .");
+}
 
+/// Optional seq-window plus caller-supplied SPARQL FILTER fragment.
+fn push_filters(q: &mut String, request: &ReplayRequest) {
     if request.since_seq > 0 {
         let _ = write!(q, " FILTER(?seq >= {}) ", request.since_seq);
     }
@@ -41,11 +60,6 @@ pub(super) fn build_query(request: &ReplayRequest) -> String {
         q.push_str(filter.as_str());
         q.push_str(") ");
     }
-    q.push_str("} ORDER BY ?seq");
-    if let Some(limit) = request.limit {
-        let _ = write!(q, " LIMIT {limit}");
-    }
-    q
 }
 
 pub(super) fn named_node_iri(

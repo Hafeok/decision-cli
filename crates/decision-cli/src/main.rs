@@ -1,7 +1,7 @@
-//! `dec` — decision-cli binary entry point.
+//! `dec` — decision-cli binary entry point (dispatch-only per ADR-013).
 //!
 //! Slice 1 surface: init, status, health, implement, events, session.
-//! See ADR-011 (CLI shape) and FT-012.
+//! See ADR-011 (CLI shape), FT-012, and ADR-016 (vertical-slice SDP).
 
 mod cli;
 
@@ -25,10 +25,9 @@ use cli::sparql::SparqlArgs;
 )]
 struct Cli {
     /// Override the working directory (defaults to CWD; ADR-012 walk-up
-    /// not implemented yet).
+    /// not yet implemented).
     #[arg(long, global = true)]
     workdir: Option<PathBuf>,
-
     #[command(subcommand)]
     command: Command,
 }
@@ -37,27 +36,19 @@ struct Cli {
 enum Command {
     /// Initialise the orchestration store from a ValueStream definition.
     Init(InitArgs),
-    /// Display the active value stream's identity and bootstrap provenance.
+    /// Report the active value stream's bootstrap provenance.
     Status,
-    /// Hidden helper for tests/CI: run a SPARQL query against the
-    /// persisted orchestration store.
+    /// Hidden helper (tests/CI): run SPARQL against the orchestration store.
     #[command(name = "_sparql", hide = true)]
     Sparql(SparqlArgs),
-    /// Hidden helper for tests/CI (FT-010 / TC-007): exercise the goal
-    /// validation gate. Slice 1 does not ship `dec drive`, so this is
-    /// the surface that drives the same code path any dispatch-
-    /// initiating command will use.
+    /// Hidden helper (FT-010 / TC-007): exercise the goal-validation gate.
     #[command(name = "_check-goal", hide = true)]
     CheckGoal(CheckGoalArgs),
-    /// Implement a feature end-to-end (FT-011 + FT-013): assemble a
-    /// bundle for the target feature, dispatch the code-writer role,
-    /// record the Session + CodeChange with PROV-O lineage.
+    /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
-    /// Liveness check (FT-012): ontology parses, store opens, writer
-    /// is operational. Runs even outside an initialised working tree.
+    /// Liveness check (FT-012). Runs outside an initialised working tree.
     Health,
-    /// Inspect persisted events (FT-012). Backed by FT-005 replay
-    /// (`since`) and the FT-004 SSE endpoint (`tail`).
+    /// Inspect persisted events (FT-012; FT-005 replay, FT-004 SSE tail).
     #[command(subcommand)]
     Events(EventsCmd),
     /// Session inspection commands (FT-012).
@@ -70,7 +61,6 @@ fn main() -> ExitCode {
     let workdir = cli
         .workdir
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-
     match cli.command {
         Command::Init(args) => cli::init::run(&workdir, args),
         Command::Status => cli::status::run(&workdir),

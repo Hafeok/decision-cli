@@ -13,13 +13,8 @@ from typing import Any
 from . import claude_runner as _entry  # late import for test-mock hook
 from ._runner_common import STUB_ENV_VAR, _make_code_change_iri, _safe_join
 from .models import (
-    CodeChange,
-    DispatchPayload,
-    FileWrite,
-    ToolCall,
-    WorkerError,
-    WorkerResponse,
-    WorkerTelemetry,
+    CodeChange, DispatchPayload, FileWrite, ToolCall, WorkerError,
+    WorkerResponse, WorkerTelemetry,
 )
 
 
@@ -50,15 +45,11 @@ def _parse_stream_json(
         if event_type in {"tool_use", "tool_call"}:
             name = str(event.get("name", "")) or str(event.get("tool", ""))
             args: dict[str, Any] = event.get("input") or event.get("arguments") or {}
-            tool_calls.append(
-                ToolCall(name=name, arguments=args if isinstance(args, dict) else {})
-            )
+            tool_calls.append(ToolCall(name=name, arguments=args if isinstance(args, dict) else {}))
             if name in {"Write", "Edit"} and isinstance(args, dict):
                 path = str(args.get("file_path") or args.get("path") or "")
                 if path:
-                    file_writes.append(
-                        FileWrite(path=path, summary=f"{name} via claude -p")
-                    )
+                    file_writes.append(FileWrite(path=path, summary=f"{name} via claude -p"))
         elif event_type == "result":
             final_summary = str(event.get("result") or event.get("summary") or "")
         elif event_type == "error":
@@ -91,40 +82,43 @@ def _scrape_terminal_error(stdout: str) -> str:
     return stdout[-2000:]
 
 
-def run_claude(payload: DispatchPayload) -> WorkerResponse:
-    """Real ``claude -p`` subprocess runner (ADR-008 §Behaviour 3-5)."""
-    binary = _entry._claude_on_path()
-    if binary is None:
-        return WorkerResponse(
-            dispatch_id=payload.dispatch_id,
-            session_id=payload.session_id,
-            status="error",
-            error=WorkerError(
-                category="subscription_unavailable",
-                message="`claude` binary not found on $PATH",
-                detail=(
-                    "Install Claude Code and run `claude login` once on this host. "
-                    f"Alternatively, run the worker with {STUB_ENV_VAR}=1 to use "
-                    "the deterministic stub runner."
-                ),
-                retryable=False,
+def _missing_binary_response(payload: DispatchPayload) -> WorkerResponse:
+    """Response returned when `claude` is not on $PATH."""
+    return WorkerResponse(
+        dispatch_id=payload.dispatch_id,
+        session_id=payload.session_id,
+        status="error",
+        error=WorkerError(
+            category="subscription_unavailable",
+            message="`claude` binary not found on $PATH",
+            detail=(
+                "Install Claude Code and run `claude login` once on this host. "
+                f"Alternatively, run the worker with {STUB_ENV_VAR}=1 to use "
+                "the deterministic stub runner."
             ),
-        )
+            retryable=False,
+        ),
+    )
 
-    workspace = Path(payload.workspace_path)
-    workspace.mkdir(parents=True, exist_ok=True)
 
+def _write_bundle_prompt(payload: DispatchPayload) -> str:
+    """Persist the bundle as a temp `.md` file. Returns the file path."""
     prompt_fd, prompt_path = tempfile.mkstemp(
         prefix=f"dec-bundle-{payload.feature_id}-",
         suffix=".md",
     )
     with os.fdopen(prompt_fd, "w", encoding="utf-8") as fh:
         fh.write(payload.bundle_markdown)
+    return prompt_path
+
+
+def _build_claude_args(binary: str, prompt_path: str, payload: DispatchPayload) -> list[str]:
+    """Compose the argv list for `claude -p` with stream-json output."""
     user_message = (
         f"Implement feature {payload.feature_id} described in the system "
         "prompt. Follow all constraints and run `product verify` when done."
     )
-    args = [
+    return [
         binary,
         "-p",
         "--dangerously-skip-permissions",
@@ -135,6 +129,139 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
         "--verbose",
         user_message,
     ]
+
+
+def _timeout_response(payload: DispatchPayload, exc: subprocess.TimeoutExpired) -> WorkerResponse:
+    """Response returned when `claude -p` exceeded its timeout budget."""
+    return WorkerResponse(
+        dispatch_id=payload.dispatch_id,
+        session_id=payload.session_id,
+        status="error",
+        error=WorkerError(
+            category="timeout",
+            message=f"`claude -p` exceeded {payload.timeout_seconds}s",
+            detail=str(exc),
+            retryable=True,
+        ),
+    )
+
+
+def _nonzero_exit_response(
+    payload: DispatchPayload,
+    completed: subprocess.CompletedProcess[str],
+    latency: float,
+) -> WorkerResponse:
+    """Response built from a non-zero `claude -p` exit code."""
+    detail = completed.stderr.strip()
+    if not detail:
+        detail = _scrape_terminal_error(completed.stdout)
+    return WorkerResponse(
+        dispatch_id=payload.dispatch_id,
+        session_id=payload.session_id,
+        status="error",
+        error=WorkerError(
+            category="subprocess_failed",
+            message=f"`claude -p` exited with status {completed.returncode}",
+            detail=detail,
+            retryable=False,
+        ),
+        telemetry=WorkerTelemetry(
+            latency_seconds=latency,
+            stdout_excerpt=completed.stdout[-2000:],
+            stderr_excerpt=completed.stderr[-2000:],
+            errors=[completed.stderr[-2000:]] if completed.stderr else [],
+        ),
+    )
+
+
+def _workspace_violation_response(
+    payload: DispatchPayload,
+    workspace: Path,
+    file_path: str,
+    exc: ValueError,
+    completed: subprocess.CompletedProcess[str],
+    latency: float,
+) -> WorkerResponse:
+    """Response returned when the model tried to touch a file outside the workspace."""
+    return WorkerResponse(
+        dispatch_id=payload.dispatch_id,
+        session_id=payload.session_id,
+        status="error",
+        error=WorkerError(
+            category="workspace_violation",
+            message=str(exc),
+            detail=f"file path {file_path!r} escapes {workspace!s}",
+            retryable=False,
+        ),
+        telemetry=WorkerTelemetry(
+            latency_seconds=latency,
+            stdout_excerpt=completed.stdout[-2000:],
+        ),
+    )
+
+
+def _confine_writes(
+    workspace: Path,
+    file_writes: list[FileWrite],
+) -> tuple[list[FileWrite], FileWrite | None, ValueError | None]:
+    """Filter `file_writes` to those inside `workspace`.
+
+    Returns the confined list, plus the first offender (if any) with its error.
+    """
+    confined: list[FileWrite] = []
+    for fw in file_writes:
+        try:
+            _safe_join(workspace, fw.path)
+        except ValueError as exc:
+            return confined, fw, exc
+        confined.append(fw)
+    return confined, None, None
+
+
+def _build_success_response(
+    payload: DispatchPayload,
+    confined: list[FileWrite],
+    tool_calls: list[ToolCall],
+    parse_errors: list[str],
+    final_summary: str,
+    completed: subprocess.CompletedProcess[str],
+    latency: float,
+) -> WorkerResponse:
+    """Assemble the `status="ok"` response from parsed stream-json output."""
+    code_change = CodeChange(
+        iri=_make_code_change_iri(payload.dispatch_id),
+        feature_id=payload.feature_id,
+        session_id=payload.session_id,
+        files=confined,
+        summary=final_summary,
+    )
+    telemetry = WorkerTelemetry(
+        turn_count=len([tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]) or 1,
+        latency_seconds=latency,
+        tool_calls=tool_calls,
+        errors=parse_errors,
+        stdout_excerpt=completed.stdout[-2000:],
+        stderr_excerpt=completed.stderr[-2000:],
+    )
+    return WorkerResponse(
+        dispatch_id=payload.dispatch_id,
+        session_id=payload.session_id,
+        status="ok",
+        code_change=code_change,
+        telemetry=telemetry,
+    )
+
+
+def run_claude(payload: DispatchPayload) -> WorkerResponse:
+    """Real ``claude -p`` subprocess runner (ADR-008 §Behaviour 3-5)."""
+    binary = _entry._claude_on_path()
+    if binary is None:
+        return _missing_binary_response(payload)
+
+    workspace = Path(payload.workspace_path)
+    workspace.mkdir(parents=True, exist_ok=True)
+    prompt_path = _write_bundle_prompt(payload)
+    args = _build_claude_args(binary, prompt_path, payload)
 
     started = time.monotonic()
     try:
@@ -148,91 +275,20 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
                 check=False,
             )
         except subprocess.TimeoutExpired as exc:
-            return WorkerResponse(
-                dispatch_id=payload.dispatch_id,
-                session_id=payload.session_id,
-                status="error",
-                error=WorkerError(
-                    category="timeout",
-                    message=f"`claude -p` exceeded {payload.timeout_seconds}s",
-                    detail=str(exc),
-                    retryable=True,
-                ),
-            )
+            return _timeout_response(payload, exc)
 
         latency = time.monotonic() - started
         if completed.returncode != 0:
-            detail = completed.stderr.strip()
-            if not detail:
-                detail = _scrape_terminal_error(completed.stdout)
-            return WorkerResponse(
-                dispatch_id=payload.dispatch_id,
-                session_id=payload.session_id,
-                status="error",
-                error=WorkerError(
-                    category="subprocess_failed",
-                    message=f"`claude -p` exited with status {completed.returncode}",
-                    detail=detail,
-                    retryable=False,
-                ),
-                telemetry=WorkerTelemetry(
-                    latency_seconds=latency,
-                    stdout_excerpt=completed.stdout[-2000:],
-                    stderr_excerpt=completed.stderr[-2000:],
-                    errors=[completed.stderr[-2000:]] if completed.stderr else [],
-                ),
+            return _nonzero_exit_response(payload, completed, latency)
+
+        tool_calls, file_writes, final_summary, parse_errors = _parse_stream_json(completed.stdout)
+        confined, offender, exc = _confine_writes(workspace, file_writes)
+        if offender is not None and exc is not None:
+            return _workspace_violation_response(
+                payload, workspace, offender.path, exc, completed, latency
             )
-
-        tool_calls, file_writes, final_summary, parse_errors = _parse_stream_json(
-            completed.stdout
-        )
-
-        confined: list[FileWrite] = []
-        for fw in file_writes:
-            try:
-                _safe_join(workspace, fw.path)
-            except ValueError as exc:
-                return WorkerResponse(
-                    dispatch_id=payload.dispatch_id,
-                    session_id=payload.session_id,
-                    status="error",
-                    error=WorkerError(
-                        category="workspace_violation",
-                        message=str(exc),
-                        detail=f"file path {fw.path!r} escapes {workspace!s}",
-                        retryable=False,
-                    ),
-                    telemetry=WorkerTelemetry(
-                        latency_seconds=latency,
-                        stdout_excerpt=completed.stdout[-2000:],
-                    ),
-                )
-            confined.append(fw)
-
-        code_change = CodeChange(
-            iri=_make_code_change_iri(payload.dispatch_id),
-            feature_id=payload.feature_id,
-            session_id=payload.session_id,
-            files=confined,
-            summary=final_summary,
-        )
-        telemetry = WorkerTelemetry(
-            turn_count=len(
-                [tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]
-            )
-            or 1,
-            latency_seconds=latency,
-            tool_calls=tool_calls,
-            errors=parse_errors,
-            stdout_excerpt=completed.stdout[-2000:],
-            stderr_excerpt=completed.stderr[-2000:],
-        )
-        return WorkerResponse(
-            dispatch_id=payload.dispatch_id,
-            session_id=payload.session_id,
-            status="ok",
-            code_change=code_change,
-            telemetry=telemetry,
+        return _build_success_response(
+            payload, confined, tool_calls, parse_errors, final_summary, completed, latency
         )
     finally:
         try:

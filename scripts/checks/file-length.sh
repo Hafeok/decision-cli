@@ -27,9 +27,13 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
 fi
 
 # Rust under crates/<crate>/src ; Python under workers/<worker>/
-# (excluding tests/ and __pycache__/).
+# (excluding tests/, benches/, __pycache__/, .venv/, and the `tests.rs`
+# unit-test convention — ADR-013 §"Rule scope" exempts test files).
 FILES="$( {
-    find crates -path '*/src/*.rs' 2>/dev/null || true
+    find crates -path '*/src/*.rs' \
+      -not -name 'tests.rs' \
+      -not -path '*/tests/*' \
+      -not -path '*/benches/*' 2>/dev/null || true
     find workers -name '*.py' \
       -not -path '*/tests/*' \
       -not -path '*/__pycache__/*' \

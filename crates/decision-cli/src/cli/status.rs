@@ -1,5 +1,6 @@
-//! `dec status` — display the active value stream's identity and bootstrap
-//! provenance (FT-012 / TC-006).
+//! `dec status` — report the active value stream's bootstrap provenance.
+//!
+//! FT-012 / TC-006.
 
 use std::path::Path;
 use std::process::ExitCode;
@@ -18,20 +19,16 @@ pub fn run(workdir: &Path) -> ExitCode {
         );
         return ExitCode::from(1);
     }
-    let dump_path = dec_dir.join("store").join("orchestration.nq");
-    let store = match open_store(&dump_path) {
+    let store = match open_store(&dec_dir.join("store").join("orchestration.nq")) {
         Ok(s) => s,
         Err(code) => return code,
     };
-
     let (stream_iri, stream_name, action_iri) = match read_stream_identity(&store) {
         Ok(t) => t,
         Err(code) => return code,
     };
-
     let authorized_goals = read_authorized_goals(&store, &stream_iri);
     let (source, hash, ontology_version) = read_bootstrap_provenance(&store);
-
     print_report(
         &dec_dir,
         &stream_iri,
@@ -42,7 +39,6 @@ pub fn run(workdir: &Path) -> ExitCode {
         &hash,
         &ontology_version,
     );
-
     ExitCode::SUCCESS
 }
 
@@ -77,21 +73,7 @@ SELECT ?stream ?name ?action WHERE {
 } LIMIT 1";
     match store.query(stream_q) {
         Ok(QueryResults::Solutions(mut sols)) => match sols.next() {
-            Some(Ok(sol)) => {
-                let stream = sol
-                    .get("stream")
-                    .map(term_iri_string)
-                    .unwrap_or_else(|| "(unknown)".into());
-                let name = sol
-                    .get("name")
-                    .map(term_literal_string)
-                    .unwrap_or_default();
-                let action = sol
-                    .get("action")
-                    .map(term_iri_string)
-                    .unwrap_or_else(|| "(unknown)".into());
-                Ok((stream, name, action))
-            }
+            Some(Ok(sol)) => Ok(decode_stream_identity_row(&sol)),
             _ => {
                 eprintln!("dec status: no dec:ValueStream artifact in the store");
                 Err(ExitCode::from(1))
@@ -106,6 +88,21 @@ SELECT ?stream ?name ?action WHERE {
             Err(ExitCode::from(1))
         }
     }
+}
+
+/// Decode one SPARQL solution from `read_stream_identity` into the
+/// `(stream_iri, stream_name, action_iri)` triple consumed by `run`.
+fn decode_stream_identity_row(sol: &oxigraph::sparql::QuerySolution) -> (String, String, String) {
+    let stream = sol
+        .get("stream")
+        .map(term_iri_string)
+        .unwrap_or_else(|| "(unknown)".into());
+    let name = sol.get("name").map(term_literal_string).unwrap_or_default();
+    let action = sol
+        .get("action")
+        .map(term_iri_string)
+        .unwrap_or_else(|| "(unknown)".into());
+    (stream, name, action)
 }
 
 fn read_authorized_goals(store: &Store, stream_iri: &str) -> Vec<String> {
@@ -145,10 +142,7 @@ SELECT ?source ?hash ?version WHERE {
                     .get("source")
                     .map(term_literal_string)
                     .unwrap_or_default();
-                let hash = sol
-                    .get("hash")
-                    .map(term_literal_string)
-                    .unwrap_or_default();
+                let hash = sol.get("hash").map(term_literal_string).unwrap_or_default();
                 let ver = sol
                     .get("version")
                     .map(term_literal_string)
@@ -173,25 +167,10 @@ fn print_report(
     ontology_version: &str,
 ) {
     let action_label = shorten_value_action(action_iri);
-    let provenance_label = if bundled::lookup_value_action(action_iri).is_some() {
-        format!("bundled, ontology v{ontology_version}")
-    } else {
-        format!("custom, ontology v{ontology_version}")
-    };
-    let hash_short = if hash.len() >= 12 {
-        format!("sha256:{}…", &hash[..12])
-    } else if !hash.is_empty() {
-        format!("sha256:{hash}")
-    } else {
-        "sha256:(unknown)".to_string()
-    };
-    let display_name = if stream_name.is_empty() {
-        shorten_stream(stream_iri)
-    } else {
-        stream_name.to_string()
-    };
+    let provenance_label = provenance_label(action_iri, ontology_version);
+    let hash_short = short_hash_label(hash);
+    let display_name = display_stream_name(stream_iri, stream_name);
     let store_display = dec_dir.join("store").to_string_lossy().into_owned();
-
     println!("Value Stream:      {display_name}");
     if source.is_empty() {
         println!("Definition:        ({hash_short})");
@@ -209,6 +188,37 @@ fn print_report(
         }
     );
     println!("Graph Store:       {store_display}");
+}
+
+/// Build the `(bundled|custom, ontology vX)` label for the terminal value
+/// action — bundled when `lookup_value_action` recognises the IRI.
+fn provenance_label(action_iri: &str, ontology_version: &str) -> String {
+    if bundled::lookup_value_action(action_iri).is_some() {
+        format!("bundled, ontology v{ontology_version}")
+    } else {
+        format!("custom, ontology v{ontology_version}")
+    }
+}
+
+/// Render the short SHA-256 prefix used in the status header.
+fn short_hash_label(hash: &str) -> String {
+    if hash.len() >= 12 {
+        format!("sha256:{}…", &hash[..12])
+    } else if !hash.is_empty() {
+        format!("sha256:{hash}")
+    } else {
+        "sha256:(unknown)".to_string()
+    }
+}
+
+/// Prefer the human-readable `dec:name` literal; fall back to a shortened
+/// IRI when the stream has no name attached.
+fn display_stream_name(stream_iri: &str, stream_name: &str) -> String {
+    if stream_name.is_empty() {
+        shorten_stream(stream_iri)
+    } else {
+        stream_name.to_string()
+    }
 }
 
 fn term_iri_string(t: &oxigraph::model::Term) -> String {

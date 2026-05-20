@@ -36,33 +36,40 @@ pub struct EventsTailArgs {
 
 pub fn run(workdir: &Path, cmd: EventsCmd) -> ExitCode {
     match cmd {
-        EventsCmd::Since(args) => match events_cmd::since(workdir, args.seq, args.limit) {
-            Ok(events) => {
-                if events.is_empty() {
-                    println!("(no events with seq >= {})", args.seq);
-                }
-                for e in &events {
-                    println!("{}", events_cmd::format_event_line(e));
-                }
-                ExitCode::SUCCESS
+        EventsCmd::Since(args) => run_since(workdir, &args),
+        EventsCmd::Tail(args) => run_tail(&args),
+    }
+}
+
+fn run_since(workdir: &Path, args: &EventsSinceArgs) -> ExitCode {
+    match events_cmd::since(workdir, args.seq, args.limit) {
+        Ok(events) => {
+            if events.is_empty() {
+                println!("(no events with seq >= {})", args.seq);
             }
-            Err(err) => {
-                eprintln!("dec events since: {err:#}");
-                ExitCode::from(1)
+            for e in &events {
+                println!("{}", events_cmd::format_event_line(e));
             }
-        },
-        EventsCmd::Tail(args) => {
-            let url = args
-                .url
-                .or_else(|| std::env::var("DEC_EVENTS_URL").ok())
-                .unwrap_or_else(|| events_cmd::DEFAULT_EVENTS_URL.to_string());
-            match events_cmd::tail(&url) {
-                Ok(()) => ExitCode::SUCCESS,
-                Err(err) => {
-                    eprintln!("dec events tail: {err:#}");
-                    ExitCode::from(1)
-                }
-            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec events since: {err:#}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn run_tail(args: &EventsTailArgs) -> ExitCode {
+    let url = args
+        .url
+        .clone()
+        .or_else(|| std::env::var("DEC_EVENTS_URL").ok())
+        .unwrap_or_else(|| events_cmd::DEFAULT_EVENTS_URL.to_string());
+    match events_cmd::tail(&url) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("dec events tail: {err:#}");
+            ExitCode::from(1)
         }
     }
 }

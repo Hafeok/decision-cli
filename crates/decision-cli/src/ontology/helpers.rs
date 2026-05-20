@@ -1,4 +1,4 @@
-//! Parsing and invariant checks for the embedded ontology + SHACL shapes.
+//! Parse-time invariant checks for the embedded ontology bundle.
 
 use oxigraph::io::{RdfFormat, RdfParser};
 use oxigraph::model::{GraphName, NamedNode};
@@ -90,7 +90,16 @@ pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), On
 }
 
 pub(super) fn invariant_shapes_present(store: &Store) -> Result<(), OntologyError> {
-    let required = [
+    for (target_class, props) in required_shape_properties() {
+        for prop in props.iter() {
+            ensure_min_count_property(store, target_class, prop)?;
+        }
+    }
+    Ok(())
+}
+
+fn required_shape_properties() -> &'static [(&'static str, &'static [&'static str])] {
+    &[
         (
             "https://decision-cli.dev/ns#ValueStream",
             &[
@@ -98,7 +107,7 @@ pub(super) fn invariant_shapes_present(store: &Store) -> Result<(), OntologyErro
                 "https://decision-cli.dev/ns#title",
                 "https://decision-cli.dev/ns#terminalValueAction",
                 "https://decision-cli.dev/ns#authorizedGoals",
-            ][..],
+            ],
         ),
         (
             "https://decision-cli.dev/ns#ValueAction",
@@ -108,29 +117,32 @@ pub(super) fn invariant_shapes_present(store: &Store) -> Result<(), OntologyErro
                 "https://decision-cli.dev/ns#exitCriterion",
                 "https://decision-cli.dev/ns#expectedOutputType",
                 "https://decision-cli.dev/ns#compatibleGoals",
-            ][..],
+            ],
         ),
-    ];
-    for (target_class, props) in required {
-        for prop in props {
-            let q = format!(
-                "ASK {{ GRAPH <{g}> {{ \
-                    ?shape <http://www.w3.org/ns/shacl#targetClass> <{target_class}> ; \
-                           <http://www.w3.org/ns/shacl#property> ?p . \
-                    ?p <http://www.w3.org/ns/shacl#path> <{prop}> ; \
-                       <http://www.w3.org/ns/shacl#minCount> ?_ . \
-                 }} }}",
-                g = SHAPES_GRAPH_IRI
-            );
-            let result = store
-                .query(q.as_str())
-                .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
-            if !matches!(result, QueryResults::Boolean(true)) {
-                return Err(OntologyError::InvariantViolation(format!(
-                    "shapes graph is missing a sh:minCount constraint on {prop} for {target_class}"
-                )));
-            }
-        }
+    ]
+}
+
+fn ensure_min_count_property(
+    store: &Store,
+    target_class: &str,
+    prop: &str,
+) -> Result<(), OntologyError> {
+    let q = format!(
+        "ASK {{ GRAPH <{g}> {{ \
+            ?shape <http://www.w3.org/ns/shacl#targetClass> <{target_class}> ; \
+                   <http://www.w3.org/ns/shacl#property> ?p . \
+            ?p <http://www.w3.org/ns/shacl#path> <{prop}> ; \
+               <http://www.w3.org/ns/shacl#minCount> ?_ . \
+         }} }}",
+        g = SHAPES_GRAPH_IRI
+    );
+    let result = store
+        .query(q.as_str())
+        .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
+    if !matches!(result, QueryResults::Boolean(true)) {
+        return Err(OntologyError::InvariantViolation(format!(
+            "shapes graph is missing a sh:minCount constraint on {prop} for {target_class}"
+        )));
     }
     Ok(())
 }

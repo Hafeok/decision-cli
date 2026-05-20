@@ -1,5 +1,6 @@
-//! `dec session list` and `dec session log` — read-only session
-//! inspection over the persisted orchestration store (FT-012).
+//! Read-only session inspection over the persisted orchestration store.
+//!
+//! Powers `dec session list` and `dec session log` (FT-012).
 //!
 //! These commands materialise the read-side of FT-011's Session
 //! lifecycle: every Session is a PROV-O `Activity` carrying its feature
@@ -71,13 +72,25 @@ pub struct SessionLog {
 /// simple — for "show me the latest N" callers can sort client-side).
 pub fn list(workdir: &Path, limit: usize, offset: usize) -> Result<Vec<SessionSummary>> {
     let store = open_store(workdir)?;
+    let q = build_session_list_query(limit, offset);
+    let results = store.query(q.as_str()).context("session-list SPARQL")?;
+    let QueryResults::Solutions(sols) = results else {
+        return Err(anyhow!("session-list: unexpected SPARQL result shape"));
+    };
+    let mut out = Vec::new();
+    for sol in sols {
+        let sol = sol.context("session-list SPARQL row")?;
+        out.push(decode_session_summary_row(&sol));
+    }
+    Ok(out)
+}
 
-    // ORDER BY ?started keeps results stable. `OPTIONAL` on feature
-    // and status keeps the row even if the session has not yet been
-    // tagged. The query is bounded by LIMIT+OFFSET clauses appended
-    // below; we use string interpolation rather than parameter binding
-    // since SPARQL has no portable bind for numeric literals.
-    let q = format!(
+/// Build the SPARQL `SELECT` used by [`list`]. `ORDER BY ?started` keeps
+/// results stable; `OPTIONAL` on feature/status preserves rows for
+/// sessions not yet tagged. Numeric LIMIT/OFFSET are interpolated since
+/// SPARQL has no portable numeric bind.
+fn build_session_list_query(limit: usize, offset: usize) -> String {
+    format!(
         "PREFIX dec: <{DEC_NS}>
 PREFIX prov: <{PROV_NS}>
 SELECT ?session ?feature ?started ?status WHERE {{
@@ -88,28 +101,23 @@ SELECT ?session ?feature ?started ?status WHERE {{
     OPTIONAL {{ ?session dec:status ?status }}
   }}
 }} ORDER BY ?started LIMIT {limit} OFFSET {offset}"
-    );
-    let results = store.query(q.as_str()).context("session-list SPARQL")?;
-    let QueryResults::Solutions(sols) = results else {
-        return Err(anyhow!("session-list: unexpected SPARQL result shape"));
-    };
-    let mut out = Vec::new();
-    for sol in sols {
-        let sol = sol.context("session-list SPARQL row")?;
-        let iri = sol
-            .get("session")
-            .map_or_else(|| "(unknown)".into(), term_iri);
-        let feature_id = sol.get("feature").map(term_literal).unwrap_or_default();
-        let started_at = sol.get("started").map(term_literal).unwrap_or_default();
-        let status = sol.get("status").map(term_literal).unwrap_or_default();
-        out.push(SessionSummary {
-            iri,
-            feature_id,
-            started_at,
-            status,
-        });
+    )
+}
+
+/// Decode one `list` solution row into a [`SessionSummary`].
+fn decode_session_summary_row(sol: &oxigraph::sparql::QuerySolution) -> SessionSummary {
+    let iri = sol
+        .get("session")
+        .map_or_else(|| "(unknown)".into(), term_iri);
+    let feature_id = sol.get("feature").map(term_literal).unwrap_or_default();
+    let started_at = sol.get("started").map(term_literal).unwrap_or_default();
+    let status = sol.get("status").map(term_literal).unwrap_or_default();
+    SessionSummary {
+        iri,
+        feature_id,
+        started_at,
+        status,
     }
-    Ok(out)
 }
 
 /// Walk the PROV-O chain anchored on `session_iri`.
@@ -118,9 +126,64 @@ SELECT ?session ?feature ?started ?status WHERE {{
 /// `Result` shape lets the caller decide between exit codes 1 and 64.
 pub fn log(workdir: &Path, session_iri: &str) -> Result<SessionLog> {
     let store = open_store(workdir)?;
+    let mut log = SessionLog {
+        session_iri: session_iri.to_string(),
+        ..SessionLog::default()
+    };
+    populate_core_fields(&store, session_iri, &mut log)?;
+    populate_dispatch(&store, session_iri, &mut log)?;
+    Ok(log)
+}
 
-    // Phase 1: the Session row itself.
-    let core_q = format!(
+/// Phase 1 of [`log`]: load the Session row's own fields (feature,
+/// timestamps, status, stream, bundle/model refs, output) into `log`.
+/// Errors with a clear message when the Session is absent.
+fn populate_core_fields(store: &Store, session_iri: &str, log: &mut SessionLog) -> Result<()> {
+    let core_q = build_core_query(session_iri);
+    let results = store
+        .query(core_q.as_str())
+        .context("session-log core SPARQL")?;
+    let QueryResults::Solutions(mut sols) = results else {
+        return Err(anyhow!("session-log: unexpected SPARQL result shape"));
+    };
+    let Some(sol_res) = sols.next() else {
+        return Err(anyhow!(
+            "no Session with IRI <{session_iri}> in the orchestration store"
+        ));
+    };
+    let sol = sol_res.context("session-log SPARQL row")?;
+    decode_core_fields(&sol, log);
+    Ok(())
+}
+
+/// Phase 2 of [`log`]: record the IRI of the Dispatch generated by this
+/// Session. Quietly leaves `dispatch_iri` empty when none exists.
+fn populate_dispatch(store: &Store, session_iri: &str, log: &mut SessionLog) -> Result<()> {
+    let dispatch_q = format!(
+        "PREFIX dec: <{DEC_NS}>
+PREFIX prov: <{PROV_NS}>
+SELECT ?dispatch WHERE {{
+  GRAPH ?g {{
+    ?dispatch a dec:Dispatch ;
+              prov:wasGeneratedBy <{session_iri}> .
+  }}
+}} LIMIT 1"
+    );
+    let results = store
+        .query(dispatch_q.as_str())
+        .context("session-log dispatch SPARQL")?;
+    if let QueryResults::Solutions(mut sols) = results {
+        if let Some(sol_res) = sols.next() {
+            let sol = sol_res.context("session-log dispatch row")?;
+            log.dispatch_iri = sol.get("dispatch").map(term_iri).unwrap_or_default();
+        }
+    }
+    Ok(())
+}
+
+/// Build the Phase 1 SPARQL `SELECT` for [`populate_core_fields`].
+fn build_core_query(session_iri: &str) -> String {
+    format!(
         "PREFIX dec: <{DEC_NS}>
 PREFIX prov: <{PROV_NS}>
 SELECT ?feature ?started ?ended ?status ?stream ?bundleRef ?bundleHash ?modelRef ?modelVersion ?output WHERE {{
@@ -138,59 +201,24 @@ SELECT ?feature ?started ?ended ?status ?stream ?bundleRef ?bundleHash ?modelRef
     OPTIONAL {{ <{session_iri}> dec:outputRef ?output }}
   }}
 }} LIMIT 1"
-    );
-    let mut log = SessionLog {
-        session_iri: session_iri.to_string(),
-        ..SessionLog::default()
-    };
-    match store.query(core_q.as_str()).context("session-log core SPARQL")? {
-        QueryResults::Solutions(mut sols) => match sols.next() {
-            Some(sol_res) => {
-                let sol = sol_res.context("session-log SPARQL row")?;
-                log.feature_id = sol.get("feature").map(term_literal).unwrap_or_default();
-                log.started_at = sol.get("started").map(term_literal).unwrap_or_default();
-                log.ended_at = sol.get("ended").map(term_literal).unwrap_or_default();
-                log.status = sol.get("status").map(term_literal).unwrap_or_default();
-                log.stream_iri = sol.get("stream").map(term_iri).unwrap_or_default();
-                log.bundle_ref = sol.get("bundleRef").map(term_iri).unwrap_or_default();
-                log.bundle_hash = sol.get("bundleHash").map(term_literal).unwrap_or_default();
-                log.model_ref = sol.get("modelRef").map(term_iri).unwrap_or_default();
-                log.model_version = sol
-                    .get("modelVersion")
-                    .map(term_literal)
-                    .unwrap_or_default();
-                log.output_ref = sol.get("output").map(term_iri).unwrap_or_default();
-            }
-            None => {
-                return Err(anyhow!(
-                    "no Session with IRI <{session_iri}> in the orchestration store"
-                ))
-            }
-        },
-        _ => return Err(anyhow!("session-log: unexpected SPARQL result shape")),
-    }
+    )
+}
 
-    // Phase 2: the Dispatch generated by this Session, if any.
-    let dispatch_q = format!(
-        "PREFIX dec: <{DEC_NS}>
-PREFIX prov: <{PROV_NS}>
-SELECT ?dispatch WHERE {{
-  GRAPH ?g {{
-    ?dispatch a dec:Dispatch ;
-              prov:wasGeneratedBy <{session_iri}> .
-  }}
-}} LIMIT 1"
-    );
-    if let QueryResults::Solutions(mut sols) = store
-        .query(dispatch_q.as_str())
-        .context("session-log dispatch SPARQL")?
-    {
-        if let Some(sol_res) = sols.next() {
-            let sol = sol_res.context("session-log dispatch row")?;
-            log.dispatch_iri = sol.get("dispatch").map(term_iri).unwrap_or_default();
-        }
-    }
-    Ok(log)
+/// Copy the Phase 1 SPARQL solution into the mutable [`SessionLog`].
+fn decode_core_fields(sol: &oxigraph::sparql::QuerySolution, log: &mut SessionLog) {
+    log.feature_id = sol.get("feature").map(term_literal).unwrap_or_default();
+    log.started_at = sol.get("started").map(term_literal).unwrap_or_default();
+    log.ended_at = sol.get("ended").map(term_literal).unwrap_or_default();
+    log.status = sol.get("status").map(term_literal).unwrap_or_default();
+    log.stream_iri = sol.get("stream").map(term_iri).unwrap_or_default();
+    log.bundle_ref = sol.get("bundleRef").map(term_iri).unwrap_or_default();
+    log.bundle_hash = sol.get("bundleHash").map(term_literal).unwrap_or_default();
+    log.model_ref = sol.get("modelRef").map(term_iri).unwrap_or_default();
+    log.model_version = sol
+        .get("modelVersion")
+        .map(term_literal)
+        .unwrap_or_default();
+    log.output_ref = sol.get("output").map(term_iri).unwrap_or_default();
 }
 
 /// Format [`SessionLog`] for human-readable terminal output (slice 1).
@@ -198,6 +226,7 @@ SELECT ?dispatch WHERE {{
 #[must_use]
 pub fn format_log(log: &SessionLog) -> String {
     let blank = |s: &str| if s.is_empty() { "(none)" } else { s }.to_string();
+    let status = render_status(&log.status);
     format!(
         "Session: {iri}\n  \
          Feature:        {feature}\n  \
@@ -216,11 +245,6 @@ pub fn format_log(log: &SessionLog) -> String {
         stream = blank(&log.stream_iri),
         started = blank(&log.started_at),
         ended = blank(&log.ended_at),
-        status = if log.status.is_empty() {
-            "(pending)".to_string()
-        } else {
-            log.status.clone()
-        },
         bref = blank(&log.bundle_ref),
         bhash = blank(&log.bundle_hash),
         mref = blank(&log.model_ref),
@@ -228,6 +252,17 @@ pub fn format_log(log: &SessionLog) -> String {
         disp = blank(&log.dispatch_iri),
         out = blank(&log.output_ref),
     )
+}
+
+/// Render the Session `dec:status` literal for the `format_log` output;
+/// substitute the explicit `(pending)` placeholder when the field is
+/// empty so consumers can tell pending apart from missing.
+fn render_status(status: &str) -> String {
+    if status.is_empty() {
+        "(pending)".to_string()
+    } else {
+        status.to_string()
+    }
 }
 
 fn open_store(workdir: &Path) -> Result<Store> {
@@ -238,8 +273,8 @@ fn open_store(workdir: &Path) -> Result<Store> {
             dump_path.display()
         ));
     }
-    let bytes = std::fs::read(&dump_path)
-        .with_context(|| format!("reading {}", dump_path.display()))?;
+    let bytes =
+        std::fs::read(&dump_path).with_context(|| format!("reading {}", dump_path.display()))?;
     let store = Store::new().context("opening in-memory orchestration store")?;
     store
         .load_from_reader(RdfFormat::NQuads, bytes.as_slice())

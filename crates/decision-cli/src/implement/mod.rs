@@ -23,6 +23,7 @@
 
 mod bundle;
 mod codechange;
+mod lifecycle;
 mod quads;
 mod session_show;
 mod vocab;
@@ -45,13 +46,14 @@ use crate::StreamWriter;
 pub use bundle::resolve_product_root;
 pub use session_show::session_show;
 
-use bundle::{assemble_bundle, persist_store, product_codechange_path, sha256_hex};
-use codechange::write_codechange_to_product_graph;
-use quads::{
-    build_completion_quads, build_dispatch_quads, build_failure_quad, build_session_quads,
+use bundle::{assemble_bundle, persist_store, sha256_hex};
+use lifecycle::{
+    assemble_implement_outcome, build_dispatch_payload, commit_session_completion,
+    extract_code_change, finalize_implement_run, persist_code_change,
 };
+use quads::{build_dispatch_quads, build_failure_quad, build_session_quads};
 use vocab::{DISPATCH_PREFIX, SESSION_PREFIX};
-use worker::{format_worker_failure, run_worker, DispatchPayloadJson};
+use worker::{format_worker_failure, run_worker};
 
 /// Goal verb the implementer role always pursues (ADR-005 / §3.4).
 pub const IMPLEMENT_GOAL: &str = "ship";
@@ -119,51 +121,117 @@ struct DispatchContext {
 }
 
 fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchContext> {
+    validate_scope(workdir)?;
+    let bundle = prepare_bundle(workdir, args)?;
+    let (store, writer, dump_path) = load_store_and_writer(workdir)?;
+    let iris = mint_dispatch_iris(args, &bundle)?;
+    commit_initial_session(&writer, &store, &dump_path, args, &bundle, &iris)?;
+    let workspace_dir = resolve_workspace_dir(workdir, args)?;
+    Ok(DispatchContext {
+        session_iri: iris.session,
+        dispatch_iri: iris.dispatch,
+        bundle_hash: bundle.hash,
+        bundle_markdown: bundle.markdown,
+        workspace_dir,
+        product_root: bundle.product_root,
+        dump_path,
+        store,
+        writer,
+    })
+}
+
+/// Load the active scope and reject the dispatch if the stream does not
+/// authorise the implementer goal ([`IMPLEMENT_GOAL`]).
+fn validate_scope(workdir: &Path) -> Result<()> {
     let scope = ActiveScope::load(workdir).map_err(|e| anyhow!("loading active scope: {e}"))?;
     scope
         .validate_goal(IMPLEMENT_GOAL)
-        .map_err(|e| anyhow!("goal refused: {e}"))?;
+        .map_err(|e| anyhow!("goal refused: {e}"))
+}
 
+struct PreparedBundle {
+    markdown: String,
+    hash: String,
+    iri: String,
+    product_root: PathBuf,
+}
+
+/// Assemble the context bundle via `product context` and compute its
+/// content hash + the bundle artifact IRI consumed downstream.
+fn prepare_bundle(workdir: &Path, args: &ImplementArgs) -> Result<PreparedBundle> {
     let product_root = resolve_product_root(workdir, args.product_root.as_deref());
-    let bundle_markdown = assemble_bundle(&product_root, &args.feature_id, args.bundle_depth)?;
-    let bundle_hash = sha256_hex(bundle_markdown.as_bytes());
-    let bundle_iri = format!("urn:dec:bundle:{}:{}", args.feature_id, &bundle_hash[..16]);
+    let markdown = assemble_bundle(&product_root, &args.feature_id, args.bundle_depth)?;
+    let hash = sha256_hex(markdown.as_bytes());
+    let iri = format!("urn:dec:bundle:{}:{}", args.feature_id, &hash[..16]);
+    Ok(PreparedBundle {
+        markdown,
+        hash,
+        iri,
+        product_root,
+    })
+}
 
+/// Open the persisted orchestration store and bind a [`StreamWriter`] to
+/// the active value-stream identity.
+fn load_store_and_writer(workdir: &Path) -> Result<(Arc<Store>, StreamWriter, PathBuf)> {
+    let scope = ActiveScope::load(workdir).map_err(|e| anyhow!("loading active scope: {e}"))?;
     let dump_path = workdir.join(".dec").join("store").join("orchestration.nq");
     let store = Arc::new(Store::new().context("opening in-memory orchestration store")?);
     let bytes = fs::read(&dump_path).with_context(|| format!("reading {}", dump_path.display()))?;
     store
         .load_from_reader(RdfFormat::NQuads, bytes.as_slice())
         .with_context(|| format!("loading {}", dump_path.display()))?;
-
     let stream_iri = NamedNode::new(&scope.stream_iri)
         .with_context(|| format!("active stream IRI {}", scope.stream_iri))?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
         .context("binding StreamWriter to active stream")?;
+    Ok((store, writer, dump_path))
+}
 
+struct MintedIris {
+    session: NamedNode,
+    dispatch: NamedNode,
+    bundle_ref: NamedNode,
+    model_ref: NamedNode,
+}
+
+/// Mint the per-dispatch session / dispatch / bundle / model IRIs.
+fn mint_dispatch_iris(_args: &ImplementArgs, bundle: &PreparedBundle) -> Result<MintedIris> {
     let session_uuid = uuid::Uuid::new_v4();
     let dispatch_uuid = uuid::Uuid::new_v4();
-    let session_iri = NamedNode::new(format!("{SESSION_PREFIX}{session_uuid}"))
-        .context("minting session IRI")?;
-    let dispatch_iri = NamedNode::new(format!("{DISPATCH_PREFIX}{dispatch_uuid}"))
-        .context("minting dispatch IRI")?;
-    let bundle_ref = NamedNode::new(&bundle_iri).context("minting bundle ref IRI")?;
-    let model_ref = NamedNode::new(format!("urn:dec:model:{SLICE1_MODEL_ID}"))
-        .context("minting model ref")?;
+    Ok(MintedIris {
+        session: NamedNode::new(format!("{SESSION_PREFIX}{session_uuid}"))
+            .context("minting session IRI")?,
+        dispatch: NamedNode::new(format!("{DISPATCH_PREFIX}{dispatch_uuid}"))
+            .context("minting dispatch IRI")?,
+        bundle_ref: NamedNode::new(&bundle.iri).context("minting bundle ref IRI")?,
+        model_ref: NamedNode::new(format!("urn:dec:model:{SLICE1_MODEL_ID}"))
+            .context("minting model ref")?,
+    })
+}
 
+/// Commit the `Session + Dispatch` quad set via [`StreamWriter`] and
+/// persist the store snapshot used by downstream commands.
+fn commit_initial_session(
+    writer: &StreamWriter,
+    store: &Store,
+    dump_path: &Path,
+    args: &ImplementArgs,
+    bundle: &PreparedBundle,
+    iris: &MintedIris,
+) -> Result<()> {
     let started_at = Utc::now().to_rfc3339();
     let session_quads = build_session_quads(
-        &session_iri,
-        &dispatch_iri,
-        &bundle_ref,
-        &bundle_hash,
-        &model_ref,
+        &iris.session,
+        &iris.dispatch,
+        &iris.bundle_ref,
+        &bundle.hash,
+        &iris.model_ref,
         SLICE1_MODEL_ID,
         &args.feature_id,
         &started_at,
     );
-    let dispatch_quads = build_dispatch_quads(&dispatch_iri, &session_iri, &started_at);
-
+    let dispatch_quads = build_dispatch_quads(&iris.dispatch, &iris.session, &started_at);
     let mut mint = Mutation::insert(session_quads.iter().cloned());
     for q in &dispatch_quads {
         mint.inserts.push(q.clone());
@@ -172,31 +240,27 @@ fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchCont
     writer
         .commit(mint)
         .context("committing Session + Dispatch artifacts")?;
-    persist_store(&store, &dump_path)?;
+    persist_store(store, dump_path)
+}
 
-    let workspace_dir = args
-        .workspace
-        .clone()
-        .unwrap_or_else(|| workdir.join(".dec").join("workspace").join(&args.feature_id));
+/// Pick the workspace directory the worker will be confined to,
+/// defaulting to `.dec/workspace/<feature_id>/`.
+fn resolve_workspace_dir(workdir: &Path, args: &ImplementArgs) -> Result<PathBuf> {
+    let workspace_dir = args.workspace.clone().unwrap_or_else(|| {
+        workdir
+            .join(".dec")
+            .join("workspace")
+            .join(&args.feature_id)
+    });
     fs::create_dir_all(&workspace_dir)
         .with_context(|| format!("preparing workspace {}", workspace_dir.display()))?;
-
-    Ok(DispatchContext {
-        session_iri,
-        dispatch_iri,
-        bundle_hash,
-        bundle_markdown,
-        workspace_dir,
-        product_root,
-        dump_path,
-        store,
-        writer,
-    })
+    Ok(workspace_dir)
 }
 
 fn record_worker_failure(ctx: &DispatchContext, detail: &str) {
     let mut fail = Mutation::default();
-    fail.inserts.push(build_failure_quad(&ctx.session_iri, detail));
+    fail.inserts
+        .push(build_failure_quad(&ctx.session_iri, detail));
     ctx.writer
         .commit(fail.with_cause("dec implement: worker failure"))
         .ok();
@@ -206,93 +270,23 @@ fn record_worker_failure(ctx: &DispatchContext, detail: &str) {
 /// Run the implementer dispatch end-to-end. See module docs.
 pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     let ctx = prepare_dispatch(workdir, args)?;
-
-    let dispatch_payload = DispatchPayloadJson {
-        dispatch_id: ctx.dispatch_iri.as_str().to_string(),
-        session_id: ctx.session_iri.as_str().to_string(),
-        feature_id: args.feature_id.clone(),
-        bundle_markdown: ctx.bundle_markdown.clone(),
-        bundle_hash: ctx.bundle_hash.clone(),
-        workspace_path: ctx
-            .workspace_dir
-            .canonicalize()
-            .unwrap_or_else(|_| ctx.workspace_dir.clone())
-            .to_string_lossy()
-            .into_owned(),
-        model_id: SLICE1_MODEL_ID.to_string(),
-        timeout_seconds: 1800,
-    };
+    let dispatch_payload = build_dispatch_payload(&ctx, args);
     let response = run_worker(args.worker_command.as_deref(), &dispatch_payload)
         .context("running code-writer worker")?;
-
     if response.status != "ok" {
         let detail = format_worker_failure(response.error.as_ref());
         record_worker_failure(&ctx, &detail);
         return Err(anyhow!("code-writer worker reported failure: {detail}"));
     }
-
-    let code_change = response
-        .code_change
-        .as_ref()
-        .ok_or_else(|| anyhow!("worker reported status=ok with no code_change"))?;
-
-    let codechange_path = product_codechange_path(&ctx.product_root);
-    write_codechange_to_product_graph(
-        &codechange_path,
+    let code_change = extract_code_change(&response)?;
+    let codechange_path = persist_code_change(&ctx, args, code_change)?;
+    commit_session_completion(&ctx, code_change)?;
+    let finalize_outcome = finalize_implement_run(workdir, &ctx, args, code_change)?;
+    Ok(assemble_implement_outcome(
+        ctx,
+        &response,
         code_change,
-        &ctx.session_iri,
-        &ctx.dispatch_iri,
-        &args.feature_id,
-    )
-    .with_context(|| {
-        format!(
-            "writing CodeChange artifact to product graph at {}",
-            codechange_path.display()
-        )
-    })?;
-
-    let completed_at = Utc::now().to_rfc3339();
-    let code_change_iri = NamedNode::new(&code_change.iri)
-        .with_context(|| format!("code change IRI {}", code_change.iri))?;
-    let complete_quads = build_completion_quads(&ctx.session_iri, &code_change_iri, &completed_at);
-    let mut complete = Mutation::default();
-    for q in complete_quads {
-        complete.inserts.push(q);
-    }
-    ctx.writer
-        .commit(complete.with_cause("dec implement: worker complete"))
-        .context("committing session completion")?;
-    persist_store(&ctx.store, &ctx.dump_path)?;
-
-    let finalize_input = crate::finalize::FinalizeInput {
-        repo_root: workdir,
-        product_root: &ctx.product_root,
-        feature_id: &args.feature_id,
-        session_iri: ctx.session_iri.as_str(),
-        dispatch_iri: ctx.dispatch_iri.as_str(),
-        code_change_iri: code_change.iri.as_str(),
-        bundle_hash: &ctx.bundle_hash,
-        worker_summary: &code_change.summary,
-    };
-    let finalize_outcome = crate::finalize::finalize_run(&finalize_input)
-        .context("finalising dec implement run (FT-017)")?;
-
-    let files_written: Vec<PathBuf> = code_change
-        .files
-        .iter()
-        .map(|f| ctx.workspace_dir.join(&f.path))
-        .collect();
-    Ok(ImplementOutcome {
-        session_iri: ctx.session_iri.as_str().to_string(),
-        dispatch_iri: ctx.dispatch_iri.as_str().to_string(),
-        code_change_iri: code_change.iri.clone(),
-        bundle_hash: ctx.bundle_hash,
-        workspace_dir: ctx.workspace_dir,
-        product_codechange_path: codechange_path,
-        files_written,
-        worker_status: response.status.clone(),
-        turn_count: response.telemetry.turn_count,
-        latency_seconds: response.telemetry.latency_seconds,
-        finalize: Some(finalize_outcome),
-    })
+        codechange_path,
+        finalize_outcome,
+    ))
 }

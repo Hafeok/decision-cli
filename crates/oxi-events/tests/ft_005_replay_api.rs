@@ -12,8 +12,8 @@
 use std::sync::Arc;
 
 use oxi_events::{
-    replay, GraphWriter, Mutation, ReplayError, ReplayRequest, ReplayedEvent,
-    SparqlFilterFragment, Subscription,
+    replay, GraphWriter, Mutation, ReplayError, ReplayRequest, ReplayedEvent, SparqlFilterFragment,
+    Subscription,
 };
 use oxigraph::model::{GraphName, NamedNode, Quad};
 use oxigraph::store::Store;
@@ -189,7 +189,9 @@ fn replay_is_read_only() {
     let _ = replay(&store, &ReplayRequest::since(4).with_until(8)).expect("b");
     let _ = replay(
         &store,
-        &ReplayRequest::since(0).with_filter("?seq > 0").with_limit(2),
+        &ReplayRequest::since(0)
+            .with_filter("?seq > 0")
+            .with_limit(2),
     )
     .expect("c");
 

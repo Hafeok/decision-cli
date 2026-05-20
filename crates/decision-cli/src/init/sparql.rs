@@ -123,37 +123,49 @@ fn walk_list(store: &Store, head: &str, out: &mut Vec<String>) {
         if current == RDF_NIL {
             return;
         }
-        let first_q = list_query(&current, RDF_FIRST);
-        let mut found_value = false;
-        if let Ok(QueryResults::Solutions(sols)) = store.query(first_q.as_str()) {
-            for sol in sols.flatten() {
-                if let Some(Term::Literal(lit)) = sol.get("v") {
-                    out.push(lit.value().to_string());
-                    found_value = true;
-                }
-            }
-        }
-        if !found_value {
+        if !push_list_first_literal(store, &current, out) {
             return;
         }
-        let rest_q = list_query(&current, RDF_REST);
-        let mut next = String::new();
-        if let Ok(QueryResults::Solutions(sols)) = store.query(rest_q.as_str()) {
-            for sol in sols.flatten() {
-                if let Some(term) = sol.get("v") {
-                    match term {
-                        Term::NamedNode(n) => next = n.as_str().to_string(),
-                        Term::BlankNode(b) => next = format!("_:{}", b.as_str()),
-                        _ => {}
-                    }
-                }
-            }
-        }
+        let next = read_list_rest(store, &current);
         if next.is_empty() || next == current {
             return;
         }
         current = next;
     }
+}
+
+/// Push every `rdf:first` literal value for `current` onto `out`.
+/// Returns true when at least one literal was found.
+fn push_list_first_literal(store: &Store, current: &str, out: &mut Vec<String>) -> bool {
+    let first_q = list_query(current, RDF_FIRST);
+    let mut found_value = false;
+    if let Ok(QueryResults::Solutions(sols)) = store.query(first_q.as_str()) {
+        for sol in sols.flatten() {
+            if let Some(Term::Literal(lit)) = sol.get("v") {
+                out.push(lit.value().to_string());
+                found_value = true;
+            }
+        }
+    }
+    found_value
+}
+
+/// Read the `rdf:rest` IRI / blank-node label for `current`.
+fn read_list_rest(store: &Store, current: &str) -> String {
+    let rest_q = list_query(current, RDF_REST);
+    let mut next = String::new();
+    if let Ok(QueryResults::Solutions(sols)) = store.query(rest_q.as_str()) {
+        for sol in sols.flatten() {
+            if let Some(term) = sol.get("v") {
+                match term {
+                    Term::NamedNode(n) => next = n.as_str().to_string(),
+                    Term::BlankNode(b) => next = format!("_:{}", b.as_str()),
+                    _ => {}
+                }
+            }
+        }
+    }
+    next
 }
 
 fn list_query(current: &str, predicate: &str) -> String {

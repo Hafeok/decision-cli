@@ -1,4 +1,4 @@
-//! Embedded base ontology and SHACL shapes (FT-006 / ADR-007).
+//! Embedded base ontology bundle, including SHACL shapes (FT-006 / ADR-007).
 //!
 //! The Turtle assets in [`assets`](self) are compiled into the binary
 //! via `include_str!`. They are parsed lazily on the first
@@ -158,7 +158,10 @@ impl OntologyHandle {
             "ASK {{ GRAPH <{g}> {{ <{iri}> a <http://www.w3.org/2000/01/rdf-schema#Class> }} }}",
             g = ONTOLOGY_GRAPH_IRI
         );
-        matches!(self.store.query(q.as_str()), Ok(QueryResults::Boolean(true)))
+        matches!(
+            self.store.query(q.as_str()),
+            Ok(QueryResults::Boolean(true))
+        )
     }
 
     /// True iff `iri` is declared as an `rdf:Property` by the embedded ontology.
@@ -167,7 +170,10 @@ impl OntologyHandle {
             "ASK {{ GRAPH <{g}> {{ <{iri}> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> }} }}",
             g = ONTOLOGY_GRAPH_IRI
         );
-        matches!(self.store.query(q.as_str()), Ok(QueryResults::Boolean(true)))
+        matches!(
+            self.store.query(q.as_str()),
+            Ok(QueryResults::Boolean(true))
+        )
     }
 
     /// Convenience: NamedNodeRef for the ontology's IRI namespace.

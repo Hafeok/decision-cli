@@ -1,4 +1,4 @@
-//! Bundle assembly via `product context` and product-root discovery.
+//! Bundle assembly via `product context` (with product-root discovery).
 
 use std::fs;
 use std::path::{Path, PathBuf};

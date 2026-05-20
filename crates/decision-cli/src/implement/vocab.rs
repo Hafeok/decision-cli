@@ -1,4 +1,4 @@
-//! IRI constants and namespaces used across the implementer pipeline.
+//! Implementer-pipeline IRI constants (session/dispatch namespaces).
 
 pub(super) const SESSION_PREFIX: &str = "https://decision-cli.dev/ns/session/";
 pub(super) const DISPATCH_PREFIX: &str = "https://decision-cli.dev/ns/dispatch/";

@@ -154,26 +154,34 @@ fn check_writer(workdir: &Path) -> GateOutcome {
         Ok(s) => s,
         Err(err) => return GateOutcome::Failed(format!("load active scope: {err}")),
     };
-    let dump_path = dec_dir.join("store").join("orchestration.nq");
-    let bytes = match std::fs::read(&dump_path) {
-        Ok(b) => b,
-        Err(e) => return GateOutcome::Failed(format!("read {}: {e}", dump_path.display())),
-    };
-    let store = match Store::new() {
+    let store = match load_orchestration_store(&dec_dir) {
         Ok(s) => s,
-        Err(e) => return GateOutcome::Failed(format!("open store: {e}")),
+        Err(g) => return g,
     };
-    if let Err(e) = store.load_from_reader(RdfFormat::NQuads, bytes.as_slice()) {
-        return GateOutcome::Failed(format!("load store: {e}"));
-    }
     let stream = match NamedNode::new(&scope.stream_iri) {
         Ok(n) => n,
-        Err(e) => return GateOutcome::Failed(format!("active stream IRI {}: {e}", scope.stream_iri)),
+        Err(e) => {
+            return GateOutcome::Failed(format!("active stream IRI {}: {e}", scope.stream_iri))
+        }
     };
     match StreamWriter::open(Arc::new(store), stream) {
         Ok(_) => GateOutcome::Ok(format!("StreamWriter bound to <{}>", scope.stream_iri)),
         Err(e) => GateOutcome::Failed(format!("StreamWriter bind: {e}")),
     }
+}
+
+/// Read the on-disk N-Quads dump under `<dec_dir>/store/orchestration.nq`
+/// into a fresh in-memory store, returning a `GateOutcome::Failed` if any
+/// step (read, open, load) reports an error.
+fn load_orchestration_store(dec_dir: &Path) -> Result<Store, GateOutcome> {
+    let dump_path = dec_dir.join("store").join("orchestration.nq");
+    let bytes = std::fs::read(&dump_path)
+        .map_err(|e| GateOutcome::Failed(format!("read {}: {e}", dump_path.display())))?;
+    let store = Store::new().map_err(|e| GateOutcome::Failed(format!("open store: {e}")))?;
+    store
+        .load_from_reader(RdfFormat::NQuads, bytes.as_slice())
+        .map_err(|e| GateOutcome::Failed(format!("load store: {e}")))?;
+    Ok(store)
 }
 
 fn short_hash(hash: &str) -> &str {

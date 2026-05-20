@@ -16,31 +16,49 @@ pub struct SparqlArgs {
 }
 
 pub fn run(workdir: &Path, args: SparqlArgs) -> ExitCode {
+    let store = match load_store(workdir) {
+        Ok(s) => s,
+        Err(code) => return code,
+    };
+    match store.query(args.query.as_str()) {
+        Ok(results) => print_query_results(results),
+        Err(e) => {
+            eprintln!("query: {e}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn load_store(workdir: &Path) -> Result<Store, ExitCode> {
     let dump_path = workdir.join(".dec").join("store").join("orchestration.nq");
     if !dump_path.exists() {
         eprintln!("no orchestration store at {}", dump_path.display());
-        return ExitCode::from(1);
+        return Err(ExitCode::from(1));
     }
     let bytes = match std::fs::read(&dump_path) {
         Ok(b) => b,
         Err(e) => {
             eprintln!("read {}: {e}", dump_path.display());
-            return ExitCode::from(1);
+            return Err(ExitCode::from(1));
         }
     };
     let store = match Store::new() {
         Ok(s) => s,
         Err(e) => {
             eprintln!("store: {e}");
-            return ExitCode::from(1);
+            return Err(ExitCode::from(1));
         }
     };
     if let Err(e) = store.load_from_reader(RdfFormat::NQuads, bytes.as_slice()) {
         eprintln!("load: {e}");
-        return ExitCode::from(1);
+        return Err(ExitCode::from(1));
     }
-    match store.query(args.query.as_str()) {
-        Ok(QueryResults::Solutions(sols)) => {
+    Ok(store)
+}
+
+fn print_query_results(results: QueryResults) -> ExitCode {
+    match results {
+        QueryResults::Solutions(sols) => {
             for sol in sols {
                 let Ok(sol) = sol else { continue };
                 let mut row = Vec::new();
@@ -49,22 +67,16 @@ pub fn run(workdir: &Path, args: SparqlArgs) -> ExitCode {
                 }
                 println!("{}", row.join("\t"));
             }
-            ExitCode::SUCCESS
         }
-        Ok(QueryResults::Boolean(b)) => {
+        QueryResults::Boolean(b) => {
             println!("{b}");
-            ExitCode::SUCCESS
         }
-        Ok(QueryResults::Graph(quads)) => {
+        QueryResults::Graph(quads) => {
             for q in quads {
                 let Ok(q) = q else { continue };
                 println!("{q}");
             }
-            ExitCode::SUCCESS
-        }
-        Err(e) => {
-            eprintln!("query: {e}");
-            ExitCode::from(1)
         }
     }
+    ExitCode::SUCCESS
 }

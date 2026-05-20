@@ -31,8 +31,8 @@ use std::sync::Arc;
 use decision_cli::implement::{run as implement_run, ImplementArgs};
 use decision_cli::init::{run as init_run, DefinitionSource};
 use oxi_events::vocab::{
-    IRI_OXI_GRAPH_SUBSCRIPTIONS, IRI_OXI_SUBSCRIPTION, IRI_OXI_SUB_ASK_QUERY,
-    IRI_OXI_SUB_MODE, IRI_OXI_SUB_SELECT_QUERY, SUB_MODE_INLINE,
+    IRI_OXI_GRAPH_SUBSCRIPTIONS, IRI_OXI_SUBSCRIPTION, IRI_OXI_SUB_ASK_QUERY, IRI_OXI_SUB_MODE,
+    IRI_OXI_SUB_SELECT_QUERY, SUB_MODE_INLINE,
 };
 use oxi_events::{replay, GraphWriter, ReplayRequest};
 use oxigraph::io::RdfFormat;
@@ -89,7 +89,10 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
             m = IRI_OXI_SUB_MODE,
             mode = SUB_MODE_INLINE,
         );
-        assert!(ask(&store, &mode_q), "<{iri}> should carry oxi:mode \"inline\"");
+        assert!(
+            ask(&store, &mode_q),
+            "<{iri}> should carry oxi:mode \"inline\""
+        );
 
         let select_q = format!(
             "ASK {{ GRAPH <{g}> {{ <{iri}> <{p}> ?body }} FILTER(STR(?body) != \"\") }}",

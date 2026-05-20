@@ -1,5 +1,6 @@
-//! Spawn the code-writer worker as a one-shot subprocess and parse its
-//! stdout response (ADR-008).
+//! One-shot subprocess invocation of the code-writer worker (ADR-008).
+//!
+//! Spawns the worker, pipes the bundle in, parses the response on stdout.
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -76,7 +77,30 @@ pub(super) fn run_worker(
     worker_command: Option<&str>,
     payload: &DispatchPayloadJson,
 ) -> Result<WorkerResponseJson> {
-    let mut cmd = if let Some(custom) = worker_command {
+    let mut cmd = build_worker_command(worker_command);
+    cmd.stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    let mut child = cmd
+        .spawn()
+        .context("spawning code-writer worker subprocess")?;
+    write_payload_to_stdin(&mut child, payload)?;
+    let output = child
+        .wait_with_output()
+        .context("waiting for worker subprocess")?;
+    if !output.status.success() && output.stdout.is_empty() {
+        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+        return Err(anyhow!(
+            "code-writer worker exited with {} and no stdout. stderr: {stderr}",
+            output.status
+        ));
+    }
+    parse_worker_response(&output.stdout)
+}
+
+fn build_worker_command(worker_command: Option<&str>) -> Command {
+    if let Some(custom) = worker_command {
         build_shell_command(custom)
     } else if let Ok(env_cmd) = std::env::var("CODE_WRITER_CMD") {
         build_shell_command(&env_cmd)
@@ -88,43 +112,33 @@ pub(super) fn run_worker(
         let mut c = Command::new("python3");
         c.arg("-m").arg("code_writer.main").arg("run-once");
         c
-    };
-
-    cmd.stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-
-    let mut child = cmd
-        .spawn()
-        .context("spawning code-writer worker subprocess")?;
-    {
-        let mut stdin = child
-            .stdin
-            .take()
-            .ok_or_else(|| anyhow!("worker stdin closed"))?;
-        let body = serde_json::to_vec(payload).context("serialising DispatchPayload")?;
-        stdin
-            .write_all(&body)
-            .context("writing DispatchPayload to worker stdin")?;
     }
-    let output = child
-        .wait_with_output()
-        .context("waiting for worker subprocess")?;
-    if !output.status.success() && output.stdout.is_empty() {
-        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-        return Err(anyhow!(
-            "code-writer worker exited with {} and no stdout. stderr: {stderr}",
-            output.status
-        ));
-    }
-    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+}
+
+fn write_payload_to_stdin(
+    child: &mut std::process::Child,
+    payload: &DispatchPayloadJson,
+) -> Result<()> {
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| anyhow!("worker stdin closed"))?;
+    let body = serde_json::to_vec(payload).context("serialising DispatchPayload")?;
+    stdin
+        .write_all(&body)
+        .context("writing DispatchPayload to worker stdin")?;
+    Ok(())
+}
+
+fn parse_worker_response(stdout_bytes: &[u8]) -> Result<WorkerResponseJson> {
+    let stdout = String::from_utf8_lossy(stdout_bytes).into_owned();
     let line = stdout
         .lines()
         .rev()
         .find(|l| !l.trim().is_empty())
         .ok_or_else(|| anyhow!("worker produced no parseable stdout"))?;
-    let response: WorkerResponseJson = serde_json::from_str(line)
-        .with_context(|| format!("parsing worker response: {line}"))?;
+    let response: WorkerResponseJson =
+        serde_json::from_str(line).with_context(|| format!("parsing worker response: {line}"))?;
     Ok(response)
 }
 

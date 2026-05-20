@@ -12,10 +12,19 @@ use oxigraph::store::Store;
 use crate::vocab::IRI_DEC_GRAPH_ORCHESTRATION;
 
 use super::vocab::{
-    DEC_CHANGED_FILE, DEC_CODE_CHANGE_CLASS, DEC_DISPATCH_PROP, DEC_FEATURE_ID,
-    DEC_FILE_PATH_PROP, DEC_FILE_SUMMARY_PROP, PROV_GENERATED_BY, RDF_TYPE,
+    DEC_CHANGED_FILE, DEC_CODE_CHANGE_CLASS, DEC_DISPATCH_PROP, DEC_FEATURE_ID, DEC_FILE_PATH_PROP,
+    DEC_FILE_SUMMARY_PROP, PROV_GENERATED_BY, RDF_TYPE,
 };
-use super::worker::CodeChangeJson;
+use super::worker::{CodeChangeJson, FileWriteJson};
+
+/// Stable IRI of the product-cli CodeChange named graph.
+const PRODUCT_CODECHANGE_GRAPH_IRI: &str = "https://product-meta/graph/code-changes";
+
+/// IRI for the `dec:summary` predicate on `CodeChange`.
+const DEC_SUMMARY_PROP: &str = "https://decision-cli.dev/ns#summary";
+
+/// IRI for the `dec:bytesWritten` predicate on file nodes.
+const DEC_BYTES_WRITTEN_PROP: &str = "https://decision-cli.dev/ns#bytesWritten";
 
 pub(super) fn write_codechange_to_product_graph(
     path: &Path,
@@ -27,8 +36,24 @@ pub(super) fn write_codechange_to_product_graph(
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
     }
-    let product_graph_iri = "https://product-meta/graph/code-changes";
-    let g = NamedNode::new(product_graph_iri).context("product graph IRI")?;
+    let g = NamedNode::new(PRODUCT_CODECHANGE_GRAPH_IRI).context("product graph IRI")?;
+    let store = open_codechange_store(path)?;
+    let quads = build_codechange_quads(
+        code_change,
+        session_iri,
+        dispatch_iri,
+        feature_id,
+        GraphName::NamedNode(g),
+    )?;
+    insert_codechange_quads(&store, &quads, path)?;
+    dump_codechange_store(&store, path)?;
+    let _ = IRI_DEC_GRAPH_ORCHESTRATION;
+    Ok(())
+}
+
+/// Open a product-CodeChange [`Store`], pre-populating it from `path`
+/// when the file already exists with non-empty contents.
+fn open_codechange_store(path: &Path) -> Result<Store> {
     let store = Store::new().context("opening product codechange store")?;
     if path.exists() {
         let bytes = fs::read(path).with_context(|| format!("reading {}", path.display()))?;
@@ -38,21 +63,25 @@ pub(super) fn write_codechange_to_product_graph(
                 .with_context(|| format!("loading {}", path.display()))?;
         }
     }
-    let quads = build_codechange_quads(
-        code_change,
-        session_iri,
-        dispatch_iri,
-        feature_id,
-        GraphName::NamedNode(g.clone()),
-    )?;
+    Ok(store)
+}
+
+/// Insert the freshly built CodeChange triples in a single transaction.
+fn insert_codechange_quads(store: &Store, quads: &[Quad], path: &Path) -> Result<()> {
     store
         .transaction(|mut tx| {
-            for q in &quads {
+            for q in quads {
                 tx.insert(q.as_ref())?;
             }
             Ok::<_, oxigraph::store::StorageError>(())
         })
         .with_context(|| format!("inserting CodeChange triples into {}", path.display()))?;
+    Ok(())
+}
+
+/// Dump the product-CodeChange [`Store`] to `path` atomically via
+/// write-then-rename through a sibling `.nq.tmp`.
+fn dump_codechange_store(store: &Store, path: &Path) -> Result<()> {
     let mut buf: Vec<u8> = Vec::new();
     store
         .dump_to_writer(RdfFormat::NQuads, &mut buf)
@@ -61,7 +90,6 @@ pub(super) fn write_codechange_to_product_graph(
     fs::write(&tmp, &buf).with_context(|| format!("writing {}", tmp.display()))?;
     fs::rename(&tmp, path)
         .with_context(|| format!("renaming {} -> {}", tmp.display(), path.display()))?;
-    let _ = IRI_DEC_GRAPH_ORCHESTRATION;
     Ok(())
 }
 
@@ -73,79 +101,104 @@ fn build_codechange_quads(
     graph: GraphName,
 ) -> Result<Vec<Quad>> {
     let cc_iri = NamedNode::new(&code_change.iri).context("code change IRI")?;
-    let class = NamedNodeRef::new_unchecked(DEC_CODE_CHANGE_CLASS).into_owned();
-    let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
-    let prov_generated = NamedNodeRef::new_unchecked(PROV_GENERATED_BY).into_owned();
-    let dispatch_pred = NamedNodeRef::new_unchecked(DEC_DISPATCH_PROP).into_owned();
-    let feature_pred = NamedNodeRef::new_unchecked(DEC_FEATURE_ID).into_owned();
-    let file_pred = NamedNodeRef::new_unchecked(DEC_CHANGED_FILE).into_owned();
-    let path_pred = NamedNodeRef::new_unchecked(DEC_FILE_PATH_PROP).into_owned();
-    let summary_pred = NamedNodeRef::new_unchecked(DEC_FILE_SUMMARY_PROP).into_owned();
-    let mut quads: Vec<Quad> = vec![
-        Quad::new(cc_iri.clone(), rdf_type, class, graph.clone()),
-        Quad::new(
-            cc_iri.clone(),
-            prov_generated,
-            session_iri.clone(),
-            graph.clone(),
-        ),
-        Quad::new(
-            cc_iri.clone(),
-            dispatch_pred,
-            dispatch_iri.clone(),
-            graph.clone(),
-        ),
-        Quad::new(
-            cc_iri.clone(),
-            feature_pred,
-            Literal::new_simple_literal(feature_id),
-            graph.clone(),
-        ),
-        Quad::new(
-            cc_iri.clone(),
-            NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#summary").into_owned(),
-            Literal::new_simple_literal(&code_change.summary),
-            graph.clone(),
-        ),
-    ];
+    let mut quads = codechange_header_quads(
+        &cc_iri,
+        session_iri,
+        dispatch_iri,
+        feature_id,
+        code_change,
+        &graph,
+    );
     for file in &code_change.files {
-        let file_node = NamedNode::new(format!(
-            "{}/file/{}",
-            code_change.iri,
-            sanitize_iri_tail(&file.path)
-        ))
-        .with_context(|| format!("minting file IRI for {}", file.path))?;
-        quads.push(Quad::new(
-            cc_iri.clone(),
-            file_pred.clone(),
-            file_node.clone(),
-            graph.clone(),
-        ));
-        quads.push(Quad::new(
-            file_node.clone(),
-            path_pred.clone(),
-            Literal::new_simple_literal(&file.path),
-            graph.clone(),
-        ));
-        if !file.summary.is_empty() {
-            quads.push(Quad::new(
-                file_node.clone(),
-                summary_pred.clone(),
-                Literal::new_simple_literal(&file.summary),
-                graph.clone(),
-            ));
-        }
-        if file.bytes_written > 0 {
-            quads.push(Quad::new(
-                file_node,
-                NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#bytesWritten")
-                    .into_owned(),
-                Literal::new_simple_literal(file.bytes_written.to_string()),
-                graph.clone(),
-            ));
-        }
+        let file_quads = codechange_file_quads(&cc_iri, file, &code_change.iri, &graph)?;
+        quads.extend(file_quads);
     }
     Ok(quads)
+}
+
+/// The five core triples describing the `CodeChange` itself — type,
+/// PROV-O lineage to the [`Session`], the originating [`Dispatch`],
+/// feature_id tag, worker summary.
+fn codechange_header_quads(
+    cc_iri: &NamedNode,
+    session_iri: &NamedNode,
+    dispatch_iri: &NamedNode,
+    feature_id: &str,
+    code_change: &CodeChangeJson,
+    graph: &GraphName,
+) -> Vec<Quad> {
+    let class = pred(DEC_CODE_CHANGE_CLASS);
+    let feature_lit = Literal::new_simple_literal(feature_id);
+    let summary_lit = Literal::new_simple_literal(&code_change.summary);
+    vec![
+        node_quad(cc_iri, &pred(RDF_TYPE), &class, graph),
+        node_quad(cc_iri, &pred(PROV_GENERATED_BY), session_iri, graph),
+        node_quad(cc_iri, &pred(DEC_DISPATCH_PROP), dispatch_iri, graph),
+        literal_quad(cc_iri, &pred(DEC_FEATURE_ID), feature_lit, graph),
+        literal_quad(cc_iri, &pred(DEC_SUMMARY_PROP), summary_lit, graph),
+    ]
+}
+
+/// Owned [`NamedNode`] from a static IRI string.
+fn pred(iri: &str) -> NamedNode {
+    NamedNodeRef::new_unchecked(iri).into_owned()
+}
+
+/// Quad whose object is a [`NamedNode`].
+fn node_quad(s: &NamedNode, p: &NamedNode, o: &NamedNode, g: &GraphName) -> Quad {
+    Quad::new(s.clone(), p.clone(), o.clone(), g.clone())
+}
+
+/// Quad whose object is a [`Literal`].
+fn literal_quad(s: &NamedNode, p: &NamedNode, o: Literal, g: &GraphName) -> Quad {
+    Quad::new(s.clone(), p.clone(), o, g.clone())
+}
+
+/// Per-file triples — the `dec:changedFile` edge plus path, optional
+/// summary, optional bytesWritten on the freshly minted file node.
+fn codechange_file_quads(
+    cc_iri: &NamedNode,
+    file: &FileWriteJson,
+    code_change_iri: &str,
+    graph: &GraphName,
+) -> Result<Vec<Quad>> {
+    let file_node = mint_file_node(code_change_iri, &file.path)?;
+    let mut quads = vec![
+        node_quad(cc_iri, &pred(DEC_CHANGED_FILE), &file_node, graph),
+        literal_quad(
+            &file_node,
+            &pred(DEC_FILE_PATH_PROP),
+            Literal::new_simple_literal(&file.path),
+            graph,
+        ),
+    ];
+    if !file.summary.is_empty() {
+        quads.push(literal_quad(
+            &file_node,
+            &pred(DEC_FILE_SUMMARY_PROP),
+            Literal::new_simple_literal(&file.summary),
+            graph,
+        ));
+    }
+    if file.bytes_written > 0 {
+        quads.push(literal_quad(
+            &file_node,
+            &pred(DEC_BYTES_WRITTEN_PROP),
+            Literal::new_simple_literal(file.bytes_written.to_string()),
+            graph,
+        ));
+    }
+    Ok(quads)
+}
+
+/// Mint a stable file IRI under the parent code-change IRI.
+fn mint_file_node(code_change_iri: &str, path: &str) -> Result<NamedNode> {
+    NamedNode::new(format!(
+        "{}/file/{}",
+        code_change_iri,
+        sanitize_iri_tail(path)
+    ))
+    .with_context(|| format!("minting file IRI for {path}"))
 }
 
 fn sanitize_iri_tail(s: &str) -> String {

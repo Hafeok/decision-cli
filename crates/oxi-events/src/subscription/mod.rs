@@ -1,4 +1,4 @@
-//! Subscription registry and evaluator (FT-002).
+//! Subscription substrate — registry plus evaluator (FT-002).
 //!
 //! A [`Subscription`] is a first-class graph artifact (ADR-003) carrying:
 //!

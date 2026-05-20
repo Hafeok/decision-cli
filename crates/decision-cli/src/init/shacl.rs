@@ -33,14 +33,28 @@ pub(super) fn check_stream_shacl(
     subject_iri: &str,
 ) -> Vec<Violation> {
     let mut violations = Vec::new();
-    let required = [
-        (DEC_NAME, true, true),
-        (DEC_TITLE, true, true),
-    ];
-    for (prop, is_string, single) in required {
-        check_property(store, graph, subject_iri, prop, is_string, single, &mut violations);
+    for (prop, is_string, single) in [(DEC_NAME, true, true), (DEC_TITLE, true, true)] {
+        check_property(
+            store,
+            graph,
+            subject_iri,
+            prop,
+            is_string,
+            single,
+            &mut violations,
+        );
     }
+    check_terminal_value_action(store, graph, subject_iri, &mut violations);
+    check_authorized_goals_present(store, subject_iri, &mut violations);
+    violations
+}
 
+fn check_terminal_value_action(
+    store: &Store,
+    graph: &NamedNode,
+    subject_iri: &str,
+    violations: &mut Vec<Violation>,
+) {
     let tvalues = collect_property_values(store, graph, subject_iri, DEC_TERMINAL_VALUE_ACTION);
     if tvalues.is_empty() {
         violations.push(Violation {
@@ -66,7 +80,13 @@ pub(super) fn check_stream_shacl(
             detail: format!("{DEC_TERMINAL_VALUE_ACTION} must be an IRI (sh:nodeKind sh:IRI)"),
         });
     }
+}
 
+fn check_authorized_goals_present(
+    store: &Store,
+    subject_iri: &str,
+    violations: &mut Vec<Violation>,
+) {
     let authorized = collect_string_property(store, subject_iri, DEC_AUTHORIZED_GOALS);
     if authorized.is_empty() {
         violations.push(Violation {
@@ -75,7 +95,6 @@ pub(super) fn check_stream_shacl(
             detail: format!("missing required property {DEC_AUTHORIZED_GOALS} (sh:minCount 1)"),
         });
     }
-    violations
 }
 
 pub(super) fn check_value_action_shacl(
@@ -89,7 +108,11 @@ pub(super) fn check_value_action_shacl(
         (DEC_DESCRIPTION, true, false),
         (DEC_COMPATIBLE_GOALS, false, false),
         ("https://decision-cli.dev/ns#exitCriterion", false, false),
-        ("https://decision-cli.dev/ns#expectedOutputType", false, false),
+        (
+            "https://decision-cli.dev/ns#expectedOutputType",
+            false,
+            false,
+        ),
     ] {
         check_property(
             store,
@@ -116,35 +139,49 @@ fn check_property(
 ) {
     let values = collect_property_values(store, graph, subject_iri, prop);
     if values.is_empty() {
-        violations.push(Violation {
-            target: subject_iri.to_string(),
-            path: prop.to_string(),
-            detail: format!("missing required property {prop} (sh:minCount 1)"),
-        });
+        violations.push(missing_property_violation(subject_iri, prop));
         return;
     }
     if single && values.len() > 1 {
-        violations.push(Violation {
-            target: subject_iri.to_string(),
-            path: prop.to_string(),
-            detail: format!(
-                "expected exactly one {prop}, found {} (sh:maxCount 1)",
-                values.len()
-            ),
-        });
+        violations.push(too_many_values_violation(subject_iri, prop, values.len()));
     }
     if is_string {
-        for v in &values {
-            if !matches!(v, Term::Literal(_)) {
-                violations.push(Violation {
-                    target: subject_iri.to_string(),
-                    path: prop.to_string(),
-                    detail: format!(
-                        "{prop} must be a literal (sh:datatype xsd:string), got {}",
-                        term_kind(v)
-                    ),
-                });
-            }
+        append_non_literal_violations(subject_iri, prop, &values, violations);
+    }
+}
+
+fn missing_property_violation(subject_iri: &str, prop: &str) -> Violation {
+    Violation {
+        target: subject_iri.to_string(),
+        path: prop.to_string(),
+        detail: format!("missing required property {prop} (sh:minCount 1)"),
+    }
+}
+
+fn too_many_values_violation(subject_iri: &str, prop: &str, count: usize) -> Violation {
+    Violation {
+        target: subject_iri.to_string(),
+        path: prop.to_string(),
+        detail: format!("expected exactly one {prop}, found {count} (sh:maxCount 1)"),
+    }
+}
+
+fn append_non_literal_violations(
+    subject_iri: &str,
+    prop: &str,
+    values: &[Term],
+    violations: &mut Vec<Violation>,
+) {
+    for v in values {
+        if !matches!(v, Term::Literal(_)) {
+            violations.push(Violation {
+                target: subject_iri.to_string(),
+                path: prop.to_string(),
+                detail: format!(
+                    "{prop} must be a literal (sh:datatype xsd:string), got {}",
+                    term_kind(v)
+                ),
+            });
         }
     }
 }

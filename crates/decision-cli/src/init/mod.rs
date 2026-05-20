@@ -111,7 +111,10 @@ pub enum InitError {
     },
 
     #[error("SHACL validation failed for {source_label}:\n{report}")]
-    ShaclViolation { source_label: String, report: String },
+    ShaclViolation {
+        source_label: String,
+        report: String,
+    },
 
     #[error(
         "ValueAction <{iri}> is not bundled with slice 1; bundled URIs: {available}. \
@@ -154,47 +157,102 @@ pub fn run(workdir: &Path, source: DefinitionSource) -> Result<InitOutcome, Init
     let ontology = OntologyHandle::load()?;
     let (definition_bytes, source_label, base_iri) = read_definition_bytes(&source)?;
     let definition_hash = sha256_hex(&definition_bytes);
-
     let staged = stage_and_validate(&definition_bytes, &source_label, base_iri.as_deref())?;
 
-    let now = Utc::now().to_rfc3339();
-    let orchestration = build_orchestration_store(
+    persist_init_artifacts(
+        workdir,
+        &dec_dir,
         &staged,
+        &source,
         &source_label,
         &definition_hash,
+        &definition_bytes,
         ontology.version(),
+    )?;
+
+    Ok(build_init_outcome(
+        &dec_dir,
+        staged,
+        definition_hash,
+        source_label,
+        ontology.version().to_string(),
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn persist_init_artifacts(
+    workdir: &Path,
+    dec_dir: &Path,
+    staged: &pipeline::StagedDefinition,
+    source: &DefinitionSource,
+    source_label: &str,
+    definition_hash: &str,
+    definition_bytes: &[u8],
+    ontology_version: &str,
+) -> Result<(), InitError> {
+    let now = Utc::now().to_rfc3339();
+    let orchestration = build_orchestration_store(
+        staged,
+        source_label,
+        definition_hash,
+        ontology_version,
         source.form(),
         &now,
     )?;
-
-    let metadata_json = format!(
-        r#"{{"source":"{source}","hash":"{hash}","ontology_version":"{ver}","form":"{form}","stream":"{stream}","value_action":"{va}"}}"#,
-        source = json_escape(&source_label),
-        hash = definition_hash,
-        ver = ontology.version(),
-        form = source.form(),
-        stream = staged.stream_iri,
-        va = staged.terminal_iri,
+    let metadata_json = build_init_metadata_json(
+        source_label,
+        definition_hash,
+        ontology_version,
+        source.form(),
+        &staged.stream_iri,
+        &staged.terminal_iri,
     );
     finalise_orchestration_dir(
         workdir,
-        &dec_dir,
+        dec_dir,
         &orchestration,
-        &definition_bytes,
+        definition_bytes,
         &metadata_json,
-    )?;
+    )
+}
 
+fn build_init_metadata_json(
+    source_label: &str,
+    definition_hash: &str,
+    ontology_version: &str,
+    form: &str,
+    stream_iri: &str,
+    value_action_iri: &str,
+) -> String {
+    format!(
+        r#"{{"source":"{source}","hash":"{hash}","ontology_version":"{ver}","form":"{form}","stream":"{stream}","value_action":"{va}"}}"#,
+        source = json_escape(source_label),
+        hash = definition_hash,
+        ver = ontology_version,
+        form = form,
+        stream = stream_iri,
+        va = value_action_iri,
+    )
+}
+
+fn build_init_outcome(
+    dec_dir: &Path,
+    staged: pipeline::StagedDefinition,
+    definition_hash: String,
+    source_label: String,
+    ontology_version: String,
+) -> InitOutcome {
     let store_dir = dec_dir.join("store");
     let dump_path = store_dir.join("orchestration.nq");
-    Ok(InitOutcome {
+    InitOutcome {
         stream_iri: staged.stream_iri,
         value_action_iri: staged.terminal_iri,
         session_iri: BOOTSTRAP_SESSION_IRI.to_string(),
         definition_hash,
         definition_source: source_label,
-        ontology_version: ontology.version().to_string(),
+        ontology_version,
         authorized_goals: staged.authorized,
         store_dir,
         store_dump_path: dump_path,
-    })
+    }
 }

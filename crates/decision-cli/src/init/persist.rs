@@ -53,56 +53,80 @@ pub(super) fn build_session_quads(
     form: &str,
     started_at: &str,
 ) -> Vec<Quad> {
-    let g: GraphName = graph.clone();
+    let mut quads = build_session_type_quads(session_iri, graph);
+    quads.extend(build_session_source_quads(session_iri, graph, source_label));
+    quads.extend(build_session_metadata_quads(
+        session_iri,
+        graph,
+        definition_hash,
+        ontology_version,
+        form,
+        started_at,
+    ));
+    quads
+}
+
+fn build_session_type_quads(session_iri: &NamedNode, graph: &GraphName) -> Vec<Quad> {
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE);
     let session_class = NamedNodeRef::new_unchecked(DEC_SESSION_CLASS);
     let activity = NamedNodeRef::new_unchecked(PROV_ACTIVITY);
-    let derived = NamedNodeRef::new_unchecked(PROV_DERIVED_FROM);
-    let at_time = NamedNodeRef::new_unchecked(PROV_AT_TIME);
-    let p_source = NamedNodeRef::new_unchecked(DEC_DEFINITION_SOURCE);
-    let p_hash = NamedNodeRef::new_unchecked(DEC_DEFINITION_HASH);
-    let p_ver = NamedNodeRef::new_unchecked(DEC_ONTOLOGY_VERSION);
-    let p_form = NamedNodeRef::new_unchecked(DEC_DEFINITION_FORM);
     vec![
-        Quad::new(session_iri.clone(), rdf_type, session_class, g.clone()),
-        Quad::new(session_iri.clone(), rdf_type, activity, g.clone()),
+        Quad::new(session_iri.clone(), rdf_type, session_class, graph.clone()),
+        Quad::new(session_iri.clone(), rdf_type, activity, graph.clone()),
+    ]
+}
+
+fn build_session_source_quads(
+    session_iri: &NamedNode,
+    graph: &GraphName,
+    source_label: &str,
+) -> Vec<Quad> {
+    let derived = NamedNodeRef::new_unchecked(PROV_DERIVED_FROM);
+    let p_source = NamedNodeRef::new_unchecked(DEC_DEFINITION_SOURCE);
+    vec![
         Quad::new(
             session_iri.clone(),
             p_source,
             Literal::new_simple_literal(source_label),
-            g.clone(),
+            graph.clone(),
         ),
         Quad::new(
             session_iri.clone(),
             derived,
             Literal::new_simple_literal(source_label),
-            g.clone(),
-        ),
-        Quad::new(
-            session_iri.clone(),
-            p_hash,
-            Literal::new_simple_literal(definition_hash),
-            g.clone(),
-        ),
-        Quad::new(
-            session_iri.clone(),
-            p_ver,
-            Literal::new_simple_literal(ontology_version),
-            g.clone(),
-        ),
-        Quad::new(
-            session_iri.clone(),
-            p_form,
-            Literal::new_simple_literal(form),
-            g.clone(),
-        ),
-        Quad::new(
-            session_iri.clone(),
-            at_time,
-            Literal::new_simple_literal(started_at),
-            g.clone(),
+            graph.clone(),
         ),
     ]
+}
+
+fn build_session_metadata_quads(
+    session_iri: &NamedNode,
+    graph: &GraphName,
+    definition_hash: &str,
+    ontology_version: &str,
+    form: &str,
+    started_at: &str,
+) -> Vec<Quad> {
+    vec![
+        session_literal_quad(session_iri, graph, DEC_DEFINITION_HASH, definition_hash),
+        session_literal_quad(session_iri, graph, DEC_ONTOLOGY_VERSION, ontology_version),
+        session_literal_quad(session_iri, graph, DEC_DEFINITION_FORM, form),
+        session_literal_quad(session_iri, graph, PROV_AT_TIME, started_at),
+    ]
+}
+
+fn session_literal_quad(
+    session_iri: &NamedNode,
+    graph: &GraphName,
+    predicate_iri: &str,
+    value: &str,
+) -> Quad {
+    Quad::new(
+        session_iri.clone(),
+        NamedNodeRef::new_unchecked(predicate_iri),
+        Literal::new_simple_literal(value),
+        graph.clone(),
+    )
 }
 
 pub(super) fn sha256_hex(bytes: &[u8]) -> String {
@@ -139,13 +163,21 @@ pub(super) fn seed_bootstrap_subscriptions(
 ) -> Result<(), oxigraph::store::StorageError> {
     let subs_graph: GraphName =
         NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_GRAPH_SUBSCRIPTIONS).into();
-    let rdf_type = NamedNode::new_unchecked(RDF_TYPE);
-    let sub_class = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
-    let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
-    let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
-    let rdfs_label = NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
+    let entries = bootstrap_subscription_entries();
+    let mut quads: Vec<Quad> = Vec::with_capacity(entries.len() * 4);
+    for (iri, label, query) in entries {
+        quads.extend(build_subscription_quads(iri, label, query, &subs_graph));
+    }
+    store.transaction(|mut tx| {
+        for q in &quads {
+            tx.insert(q.as_ref())?;
+        }
+        Ok::<_, oxigraph::store::StorageError>(())
+    })
+}
 
-    let entries: &[(&str, &str, &str)] = &[
+fn bootstrap_subscription_entries() -> &'static [(&'static str, &'static str, &'static str)] {
+    &[
         (
             "https://decision-cli.dev/ns/subscription/dispatch-available-code-writer",
             "dispatch available for code-writer",
@@ -158,45 +190,42 @@ pub(super) fn seed_bootstrap_subscriptions(
             "PREFIX dec: <https://decision-cli.dev/ns#> \
              SELECT ?s WHERE { GRAPH ?g { ?s a dec:Session ; dec:role \"code-writer\" ; dec:status \"complete\" } }",
         ),
-    ];
+    ]
+}
 
-    store.transaction(|mut tx| {
-        for (iri, label, query) in entries {
-            let sub = NamedNode::new_unchecked(*iri);
-            tx.insert(
-                Quad::new(sub.clone(), rdf_type.clone(), sub_class.clone(), subs_graph.clone())
-                    .as_ref(),
-            )?;
-            tx.insert(
-                Quad::new(
-                    sub.clone(),
-                    select_pred.clone(),
-                    Literal::new_simple_literal(*query),
-                    subs_graph.clone(),
-                )
-                .as_ref(),
-            )?;
-            tx.insert(
-                Quad::new(
-                    sub.clone(),
-                    mode_pred.clone(),
-                    Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_INLINE),
-                    subs_graph.clone(),
-                )
-                .as_ref(),
-            )?;
-            tx.insert(
-                Quad::new(
-                    sub,
-                    rdfs_label.clone(),
-                    Literal::new_simple_literal(*label),
-                    subs_graph.clone(),
-                )
-                .as_ref(),
-            )?;
-        }
-        Ok::<_, oxigraph::store::StorageError>(())
-    })
+fn build_subscription_quads(
+    iri: &str,
+    label: &str,
+    query: &str,
+    subs_graph: &GraphName,
+) -> Vec<Quad> {
+    let rdf_type = NamedNode::new_unchecked(RDF_TYPE);
+    let sub_class = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
+    let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
+    let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
+    let rdfs_label = NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
+    let sub = NamedNode::new_unchecked(iri);
+    vec![
+        Quad::new(sub.clone(), rdf_type, sub_class, subs_graph.clone()),
+        Quad::new(
+            sub.clone(),
+            select_pred,
+            Literal::new_simple_literal(query),
+            subs_graph.clone(),
+        ),
+        Quad::new(
+            sub.clone(),
+            mode_pred,
+            Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_INLINE),
+            subs_graph.clone(),
+        ),
+        Quad::new(
+            sub,
+            rdfs_label,
+            Literal::new_simple_literal(label),
+            subs_graph.clone(),
+        ),
+    ]
 }
 
 /// Serialise the orchestration store to disk atomically: write a temp

@@ -16,42 +16,13 @@ pub struct InitArgs {
 }
 
 pub fn run(workdir: &Path, args: InitArgs) -> ExitCode {
-    let source = match (args.template, args.from) {
-        (Some(t), None) => DefinitionSource::Template(t),
-        (None, Some(p)) => DefinitionSource::File(p),
-        (Some(_), Some(_)) => {
-            eprintln!("dec init: pass exactly one of --template or --from, not both");
-            return ExitCode::from(2);
-        }
-        (None, None) => {
-            eprintln!(
-                "dec init: a definition reference is required.\n  \
-                 Try: dec init --template engineering-development\n  \
-                 Or:  dec init --from ./streams/decision-cli-development.ttl"
-            );
-            return ExitCode::from(2);
-        }
+    let source = match resolve_source(args) {
+        Ok(s) => s,
+        Err(code) => return code,
     };
-
     match init::run(workdir, source) {
         Ok(outcome) => {
-            println!(
-                "Initialised orchestration store in {}",
-                outcome.store_dir.display()
-            );
-            println!("  ValueStream:       {}", outcome.stream_iri);
-            println!("  ValueAction:       {}", outcome.value_action_iri);
-            println!("  Bootstrap session: {}", outcome.session_iri);
-            let short = &outcome.definition_hash[..outcome.definition_hash.len().min(12)];
-            println!(
-                "  Definition source: {} (sha256:{short}…)",
-                outcome.definition_source
-            );
-            println!("  Ontology version:  {}", outcome.ontology_version);
-            println!(
-                "  Authorized goals:  {}",
-                outcome.authorized_goals.join(", ")
-            );
+            print_init_success(&outcome);
             ExitCode::SUCCESS
         }
         Err(err) => {
@@ -59,6 +30,45 @@ pub fn run(workdir: &Path, args: InitArgs) -> ExitCode {
             ExitCode::from(1)
         }
     }
+}
+
+fn resolve_source(args: InitArgs) -> Result<DefinitionSource, ExitCode> {
+    match (args.template, args.from) {
+        (Some(t), None) => Ok(DefinitionSource::Template(t)),
+        (None, Some(p)) => Ok(DefinitionSource::File(p)),
+        (Some(_), Some(_)) => {
+            eprintln!("dec init: pass exactly one of --template or --from, not both");
+            Err(ExitCode::from(2))
+        }
+        (None, None) => {
+            eprintln!(
+                "dec init: a definition reference is required.\n  \
+                 Try: dec init --template engineering-development\n  \
+                 Or:  dec init --from ./streams/decision-cli-development.ttl"
+            );
+            Err(ExitCode::from(2))
+        }
+    }
+}
+
+fn print_init_success(outcome: &init::InitOutcome) {
+    println!(
+        "Initialised orchestration store in {}",
+        outcome.store_dir.display()
+    );
+    println!("  ValueStream:       {}", outcome.stream_iri);
+    println!("  ValueAction:       {}", outcome.value_action_iri);
+    println!("  Bootstrap session: {}", outcome.session_iri);
+    let short = &outcome.definition_hash[..outcome.definition_hash.len().min(12)];
+    println!(
+        "  Definition source: {} (sha256:{short}…)",
+        outcome.definition_source
+    );
+    println!("  Ontology version:  {}", outcome.ontology_version);
+    println!(
+        "  Authorized goals:  {}",
+        outcome.authorized_goals.join(", ")
+    );
 }
 
 fn print_init_error(err: &InitError) {

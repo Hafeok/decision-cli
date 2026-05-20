@@ -7,8 +7,7 @@
 //! will extend it with a richer catalog and lookup helpers.
 
 /// Canonical bundled ValueAction (`va:shipped-feature`).
-pub const SHIPPED_FEATURE_TTL: &str =
-    include_str!("assets/value-actions/shipped-feature.ttl");
+pub const SHIPPED_FEATURE_TTL: &str = include_str!("assets/value-actions/shipped-feature.ttl");
 
 /// Bundled stream template (`engineering-development`).
 pub const ENGINEERING_DEVELOPMENT_TTL: &str =
