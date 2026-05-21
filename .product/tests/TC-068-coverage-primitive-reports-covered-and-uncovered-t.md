@@ -2,11 +2,16 @@
 id: TC-068
 title: coverage primitive reports covered and uncovered TCs structurally
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_068_coverage_primitive_reports_covered_and_uncovered_t
+runner-timeout: 120
+last-run: 2026-05-21T16:57:50.083253919+00:00
+last-run-duration: 0.1s
 ---
 
 ## Premise

@@ -2,11 +2,16 @@
 id: TC-069
 title: coverage primitive treats absent providesEvidenceFor as no coverage
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_069_coverage_primitive_treats_absent_providesevidencef
+runner-timeout: 120
+last-run: 2026-05-21T16:57:50.083253919+00:00
+last-run-duration: 0.1s
 ---
 
 ## Premise
