@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
 use cli::{
     check_goal::CheckGoalArgs, doctor::DoctorArgs, events::EventsCmd, feedback::FeedbackCmd,
     implement::ImplementCmdArgs, init::InitArgs, mcp::McpCmd, session::SessionCmd,
-    sparql::SparqlArgs,
+    sparql::SparqlArgs, verify::VerifyCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -58,6 +58,9 @@ enum Command {
     /// MCP server (FT-034 / ADR-029).
     #[command(subcommand)]
     Mcp(McpCmd),
+    /// Verification artifact management (FT-038 / ADR-028 / ADR-029).
+    #[command(subcommand)]
+    Verify(VerifyCmd),
 }
 
 fn main() -> ExitCode {
@@ -80,6 +83,7 @@ fn main() -> ExitCode {
             init_tracing_for_mcp();
             cli::mcp::run(&workdir, cmd)
         }
+        Command::Verify(cmd) => cli::verify::run(&workdir, cmd),
     }
 }
 

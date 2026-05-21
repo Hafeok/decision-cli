@@ -2,11 +2,16 @@
 id: TC-060
 title: dec verify env new produces identical artifact via CLI and MCP
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_060_dec_verify_env_new_produces_identical_artifact_via
+runner-timeout: 120
+last-run: 2026-05-21T14:58:27.085298574+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

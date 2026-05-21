@@ -1,11 +1,17 @@
 //! `dec mcp serve` — MCP stdio server subcommand (FT-034 / ADR-029).
 //!
 //! Thin wrapper around [`crate::core::mcp::serve_stdio`]. The feature
-//! constructs a [`ToolRegistry`], optionally seeds it with test
-//! fixtures (only when the `DEC_MCP_TEST_FIXTURES` env var is set),
-//! and hands it to the stdio loop. No CLI-side business logic lives
-//! here; per ADR-029 the single-handler discipline means every tool
-//! routes through its own handler in the relevant feature module.
+//! exposes:
+//!
+//!   * [`build_registry`] — empty registry plus optional test fixtures.
+//!   * [`serve_with_registry`] — run the stdio loop against a registry.
+//!   * [`serve`] — convenience that calls both for callers (tests) that
+//!     want the fixture-only surface.
+//!
+//! Per ADR-016, this module MUST NOT import from sibling feature
+//! modules. Composition of production tool descriptors happens in the
+//! binary (`crates/decision-cli/src/cli/mcp.rs`), which is allowed to
+//! see every feature.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -33,10 +39,11 @@ pub enum McpError {
 
 /// Build the registry for `dec mcp serve`.
 ///
-/// FT-034 itself registers no tools (it is pure substrate). The
-/// `DEC_MCP_TEST_FIXTURES` env var opts in to a minimal fixture set
-/// used by the TC-051 / TC-053 bash harnesses to verify the wire
-/// protocol without needing a real subcommand-feature handler.
+/// FT-034 itself registers no tools — production tool composition
+/// lives in the binary (per ADR-016: `features::mcp` MUST NOT depend
+/// on sibling feature modules). `DEC_MCP_TEST_FIXTURES=1` opts in to a
+/// minimal fixture set used by the TC-051 / TC-053 bash harnesses to
+/// verify the wire protocol without a real subcommand-feature handler.
 pub fn build_registry(_workdir: &Path) -> Result<ToolRegistry, McpError> {
     let mut registry = ToolRegistry::new();
     if std::env::var_os("DEC_MCP_TEST_FIXTURES").is_some() {
@@ -45,13 +52,15 @@ pub fn build_registry(_workdir: &Path) -> Result<ToolRegistry, McpError> {
     Ok(registry)
 }
 
-/// Programmatic entry point for the `dec mcp serve` subcommand.
+/// Programmatic entry point for `dec mcp serve` with a caller-supplied
+/// registry. The binary uses this after assembling production tools
+/// from each feature module; tests use this to drive the loop with
+/// fixture-only registries.
 ///
 /// Logs `mcp server ready` to stderr via tracing (TC-053 AC #1),
 /// reads JSON-RPC frames until EOF (TC-053 AC #3), and writes
 /// responses to stdout. Returns `Ok(())` on a clean shutdown.
-pub fn serve(workdir: &Path) -> Result<(), McpError> {
-    let registry = build_registry(workdir)?;
+pub fn serve_with_registry(_workdir: &Path, registry: ToolRegistry) -> Result<(), McpError> {
     info!(
         target: "dec_mcp",
         registered = registry.len(),
@@ -59,6 +68,17 @@ pub fn serve(workdir: &Path) -> Result<(), McpError> {
     );
     serve_stdio(&registry)?;
     Ok(())
+}
+
+/// Convenience: build the fixture-only registry and serve it.
+///
+/// Production callers (the `dec` binary) should NOT use this directly —
+/// they compose feature-module descriptors first, then call
+/// [`serve_with_registry`]. This helper exists for tests / scripts that
+/// only need the wire protocol with no real tools.
+pub fn serve(workdir: &Path) -> Result<(), McpError> {
+    let registry = build_registry(workdir)?;
+    serve_with_registry(workdir, registry)
 }
 
 /// Test-fixture tools registered only when `DEC_MCP_TEST_FIXTURES=1`.
@@ -125,17 +145,26 @@ mod tests {
         }
     }
 
+    // The two env-sensitive tests below share global process state
+    // (the `DEC_MCP_TEST_FIXTURES` env var). Cargo runs them in
+    // parallel so we serialise through a mutex.
+    static ENV_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[test]
     fn registry_is_empty_without_fixture_flag() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         with_fixture_env(None, || {
             let tmp = std::env::temp_dir();
             let reg = build_registry(&tmp).expect("build registry");
-            assert!(reg.is_empty(), "FT-034 ships no production tools");
+            // FT-034 (this module) ships no production tools.
+            // Production tool composition happens in the binary.
+            assert!(reg.is_empty(), "features::mcp must not register feature tools");
         });
     }
 
     #[test]
     fn fixture_flag_registers_ping() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         with_fixture_env(Some(OsStr::new("1")), || {
             let tmp = std::env::temp_dir();
             let reg = build_registry(&tmp).expect("build registry");

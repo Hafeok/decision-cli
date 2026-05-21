@@ -2,11 +2,16 @@
 id: TC-052
 title: Every dec verify subcommand has paired CLI and MCP twin sharing one handler
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_052_every_dec_verify_subcommand_has_paired_cli_and_mcp
+runner-timeout: 120
+last-run: 2026-05-21T14:58:27.085298574+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
