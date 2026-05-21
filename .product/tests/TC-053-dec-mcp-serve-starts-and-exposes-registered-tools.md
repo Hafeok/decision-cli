@@ -7,6 +7,9 @@ validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_053_mcp_serve
+runner-timeout: 120
 ---
 
 ## Description
