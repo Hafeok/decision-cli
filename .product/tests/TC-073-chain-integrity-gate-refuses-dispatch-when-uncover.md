@@ -1,7 +1,7 @@
 ---
 id: TC-073
 title: chain-integrity gate refuses dispatch when uncovered TCs and no waiver
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

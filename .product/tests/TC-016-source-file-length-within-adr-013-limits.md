@@ -2,7 +2,7 @@
 id: TC-016
 title: source_file_length_within_adr_013_limits
 type: invariant
-status: failing
+status: unrunnable
 validates:
   features: []
   adrs:

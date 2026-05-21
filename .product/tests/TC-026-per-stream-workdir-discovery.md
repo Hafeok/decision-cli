@@ -2,7 +2,7 @@
 id: TC-026
 title: per_stream_working_directory_discovery
 type: invariant
-status: failing
+status: unrunnable
 validates:
   features: []
   adrs:
@@ -41,3 +41,11 @@ scripts/checks/per-stream-workdir.sh
    `orchestration.nq` from inside it.
 2. Exit 1 if either the `.dec/` join or the `orchestration.nq` path has
    been removed (per-stream-workdir-discovery regressed).
+
+## Formal Specification
+
+⟦Γ:Invariants⟧{
+  references(crates/decision-cli/src/scope/mod.rs, ".dec")
+  references(crates/decision-cli/src/scope/mod.rs, "orchestration.nq")
+  ¬ ∃ flag StreamRegistry ∈ crates/decision-cli/src/**.rs
+}

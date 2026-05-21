@@ -1,7 +1,7 @@
 ---
 id: TC-068
 title: coverage primitive reports covered and uncovered TCs structurally
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

@@ -41,3 +41,15 @@ Exit code ≠ 0; the violation message names the offending file, line, and `use`
 
 - This TC is `scope: cross-cutting` and `validates.adrs: [ADR-016]` so it runs on every PR via `product verify --platform` (per [ADR-014](ADR-014)).
 - The check script lives alongside the other ADR-014 fitness functions (`scripts/checks/file-length.sh`, etc.) and is governed by `source-files` on ADR-016.
+
+## Formal Specification
+
+⟦Σ:Types⟧{
+  Feature ≜ IRI
+  UseStmt ≜ ⟨file:Path, line:Int, target_feature:Feature⟩
+}
+
+⟦Γ:Invariants⟧{
+  ∀ u:UseStmt ∈ crates/decision-cli/src/features/:
+    feature_of(u.file) = u.target_feature
+}

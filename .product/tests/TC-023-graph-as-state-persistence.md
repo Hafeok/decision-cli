@@ -2,7 +2,7 @@
 id: TC-023
 title: orchestration_store_persisted_as_graph_dump
 type: invariant
-status: failing
+status: unrunnable
 validates:
   features: []
   adrs:
@@ -45,3 +45,11 @@ scripts/checks/graph-as-state.sh
    store as an N-Quads dump.
 2. Exit 1 if the `RdfFormat::NQuads` serialisation or the
    `orchestration.nq` path has been removed (graph-as-state regression).
+
+## Formal Specification
+
+⟦Γ:Invariants⟧{
+  references(crates/decision-cli/src/init/persist.rs, RdfFormat::NQuads)
+  references(crates/decision-cli/src/init/persist.rs, "orchestration.nq")
+  ¬ ∃ EventLogReducer ∈ crates/decision-cli/src/**.rs
+}

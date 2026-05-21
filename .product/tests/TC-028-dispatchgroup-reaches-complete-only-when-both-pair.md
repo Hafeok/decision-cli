@@ -19,4 +19,32 @@ last-run-duration: 0.1s
 
 ## Description
 
-[Describe test here.]
+Invariant: a `dec:DispatchGroup` only reaches `dec:state = "complete"` when **both** of its paired sessions (the action session and its interpretation session) are in terminal states. This is the lifecycle correctness claim of [ADR-017](ADR-017).
+
+Terminal states for a session: `completed`, `failed`, `cancelled`. Non-terminal: `pending`, `in_progress`, `pending_review`. A `DispatchGroup` that flips to `complete` while either paired session is still non-terminal is a regression of the group's state machine.
+
+## Runner
+
+The runner script asserts the SPARQL ASK:
+
+```sparql
+PREFIX dec: <https://decision-cli.dev/ns/>
+ASK WHERE {
+  ?g a dec:DispatchGroup ; dec:state "complete" .
+  { ?g dec:hasAction ?a .       ?a dec:state ?s . FILTER(?s NOT IN ("completed","failed","cancelled")) }
+  UNION
+  { ?g dec:hasInterpretation ?i . ?i dec:state ?s . FILTER(?s NOT IN ("completed","failed","cancelled")) }
+}
+```
+
+The ASK returning `true` indicates a regression; the runner exits 1.
+
+⟦Σ:Types⟧{
+  SessionState ≜ pending | in_progress | pending_review | completed | failed | cancelled
+  TerminalState ≜ completed | failed | cancelled
+}
+
+⟦Γ:Invariants⟧{
+  ∀ g:DispatchGroup: state(g) = complete ⇒
+    state(action(g)) ∈ TerminalState ∧ state(interpretation(g)) ∈ TerminalState
+}

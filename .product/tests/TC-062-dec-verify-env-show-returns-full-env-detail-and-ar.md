@@ -1,7 +1,7 @@
 ---
 id: TC-062
 title: dec verify env show returns full env detail and ArtifactNotFound on unknown id
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

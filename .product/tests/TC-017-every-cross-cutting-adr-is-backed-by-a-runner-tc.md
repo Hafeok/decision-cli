@@ -2,7 +2,7 @@
 id: TC-017
 title: every_cross_cutting_adr_is_backed_by_a_runner_tc
 type: invariant
-status: failing
+status: unrunnable
 validates:
   features: []
   adrs:

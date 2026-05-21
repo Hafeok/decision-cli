@@ -52,3 +52,15 @@ scripts/checks/oxi-events-sdp-boundary.sh
   module headers can *explain why* those terms are forbidden.
 - Authoring a new DDD-aware feature inside `oxi-events` will surface as
   an exit-1 here long before the SDP boundary erodes.
+
+## Formal Specification
+
+⟦Σ:Types⟧{
+  ForbiddenTerm ≜ role_id | RoleBinding | bundle_hash | session_id | policy_id | autonomy_level
+}
+
+⟦Γ:Invariants⟧{
+  ¬ depends_on(oxi-events, decision-cli)
+  ∀ t:ForbiddenTerm, src ∈ crates/oxi-events/src/**.rs:
+    ¬ references(src, t)  -- comments excepted
+}

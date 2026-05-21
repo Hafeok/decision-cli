@@ -2,7 +2,7 @@
 id: TC-024
 title: prov_o_lineage_in_writer_and_init
 type: invariant
-status: failing
+status: unrunnable
 validates:
   features: []
   adrs:
@@ -42,3 +42,14 @@ scripts/checks/prov-o-lineage.sh
    `crates/oxi-events/src/writer/` and `crates/decision-cli/src/init/`.
 2. Exit 1 otherwise; diagnostic lines on stdout name the missing
    predicate.
+
+## Formal Specification
+
+⟦Σ:Types⟧{
+  ProvPredicate ≜ wasGeneratedBy | wasDerivedFrom | atTime
+  Module ≜ crates/oxi-events/src/writer | crates/decision-cli/src/init
+}
+
+⟦Γ:Invariants⟧{
+  ∀ p:ProvPredicate, m:Module: references(m, p)
+}

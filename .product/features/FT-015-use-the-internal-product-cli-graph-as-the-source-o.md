@@ -10,22 +10,23 @@ adrs:
 tests:
 - TC-016
 - TC-017
+- TC-087
 domains: []
 domains-acknowledged:
-  ADR-001: FT-015 ships convention and documentation only — no oxi-events code changes, so the SDP boundary is not exercised by this feature.
-  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-015 produces no feedback artifacts.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-015 produces no action/interpretation pair.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-015's code is reorganised under that migration, not by this feature.
   ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-015 has no feedback to gate.
-  ADR-012: FT-015 ships no dec command surface; per-stream working directories are not exercised by this feature's deliverables.
-  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-015 produces no feedback artifacts.
   ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-015 does not introduce or modify a role catalog entry.
-  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-015 neither emits nor routes feedback.
-  ADR-004: FT-015 is documentation and scaffolding — no Session, Event, or Bundle artifact is produced, so PROV-O linkage does not apply.
   ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-015 is out of scope for the pairing.
-  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-015 neither emits nor consumes verdicts.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-015's code is reorganised under that migration, not by this feature.
+  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-015 produces no feedback artifacts.
+  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-015 produces no feedback artifacts.
+  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-015 neither emits nor routes feedback.
   ADR-005: FT-015 modifies the .product/ graph and scripts/ — both repo-level, not value-stream-scoped artifacts. ValueStream enforcement does not apply.
   ADR-002: FT-015 ships scripts, TCs, and CLAUDE.md edits — no orchestration store mutations, so the graph-as-state principle is not exercised.
+  ADR-004: FT-015 is documentation and scaffolding — no Session, Event, or Bundle artifact is produced, so PROV-O linkage does not apply.
+  ADR-001: FT-015 ships convention and documentation only — no oxi-events code changes, so the SDP boundary is not exercised by this feature.
+  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-015 neither emits nor consumes verdicts.
+  ADR-012: FT-015 ships no dec command surface; per-stream working directories are not exercised by this feature's deliverables.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-015 produces no action/interpretation pair.
 ---
 
 ## Description

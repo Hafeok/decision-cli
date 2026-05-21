@@ -1,7 +1,7 @@
 ---
 id: TC-064
 title: dec verify graph list returns graphs with step counts and respects filters
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

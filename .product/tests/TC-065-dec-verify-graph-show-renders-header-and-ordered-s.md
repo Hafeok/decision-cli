@@ -1,7 +1,7 @@
 ---
 id: TC-065
 title: dec verify graph show renders header and ordered step list
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

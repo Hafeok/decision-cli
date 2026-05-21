@@ -1,7 +1,7 @@
 ---
 id: TC-079
 title: dec verify graph generate persists proposed graph through slice-2.5 writers
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

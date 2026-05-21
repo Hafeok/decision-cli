@@ -1,7 +1,7 @@
 ---
 id: TC-060
 title: dec verify env new produces identical artifact via CLI and MCP
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

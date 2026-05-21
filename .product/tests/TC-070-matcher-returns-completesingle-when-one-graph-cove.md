@@ -1,7 +1,7 @@
 ---
 id: TC-070
 title: matcher returns CompleteSingle when one graph covers all feature TCs in env
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

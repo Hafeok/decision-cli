@@ -19,4 +19,21 @@ last-run-duration: 1.9s
 
 ## Description
 
-[Describe test here.]
+Invariant: every persisted `dec:VerificationVerdict` artifact conforms to the SHACL shape defined in [ADR-018](ADR-018): `dec:VerificationVerdictShape`. The shape constrains:
+
+- `dec:kind` ∈ {`approved`, `amendment-required`, `rejected`} (one value, required).
+- `dec:actionSessionId` and `dec:interpretationSessionId` are present and reference existing sessions.
+- `dec:cites` is non-empty when `kind ≠ approved`.
+- `dcterms:created` is a valid `xsd:dateTime` literal.
+
+The runner is a `cargo-test` integration that loads a sample of persisted verdicts plus a battery of constructed-invalid verdicts, runs `oxigraph::shacl::validate`, and asserts the valid ones pass and the invalid ones produce specific shape-violation reports.
+
+⟦Σ:Types⟧{
+  Verdict ≜ ⟨kind:VerdictKind, actionId:IRI, interpretationId:IRI, cites:CitationSet, created:DateTime⟩
+  VerdictKind ≜ approved | amendment-required | rejected
+}
+
+⟦Γ:Invariants⟧{
+  ∀ v:Verdict: shacl_conforms(v, VerificationVerdictShape)
+  ∀ v:Verdict: v.kind ≠ approved ⇒ |v.cites| ≥ 1
+}

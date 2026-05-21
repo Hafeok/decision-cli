@@ -2,7 +2,7 @@
 id: TC-025
 title: value_stream_scope_chokepoint_in_place
 type: invariant
-status: failing
+status: unrunnable
 validates:
   features: []
   adrs:
@@ -44,3 +44,13 @@ scripts/checks/value-stream-scope.sh
 1. Exit 0 if `ActiveScope::load`, `validate_goal`, and `UnauthorizedGoal`
    appear in the scope module.
 2. Exit 1 if any of the three is missing (the §3.4 chokepoint regressed).
+
+## Formal Specification
+
+⟦Σ:Types⟧{
+  Symbol ≜ ActiveScope::load | validate_goal | UnauthorizedGoal
+}
+
+⟦Γ:Invariants⟧{
+  ∀ s:Symbol: defined_in(crates/decision-cli/src/scope, s)
+}

@@ -1,7 +1,7 @@
 ---
 id: TC-058
 title: Safety check raises when step requiredOps not subset of env allowedOps
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

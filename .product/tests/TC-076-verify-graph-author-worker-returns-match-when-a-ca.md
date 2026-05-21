@@ -1,7 +1,7 @@
 ---
 id: TC-076
 title: verify-graph-author worker returns Match when a candidate covers all TCs
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

@@ -1,7 +1,7 @@
 ---
 id: TC-056
 title: Each VerificationStep kind SHACL shape validates its required fields
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

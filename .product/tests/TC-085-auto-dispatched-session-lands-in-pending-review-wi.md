@@ -1,7 +1,7 @@
 ---
 id: TC-085
 title: auto-dispatched session lands in pending_review without persisting graph
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

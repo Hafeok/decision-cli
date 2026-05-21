@@ -1,7 +1,7 @@
 ---
 id: TC-061
 title: dec verify env list returns ordered envs with safety-class and type filters
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features: []

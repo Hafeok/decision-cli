@@ -1,7 +1,7 @@
 ---
 id: TC-018
 title: dec implement commits the working tree and flips feature status
-type: integration
+type: exit-criteria
 status: passing
 validates:
   features:
