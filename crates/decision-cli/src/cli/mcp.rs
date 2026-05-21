@@ -25,6 +25,7 @@ use decision_cli::core::mcp::{
 use decision_cli::mcp;
 use decision_cli::verify_env_list;
 use decision_cli::verify_env_new;
+use decision_cli::verify_env_show;
 
 #[derive(Debug, Subcommand)]
 pub enum McpCmd {
@@ -63,6 +64,7 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
         })?;
     register_verify_env_new(&mut registry, workdir)?;
     register_verify_env_list(&mut registry, workdir)?;
+    register_verify_env_show(&mut registry, workdir)?;
     Ok(registry)
 }
 
@@ -129,6 +131,50 @@ fn verify_env_list_response(outcome: &verify_env_list::EnvListResponse) -> Respo
     Response::with_summary(
         json!({
             "envs": outcome.envs,
+        }),
+        summary,
+    )
+}
+
+/// FT-040: register `dec_verify_env_show`. Workdir binding mirrors the
+/// list and new patterns above.
+fn register_verify_env_show(
+    registry: &mut ToolRegistry,
+    workdir: &Path,
+) -> Result<(), RegisterError> {
+    let base = verify_env_show::tool_descriptor();
+    let workdir_owned: PathBuf = workdir.to_path_buf();
+    let bound: ToolHandler = Arc::new(move |req: Request| {
+        let mut parsed = verify_env_show::parse_request(&req)?;
+        if parsed.workdir.is_none() {
+            parsed.workdir = Some(workdir_owned.clone());
+        }
+        let outcome = verify_env_show::run(&parsed)?;
+        Ok(verify_env_show_response(&outcome))
+    });
+    let mut descriptor = ToolDescriptor::new(
+        base.name.clone(),
+        base.description.clone(),
+        base.input_schema.clone(),
+        bound,
+    );
+    if let Some(schema) = base.output_schema.clone() {
+        descriptor = descriptor.with_output_schema(schema);
+    }
+    registry.register(descriptor)?;
+    Ok(())
+}
+
+fn verify_env_show_response(outcome: &verify_env_show::EnvShowResponse) -> Response {
+    let summary = format!(
+        "showed env {id} from {path}",
+        id = outcome.env.id,
+        path = outcome.path.display()
+    );
+    Response::with_summary(
+        json!({
+            "env": outcome.env,
+            "path": outcome.path,
         }),
         summary,
     )

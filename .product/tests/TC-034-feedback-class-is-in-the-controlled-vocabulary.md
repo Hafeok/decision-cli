@@ -12,8 +12,8 @@ phase: 2
 runner: cargo-test
 runner-args: --package decision-cli --test feedback_class_vocab
 runner-timeout: 120
-last-run: 2026-05-21T13:31:41.447481757+00:00
-last-run-duration: 5.4s
+last-run: 2026-05-21T15:21:18.505743289+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

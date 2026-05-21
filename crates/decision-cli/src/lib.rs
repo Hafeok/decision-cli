@@ -28,6 +28,7 @@ pub use features::mcp;
 pub use features::session_inspect;
 pub use features::verify_env_list;
 pub use features::verify_env_new;
+pub use features::verify_env_show;
 
 // Stable type re-exports for slice 1 callers.
 pub use crate::core::{ActiveScope, OntologyError, OntologyHandle, ScopeError, StreamWriter,

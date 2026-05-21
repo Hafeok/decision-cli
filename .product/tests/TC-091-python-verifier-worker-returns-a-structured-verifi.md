@@ -12,7 +12,7 @@ phase: 2
 runner: bash
 runner-args: workers/verifier/tests/run-verifier-tc.sh
 runner-timeout: 180
-last-run: 2026-05-21T13:31:41.447481757+00:00
+last-run: 2026-05-21T15:21:18.505743289+00:00
 last-run-duration: 0.0s
 failure-message: "bash: line 1: workers/verifier/tests/run-verifier-tc.sh: No such file or directory\n"
 ---

@@ -2,11 +2,16 @@
 id: TC-062
 title: dec verify env show returns full env detail and ArtifactNotFound on unknown id
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_062_dec_verify_env_show_returns_full_env_detail_and_ar
+runner-timeout: 120
+last-run: 2026-05-21T15:23:59.212042941+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

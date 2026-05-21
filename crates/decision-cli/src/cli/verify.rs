@@ -12,15 +12,20 @@ use std::process::ExitCode;
 use clap::Subcommand;
 
 use decision_cli::core::handler::Error as HandlerError;
-use decision_cli::verify_env_list::{self, EnvListRequest, OutputFormat};
+use decision_cli::verify_env_list::{self, EnvListRequest, OutputFormat as ListFormat};
 use decision_cli::verify_env_new::{self, EnvNewRequest};
+use decision_cli::verify_env_show::{self, EnvShowRequest, OutputFormat as ShowFormat};
 
 /// Names of every MCP tool the `dec verify` clap tree pairs with. The
 /// TC-052 surface-symmetry harness asserts this list matches the MCP
 /// registry. The constant is `pub` so the parity TC's structural check
 /// (grep over this file) can confirm one entry per leaf subcommand.
 #[allow(dead_code)]
-pub const PAIRED_TOOL_NAMES: &[&str] = &["dec_verify_env_list", "dec_verify_env_new"];
+pub const PAIRED_TOOL_NAMES: &[&str] = &[
+    "dec_verify_env_list",
+    "dec_verify_env_new",
+    "dec_verify_env_show",
+];
 
 #[derive(Debug, Subcommand)]
 pub enum VerifyCmd {
@@ -35,6 +40,8 @@ pub enum EnvCmd {
     New(EnvNewArgs),
     /// List VerificationEnvironment artifacts (FT-039).
     List(EnvListArgs),
+    /// Show a single VerificationEnvironment in detail (FT-040).
+    Show(EnvShowArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -76,12 +83,21 @@ pub struct EnvListArgs {
     pub format: String,
 }
 
+#[derive(Debug, clap::Args)]
+pub struct EnvShowArgs {
+    /// Identifier of the env to show (e.g. `ENV-001-ephemeral-cli`).
+    pub id: String,
+    /// Output format. Defaults to `text`.
+    #[arg(long, value_name = "FORMAT", default_value = "text")]
+    pub format: String,
+}
+
 /// Convert env-list clap args into the structured [`EnvListRequest`].
 ///
 /// Returns `Err` for malformed `--format` values so the CLI surface can
 /// short-circuit before invoking the handler.
 pub fn env_list_request(args: &EnvListArgs, workdir: &Path) -> Result<EnvListRequest, HandlerError> {
-    let format = OutputFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
+    let format = ListFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
         field: "format".to_string(),
         detail: format!(
             "format must be one of {{table, json}}; got {got:?}",
@@ -91,6 +107,25 @@ pub fn env_list_request(args: &EnvListArgs, workdir: &Path) -> Result<EnvListReq
     Ok(EnvListRequest {
         safety_class: args.safety_class.clone(),
         env_type: args.env_type.clone(),
+        format: Some(format),
+        workdir: Some(workdir.to_path_buf()),
+    })
+}
+
+/// Convert env-show clap args into the structured [`EnvShowRequest`].
+///
+/// Returns `Err` for malformed `--format` values so the CLI surface can
+/// short-circuit before invoking the handler (FT-040 §Error handling).
+pub fn env_show_request(args: &EnvShowArgs, workdir: &Path) -> Result<EnvShowRequest, HandlerError> {
+    let format = ShowFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
+        field: "format".to_string(),
+        detail: format!(
+            "format must be one of {{text, json}}; got {got:?}",
+            got = args.format
+        ),
+    })?;
+    Ok(EnvShowRequest {
+        id: args.id.clone(),
         format: Some(format),
         workdir: Some(workdir.to_path_buf()),
     })
@@ -123,6 +158,7 @@ pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
         VerifyCmd::Env(env_cmd) => match env_cmd {
             EnvCmd::New(args) => run_env_new(workdir, args),
             EnvCmd::List(args) => run_env_list(workdir, args),
+            EnvCmd::Show(args) => run_env_show(workdir, args),
         },
     }
 }
@@ -154,13 +190,37 @@ fn run_env_list(workdir: &Path, args: EnvListArgs) -> ExitCode {
         Ok(outcome) => {
             let format = req.format.unwrap_or_default();
             match format {
-                OutputFormat::Table => print!("{}", verify_env_list::render_table(&outcome)),
-                OutputFormat::Json => println!("{}", verify_env_list::render_json(&outcome)),
+                ListFormat::Table => print!("{}", verify_env_list::render_table(&outcome)),
+                ListFormat::Json => println!("{}", verify_env_list::render_json(&outcome)),
             }
             ExitCode::SUCCESS
         }
         Err(err) => {
             eprintln!("dec verify env list: {err}");
+            ExitCode::from(exit_code_for(&err))
+        }
+    }
+}
+
+fn run_env_show(workdir: &Path, args: EnvShowArgs) -> ExitCode {
+    let req = match env_show_request(&args, workdir) {
+        Ok(r) => r,
+        Err(err) => {
+            eprintln!("dec verify env show: {err}");
+            return ExitCode::from(exit_code_for(&err));
+        }
+    };
+    match verify_env_show::run(&req) {
+        Ok(outcome) => {
+            let format = req.format.unwrap_or_default();
+            match format {
+                ShowFormat::Text => print!("{}", verify_env_show::render_text(&outcome)),
+                ShowFormat::Json => println!("{}", verify_env_show::render_json(&outcome)),
+            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec verify env show: {err}");
             ExitCode::from(exit_code_for(&err))
         }
     }
