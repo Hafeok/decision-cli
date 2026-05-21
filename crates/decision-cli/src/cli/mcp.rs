@@ -28,6 +28,7 @@ use decision_cli::verify_env_new;
 use decision_cli::verify_env_show;
 use decision_cli::verify_graph_list;
 use decision_cli::verify_graph_new;
+use decision_cli::verify_graph_show;
 
 #[derive(Debug, Subcommand)]
 pub enum McpCmd {
@@ -69,7 +70,52 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
     register_verify_env_show(&mut registry, workdir)?;
     register_verify_graph_new(&mut registry, workdir)?;
     register_verify_graph_list(&mut registry, workdir)?;
+    register_verify_graph_show(&mut registry, workdir)?;
     Ok(registry)
+}
+
+/// FT-043: register `dec_verify_graph_show`. Same workdir-binding pattern
+/// the other verify tools use.
+fn register_verify_graph_show(
+    registry: &mut ToolRegistry,
+    workdir: &Path,
+) -> Result<(), RegisterError> {
+    let base = verify_graph_show::tool_descriptor();
+    let workdir_owned: PathBuf = workdir.to_path_buf();
+    let bound: ToolHandler = Arc::new(move |req: Request| {
+        let mut parsed = verify_graph_show::parse_request(&req)?;
+        if parsed.workdir.is_none() {
+            parsed.workdir = Some(workdir_owned.clone());
+        }
+        let outcome = verify_graph_show::run(&parsed)?;
+        Ok(verify_graph_show_response(&outcome))
+    });
+    let mut descriptor = ToolDescriptor::new(
+        base.name.clone(),
+        base.description.clone(),
+        base.input_schema.clone(),
+        bound,
+    );
+    if let Some(schema) = base.output_schema.clone() {
+        descriptor = descriptor.with_output_schema(schema);
+    }
+    registry.register(descriptor)?;
+    Ok(())
+}
+
+fn verify_graph_show_response(outcome: &verify_graph_show::GraphShowResponse) -> Response {
+    let summary = format!(
+        "showed graph {id} from {path}",
+        id = outcome.graph.id,
+        path = outcome.path.display()
+    );
+    Response::with_summary(
+        json!({
+            "graph": outcome.graph,
+            "path": outcome.path,
+        }),
+        summary,
+    )
 }
 
 /// FT-042: register `dec_verify_graph_list`. Same workdir-binding pattern
