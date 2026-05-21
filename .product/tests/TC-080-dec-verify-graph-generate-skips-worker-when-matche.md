@@ -2,11 +2,16 @@
 id: TC-080
 title: dec verify graph generate skips worker when matcher reports complete match
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_080_dec_verify_graph_generate_skips_worker_when_matche
+runner-timeout: 120
+last-run: 2026-05-21T19:20:28.691484988+00:00
+last-run-duration: 0.4s
 ---
 
 ## Premise

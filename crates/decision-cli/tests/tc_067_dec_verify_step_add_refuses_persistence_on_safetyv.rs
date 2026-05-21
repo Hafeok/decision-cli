@@ -160,6 +160,7 @@ fn http_post_against_readonly_env_returns_safety_violation() {
                 ("url", "https://prod.example.com/api"),
                 ("expect-status", "200"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -199,6 +200,7 @@ fn safety_violation_leaves_on_disk_ttl_unchanged() {
                 ("url", "https://prod.example.com/api"),
                 ("expect-status", "200"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -232,6 +234,7 @@ fn safety_violation_leaves_store_dump_unchanged() {
                 ("url", "https://prod.example.com/api"),
                 ("expect-status", "200"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -259,6 +262,7 @@ fn mcp_surfaces_structured_safety_violation_with_same_fields() {
                 ("url", "https://prod.example.com/api"),
                 ("expect-status", "200"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -309,6 +313,7 @@ fn subsequent_allowed_step_succeeds_in_isolated_env() {
                 ("url", "https://prod.example.com/api"),
                 ("expect-status", "200"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -327,6 +332,7 @@ fn subsequent_allowed_step_succeeds_in_isolated_env() {
             graph_id: iso.id,
             step_type: "shell-command".to_string(),
             fields: fields(&[("command", "echo ok")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -356,6 +362,7 @@ fn safety_violation_surfaces_before_schema_violation() {
                 ("method", "POST"),
                 ("url", "https://prod.example.com/api"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )

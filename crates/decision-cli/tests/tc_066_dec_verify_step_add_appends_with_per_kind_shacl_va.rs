@@ -157,6 +157,7 @@ fn append_shell_command_writes_step_at_position_1() {
             graph_id: vg.clone(),
             step_type: "shell-command".to_string(),
             fields: fields(&[("command", "dec init"), ("expect-exit-code", "0")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -204,6 +205,7 @@ fn append_two_steps_preserves_authoring_order() {
             graph_id: vg.clone(),
             step_type: "shell-command".to_string(),
             fields: fields(&[("command", "dec init")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -219,6 +221,7 @@ fn append_two_steps_preserves_authoring_order() {
                 ("query", "SELECT ?s WHERE { ?s ?p ?o } LIMIT 1"),
                 ("expect-rows", "1"),
             ]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -248,6 +251,7 @@ fn shell_command_without_command_field_is_schema_violation() {
             graph_id: vg,
             step_type: "shell-command".to_string(),
             fields: fields(&[("expect-exit-code", "0")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -269,6 +273,7 @@ fn http_request_without_url_is_schema_violation() {
             graph_id: vg,
             step_type: "http-request".to_string(),
             fields: fields(&[("method", "GET")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -290,6 +295,7 @@ fn capture_without_bind_as_is_schema_violation() {
             graph_id: vg,
             step_type: "capture".to_string(),
             fields: fields(&[]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -313,6 +319,7 @@ fn unknown_step_type_returns_invalid_argument() {
             graph_id: vg,
             step_type: "rocketship".to_string(),
             fields: fields(&[]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -354,6 +361,7 @@ fn missing_graph_returns_artifact_not_found() {
             graph_id: "VG-999".to_string(),
             step_type: "shell-command".to_string(),
             fields: fields(&[("command", "ls")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -379,6 +387,7 @@ fn cli_and_mcp_produce_structurally_identical_graphs() {
             graph_id: vg_cli.clone(),
             step_type: "shell-command".to_string(),
             fields: fields(&[("command", "dec init"), ("expect-exit-code", "0")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )
@@ -416,6 +425,7 @@ fn dollar_brace_placeholder_preserved_in_turtle() {
             graph_id: vg,
             step_type: "shell-command".to_string(),
             fields: fields(&[("command", "dec verify ${prior_capture}")]),
+            provides_evidence_for: Vec::new(),
             workdir: None,
         },
     )

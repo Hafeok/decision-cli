@@ -157,6 +157,16 @@ pub enum Error {
         origin: String,
     },
 
+    /// The MCP `dec_verify_graph_accept` was invoked with a proposal
+    /// whose `bundle_hash` no longer matches the live matcher state
+    /// (per FT-049 §Invariants / ADR-030 §Level-3 autonomy). Caller
+    /// must re-run `dec_verify_graph_generate`.
+    #[error("proposal stale: {detail}")]
+    ProposalStale {
+        /// Human-readable explanation including the remediation hint.
+        detail: String,
+    },
+
     /// Catch-all for IO / runtime / unexpected failures the handler
     /// surfaces as a generic error.
     #[error("internal error: {detail}")]
@@ -192,6 +202,7 @@ impl Error {
             Self::DanglingRef { .. } => "DanglingRef",
             Self::SafetyViolation(_) => "SafetyViolation",
             Self::UnknownOp { .. } => "UnknownOp",
+            Self::ProposalStale { .. } => "ProposalStale",
             Self::Internal { .. } => "Internal",
         }
     }

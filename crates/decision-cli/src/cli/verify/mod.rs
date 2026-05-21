@@ -42,6 +42,8 @@ pub const PAIRED_TOOL_NAMES: &[&str] = &[
     "dec_verify_env_list",
     "dec_verify_env_new",
     "dec_verify_env_show",
+    "dec_verify_graph_accept",
+    "dec_verify_graph_generate",
     "dec_verify_graph_list",
     "dec_verify_graph_new",
     "dec_verify_graph_show",

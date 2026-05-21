@@ -2,11 +2,16 @@
 id: TC-082
 title: MCP generate-then-accept refuses stale proposals after candidate set changes
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_082_mcp_generate_then_accept_refuses_stale_proposals_a
+runner-timeout: 120
+last-run: 2026-05-21T19:20:28.691484988+00:00
+last-run-duration: 0.4s
 ---
 
 ## Premise

@@ -2,7 +2,7 @@
 id: FT-049
 title: 'decision-cli: dec verify graph generate (CLI + MCP)'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-034
 - FT-041
@@ -21,20 +21,20 @@ tests:
 domains: []
 domains-acknowledged:
   ADR-001: ADR-001 governs the oxi-events crate boundary; FT-049 does not cross or alter that boundary.
-  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-049 persists graphs only through the existing slice-2.5 writers (FT-041 + FT-044) which themselves go through the StreamWriter chokepoint.
-  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-049 opens a dispatch session for the worker invocation and records prov:wasGeneratedBy on the resulting graph.
-  ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-049 runs inside an already-scoped command and does not introduce a new scope check.
-  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-049 runs after the working directory is resolved and does not re-discover it.
-  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-049's code conforms to cargo/clippy/rustfmt and the module-size convention. ADR-013 itself is owned by FT-014.
-  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-049 does not author or modify a fitness-function artifact.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-049's code is organised under that migration.
-  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-049 produces the action half (GraphProposal/Graph artifact); slice 3's executor will produce the interpretation.
+  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-049 has no feedback to gate.
   ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-049 neither emits nor consumes verdicts.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-049's pairing will be measured by the slice-3 executor pairing, not this feature.
+  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-049 runs after the working directory is resolved and does not re-discover it.
+  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-049 produces the action half (GraphProposal/Graph artifact); slice 3's executor will produce the interpretation.
+  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-049 opens a dispatch session for the worker invocation and records prov:wasGeneratedBy on the resulting graph.
   ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-049 surfaces Gap proposals but does not route them via the feedback flow in slice 2.6.
   ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-049 produces no feedback artifacts in slice 2.6.
   ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-049 produces no feedback artifacts in slice 2.6.
-  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-049 has no feedback to gate.
+  ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-049 runs inside an already-scoped command and does not introduce a new scope check.
+  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-049's code conforms to cargo/clippy/rustfmt and the module-size convention. ADR-013 itself is owned by FT-014.
+  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-049 does not author or modify a fitness-function artifact.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-049's code is organised under that migration.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-049's pairing will be measured by the slice-3 executor pairing, not this feature.
+  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-049 persists graphs only through the existing slice-2.5 writers (FT-041 + FT-044) which themselves go through the StreamWriter chokepoint.
   ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-049 does not introduce or modify a role catalog entry.
 ---
 

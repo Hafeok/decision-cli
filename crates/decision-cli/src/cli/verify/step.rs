@@ -57,6 +57,7 @@ pub fn step_add_request(
         graph_id: args.graph_id.clone(),
         step_type: args.r#type.clone(),
         fields,
+        provides_evidence_for: Vec::new(),
         workdir: Some(workdir.to_path_buf()),
     })
 }

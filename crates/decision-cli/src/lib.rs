@@ -29,6 +29,7 @@ pub use features::session_inspect;
 pub use features::verify_env_list;
 pub use features::verify_env_new;
 pub use features::verify_env_show;
+pub use features::verify_graph_generate;
 pub use features::verify_graph_list;
 pub use features::verify_graph_new;
 pub use features::verify_graph_show;

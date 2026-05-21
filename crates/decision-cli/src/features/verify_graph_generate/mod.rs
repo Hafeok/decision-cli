@@ -1,0 +1,349 @@
+//! `dec verify graph generate` + `dec_verify_graph_accept` (FT-049 / ADR-030).
+//!
+//! Two paired handlers that together implement the verify-graph-author
+//! role's CLI + MCP surface per ADR-029 §Single-handler discipline:
+//!
+//!   * [`run_generate`] — assembles a bundle, runs the matcher first,
+//!     invokes the worker only when generation is actually needed,
+//!     and (optionally, on `--accept`) persists through the slice-2.5
+//!     writers ([`crate::verify_graph_new`] + [`crate::verify_step_add`]).
+//!   * [`run_accept`] — second half of the MCP two-call protocol;
+//!     replays a `New` proposal, re-runs the matcher, refuses stale
+//!     proposals, otherwise persists.
+//!
+//! Level-3 autonomy per ADR-030 §Level-3 autonomy is enforced by the
+//! `mode` field on the request: `Interactive` and `PrintOnly` never
+//! persist; only `Accept` does.
+
+pub mod bundle;
+mod internal;
+pub mod persist;
+pub mod proposal;
+pub mod surface;
+pub mod worker;
+
+use std::path::{Path, PathBuf};
+
+use serde::{Deserialize, Serialize};
+
+use crate::core::handler::Error as HandlerError;
+use crate::core::verify::matcher::{MatchKind, MatchReport};
+
+use self::bundle::{assemble_bundle, env_iri_to_short};
+use self::internal::{
+    coverage_preview_from_report, preview_bundle_hash_for_match, run_matcher, short_graph_id,
+};
+use self::persist::{persist_new_proposal, Persisted};
+use self::proposal::{CoverageReportSummary, GraphProposal, MatchProposal, ProposalKind};
+
+pub use self::surface::{
+    accept_input_schema, accept_tool_descriptor, generate_input_schema,
+    generate_tool_descriptor, parse_accept_request, parse_generate_request,
+    response_for_accept, response_for_generate,
+};
+
+/// MCP tool name for the generate verb.
+pub const TOOL_NAME_GENERATE: &str = "dec_verify_graph_generate";
+/// MCP tool name for the accept verb (companion shim per ADR-030).
+pub const TOOL_NAME_ACCEPT: &str = "dec_verify_graph_accept";
+
+/// Mode dispatch per ADR-030 §Level-3 autonomy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GenerateMode {
+    /// Print the proposal and prompt `[y/N]` (CLI default — handled
+    /// outside the handler since prompting is a surface concern).
+    Interactive,
+    /// Persist immediately (non-interactive `--accept`).
+    Accept,
+    /// Print only; never persist. Used by scripts.
+    PrintOnly,
+}
+
+impl Default for GenerateMode {
+    fn default() -> Self {
+        Self::Interactive
+    }
+}
+
+/// Request for the generate handler.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GenerateRequest {
+    /// Short feature id (e.g. `FT-049`).
+    pub feature_id: String,
+    /// Short env id (e.g. `ENV-001-ephemeral-cli`).
+    pub environment_id: String,
+    /// Persistence mode (defaults to `Interactive`).
+    #[serde(default)]
+    pub mode: GenerateMode,
+    /// Working directory containing `.dec/`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workdir: Option<PathBuf>,
+    /// Optional product-root override (defaults to `workdir`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub product_root: Option<PathBuf>,
+}
+
+/// Outcome of the generate handler. Returned verbatim to MCP callers;
+/// the CLI renders it as human-readable text.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateResponse {
+    /// The structured proposal artifact.
+    pub proposal: GraphProposal,
+    /// Stable proposal token (the bundle hash). Returned so MCP callers
+    /// can pass it back to `dec_verify_graph_accept`.
+    pub proposal_token: String,
+    /// Pre-persist coverage roll-up (mirrors the matcher's view).
+    pub coverage_preview: CoverageReportSummary,
+    /// Set iff the proposal was persisted in this call (CLI `--accept`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub persisted: Option<PersistedSummary>,
+}
+
+/// Persistence summary returned when the handler wrote a new graph.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersistedSummary {
+    /// Minted graph id (e.g. `VG-007`).
+    pub graph_id: String,
+    /// Absolute path of the on-disk Turtle.
+    pub graph_path: PathBuf,
+    /// Post-persist coverage roll-up.
+    pub coverage_report: CoverageReportSummary,
+}
+
+/// Request for the accept handler.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AcceptRequest {
+    /// The proposal payload echoed back from a prior `generate` call.
+    pub proposal: GraphProposal,
+    /// The bundle-hash token issued at generate time (must match the
+    /// proposal's `bundle_hash`).
+    pub proposal_token: String,
+    /// Short feature id (used to re-run the matcher for stale detection).
+    pub feature_id: String,
+    /// Short env id.
+    pub environment_id: String,
+    /// Working directory containing `.dec/`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workdir: Option<PathBuf>,
+    /// Optional product-root override.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub product_root: Option<PathBuf>,
+}
+
+/// Outcome of the accept handler.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AcceptResponse {
+    /// Persistence summary (graph id + path + final coverage).
+    pub persisted: PersistedSummary,
+}
+
+/// Single handler for the generate verb. Surface adapters (CLI + MCP)
+/// route through this function per ADR-029 §Single-handler discipline.
+pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerError> {
+    let workdir = req
+        .workdir
+        .as_deref()
+        .ok_or_else(|| HandlerError::InvalidArgument {
+            field: "workdir".to_string(),
+            detail: "no working directory available; run from a `dec init`-bootstrapped tree"
+                .to_string(),
+        })?;
+    let product_root = req.product_root.as_deref().unwrap_or(workdir);
+
+    // 1. Compute the matcher report (no I/O beyond the orchestration store).
+    let report = run_matcher(workdir, product_root, &req.feature_id, &req.environment_id)?;
+
+    // 2. Match-first dispatch — if a complete match exists, skip the
+    //    worker entirely (TC-080 AC #2).
+    if matches!(report.kind, MatchKind::CompleteSingle | MatchKind::CompleteMultiple) {
+        return Ok(build_match_response(&report));
+    }
+
+    // 3. Assemble the bundle and invoke the worker.
+    let env_short = env_iri_to_short(&report.environment);
+    let bundle = assemble_bundle(workdir, product_root, &req.feature_id, &env_short, &report)?;
+    let proposal = worker::invoke_worker(&bundle)?;
+
+    // 4. Echo-check the bundle hash. Per FT-049 §Behaviour 7 the
+    //    mismatch is a protocol violation.
+    if proposal.bundle_hash != bundle.bundle_hash {
+        return Err(HandlerError::Internal {
+            detail: format!(
+                "worker protocol violation: proposal.bundle_hash ({pp:?}) != \
+                 input bundle_hash ({bp:?})",
+                pp = proposal.bundle_hash,
+                bp = bundle.bundle_hash
+            ),
+        });
+    }
+
+    let preview = coverage_preview_from_report(&report);
+    let token = proposal.bundle_hash.clone();
+
+    // 5. Mode dispatch.
+    match req.mode {
+        GenerateMode::Accept => {
+            let persisted = persist_if_new(&proposal, workdir, &req.feature_id, &env_short)?;
+            Ok(GenerateResponse {
+                proposal,
+                proposal_token: token,
+                coverage_preview: preview,
+                persisted,
+            })
+        }
+        GenerateMode::Interactive | GenerateMode::PrintOnly => Ok(GenerateResponse {
+            proposal,
+            proposal_token: token,
+            coverage_preview: preview,
+            persisted: None,
+        }),
+    }
+}
+
+/// Single handler for the accept verb (companion to `run_generate`).
+pub fn run_accept(req: &AcceptRequest) -> Result<AcceptResponse, HandlerError> {
+    let workdir = req
+        .workdir
+        .as_deref()
+        .ok_or_else(|| HandlerError::InvalidArgument {
+            field: "workdir".to_string(),
+            detail: "no working directory available; run from a `dec init`-bootstrapped tree"
+                .to_string(),
+        })?;
+    let product_root = req.product_root.as_deref().unwrap_or(workdir);
+
+    // 1. Token must match the proposal's bundle_hash.
+    if req.proposal.bundle_hash != req.proposal_token {
+        return Err(HandlerError::ProposalStale {
+            detail: format!(
+                "proposal_token ({tok:?}) does not match proposal.bundle_hash ({ph:?}); \
+                 re-run dec_verify_graph_generate to issue a fresh proposal",
+                tok = req.proposal_token,
+                ph = req.proposal.bundle_hash
+            ),
+        });
+    }
+
+    // 2. Re-run the matcher and refuse stale proposals.
+    let report = run_matcher(workdir, product_root, &req.feature_id, &req.environment_id)?;
+    if matches!(report.kind, MatchKind::CompleteSingle | MatchKind::CompleteMultiple) {
+        return Err(HandlerError::ProposalStale {
+            detail: format!(
+                "the candidate set for ({feat}, {env}) has changed since this proposal \
+                 was issued; re-run dec_verify_graph_generate",
+                feat = req.feature_id,
+                env = req.environment_id
+            ),
+        });
+    }
+
+    // 3. Persist (only `New` proposals reach this path).
+    let env_short = env_iri_to_short(&report.environment);
+    let persisted = match req.proposal.kind {
+        ProposalKind::New => persist_if_new(&req.proposal, workdir, &req.feature_id, &env_short)?,
+        ProposalKind::Match => {
+            return Err(HandlerError::InvalidArgument {
+                field: "proposal.kind".to_string(),
+                detail: "accept refuses Match proposals — they have nothing to persist"
+                    .to_string(),
+            })
+        }
+        ProposalKind::Gap => {
+            return Err(HandlerError::InvalidArgument {
+                field: "proposal.kind".to_string(),
+                detail: "accept refuses Gap proposals — there is no graph to persist"
+                    .to_string(),
+            })
+        }
+    };
+    let persisted = persisted.ok_or_else(|| HandlerError::Internal {
+        detail: "persist_if_new returned None for a New proposal".to_string(),
+    })?;
+    Ok(AcceptResponse { persisted })
+}
+
+fn build_match_response(report: &MatchReport) -> GenerateResponse {
+    let match_graph_short = report
+        .graphs
+        .first()
+        .map(|g| short_graph_id(&g.id))
+        .unwrap_or_else(|| "unknown".to_string());
+    let preview = coverage_preview_from_report(report);
+    let proposal = GraphProposal::new_match(
+        preview_bundle_hash_for_match(&match_graph_short),
+        MatchProposal {
+            graph_id: match_graph_short,
+            rationale: "An existing graph in this environment already covers \
+                every TC the feature lists; no new graph needed."
+                .to_string(),
+        },
+    );
+    let token = proposal.bundle_hash.clone();
+    GenerateResponse {
+        proposal,
+        proposal_token: token,
+        coverage_preview: preview,
+        persisted: None,
+    }
+}
+
+fn persist_if_new(
+    proposal: &GraphProposal,
+    workdir: &Path,
+    feature_id: &str,
+    env_short: &str,
+) -> Result<Option<PersistedSummary>, HandlerError> {
+    let new_payload = match proposal.kind {
+        ProposalKind::New => proposal.new.as_ref().ok_or_else(|| HandlerError::Internal {
+            detail: "proposal.kind = New but proposal.new payload missing".to_string(),
+        })?,
+        _ => return Ok(None),
+    };
+    let persisted = persist_new_proposal(workdir, feature_id, env_short, &new_payload.steps)?;
+    Ok(Some(post_persist_summary(
+        persisted, workdir, feature_id, env_short,
+    )))
+}
+
+fn post_persist_summary(
+    persisted: Persisted,
+    workdir: &Path,
+    feature_id: &str,
+    env_short: &str,
+) -> PersistedSummary {
+    let coverage_report = match run_matcher(workdir, workdir, feature_id, env_short) {
+        Ok(report) => coverage_preview_from_report(&report),
+        Err(_) => CoverageReportSummary::default(),
+    };
+    PersistedSummary {
+        graph_id: persisted.graph_id,
+        graph_path: persisted.graph_path,
+        coverage_report,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_request_round_trips() {
+        let r = GenerateRequest {
+            feature_id: "FT-049".to_string(),
+            environment_id: "ENV-001-ephemeral-cli".to_string(),
+            mode: GenerateMode::Accept,
+            workdir: Some(PathBuf::from("/tmp")),
+            product_root: None,
+        };
+        let v = serde_json::to_value(&r).expect("ser");
+        let back: GenerateRequest = serde_json::from_value(v).expect("de");
+        assert_eq!(r, back);
+    }
+
+    #[test]
+    fn descriptors_have_canonical_names() {
+        assert_eq!(generate_tool_descriptor().name, TOOL_NAME_GENERATE);
+        assert_eq!(accept_tool_descriptor().name, TOOL_NAME_ACCEPT);
+    }
+}

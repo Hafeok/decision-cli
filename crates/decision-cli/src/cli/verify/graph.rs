@@ -6,6 +6,7 @@ use std::process::ExitCode;
 use clap::Subcommand;
 
 use decision_cli::core::handler::Error as HandlerError;
+use decision_cli::verify_graph_generate::{self, GenerateMode, GenerateRequest};
 use decision_cli::verify_graph_list::{
     self, GraphListRequest, OutputFormat as GraphListFormat,
 };
@@ -24,6 +25,8 @@ pub enum GraphCmd {
     List(GraphListArgs),
     /// Show a single VerificationGraph in detail (FT-043).
     Show(GraphShowArgs),
+    /// Propose a graph for a feature in an environment (FT-049 / ADR-030).
+    Generate(GraphGenerateArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -59,6 +62,40 @@ pub struct GraphShowArgs {
     /// Output format. Defaults to `text`.
     #[arg(long, value_name = "FORMAT", default_value = "text")]
     pub format: String,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct GraphGenerateArgs {
+    /// Feature id (e.g. `FT-049`).
+    pub feature_id: String,
+    /// Environment id (e.g. `ENV-001-ephemeral-cli`).
+    #[arg(long)]
+    pub environment: String,
+    /// Persist the proposal without prompting.
+    #[arg(long, conflicts_with = "print_only")]
+    pub accept: bool,
+    /// Print only; never persist.
+    #[arg(long = "print-only", conflicts_with = "accept")]
+    pub print_only: bool,
+}
+
+/// Build a [`GenerateRequest`] from clap args (CLI <-> MCP twin parity).
+#[must_use]
+pub fn graph_generate_request(args: &GraphGenerateArgs, workdir: &Path) -> GenerateRequest {
+    let mode = if args.accept {
+        GenerateMode::Accept
+    } else if args.print_only {
+        GenerateMode::PrintOnly
+    } else {
+        GenerateMode::Interactive
+    };
+    GenerateRequest {
+        feature_id: args.feature_id.clone(),
+        environment_id: args.environment.clone(),
+        mode,
+        workdir: Some(workdir.to_path_buf()),
+        product_root: None,
+    }
 }
 
 /// Convert graph-list clap args into the structured [`GraphListRequest`].
@@ -119,6 +156,68 @@ pub(super) fn run(workdir: &Path, cmd: GraphCmd) -> ExitCode {
         GraphCmd::New(args) => run_graph_new(workdir, args),
         GraphCmd::List(args) => run_graph_list(workdir, args),
         GraphCmd::Show(args) => run_graph_show(workdir, args),
+        GraphCmd::Generate(args) => run_graph_generate(workdir, args),
+    }
+}
+
+fn run_graph_generate(workdir: &Path, args: GraphGenerateArgs) -> ExitCode {
+    let req = graph_generate_request(&args, workdir);
+    match verify_graph_generate::run_generate(&req) {
+        Ok(outcome) => {
+            print_generate_outcome(&outcome);
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec verify graph generate: {err}");
+            ExitCode::from(exit_code_for(&err))
+        }
+    }
+}
+
+fn print_generate_outcome(outcome: &verify_graph_generate::GenerateResponse) {
+    use decision_cli::verify_graph_generate::proposal::ProposalKind;
+    match outcome.proposal.kind {
+        ProposalKind::Match => {
+            if let Some(m) = &outcome.proposal.match_payload {
+                println!(
+                    "{graph} already covers this feature in this environment; \
+                     no new graph needed",
+                    graph = m.graph_id
+                );
+            }
+        }
+        ProposalKind::New => match &outcome.persisted {
+            Some(p) => {
+                println!("Persisted VerificationGraph {id}", id = p.graph_id);
+                println!("  Path: {}", p.graph_path.display());
+                if p.coverage_report.uncovered.is_empty() {
+                    println!("  Coverage: complete");
+                } else {
+                    println!(
+                        "  Coverage gaps: {gaps:?}",
+                        gaps = p.coverage_report.uncovered
+                    );
+                }
+            }
+            None => {
+                println!(
+                    "Proposed New graph (env={env}); re-run with --accept to persist.",
+                    env = outcome
+                        .proposal
+                        .new
+                        .as_ref()
+                        .map(|n| n.environment.clone())
+                        .unwrap_or_default()
+                );
+            }
+        },
+        ProposalKind::Gap => {
+            if let Some(g) = &outcome.proposal.gap {
+                println!("Gap — worker cannot produce a covering graph in this env.");
+                println!("  Uncovered: {tcs:?}", tcs = g.uncovered_tcs);
+                println!("  Reason: {r}", r = g.reason);
+            }
+        }
     }
 }
 

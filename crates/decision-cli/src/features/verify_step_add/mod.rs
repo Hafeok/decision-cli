@@ -21,12 +21,14 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use oxigraph::model::NamedNode;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::core::handler::{Error as HandlerError, Request, Response};
 use crate::core::mcp::{ToolDescriptor, ToolHandler};
 use crate::core::ontology::verification_graph::{step_iri_for, StepKind, VerificationStep};
+use crate::core::verify::coverage::feature_resolver::tc_iri_for;
 use crate::core::verify::safety::check_step_against_env;
 
 /// MCP tool name — referenced by `cli::verify` for the parity TC.
@@ -44,6 +46,13 @@ pub struct StepAddRequest {
     /// are preserved unchanged per FT-044 §Invariants).
     #[serde(default)]
     pub fields: BTreeMap<String, String>,
+    /// Optional list of TC ids (short or IRI) this step provides
+    /// evidence for (FT-049 / ADR-030 §Coverage predicate). Each entry
+    /// is translated to a full IRI before commit. Empty list is a
+    /// no-op — the step is appended without any `dec:providesEvidenceFor`
+    /// triples (forward-compatible with pre-FT-049 graphs).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub provides_evidence_for: Vec<String>,
     /// Working directory the handler runs against.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub workdir: Option<PathBuf>,
@@ -135,6 +144,10 @@ pub fn input_schema() -> Value {
                 "type": "object",
                 "additionalProperties": { "type": "string" },
             },
+            "provides_evidence_for": {
+                "type": "array",
+                "items": { "type": "string" },
+            },
             "workdir": { "type": "string" },
         },
     })
@@ -171,11 +184,12 @@ pub fn run(req: &StepAddRequest) -> Result<StepAddResponse, HandlerError> {
     // 4. Mint the new step at the next position.
     let next_index = graph.steps.len();
     let new_step_iri = step_iri_for(&graph_id_str, next_index);
+    let evidence_iris = parse_evidence_ids(&req.provides_evidence_for)?;
     let new_step = VerificationStep {
         id: new_step_iri.clone(),
         kind,
         fields: step_fields,
-        provides_evidence_for: Vec::new(),
+        provides_evidence_for: evidence_iris,
     };
 
     // 5. Pre-flight safety check (FT-037) — refuses persistence on
@@ -201,6 +215,28 @@ pub fn run(req: &StepAddRequest) -> Result<StepAddResponse, HandlerError> {
     })
 }
 
+/// Translate caller-supplied TC ids (short `TC-NNN` or full IRI) into
+/// the IRI form `dec:providesEvidenceFor` expects (FT-049 / ADR-030).
+fn parse_evidence_ids(ids: &[String]) -> Result<Vec<NamedNode>, HandlerError> {
+    let mut out = Vec::with_capacity(ids.len());
+    for raw in ids {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            return Err(HandlerError::InvalidArgument {
+                field: "provides_evidence_for".to_string(),
+                detail: "TC reference must be non-empty".to_string(),
+            });
+        }
+        let iri_str = tc_iri_for(trimmed);
+        let iri = NamedNode::new(&iri_str).map_err(|e| HandlerError::InvalidArgument {
+            field: "provides_evidence_for".to_string(),
+            detail: format!("invalid TC IRI {iri_str:?}: {e}"),
+        })?;
+        out.push(iri);
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,6 +260,7 @@ mod tests {
             graph_id: "VG-001".to_string(),
             step_type: "shell-command".to_string(),
             fields,
+            provides_evidence_for: Vec::new(),
             workdir: None,
         };
         let v = serde_json::to_value(&req).expect("ser");
@@ -249,6 +286,7 @@ mod tests {
             graph_id: "VG-001".to_string(),
             step_type: "rocketship".to_string(),
             fields: BTreeMap::new(),
+            provides_evidence_for: Vec::new(),
             workdir: Some(std::env::temp_dir()),
         };
         let err = run(&req).expect_err("must fail");

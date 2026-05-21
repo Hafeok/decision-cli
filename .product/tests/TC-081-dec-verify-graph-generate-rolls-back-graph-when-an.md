@@ -2,11 +2,16 @@
 id: TC-081
 title: dec verify graph generate rolls back graph when any step-add fails
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_081_dec_verify_graph_generate_rolls_back_graph_when_an
+runner-timeout: 120
+last-run: 2026-05-21T19:20:28.691484988+00:00
+last-run-duration: 0.5s
 ---
 
 ## Premise
