@@ -29,6 +29,7 @@ use decision_cli::verify_env_show;
 use decision_cli::verify_graph_list;
 use decision_cli::verify_graph_new;
 use decision_cli::verify_graph_show;
+use decision_cli::verify_step_add;
 
 #[derive(Debug, Subcommand)]
 pub enum McpCmd {
@@ -71,7 +72,37 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
     register_verify_graph_new(&mut registry, workdir)?;
     register_verify_graph_list(&mut registry, workdir)?;
     register_verify_graph_show(&mut registry, workdir)?;
+    register_verify_step_add(&mut registry, workdir)?;
     Ok(registry)
+}
+
+/// FT-044: register `dec_verify_step_add`. Same workdir-binding pattern
+/// the other verify tools use.
+fn register_verify_step_add(
+    registry: &mut ToolRegistry,
+    workdir: &Path,
+) -> Result<(), RegisterError> {
+    let base = verify_step_add::tool_descriptor();
+    let workdir_owned: PathBuf = workdir.to_path_buf();
+    let bound: ToolHandler = Arc::new(move |req: Request| {
+        let mut parsed = verify_step_add::parse_request(&req)?;
+        if parsed.workdir.is_none() {
+            parsed.workdir = Some(workdir_owned.clone());
+        }
+        let outcome = verify_step_add::run(&parsed)?;
+        Ok(verify_step_add::response_for(&outcome))
+    });
+    let mut descriptor = ToolDescriptor::new(
+        base.name.clone(),
+        base.description.clone(),
+        base.input_schema.clone(),
+        bound,
+    );
+    if let Some(schema) = base.output_schema.clone() {
+        descriptor = descriptor.with_output_schema(schema);
+    }
+    registry.register(descriptor)?;
+    Ok(())
 }
 
 /// FT-043: register `dec_verify_graph_show`. Same workdir-binding pattern

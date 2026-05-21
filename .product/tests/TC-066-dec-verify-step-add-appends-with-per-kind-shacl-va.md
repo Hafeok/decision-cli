@@ -2,11 +2,16 @@
 id: TC-066
 title: dec verify step add appends with per-kind SHACL validation
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_066_dec_verify_step_add_appends_with_per_kind_shacl_va
+runner-timeout: 120
+last-run: 2026-05-21T16:44:25.249046608+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

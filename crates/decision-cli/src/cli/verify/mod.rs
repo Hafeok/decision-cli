@@ -11,6 +11,7 @@
 
 pub mod env;
 pub mod graph;
+pub mod step;
 
 use std::path::Path;
 use std::process::ExitCode;
@@ -29,6 +30,8 @@ pub use graph::{
     graph_list_request, graph_new_request, graph_show_request, GraphCmd, GraphListArgs,
     GraphNewArgs, GraphShowArgs,
 };
+#[allow(unused_imports)]
+pub use step::{step_add_request, StepAddArgs, StepCmd};
 
 /// Names of every MCP tool the `dec verify` clap tree pairs with. The
 /// TC-052 surface-symmetry harness asserts this list matches the MCP
@@ -42,6 +45,7 @@ pub const PAIRED_TOOL_NAMES: &[&str] = &[
     "dec_verify_graph_list",
     "dec_verify_graph_new",
     "dec_verify_graph_show",
+    "dec_verify_step_add",
 ];
 
 #[derive(Debug, Subcommand)]
@@ -52,12 +56,16 @@ pub enum VerifyCmd {
     /// Manage `dec:VerificationGraph` artifacts.
     #[command(subcommand)]
     Graph(GraphCmd),
+    /// Manage `dec:VerificationStep` artifacts within a graph.
+    #[command(subcommand)]
+    Step(StepCmd),
 }
 
 pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
     match cmd {
         VerifyCmd::Env(c) => env::run(workdir, c),
         VerifyCmd::Graph(c) => graph::run(workdir, c),
+        VerifyCmd::Step(c) => step::run(workdir, c),
     }
 }
 

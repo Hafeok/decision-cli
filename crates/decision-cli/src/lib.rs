@@ -32,6 +32,7 @@ pub use features::verify_env_show;
 pub use features::verify_graph_list;
 pub use features::verify_graph_new;
 pub use features::verify_graph_show;
+pub use features::verify_step_add;
 
 // Stable type re-exports for slice 1 callers.
 pub use crate::core::{ActiveScope, OntologyError, OntologyHandle, ScopeError, StreamWriter,

@@ -2,11 +2,16 @@
 id: TC-067
 title: dec verify step add refuses persistence on SafetyViolation
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_067_dec_verify_step_add_refuses_persistence_on_safetyv
+runner-timeout: 120
+last-run: 2026-05-21T16:44:25.249046608+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
