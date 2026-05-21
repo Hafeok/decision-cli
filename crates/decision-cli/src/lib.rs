@@ -26,6 +26,7 @@ pub use features::implement;
 pub use features::init;
 pub use features::mcp;
 pub use features::session_inspect;
+pub use features::verify_env_list;
 pub use features::verify_env_new;
 
 // Stable type re-exports for slice 1 callers.

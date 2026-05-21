@@ -82,6 +82,8 @@ fn build_production_registry(_workdir: &Path) -> ToolRegistry {
     let mut reg = ToolRegistry::new();
     reg.register(decision_cli::verify_env_new::tool_descriptor())
         .expect("register verify_env_new");
+    reg.register(decision_cli::verify_env_list::tool_descriptor())
+        .expect("register verify_env_list");
     reg
 }
 
@@ -133,7 +135,7 @@ fn decision_cli_cli_paired_tool_names() -> &'static [&'static str] {
 // `core::tests::descriptor_uses_canonical_name` in features/verify_env_new
 // already catches drift from the MCP side; this constant catches drift
 // from the CLI side.
-const PAIRED_TOOL_NAMES: &[&str] = &["dec_verify_env_new"];
+const PAIRED_TOOL_NAMES: &[&str] = &["dec_verify_env_list", "dec_verify_env_new"];
 
 // --- AC #2: single handler — no surface-specific business logic ----------
 

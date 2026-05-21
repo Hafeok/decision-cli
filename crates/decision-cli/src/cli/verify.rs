@@ -12,6 +12,7 @@ use std::process::ExitCode;
 use clap::Subcommand;
 
 use decision_cli::core::handler::Error as HandlerError;
+use decision_cli::verify_env_list::{self, EnvListRequest, OutputFormat};
 use decision_cli::verify_env_new::{self, EnvNewRequest};
 
 /// Names of every MCP tool the `dec verify` clap tree pairs with. The
@@ -19,7 +20,7 @@ use decision_cli::verify_env_new::{self, EnvNewRequest};
 /// registry. The constant is `pub` so the parity TC's structural check
 /// (grep over this file) can confirm one entry per leaf subcommand.
 #[allow(dead_code)]
-pub const PAIRED_TOOL_NAMES: &[&str] = &["dec_verify_env_new"];
+pub const PAIRED_TOOL_NAMES: &[&str] = &["dec_verify_env_list", "dec_verify_env_new"];
 
 #[derive(Debug, Subcommand)]
 pub enum VerifyCmd {
@@ -32,6 +33,8 @@ pub enum VerifyCmd {
 pub enum EnvCmd {
     /// Create a new VerificationEnvironment (FT-038).
     New(EnvNewArgs),
+    /// List VerificationEnvironment artifacts (FT-039).
+    List(EnvListArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -57,6 +60,40 @@ pub struct EnvNewArgs {
     /// Required iff `--type` is `remote-*`; forbidden for local types.
     #[arg(long)]
     pub endpoint: Option<String>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct EnvListArgs {
+    /// Optional safety-class filter (`isolated`, `shared-non-destructive`,
+    /// or `production-readonly`).
+    #[arg(long = "safety-class")]
+    pub safety_class: Option<String>,
+    /// Optional env-type filter (e.g. `ephemeral-tempdir`, `remote-http`).
+    #[arg(long = "type", value_name = "ENV-TYPE")]
+    pub env_type: Option<String>,
+    /// Output format. Defaults to `table`.
+    #[arg(long, value_name = "FORMAT", default_value = "table")]
+    pub format: String,
+}
+
+/// Convert env-list clap args into the structured [`EnvListRequest`].
+///
+/// Returns `Err` for malformed `--format` values so the CLI surface can
+/// short-circuit before invoking the handler.
+pub fn env_list_request(args: &EnvListArgs, workdir: &Path) -> Result<EnvListRequest, HandlerError> {
+    let format = OutputFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
+        field: "format".to_string(),
+        detail: format!(
+            "format must be one of {{table, json}}; got {got:?}",
+            got = args.format
+        ),
+    })?;
+    Ok(EnvListRequest {
+        safety_class: args.safety_class.clone(),
+        env_type: args.env_type.clone(),
+        format: Some(format),
+        workdir: Some(workdir.to_path_buf()),
+    })
 }
 
 /// Convert clap args into the structured `EnvNewRequest`. Exposed so
@@ -85,6 +122,7 @@ pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
     match cmd {
         VerifyCmd::Env(env_cmd) => match env_cmd {
             EnvCmd::New(args) => run_env_new(workdir, args),
+            EnvCmd::List(args) => run_env_list(workdir, args),
         },
     }
 }
@@ -99,6 +137,30 @@ fn run_env_new(workdir: &Path, args: EnvNewArgs) -> ExitCode {
         }
         Err(err) => {
             eprintln!("dec verify env new: {err}");
+            ExitCode::from(exit_code_for(&err))
+        }
+    }
+}
+
+fn run_env_list(workdir: &Path, args: EnvListArgs) -> ExitCode {
+    let req = match env_list_request(&args, workdir) {
+        Ok(r) => r,
+        Err(err) => {
+            eprintln!("dec verify env list: {err}");
+            return ExitCode::from(exit_code_for(&err));
+        }
+    };
+    match verify_env_list::run(&req) {
+        Ok(outcome) => {
+            let format = req.format.unwrap_or_default();
+            match format {
+                OutputFormat::Table => print!("{}", verify_env_list::render_table(&outcome)),
+                OutputFormat::Json => println!("{}", verify_env_list::render_json(&outcome)),
+            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec verify env list: {err}");
             ExitCode::from(exit_code_for(&err))
         }
     }

@@ -13,4 +13,5 @@ pub mod implement;
 pub mod init;
 pub mod mcp;
 pub mod session_inspect;
+pub mod verify_env_list;
 pub mod verify_env_new;

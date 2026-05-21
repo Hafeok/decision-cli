@@ -2,11 +2,16 @@
 id: TC-061
 title: dec verify env list returns ordered envs with safety-class and type filters
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_061_dec_verify_env_list_returns_ordered_envs_with_safe
+runner-timeout: 120
+last-run: 2026-05-21T15:11:09.864799980+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

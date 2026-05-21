@@ -23,6 +23,7 @@ use decision_cli::core::mcp::{
     RegisterError, ToolDescriptor, ToolHandler, ToolRegistry,
 };
 use decision_cli::mcp;
+use decision_cli::verify_env_list;
 use decision_cli::verify_env_new;
 
 #[derive(Debug, Subcommand)]
@@ -61,6 +62,7 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
             mcp::McpError::Serve(_) => unreachable!("build_registry never returns Serve"),
         })?;
     register_verify_env_new(&mut registry, workdir)?;
+    register_verify_env_list(&mut registry, workdir)?;
     Ok(registry)
 }
 
@@ -91,6 +93,45 @@ fn register_verify_env_new(
     }
     registry.register(descriptor)?;
     Ok(())
+}
+
+/// FT-039: register `dec_verify_env_list`. Same workdir-binding pattern
+/// as FT-038's `dec_verify_env_new`.
+fn register_verify_env_list(
+    registry: &mut ToolRegistry,
+    workdir: &Path,
+) -> Result<(), RegisterError> {
+    let base = verify_env_list::tool_descriptor();
+    let workdir_owned: PathBuf = workdir.to_path_buf();
+    let bound: ToolHandler = Arc::new(move |req: Request| {
+        let mut parsed = verify_env_list::parse_request(&req)?;
+        if parsed.workdir.is_none() {
+            parsed.workdir = Some(workdir_owned.clone());
+        }
+        let outcome = verify_env_list::run(&parsed)?;
+        Ok(verify_env_list_response(&outcome))
+    });
+    let mut descriptor = ToolDescriptor::new(
+        base.name.clone(),
+        base.description.clone(),
+        base.input_schema.clone(),
+        bound,
+    );
+    if let Some(schema) = base.output_schema.clone() {
+        descriptor = descriptor.with_output_schema(schema);
+    }
+    registry.register(descriptor)?;
+    Ok(())
+}
+
+fn verify_env_list_response(outcome: &verify_env_list::EnvListResponse) -> Response {
+    let summary = format!("listed {n} environment(s)", n = outcome.envs.len());
+    Response::with_summary(
+        json!({
+            "envs": outcome.envs,
+        }),
+        summary,
+    )
 }
 
 fn verify_env_new_response(outcome: &verify_env_new::EnvNewResponse) -> Response {
