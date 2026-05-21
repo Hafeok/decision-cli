@@ -2,11 +2,16 @@
 id: TC-055
 title: dec init seeds ephemeral-cli env idempotently
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_055_dec_init_seeds_ephemeral_cli_env_idempotently
+runner-timeout: 120
+last-run: 2026-05-21T13:35:53.264213875+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -301,3 +301,38 @@ dec:dispositionRationale a rdf:Property ;
     rdfs:domain dec:Feedback ;
     rdfs:range  xsd:string ;
     rdfs:comment "Operator-facing rationale for dec:dispositionOverride." .
+
+# --- FT-035 / ADR-028: VerificationEnvironment ------------------------------
+
+dec:VerificationEnvironment a rdfs:Class ;
+    rdfs:label "VerificationEnvironment" ;
+    rdfs:comment "A typed execution context for verification graphs (ADR-028 §VerificationEnvironment). Carries an envType, safetyClass, allowedOps list, optional setup/teardown, and (for remote types) an endpoint." .
+
+dec:envType a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Environment type tag (e.g. \"ephemeral-tempdir\", \"remote-http\")." .
+
+dec:safetyClass a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Safety classification — one of {isolated, shared-non-destructive, production-readonly}." .
+
+dec:allowedOps a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:comment "Non-empty rdf:List of operation tokens permitted by this environment (ADR-028)." .
+
+dec:setup a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Optional shell snippet executed before any step runs against the environment." .
+
+dec:teardown a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Optional shell snippet executed after step execution." .
+
+dec:endpoint a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Required for remote environment types (e.g. remote-http); URL of the target endpoint. Local environment types MUST NOT carry an endpoint (SHACL conditional)." .

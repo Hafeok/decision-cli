@@ -6,6 +6,10 @@
 
 #![allow(missing_docs)]
 
+mod verify_env;
+
+pub use verify_env::*;
+
 use oxigraph::model::NamedNodeRef;
 
 pub const NS_DEC: &str = "https://decision-cli.dev/ns#";
@@ -393,3 +397,4 @@ pub fn routing_override_actor() -> NamedNodeRef<'static> {
 pub const FEEDBACK_STATE_PRODUCED: &str = "produced";
 /// Lifecycle states that count as still-open (i.e. not terminal).
 pub const FEEDBACK_TERMINAL_STATES: &[&str] = &["closed", "rejected", "superseded"];
+

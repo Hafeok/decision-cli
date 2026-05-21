@@ -2,7 +2,7 @@
 id: TC-089
 title: VerificationVerdict round-trips through writer and reader
 type: exit-criteria
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-020
@@ -12,6 +12,9 @@ phase: 2
 runner: cargo-test
 runner-args: tc_089_verdict_round_trip
 runner-timeout: 120
+last-run: 2026-05-21T13:31:41.447481757+00:00
+last-run-duration: 0.4s
+failure-message: "   Compiling decision-cli v0.1.0 (/home/hafeok/projects/decision-cli/crates/decision-cli)\nerror[E0432]: unresolved import `decision_cli::core::ontology::verification_env`\n  --> crates/decision-cli/tests/tc_055_dec_init_seeds_ephemeral_cli_env_idempotently.rs:16:35\n   |\n16 | use decision_cli::core::ontology::verification_env::{\n   |                                   ^^^^^^^^^^^^^^^^ could not find `verification_env` in `ontology`\n\nerror[E0432]: unresolved import `decision_cli::core::ontology::ver"
 ---
 
 ## Purpose

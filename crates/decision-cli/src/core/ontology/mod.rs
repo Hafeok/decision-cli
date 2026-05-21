@@ -19,6 +19,7 @@
 
 mod helpers;
 pub mod verdict;
+pub mod verification_env;
 
 use std::sync::OnceLock;
 

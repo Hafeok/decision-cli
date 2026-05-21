@@ -13,7 +13,7 @@ phase: 2
 runner: pytest
 runner-args: workers/_shared/tests/test_emit_feedback.py
 runner-timeout: 120
-last-run: 2026-05-20T12:49:54.191246504+00:00
+last-run: 2026-05-21T13:31:41.447481757+00:00
 last-run-duration: 0.3s
 ---
 

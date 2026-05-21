@@ -12,8 +12,8 @@ phase: 2
 runner: cargo-test
 runner-args: --package decision-cli --test feedback_lifecycle
 runner-timeout: 180
-last-run: 2026-05-20T12:07:06.198265329+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-21T13:31:41.447481757+00:00
+last-run-duration: 1.3s
 ---
 
 ## Description

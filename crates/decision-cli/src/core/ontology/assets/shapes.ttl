@@ -471,3 +471,97 @@ dec:FeedbackShape a sh:NodeShape ;
             }
         """
     ] .
+
+# --- VerificationEnvironment shape (FT-035 / ADR-028) -----------------------
+# Enforces ADR-028 §VerificationEnvironment invariants:
+#   - dec:envType is a non-empty string,
+#   - dec:safetyClass ∈ {isolated, shared-non-destructive, production-readonly},
+#   - dec:allowedOps is a non-empty rdf:List of operation tokens,
+#   - dec:endpoint required iff dec:envType matches the remote-type pattern.
+
+dec:VerificationEnvironmentShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationEnvironment ;
+
+    sh:property [
+        sh:path      dec:envType ;
+        sh:datatype  xsd:string ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:minLength 1 ;
+        sh:message   "dec:VerificationEnvironment requires exactly one non-empty dec:envType (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:safetyClass ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "isolated" "shared-non-destructive" "production-readonly" ) ;
+        sh:message  "dec:VerificationEnvironment requires exactly one dec:safetyClass from {isolated, shared-non-destructive, production-readonly}."
+    ] ;
+
+    sh:property [
+        sh:path     dec:allowedOps ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationEnvironment requires exactly one dec:allowedOps rdf:List."
+    ] ;
+
+    sh:property [
+        sh:path     dec:setup ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationEnvironment carries at most one dec:setup (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:teardown ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationEnvironment carries at most one dec:teardown (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:endpoint ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationEnvironment carries at most one dec:endpoint (string)."
+    ] ;
+
+    # Remote env types (matching the remote-* prefix) must carry dec:endpoint.
+    sh:sparql [
+        sh:message "remote env types (envType starts with \"remote-\") require dec:endpoint" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:envType ?t .
+              FILTER(STRSTARTS(STR(?t), "remote-"))
+              FILTER NOT EXISTS { $this dec:endpoint ?e }
+            }
+        """
+    ] ;
+
+    # Local env types (envType does NOT start with "remote-") must NOT carry dec:endpoint.
+    sh:sparql [
+        sh:message "local env types (envType does not start with \"remote-\") must NOT carry dec:endpoint" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:envType ?t .
+              FILTER(!STRSTARTS(STR(?t), "remote-"))
+              $this dec:endpoint ?e .
+            }
+        """
+    ] ;
+
+    # allowedOps list must be non-empty (head is not rdf:nil).
+    sh:sparql [
+        sh:message "dec:allowedOps must be a non-empty rdf:List (head must not be rdf:nil)" ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            SELECT $this WHERE {
+              $this dec:allowedOps rdf:nil .
+            }
+        """
+    ] .

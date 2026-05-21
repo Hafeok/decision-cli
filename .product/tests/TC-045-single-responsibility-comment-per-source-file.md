@@ -2,7 +2,7 @@
 id: TC-045
 title: single_responsibility_comment_per_source_file
 type: invariant
-status: passing
+status: failing
 validates:
   features: []
   adrs:
@@ -11,8 +11,9 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/single-responsibility.sh
 runner-timeout: 60
-last-run: 2026-05-21T11:52:34.249757405+00:00
-last-run-duration: 0.7s
+last-run: 2026-05-21T13:31:41.447481757+00:00
+last-run-duration: 0.8s
+failure-message: ""
 ---
 
 ## Purpose

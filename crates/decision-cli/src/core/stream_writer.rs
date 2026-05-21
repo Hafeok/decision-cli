@@ -19,6 +19,7 @@ use oxigraph::store::Store;
 use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
+use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
 use crate::core::vocab::{
     in_stream, lifecycle_state, orchestration_graph, value_stream_class, IRI_DEC_FEEDBACK,
     IRI_DEC_GRAPH_ORCHESTRATION, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE, IRI_DEC_VALUE_STREAM,
@@ -88,6 +89,7 @@ impl StreamWriter {
         let mutation = self.augment(mutation);
         validate_verdicts(&mutation.inserts)?;
         validate_feedback(&mutation.inserts)?;
+        validate_envs(&mutation.inserts)?;
         self.validate_feedback_transitions(&mutation)?;
         self.inner
             .commit(mutation)
@@ -201,6 +203,18 @@ fn validate_feedback(quads: &[Quad]) -> Result<()> {
     validate_feedback_quads(quads).map_err(|err| {
         anyhow!(
             "SHACL violation: feedback mutation refused\n{}",
+            err.report
+        )
+    })
+}
+
+/// SHACL-validate every `dec:VerificationEnvironment` subject present in
+/// `quads` (FT-035 / ADR-028). Same `SHACL violation` prefix the verdict
+/// and feedback validators use so callers can detect failures uniformly.
+fn validate_envs(quads: &[Quad]) -> Result<()> {
+    validate_env_quads(quads).map_err(|err| {
+        anyhow!(
+            "SHACL violation: verification environment mutation refused\n{}",
             err.report
         )
     })

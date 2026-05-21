@@ -78,6 +78,7 @@ pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), On
         "DispatchGroup",
         "VerificationVerdict",
         "Feedback",
+        "VerificationEnvironment",
     ] {
         let iri = format!("https://decision-cli.dev/ns#{class}");
         let q = format!(
@@ -151,6 +152,12 @@ const FEEDBACK_PROPS: &[&str] = &[
     "https://decision-cli.dev/ns#inStream",
 ];
 
+const VERIFICATION_ENV_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#envType",
+    "https://decision-cli.dev/ns#safetyClass",
+    "https://decision-cli.dev/ns#allowedOps",
+];
+
 fn required_shape_properties() -> &'static [(&'static str, &'static [&'static str])] {
     &[
         ("https://decision-cli.dev/ns#ValueStream", VALUE_STREAM_PROPS),
@@ -165,6 +172,10 @@ fn required_shape_properties() -> &'static [(&'static str, &'static [&'static st
             DISPATCH_GROUP_PROPS,
         ),
         ("https://decision-cli.dev/ns#Feedback", FEEDBACK_PROPS),
+        (
+            "https://decision-cli.dev/ns#VerificationEnvironment",
+            VERIFICATION_ENV_PROPS,
+        ),
     ]
 }
 

@@ -2,7 +2,7 @@
 id: TC-086
 title: code-structure fitness functions all green on a clean tree
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features:
   - FT-014
@@ -12,6 +12,9 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/run-all-fitness.sh
 runner-timeout: 120
+last-run: 2026-05-21T13:31:41.447481757+00:00
+last-run-duration: 1.4s
+failure-message: ""
 ---
 
 ## Purpose

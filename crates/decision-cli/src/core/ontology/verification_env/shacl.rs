@@ -1,0 +1,373 @@
+//! Write-side SHACL validation for `dec:VerificationEnvironment` (ADR-028).
+//!
+//! Mirrors the verdict validator pattern (FT-020): every
+//! `dec:VerificationEnvironment` subject declared in the candidate quad
+//! set is checked against the ADR-028 §SHACL invariants. Violations are
+//! returned as structured records so the caller can surface a
+//! `SchemaViolation { artifact: EnvId, detail }`-style error.
+
+use std::collections::BTreeSet;
+
+use oxigraph::model::{NamedNode, Quad, Term};
+use thiserror::Error;
+
+use crate::core::vocab::{
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_TYPE, IRI_DEC_SAFETY_CLASS,
+    IRI_DEC_VERIFICATION_ENVIRONMENT, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY,
+    SAFETY_SHARED_NON_DESTRUCTIVE,
+};
+
+use super::types::{RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE};
+
+/// Prefix used by `env_type` strings to denote a *remote* environment
+/// (per ADR-028: `remote-http`, `remote-sparql`, …).
+pub const REMOTE_ENV_TYPE_PREFIX: &str = "remote-";
+
+/// One SHACL violation against a candidate environment mutation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnvViolation {
+    /// Subject IRI the violation is attached to.
+    pub subject: String,
+    /// Predicate path the violation is against (`dec:envType`, etc.).
+    pub path: String,
+    /// Operator-friendly explanation.
+    pub detail: String,
+}
+
+/// Structured failure for SHACL validation of a `VerificationEnvironment`.
+#[derive(Debug, Error)]
+#[error("SHACL validation failed for VerificationEnvironment:\n{report}")]
+pub struct EnvShaclError {
+    /// Rendered report (one `subject / path / detail` line per violation).
+    pub report: String,
+    /// The raw violations, in input order.
+    pub violations: Vec<EnvViolation>,
+}
+
+/// Run the ADR-028 SHACL shape against every `VerificationEnvironment`
+/// subject declared in `quads`.
+pub fn validate_quads(quads: &[Quad]) -> Result<(), EnvShaclError> {
+    let subjects = env_subjects(quads);
+    let mut violations: Vec<EnvViolation> = Vec::new();
+    for subject in subjects {
+        violations.extend(validate_subject(quads, &subject));
+    }
+    if violations.is_empty() {
+        return Ok(());
+    }
+    Err(EnvShaclError {
+        report: render_violations(&violations),
+        violations,
+    })
+}
+
+fn env_subjects(quads: &[Quad]) -> Vec<NamedNode> {
+    let mut out: Vec<NamedNode> = Vec::new();
+    for q in quads {
+        if q.predicate.as_str() != RDF_TYPE {
+            continue;
+        }
+        let Term::NamedNode(cls) = &q.object else {
+            continue;
+        };
+        if cls.as_str() != IRI_DEC_VERIFICATION_ENVIRONMENT {
+            continue;
+        }
+        if let oxigraph::model::Subject::NamedNode(s) = &q.subject {
+            if !out.iter().any(|n| n == s) {
+                out.push(s.clone());
+            }
+        }
+    }
+    out
+}
+
+fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<EnvViolation> {
+    let mut violations = Vec::new();
+    let env_type_values = literal_values(quads, subject, IRI_DEC_ENV_TYPE);
+    check_env_type(subject, &env_type_values, &mut violations);
+    check_safety_class(quads, subject, &mut violations);
+    check_allowed_ops(quads, subject, &mut violations);
+    check_endpoint_conditional(quads, subject, &env_type_values, &mut violations);
+    violations
+}
+
+fn check_env_type(
+    subject: &NamedNode,
+    values: &[String],
+    violations: &mut Vec<EnvViolation>,
+) {
+    if values.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ENV_TYPE,
+            "missing required dec:envType (sh:minCount 1)",
+        ));
+        return;
+    }
+    if values.len() > 1 {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ENV_TYPE,
+            &format!("expected exactly one dec:envType, found {}", values.len()),
+        ));
+    }
+    for v in values {
+        if v.is_empty() {
+            violations.push(violation(
+                subject,
+                IRI_DEC_ENV_TYPE,
+                "dec:envType must be a non-empty string (sh:minLength 1)",
+            ));
+        }
+    }
+}
+
+fn check_safety_class(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<EnvViolation>,
+) {
+    let values = literal_values(quads, subject, IRI_DEC_SAFETY_CLASS);
+    if values.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_SAFETY_CLASS,
+            "missing required dec:safetyClass (sh:minCount 1)",
+        ));
+        return;
+    }
+    if values.len() > 1 {
+        violations.push(violation(
+            subject,
+            IRI_DEC_SAFETY_CLASS,
+            &format!(
+                "expected exactly one dec:safetyClass, found {}",
+                values.len()
+            ),
+        ));
+    }
+    let allowed: BTreeSet<&str> = [
+        SAFETY_ISOLATED,
+        SAFETY_SHARED_NON_DESTRUCTIVE,
+        SAFETY_PRODUCTION_READONLY,
+    ]
+    .into_iter()
+    .collect();
+    for v in &values {
+        if !allowed.contains(v.as_str()) {
+            violations.push(violation(
+                subject,
+                IRI_DEC_SAFETY_CLASS,
+                &format!(
+                    "dec:safetyClass must be one of {{{a}, {b}, {c}}}, got {v:?}",
+                    a = SAFETY_ISOLATED,
+                    b = SAFETY_SHARED_NON_DESTRUCTIVE,
+                    c = SAFETY_PRODUCTION_READONLY,
+                ),
+            ));
+        }
+    }
+}
+
+fn check_allowed_ops(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<EnvViolation>) {
+    let heads = allowed_ops_heads(quads, subject);
+    if heads.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ALLOWED_OPS,
+            "missing required dec:allowedOps rdf:List (sh:minCount 1)",
+        ));
+        return;
+    }
+    if heads.len() > 1 {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ALLOWED_OPS,
+            &format!(
+                "expected exactly one dec:allowedOps rdf:List, found {}",
+                heads.len()
+            ),
+        ));
+    }
+    let head = &heads[0];
+    if list_is_nil(head) {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ALLOWED_OPS,
+            "dec:allowedOps must be a non-empty rdf:List (head must not be rdf:nil)",
+        ));
+        return;
+    }
+    let items = walk_list(quads, head);
+    if items.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ALLOWED_OPS,
+            "dec:allowedOps rdf:List must contain at least one operation token",
+        ));
+    }
+}
+
+fn check_endpoint_conditional(
+    quads: &[Quad],
+    subject: &NamedNode,
+    env_type_values: &[String],
+    violations: &mut Vec<EnvViolation>,
+) {
+    let endpoint_values = literal_values(quads, subject, IRI_DEC_ENDPOINT);
+    let is_remote = env_type_values
+        .iter()
+        .any(|t| t.starts_with(REMOTE_ENV_TYPE_PREFIX));
+    let is_local = env_type_values
+        .iter()
+        .any(|t| !t.starts_with(REMOTE_ENV_TYPE_PREFIX));
+    if endpoint_values.len() > 1 {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ENDPOINT,
+            &format!(
+                "expected at most one dec:endpoint, found {}",
+                endpoint_values.len()
+            ),
+        ));
+    }
+    if is_remote && endpoint_values.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ENDPOINT,
+            "remote env types (envType starts with \"remote-\") require dec:endpoint",
+        ));
+    }
+    if is_local && !endpoint_values.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ENDPOINT,
+            "local env types (envType does not start with \"remote-\") must NOT carry dec:endpoint",
+        ));
+    }
+}
+
+/// Collect every `dec:allowedOps` object for `subject`, as the term that
+/// names the rdf:List head (a blank node or the IRI `rdf:nil`).
+fn allowed_ops_heads(quads: &[Quad], subject: &NamedNode) -> Vec<Term> {
+    quads
+        .iter()
+        .filter_map(|q| {
+            if q.predicate.as_str() != IRI_DEC_ALLOWED_OPS {
+                return None;
+            }
+            if !subject_matches(q, subject) {
+                return None;
+            }
+            Some(q.object.clone())
+        })
+        .collect()
+}
+
+fn list_is_nil(head: &Term) -> bool {
+    matches!(head, Term::NamedNode(n) if n.as_str() == RDF_NIL)
+}
+
+/// Walk an rdf:List starting at `head` and collect literal values.
+fn walk_list(quads: &[Quad], head: &Term) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut current = head.clone();
+    let mut visited: BTreeSet<String> = BTreeSet::new();
+    loop {
+        let key = term_key(&current);
+        if visited.contains(&key) {
+            return out;
+        }
+        visited.insert(key);
+        let first = find_list_value(quads, &current, RDF_FIRST);
+        if let Some(Term::Literal(lit)) = first {
+            out.push(lit.value().to_string());
+        }
+        let rest = find_list_value(quads, &current, RDF_REST);
+        match rest {
+            Some(Term::NamedNode(n)) if n.as_str() == RDF_NIL => return out,
+            Some(t) => current = t,
+            None => return out,
+        }
+    }
+}
+
+fn find_list_value(quads: &[Quad], head: &Term, predicate: &str) -> Option<Term> {
+    quads
+        .iter()
+        .find(|q| {
+            if q.predicate.as_str() != predicate {
+                return false;
+            }
+            term_matches_subject(&q.subject, head)
+        })
+        .map(|q| q.object.clone())
+}
+
+fn term_matches_subject(s: &oxigraph::model::Subject, t: &Term) -> bool {
+    match (s, t) {
+        (oxigraph::model::Subject::NamedNode(a), Term::NamedNode(b)) => a == b,
+        (oxigraph::model::Subject::BlankNode(a), Term::BlankNode(b)) => a == b,
+        _ => false,
+    }
+}
+
+fn term_key(t: &Term) -> String {
+    match t {
+        Term::NamedNode(n) => format!("iri:{}", n.as_str()),
+        Term::BlankNode(b) => format!("bn:{}", b.as_str()),
+        Term::Literal(l) => format!("lit:{}", l.value()),
+        Term::Triple(_) => "triple".to_string(),
+    }
+}
+
+pub(super) fn literal_values(
+    quads: &[Quad],
+    subject: &NamedNode,
+    predicate: &str,
+) -> Vec<String> {
+    quads
+        .iter()
+        .filter_map(|q| {
+            if q.predicate.as_str() != predicate {
+                return None;
+            }
+            if !subject_matches(q, subject) {
+                return None;
+            }
+            match &q.object {
+                Term::Literal(lit) => Some(lit.value().to_string()),
+                _ => None,
+            }
+        })
+        .collect()
+}
+
+fn subject_matches(q: &Quad, subject: &NamedNode) -> bool {
+    match &q.subject {
+        oxigraph::model::Subject::NamedNode(s) => s == subject,
+        _ => false,
+    }
+}
+
+fn violation(subject: &NamedNode, path: &str, detail: &str) -> EnvViolation {
+    EnvViolation {
+        subject: subject.as_str().to_string(),
+        path: path.to_string(),
+        detail: detail.to_string(),
+    }
+}
+
+fn render_violations(violations: &[EnvViolation]) -> String {
+    use std::fmt::Write;
+    let mut out = String::new();
+    for v in violations {
+        let _ = writeln!(
+            out,
+            "  • subject <{}> path <{}>: {}",
+            v.subject, v.path, v.detail
+        );
+    }
+    out
+}

@@ -202,8 +202,29 @@ pub(super) fn build_orchestration_store(
 
     seed_bootstrap_subscriptions(&orchestration).map_err(|e| InitError::Internal(e.to_string()))?;
     seed_role_catalog(&orchestration)?;
+    seed_verification_envs(&orchestration)?;
 
     Ok(orchestration)
+}
+
+/// FT-035 / ADR-028 — project the seeded `ephemeral-cli` env into the
+/// `dec:graph/verify-env` named graph alongside the role catalog and
+/// subscription seeds. The on-disk `.dec/verify/env/*.ttl` files are
+/// authoritative; this projection keeps reads single-source within the
+/// orchestration store.
+fn seed_verification_envs(orchestration: &Store) -> Result<(), InitError> {
+    use crate::core::ontology::verification_env::ephemeral_cli_env;
+    use crate::core::vocab::verify_env_graph;
+    let env = ephemeral_cli_env();
+    let quads = env.to_quads(verify_env_graph());
+    orchestration
+        .transaction(|mut tx| {
+            for q in &quads {
+                tx.insert(q.as_ref())?;
+            }
+            Ok::<_, oxigraph::store::StorageError>(())
+        })
+        .map_err(|e| InitError::Internal(e.to_string()))
 }
 
 /// FT-019 + FT-030: seed both roles (implementer + verifier) alongside
