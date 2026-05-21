@@ -26,6 +26,7 @@ use decision_cli::mcp;
 use decision_cli::verify_env_list;
 use decision_cli::verify_env_new;
 use decision_cli::verify_env_show;
+use decision_cli::verify_graph_list;
 use decision_cli::verify_graph_new;
 
 #[derive(Debug, Subcommand)]
@@ -67,7 +68,50 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
     register_verify_env_list(&mut registry, workdir)?;
     register_verify_env_show(&mut registry, workdir)?;
     register_verify_graph_new(&mut registry, workdir)?;
+    register_verify_graph_list(&mut registry, workdir)?;
     Ok(registry)
+}
+
+/// FT-042: register `dec_verify_graph_list`. Same workdir-binding pattern
+/// the other verify tools use.
+fn register_verify_graph_list(
+    registry: &mut ToolRegistry,
+    workdir: &Path,
+) -> Result<(), RegisterError> {
+    let base = verify_graph_list::tool_descriptor();
+    let workdir_owned: PathBuf = workdir.to_path_buf();
+    let bound: ToolHandler = Arc::new(move |req: Request| {
+        let mut parsed = verify_graph_list::parse_request(&req)?;
+        if parsed.workdir.is_none() {
+            parsed.workdir = Some(workdir_owned.clone());
+        }
+        let outcome = verify_graph_list::run(&parsed)?;
+        Ok(verify_graph_list_response(&outcome))
+    });
+    let mut descriptor = ToolDescriptor::new(
+        base.name.clone(),
+        base.description.clone(),
+        base.input_schema.clone(),
+        bound,
+    );
+    if let Some(schema) = base.output_schema.clone() {
+        descriptor = descriptor.with_output_schema(schema);
+    }
+    registry.register(descriptor)?;
+    Ok(())
+}
+
+fn verify_graph_list_response(outcome: &verify_graph_list::GraphListResponse) -> Response {
+    let summary = format!(
+        "listed {n} verification graph(s)",
+        n = outcome.graphs.len()
+    );
+    Response::with_summary(
+        json!({
+            "graphs": outcome.graphs,
+        }),
+        summary,
+    )
 }
 
 /// FT-041: register `dec_verify_graph_new`. Same workdir-binding pattern

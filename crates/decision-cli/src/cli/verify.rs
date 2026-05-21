@@ -15,6 +15,9 @@ use decision_cli::core::handler::Error as HandlerError;
 use decision_cli::verify_env_list::{self, EnvListRequest, OutputFormat as ListFormat};
 use decision_cli::verify_env_new::{self, EnvNewRequest};
 use decision_cli::verify_env_show::{self, EnvShowRequest, OutputFormat as ShowFormat};
+use decision_cli::verify_graph_list::{
+    self, GraphListRequest, OutputFormat as GraphListFormat,
+};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
 
 /// Names of every MCP tool the `dec verify` clap tree pairs with. The
@@ -26,6 +29,7 @@ pub const PAIRED_TOOL_NAMES: &[&str] = &[
     "dec_verify_env_list",
     "dec_verify_env_new",
     "dec_verify_env_show",
+    "dec_verify_graph_list",
     "dec_verify_graph_new",
 ];
 
@@ -53,6 +57,21 @@ pub enum EnvCmd {
 pub enum GraphCmd {
     /// Create a new VerificationGraph (FT-041).
     New(GraphNewArgs),
+    /// List VerificationGraph artifacts (FT-042).
+    List(GraphListArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct GraphListArgs {
+    /// Optional filter — `FT-NNN` or `TC-NNN` reference.
+    #[arg(long)]
+    pub verifies: Option<String>,
+    /// Optional environment filter (e.g. `ENV-001-ephemeral-cli`).
+    #[arg(long)]
+    pub environment: Option<String>,
+    /// Output format. Defaults to `table`.
+    #[arg(long, value_name = "FORMAT", default_value = "table")]
+    pub format: String,
 }
 
 #[derive(Debug, clap::Args)]
@@ -155,6 +174,30 @@ pub fn env_show_request(args: &EnvShowArgs, workdir: &Path) -> Result<EnvShowReq
     })
 }
 
+/// Convert graph-list clap args into the structured [`GraphListRequest`].
+///
+/// Returns `Err` for malformed `--format` values so the CLI surface can
+/// short-circuit before invoking the handler.
+pub fn graph_list_request(
+    args: &GraphListArgs,
+    workdir: &Path,
+) -> Result<GraphListRequest, HandlerError> {
+    let format =
+        GraphListFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
+            field: "format".to_string(),
+            detail: format!(
+                "format must be one of {{table, json}}; got {got:?}",
+                got = args.format
+            ),
+        })?;
+    Ok(GraphListRequest {
+        verifies: args.verifies.clone(),
+        environment: args.environment.clone(),
+        format: Some(format),
+        workdir: Some(workdir.to_path_buf()),
+    })
+}
+
 /// Convert clap args into the structured `GraphNewRequest`. Exposed so
 /// the TC-052 unit test can build the same request the binary does.
 #[must_use]
@@ -198,7 +241,36 @@ pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
         },
         VerifyCmd::Graph(graph_cmd) => match graph_cmd {
             GraphCmd::New(args) => run_graph_new(workdir, args),
+            GraphCmd::List(args) => run_graph_list(workdir, args),
         },
+    }
+}
+
+fn run_graph_list(workdir: &Path, args: GraphListArgs) -> ExitCode {
+    let req = match graph_list_request(&args, workdir) {
+        Ok(r) => r,
+        Err(err) => {
+            eprintln!("dec verify graph list: {err}");
+            return ExitCode::from(exit_code_for(&err));
+        }
+    };
+    match verify_graph_list::run(&req) {
+        Ok(outcome) => {
+            let format = req.format.unwrap_or_default();
+            match format {
+                GraphListFormat::Table => {
+                    print!("{}", verify_graph_list::render_table(&outcome))
+                }
+                GraphListFormat::Json => {
+                    println!("{}", verify_graph_list::render_json(&outcome))
+                }
+            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec verify graph list: {err}");
+            ExitCode::from(exit_code_for(&err))
+        }
     }
 }
 
