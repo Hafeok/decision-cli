@@ -2,11 +2,16 @@
 id: TC-058
 title: Safety check raises when step requiredOps not subset of env allowedOps
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_058_safety_check_raises_when_step_requiredops_not_subs
+runner-timeout: 120
+last-run: 2026-05-21T14:37:39.194902724+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

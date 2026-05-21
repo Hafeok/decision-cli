@@ -21,6 +21,7 @@ pub mod sparql;
 pub mod store;
 pub mod stream_writer;
 pub mod subscriptions;
+pub mod verify;
 pub mod vocab;
 pub mod worker;
 

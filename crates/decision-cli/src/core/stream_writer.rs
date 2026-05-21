@@ -21,6 +21,7 @@ use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
 use crate::core::ontology::verification_graph::validate_quads as validate_graph_quads;
+use crate::core::verify::quads::{check_inserts_against_store, touches_verification_artifacts};
 use crate::core::vocab::{
     in_stream, lifecycle_state, orchestration_graph, value_stream_class, IRI_DEC_FEEDBACK,
     IRI_DEC_GRAPH_ORCHESTRATION, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE, IRI_DEC_VALUE_STREAM,
@@ -88,6 +89,10 @@ impl StreamWriter {
     /// internal error type.
     pub fn commit(&self, mutation: Mutation) -> Result<CommitResult> {
         let mutation = self.augment(mutation);
+        // FT-037 / ADR-028 §Safety gating: safety check runs *before*
+        // any SHACL pass and before the underlying writer sees the
+        // mutation. SHACL and safety errors are distinct (TC-059 §5).
+        self.validate_safety(&mutation.inserts)?;
         validate_verdicts(&mutation.inserts)?;
         validate_feedback(&mutation.inserts)?;
         validate_envs(&mutation.inserts)?;
@@ -96,6 +101,23 @@ impl StreamWriter {
         self.inner
             .commit(mutation)
             .context("committing mutation through oxi-events writer")
+    }
+
+    /// FT-037 chokepoint — runs the safety check on every
+    /// `VerificationGraph`/`Step` subject in `inserts`. No-op when the
+    /// mutation does not touch a verification artifact. Surfaces
+    /// `Error::SafetyViolation` (rendered with the `safety violation`
+    /// prefix so callers can match on it without depending on the
+    /// safety module's error type).
+    fn validate_safety(&self, inserts: &[Quad]) -> Result<()> {
+        if !touches_verification_artifacts(inserts) {
+            return Ok(());
+        }
+        let store = self.inner.store();
+        match check_inserts_against_store(inserts, store) {
+            Ok(()) => Ok(()),
+            Err(err) => Err(anyhow!("safety violation: {err}")),
+        }
     }
 
     /// FT-027 / ADR-024: when a mutation updates `dec:lifecycleState` on a

@@ -18,6 +18,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use thiserror::Error;
 
+use crate::core::verify::safety::SafetyViolation;
+
 /// Arguments to a single tool invocation, passed verbatim from either
 /// transport. The shape mirrors MCP's `tools/call.params.arguments` so
 /// the MCP surface can forward without translation; the CLI surface
@@ -121,12 +123,25 @@ pub enum Error {
         id: String,
     },
 
-    /// A safety constraint refused the operation (e.g. step ops escape
-    /// env's allowed ops). Slice-2.5 forward reference; harmless here.
-    #[error("safety violation: {detail}")]
-    SafetyViolation {
-        /// Human-readable diagnostic.
-        detail: String,
+    /// A safety constraint refused the operation per FT-037 / ADR-028
+    /// §Safety gating: a step's `requiredOps` escaped the environment's
+    /// `allowedOps`. Carries the full diagnostic context surfaced by
+    /// [`crate::core::verify::safety::SafetyViolation`].
+    #[error("safety violation: {0}")]
+    SafetyViolation(SafetyViolation),
+
+    /// An op token in either a step's `requiredOps` or an env's
+    /// `allowedOps` lies outside the controlled vocabulary
+    /// (FT-037 / ADR-028).
+    #[error("unknown op token: {token} (source: {origin})")]
+    UnknownOp {
+        /// The offending op token.
+        token: String,
+        /// Which side declared it (`"step"` or `"env"`). Named
+        /// `origin` rather than `source` to avoid thiserror's
+        /// auto-decoration of `source` fields.
+        #[serde(rename = "source")]
+        origin: String,
     },
 
     /// Catch-all for IO / runtime / unexpected failures the handler
@@ -136,6 +151,19 @@ pub enum Error {
         /// Free-form diagnostic.
         detail: String,
     },
+}
+
+impl From<crate::core::verify::safety::SafetyError> for Error {
+    fn from(value: crate::core::verify::safety::SafetyError) -> Self {
+        use crate::core::verify::safety::SafetyError;
+        match value {
+            SafetyError::Violation(v) => Self::SafetyViolation(v),
+            SafetyError::UnknownOp { token, source } => Self::UnknownOp {
+                token,
+                origin: source.as_str().to_string(),
+            },
+        }
+    }
 }
 
 impl Error {
@@ -148,7 +176,8 @@ impl Error {
             Self::ArtifactNotFound { .. } => "ArtifactNotFound",
             Self::SchemaViolation { .. } => "SchemaViolation",
             Self::DuplicateId { .. } => "DuplicateId",
-            Self::SafetyViolation { .. } => "SafetyViolation",
+            Self::SafetyViolation(_) => "SafetyViolation",
+            Self::UnknownOp { .. } => "UnknownOp",
             Self::Internal { .. } => "Internal",
         }
     }
