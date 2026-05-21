@@ -139,39 +139,86 @@ pub fn close(
     addressing_iri: &str,
     closed_by_identity: &str,
 ) -> Result<CloseOutcome, CloseError> {
+    let (ws, fb_node, addr_node) = open_and_parse_inputs(workdir, feedback_iri, addressing_iri)?;
+    let fb = load_feedback(&ws, &fb_node)?;
+    ensure_addressed_state(&ws, &fb_node, feedback_iri)?;
+    let class = parse_feedback_class(&fb, feedback_iri)?;
+    validate_addressing_artifact(&ws, &addr_node, addressing_iri, class, &fb.class)?;
+    let closed_by_node = mint_actor_iri(closed_by_identity, feedback_iri);
+    apply_close_transition(&ws, &fb_node, &addr_node, &closed_by_node)?;
+    let resumed_groups = run_resume_checks(&ws, &fb_node)?;
+    ws.persist()
+        .map_err(|e| CloseError::Other(format!("persisting store: {e:#}")))?;
+    Ok(build_close_outcome(
+        feedback_iri,
+        addressing_iri,
+        closed_by_identity,
+        &closed_by_node,
+        resumed_groups,
+    ))
+}
+
+fn open_and_parse_inputs(
+    workdir: &Path,
+    feedback_iri: &str,
+    addressing_iri: &str,
+) -> Result<(WritableStore, NamedNode, NamedNode), CloseError> {
     let ws = WritableStore::open(workdir).map_err(|e| CloseError::Other(format!("{e:#}")))?;
     let fb_node = NamedNode::new(feedback_iri)
         .map_err(|_| CloseError::InvalidFeedbackIri(feedback_iri.to_string()))?;
     let addr_node = NamedNode::new(addressing_iri)
         .map_err(|_| CloseError::InvalidAddressingIri(addressing_iri.to_string()))?;
+    Ok((ws, fb_node, addr_node))
+}
 
-    let fb = get(&ws.store, &fb_node).map_err(|e| match e {
+fn load_feedback(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+) -> Result<crate::core::feedback::Feedback, CloseError> {
+    get(&ws.store, fb_node).map_err(|e| match e {
         crate::core::feedback::FeedbackReadError::NotFound { iri } => CloseError::NotFound(iri),
         other => CloseError::Other(format!("{other}")),
-    })?;
+    })
+}
 
-    // Lifecycle invariant: only `addressed → closed` per FT-027.
+fn ensure_addressed_state(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+    feedback_iri: &str,
+) -> Result<(), CloseError> {
     let prior =
-        read_prior_state(&ws.store, &fb_node).map_err(|e| CloseError::Other(format!("{e}")))?;
+        read_prior_state(&ws.store, fb_node).map_err(|e| CloseError::Other(format!("{e}")))?;
     if prior != LifecycleState::Addressed {
         return Err(CloseError::WrongState {
             feedback: feedback_iri.to_string(),
             state: prior.as_str().to_string(),
         });
     }
+    Ok(())
+}
 
-    let class = FeedbackClass::from_iri_value(&fb.class).ok_or_else(|| CloseError::UnknownClass {
+fn parse_feedback_class(
+    fb: &crate::core::feedback::Feedback,
+    feedback_iri: &str,
+) -> Result<FeedbackClass, CloseError> {
+    FeedbackClass::from_iri_value(&fb.class).ok_or_else(|| CloseError::UnknownClass {
         feedback: feedback_iri.to_string(),
         class: fb.class.clone(),
-    })?;
+    })
+}
 
+fn validate_addressing_artifact(
+    ws: &WritableStore,
+    addr_node: &NamedNode,
+    addressing_iri: &str,
+    class: FeedbackClass,
+    class_literal: &str,
+) -> Result<(), CloseError> {
     let active_stream = ws
         .active_stream()
         .map_err(|e| CloseError::Other(format!("{e:#}")))?;
-
-    let (artifact_stream, artifact_types) = read_artifact_metadata(&ws.store, &addr_node)
+    let (artifact_stream, artifact_types) = read_artifact_metadata(&ws.store, addr_node)
         .ok_or_else(|| CloseError::AddressingArtifactMissing(addressing_iri.to_string()))?;
-
     if let Some(stream) = artifact_stream.as_deref() {
         if stream != active_stream.as_str() {
             return Err(CloseError::ForeignStream {
@@ -181,37 +228,43 @@ pub fn close(
             });
         }
     }
+    validate_artifact_type_allowed(class, &artifact_types, class_literal)?;
+    Ok(())
+}
 
-    validate_artifact_type_allowed(class, &artifact_types, &fb.class)?;
-
-    // Build the evidence quads (addressing artifact + closed-by actor)
-    // and apply the addressed → closed transition through the writer.
+fn apply_close_transition(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+    addr_node: &NamedNode,
+    closed_by_node: &NamedNode,
+) -> Result<(), CloseError> {
     let g = orchestration_graph().into_owned().into();
-    let closed_by_value = closed_by_identity.to_string();
-    let closed_by_node = mint_actor_iri(&closed_by_value, feedback_iri);
-    let evidence: Vec<Quad> = build_close_evidence(&fb_node, &addr_node, &closed_by_node, &g);
-
+    let evidence: Vec<Quad> = build_close_evidence(fb_node, addr_node, closed_by_node, &g);
     apply_transition(
         &ws.store,
         &ws.writer,
-        &fb_node,
+        fb_node,
         LifecycleState::Closed,
         evidence,
         orchestration_graph(),
     )
-    .map_err(|e| CloseError::Other(format!("applying close transition: {e}")))?;
+    .map_err(|e| CloseError::Other(format!("applying close transition: {e}")))
+}
 
-    let resumed_groups = run_resume_checks(&ws, &fb_node)?;
-    ws.persist()
-        .map_err(|e| CloseError::Other(format!("persisting store: {e:#}")))?;
-    let closed_by_iri = closed_by_node.as_str().to_string();
-    Ok(CloseOutcome {
+fn build_close_outcome(
+    feedback_iri: &str,
+    addressing_iri: &str,
+    closed_by_identity: &str,
+    closed_by_node: &NamedNode,
+    resumed_groups: Vec<ResumedGroup>,
+) -> CloseOutcome {
+    CloseOutcome {
         feedback_iri: feedback_iri.to_string(),
         addressing_iri: addressing_iri.to_string(),
-        closed_by: closed_by_value,
-        closed_by_iri,
+        closed_by: closed_by_identity.to_string(),
+        closed_by_iri: closed_by_node.as_str().to_string(),
         resumed_groups,
-    })
+    }
 }
 
 /// Render a [`CloseOutcome`] as human-readable text.

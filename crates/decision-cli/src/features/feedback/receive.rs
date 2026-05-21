@@ -67,50 +67,75 @@ pub fn receive(
     let ws = WritableStore::open(workdir).map_err(|e| ReceiveError::Other(format!("{e:#}")))?;
     let fb_node = NamedNode::new(feedback_iri)
         .map_err(|_| ReceiveError::InvalidIri(feedback_iri.to_string()))?;
-
-    let _fb = get(&ws.store, &fb_node).map_err(|e| match e {
-        crate::core::feedback::FeedbackReadError::NotFound { iri } => ReceiveError::NotFound(iri),
-        other => ReceiveError::Other(format!("{other}")),
-    })?;
-
-    let prior =
-        read_prior_state(&ws.store, &fb_node).map_err(|e| ReceiveError::Other(format!("{e}")))?;
-    if prior != LifecycleState::Routed {
-        return Err(ReceiveError::WrongState {
-            feedback: feedback_iri.to_string(),
-            state: prior.as_str().to_string(),
-        });
-    }
-
+    ensure_feedback_loadable(&ws, &fb_node)?;
+    ensure_routed_state(&ws, &fb_node, feedback_iri)?;
     let receiving_session_iri = mint_human_session_iri(feedback_iri, actor);
-    let receiving_node = NamedNode::new(&receiving_session_iri).map_err(|e| {
-        ReceiveError::Other(format!(
-            "minting receiving-session IRI {receiving_session_iri}: {e}"
-        ))
-    })?;
-    let g = orchestration_graph();
-    let evidence: Vec<Quad> = vec![Quad::new(
-        fb_node.clone(),
-        receiving_session().into_owned(),
-        receiving_node,
-        g.into_owned(),
-    )];
-
-    apply_transition(
-        &ws.store,
-        &ws.writer,
-        &fb_node,
-        LifecycleState::Received,
-        evidence,
-        g,
-    )
-    .map_err(|e| ReceiveError::Other(format!("applying receive transition: {e}")))?;
+    let receiving_node = parse_receiving_session(&receiving_session_iri)?;
+    let evidence = build_receive_evidence(&fb_node, receiving_node);
+    apply_receive_transition(&ws, &fb_node, evidence)?;
     ws.persist()
         .map_err(|e| ReceiveError::Other(format!("persisting store: {e:#}")))?;
     Ok(ReceiveOutcome {
         feedback_iri: feedback_iri.to_string(),
         receiving_session: receiving_session_iri,
     })
+}
+
+fn ensure_feedback_loadable(ws: &WritableStore, fb_node: &NamedNode) -> Result<(), ReceiveError> {
+    get(&ws.store, fb_node)
+        .map(|_| ())
+        .map_err(|e| match e {
+            crate::core::feedback::FeedbackReadError::NotFound { iri } => {
+                ReceiveError::NotFound(iri)
+            }
+            other => ReceiveError::Other(format!("{other}")),
+        })
+}
+
+fn ensure_routed_state(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+    feedback_iri: &str,
+) -> Result<(), ReceiveError> {
+    let prior =
+        read_prior_state(&ws.store, fb_node).map_err(|e| ReceiveError::Other(format!("{e}")))?;
+    if prior != LifecycleState::Routed {
+        return Err(ReceiveError::WrongState {
+            feedback: feedback_iri.to_string(),
+            state: prior.as_str().to_string(),
+        });
+    }
+    Ok(())
+}
+
+fn parse_receiving_session(iri: &str) -> Result<NamedNode, ReceiveError> {
+    NamedNode::new(iri)
+        .map_err(|e| ReceiveError::Other(format!("minting receiving-session IRI {iri}: {e}")))
+}
+
+fn build_receive_evidence(fb_node: &NamedNode, receiving_node: NamedNode) -> Vec<Quad> {
+    vec![Quad::new(
+        fb_node.clone(),
+        receiving_session().into_owned(),
+        receiving_node,
+        orchestration_graph().into_owned(),
+    )]
+}
+
+fn apply_receive_transition(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+    evidence: Vec<Quad>,
+) -> Result<(), ReceiveError> {
+    apply_transition(
+        &ws.store,
+        &ws.writer,
+        fb_node,
+        LifecycleState::Received,
+        evidence,
+        orchestration_graph(),
+    )
+    .map_err(|e| ReceiveError::Other(format!("applying receive transition: {e}")))
 }
 
 /// Build a deterministic-ish IRI for a human-driven receive event so

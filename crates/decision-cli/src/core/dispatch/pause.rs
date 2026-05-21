@@ -137,33 +137,51 @@ pub fn pause_on_feedback(
     if blocking_feedback.is_empty() {
         return Err(PauseError::NoBlockingFeedback);
     }
-    let mut group = DispatchGroup::read(store, group_iri)
+    let mut group = load_pausable_group(store, group_iri)?;
+    advance_pause_status(writer, &mut group)?;
+    commit_blocked_by_links(writer, group_iri, blocking_feedback)?;
+    Ok(group.status)
+}
+
+fn load_pausable_group(
+    store: &Store,
+    group_iri: &NamedNode,
+) -> Result<DispatchGroup, PauseError> {
+    let group = DispatchGroup::read(store, group_iri)
         .map_err(|e| PauseError::Commit(format!("read group: {e:#}")))?
         .ok_or_else(|| PauseError::Commit(format!("no DispatchGroup at <{group_iri}>")))?;
-
     match group.status {
-        DispatchStatus::AwaitingAction | DispatchStatus::PausedForFeedback => {}
-        other => {
-            return Err(PauseError::NotAwaitingAction {
-                group: group_iri.as_str().to_string(),
-                state: other,
-            });
-        }
+        DispatchStatus::AwaitingAction | DispatchStatus::PausedForFeedback => Ok(group),
+        other => Err(PauseError::NotAwaitingAction {
+            group: group_iri.as_str().to_string(),
+            state: other,
+        }),
     }
+}
 
-    // Status transition: only swap the literal if we are moving for the
-    // first time. PausedForFeedback → PausedForFeedback is a no-op as far
-    // as the persisted status literal is concerned, but the blocked-by
-    // links still need to be appended.
-    if group.status == DispatchStatus::AwaitingAction {
-        group
-            .transition(writer, DispatchEvent::BlockingFeedbackEmitted)
-            .map_err(|e| match e {
-                super::group::GroupError::Lifecycle(le) => PauseError::Lifecycle(le),
-                super::group::GroupError::Commit(c) => PauseError::Commit(c),
-            })?;
+fn advance_pause_status(
+    writer: &StreamWriter,
+    group: &mut DispatchGroup,
+) -> Result<(), PauseError> {
+    // PausedForFeedback → PausedForFeedback is a no-op as far as the
+    // persisted status literal is concerned; only swap on first move.
+    if group.status != DispatchStatus::AwaitingAction {
+        return Ok(());
     }
+    group
+        .transition(writer, DispatchEvent::BlockingFeedbackEmitted)
+        .map(|_| ())
+        .map_err(|e| match e {
+            super::group::GroupError::Lifecycle(le) => PauseError::Lifecycle(le),
+            super::group::GroupError::Commit(c) => PauseError::Commit(c),
+        })
+}
 
+fn commit_blocked_by_links(
+    writer: &StreamWriter,
+    group_iri: &NamedNode,
+    blocking_feedback: &[NamedNode],
+) -> Result<(), PauseError> {
     let mut inserts: Vec<oxigraph::model::Quad> = Vec::with_capacity(blocking_feedback.len());
     for fb in blocking_feedback {
         inserts.push(build_blocked_by_quad(group_iri, fb));
@@ -179,9 +197,8 @@ pub fn pause_on_feedback(
     ));
     writer
         .commit(mutation)
-        .map_err(|e| PauseError::Commit(format!("{e:#}")))?;
-
-    Ok(group.status)
+        .map(|_| ())
+        .map_err(|e| PauseError::Commit(format!("{e:#}")))
 }
 
 /// Check whether a paused DispatchGroup can resume.

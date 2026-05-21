@@ -83,74 +83,46 @@ pub fn format_show(fb: &Feedback) -> String {
 #[must_use]
 pub fn format_show_json(fb: &Feedback) -> String {
     let mut out = String::from("{\n");
-    out.push_str(&format!("  \"iri\": \"{}\",\n", json_escape(fb.iri.as_str())));
-    out.push_str(&format!("  \"class\": \"{}\",\n", json_escape(&fb.class)));
-    out.push_str(&format!(
-        "  \"lifecycle_state\": \"{}\",\n",
-        json_escape(&fb.lifecycle_state)
-    ));
-    out.push_str(&format!(
-        "  \"severity\": \"{}\",\n",
-        json_escape(fb.severity.as_str())
-    ));
-    out.push_str(&format!(
-        "  \"target_role\": \"{}\",\n",
-        json_escape(&fb.target_role)
-    ));
-    out.push_str(&format!(
-        "  \"in_stream\": \"{}\",\n",
-        json_escape(fb.in_stream.as_str())
-    ));
-    out.push_str(&format!(
-        "  \"source_session\": \"{}\",\n",
-        json_escape(fb.source_session.as_str())
-    ));
-    out.push_str(&format!(
-        "  \"source_artifact\": {},\n",
-        json_opt(fb.source_artifact.as_ref().map(NamedNode::as_str))
-    ));
-    out.push_str(&format!(
-        "  \"addressing_artifact\": {},\n",
-        json_opt(fb.addressing_artifact.as_ref().map(NamedNode::as_str))
-    ));
-    out.push_str(&format!(
-        "  \"closed_by\": {},\n",
-        json_opt(fb.closed_by.as_ref().map(NamedNode::as_str))
-    ));
-    out.push_str(&format!(
-        "  \"superseded_by\": {},\n",
-        json_opt(fb.superseded_by.as_ref().map(NamedNode::as_str))
-    ));
-    out.push_str(&format!(
-        "  \"receiving_session\": {},\n",
-        json_opt(fb.receiving_session.as_ref().map(NamedNode::as_str))
-    ));
-    out.push_str(&format!(
-        "  \"routed_at\": {},\n",
-        json_opt(fb.routed_at.as_deref())
-    ));
-    out.push_str(&format!(
-        "  \"rejection_reason\": {},\n",
-        json_opt(fb.rejection_reason.as_deref())
-    ));
-    out.push_str(&format!(
-        "  \"recommendation\": {},\n",
-        json_opt(fb.recommendation.as_deref())
-    ));
-    out.push_str(&format!(
-        "  \"disposition_override\": {},\n",
-        json_opt(fb.disposition_override.as_deref())
-    ));
-    out.push_str(&format!(
-        "  \"disposition_rationale\": {},\n",
-        json_opt(fb.disposition_rationale.as_deref())
-    ));
-    out.push_str(&format!(
-        "  \"evidence\": \"{}\"\n",
-        json_escape(&fb.evidence)
-    ));
+    write_required_json_fields(&mut out, fb);
+    write_optional_iri_json_fields(&mut out, fb);
+    write_optional_string_json_fields(&mut out, fb);
+    out.push_str(&format!("  \"evidence\": \"{}\"\n", json_escape(&fb.evidence)));
     out.push_str("}\n");
     out
+}
+
+fn push_required_json(out: &mut String, key: &str, value: &str) {
+    out.push_str(&format!("  \"{}\": \"{}\",\n", key, json_escape(value)));
+}
+
+fn push_optional_json(out: &mut String, key: &str, value: Option<&str>) {
+    out.push_str(&format!("  \"{}\": {},\n", key, json_opt(value)));
+}
+
+fn write_required_json_fields(out: &mut String, fb: &Feedback) {
+    push_required_json(out, "iri", fb.iri.as_str());
+    push_required_json(out, "class", &fb.class);
+    push_required_json(out, "lifecycle_state", &fb.lifecycle_state);
+    push_required_json(out, "severity", fb.severity.as_str());
+    push_required_json(out, "target_role", &fb.target_role);
+    push_required_json(out, "in_stream", fb.in_stream.as_str());
+    push_required_json(out, "source_session", fb.source_session.as_str());
+}
+
+fn write_optional_iri_json_fields(out: &mut String, fb: &Feedback) {
+    push_optional_json(out, "source_artifact", fb.source_artifact.as_ref().map(NamedNode::as_str));
+    push_optional_json(out, "addressing_artifact", fb.addressing_artifact.as_ref().map(NamedNode::as_str));
+    push_optional_json(out, "closed_by", fb.closed_by.as_ref().map(NamedNode::as_str));
+    push_optional_json(out, "superseded_by", fb.superseded_by.as_ref().map(NamedNode::as_str));
+    push_optional_json(out, "receiving_session", fb.receiving_session.as_ref().map(NamedNode::as_str));
+}
+
+fn write_optional_string_json_fields(out: &mut String, fb: &Feedback) {
+    push_optional_json(out, "routed_at", fb.routed_at.as_deref());
+    push_optional_json(out, "rejection_reason", fb.rejection_reason.as_deref());
+    push_optional_json(out, "recommendation", fb.recommendation.as_deref());
+    push_optional_json(out, "disposition_override", fb.disposition_override.as_deref());
+    push_optional_json(out, "disposition_rationale", fb.disposition_rationale.as_deref());
 }
 
 /// Render an error payload as JSON for the `--format json` error path

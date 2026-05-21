@@ -1,7 +1,5 @@
 //! `dec` — decision-cli binary entry point (dispatch-only per ADR-013).
-//!
-//! Slice 1 surface: init, status, health, implement, events, session.
-//! See ADR-011 (CLI shape), FT-012, and ADR-016 (vertical-slice SDP).
+//! Slice 1 surface plus FT-033 feedback CLI. See ADR-011, ADR-016.
 
 mod cli;
 
@@ -9,15 +7,10 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-
-use cli::check_goal::CheckGoalArgs;
-use cli::doctor::DoctorArgs;
-use cli::events::EventsCmd;
-use cli::feedback::FeedbackCmd;
-use cli::implement::ImplementCmdArgs;
-use cli::init::InitArgs;
-use cli::session::SessionCmd;
-use cli::sparql::SparqlArgs;
+use cli::{
+    check_goal::CheckGoalArgs, doctor::DoctorArgs, events::EventsCmd, feedback::FeedbackCmd,
+    implement::ImplementCmdArgs, init::InitArgs, session::SessionCmd, sparql::SparqlArgs,
+};
 
 #[derive(Debug, Parser)]
 #[command(

@@ -11,7 +11,7 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/module-structure.sh
 runner-timeout: 60
-last-run: 2026-05-20T11:41:36.841111001+00:00
+last-run: 2026-05-21T09:13:40.452484927+00:00
 last-run-duration: 0.0s
 ---
 

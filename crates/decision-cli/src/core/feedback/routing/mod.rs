@@ -18,14 +18,16 @@
 //! a sibling feature.
 
 pub mod handler;
+pub mod seed;
 pub mod table;
 
 pub use handler::{
-    pending_feedback, route_one, route_pending_feedback, routing_table_len, seed_quads,
-    FeedbackRoutingError, PendingFeedback, RoutingOutcome, FEEDBACK_ROUTING_HANDLER,
-    FEEDBACK_ROUTING_SEED_TTL, FEEDBACK_ROUTING_SUBSCRIPTION_IRI, REJECTION_OVERRIDE_NOT_PERMITTED,
+    pending_feedback, route_one, route_pending_feedback, routing_table_len, FeedbackRoutingError,
+    PendingFeedback, RoutingOutcome, FEEDBACK_ROUTING_HANDLER, FEEDBACK_ROUTING_SEED_TTL,
+    FEEDBACK_ROUTING_SUBSCRIPTION_IRI, REJECTION_OVERRIDE_NOT_PERMITTED,
     REJECTION_UNKNOWN_TARGET_ROLE,
 };
+pub use seed::seed_quads;
 pub use table::{
     default_target_role, override_permitted_for, role_may_address, rule_for, OverrideActor,
     RoutingRule, ROUTING_TABLE,
