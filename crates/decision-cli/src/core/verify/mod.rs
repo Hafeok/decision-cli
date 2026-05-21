@@ -9,12 +9,17 @@
 //! StreamWriter chokepoint integrates the check at write time.
 
 pub mod coverage;
+pub mod matcher;
 pub mod quads;
 pub mod safety;
 
 pub use coverage::{
     feature_covered_by, feature_coverage, CoverageError, CoverageHit, CoverageReport,
     FeatureId, GraphId, StepId, TcId,
+};
+pub use matcher::{
+    best_matching_graphs, EnvId, GraphSummary as MatchGraphSummary, MatchError, MatchKind,
+    MatchReport,
 };
 pub use quads::{check_inserts_against_store, touches_verification_artifacts};
 pub use safety::{

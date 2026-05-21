@@ -2,11 +2,16 @@
 id: TC-071
 title: matcher returns CompleteMultiple deterministic greedy cover with stable tiebreak
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_071_matcher_returns_completemultiple_deterministic_gre
+runner-timeout: 120
+last-run: 2026-05-21T18:22:05.062499810+00:00
+last-run-duration: 0.2s
 ---
 
 ## Premise
