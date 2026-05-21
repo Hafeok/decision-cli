@@ -1,12 +1,13 @@
 ---
 id: ADR-028
 title: Verification as a typed graph in a typed environment
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:3762470f6dd0e5c9edce0fe733d0d3463ad0d9f2bcbed3bf00336735c50d17a9
 ---
 
 ## Context

@@ -1,12 +1,13 @@
 ---
 id: ADR-031
 title: Chain-integrity invariant for worker dispatch
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:4f244b0900c46b469ad131f41aaefaae6a24ba28233267cb13c6419e9b151292
 ---
 
 ## Context

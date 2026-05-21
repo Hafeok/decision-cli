@@ -1,12 +1,13 @@
 ---
 id: ADR-029
 title: CLI and MCP pairing for dec content management
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:742b0a4d7495271aeebdff7aecabe4bd78a39085a66d197acb11d5ae5511a8b8
 ---
 
 ## Context

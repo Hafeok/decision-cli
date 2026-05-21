@@ -1,12 +1,13 @@
 ---
 id: ADR-030
 title: Verify-graph-author role and graph-proposal output
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:7c12d4eb44449b33461ed4fc0efc6be347538506386ff927310040704d8a94a0
 ---
 
 ## Context
