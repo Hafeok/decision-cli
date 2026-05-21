@@ -2,7 +2,7 @@
 id: FT-048
 title: 'decision-cli: verify-graph-author worker package'
 phase: 2
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-030
@@ -12,22 +12,22 @@ tests:
 - TC-078
 domains: []
 domains-acknowledged:
-  ADR-001: ADR-001 governs the oxi-events crate boundary; FT-048 is a stateless Python worker with no graph or event access and does not cross that boundary.
-  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-048 performs no persistence — it reads the bundle and writes only stdout.
-  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-048 is invoked under an existing dispatch session and produces no new lineage of its own.
   ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-048 receives a pre-scoped bundle and does not perform scope checks.
+  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-048 is invoked under an existing dispatch session and produces no new lineage of its own.
   ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-048 is a worker subprocess invoked by an already-scoped CLI handler.
-  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-048's Python code conforms to ruff format/check; ADR-013 itself is owned by FT-014.
   ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-048 does not author or modify a fitness-function artifact.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-048 lives under workers/ and is structurally separate from the Rust crate's SDP enforcement.
-  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-048's GraphProposal is the action half of an action-interpretation pair completed by the slice-3 graph executor.
-  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-048 produces a GraphProposal, not a verdict.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; the slice-3 graph-executor pairing will measure agreement for this role, not this feature.
-  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-048's Gap output is structurally feedback-shaped but is routed via the worker output channel, not via the feedback flow.
-  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-048 produces no feedback artifacts in slice 2.6.
   ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-048 produces no feedback artifacts in slice 2.6.
+  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-048 produces a GraphProposal, not a verdict.
+  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-048's GraphProposal is the action half of an action-interpretation pair completed by the slice-3 graph executor.
+  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-048 produces no feedback artifacts in slice 2.6.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; the slice-3 graph-executor pairing will measure agreement for this role, not this feature.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-048 lives under workers/ and is structurally separate from the Rust crate's SDP enforcement.
+  ADR-001: ADR-001 governs the oxi-events crate boundary; FT-048 is a stateless Python worker with no graph or event access and does not cross that boundary.
   ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-048 has no feedback to gate.
   ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; the verify-graph-author role catalog entry is added under FT-030's pattern when it lands; FT-048 supplies the worker implementation, not the role-catalog entry.
+  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-048's Python code conforms to ruff format/check; ADR-013 itself is owned by FT-014.
+  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-048's Gap output is structurally feedback-shaped but is routed via the worker output channel, not via the feedback flow.
+  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-048 performs no persistence — it reads the bundle and writes only stdout.
 ---
 
 ## Description

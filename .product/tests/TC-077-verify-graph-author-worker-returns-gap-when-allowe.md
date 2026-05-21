@@ -2,11 +2,16 @@
 id: TC-077
 title: verify-graph-author worker returns Gap when allowed_ops are insufficient
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: pytest
+runner-args: workers/verify-graph-author/tests/test_tc_077_gap.py
+runner-timeout: 120
+last-run: 2026-05-21T18:54:47.155789539+00:00
+last-run-duration: 0.4s
 ---
 
 ## Premise
