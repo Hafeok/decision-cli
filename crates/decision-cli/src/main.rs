@@ -9,7 +9,8 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 use cli::{
     check_goal::CheckGoalArgs, doctor::DoctorArgs, events::EventsCmd, feedback::FeedbackCmd,
-    implement::ImplementCmdArgs, init::InitArgs, session::SessionCmd, sparql::SparqlArgs,
+    implement::ImplementCmdArgs, init::InitArgs, mcp::McpCmd, session::SessionCmd,
+    sparql::SparqlArgs,
 };
 
 #[derive(Debug, Parser)]
@@ -54,6 +55,9 @@ enum Command {
     /// Feedback inspection commands (FT-029 / FT-033).
     #[command(subcommand)]
     Feedback(FeedbackCmd),
+    /// MCP server (FT-034 / ADR-029).
+    #[command(subcommand)]
+    Mcp(McpCmd),
 }
 
 fn main() -> ExitCode {
@@ -72,5 +76,27 @@ fn main() -> ExitCode {
         Command::Events(cmd) => cli::events::run(&workdir, cmd),
         Command::Session(cmd) => cli::session::run(&workdir, cmd),
         Command::Feedback(cmd) => cli::feedback::run(&workdir, cmd),
+        Command::Mcp(cmd) => {
+            init_tracing_for_mcp();
+            cli::mcp::run(&workdir, cmd)
+        }
     }
+}
+
+/// Initialise `tracing` for the MCP server. Stdout is reserved for the
+/// JSON-RPC wire protocol per FT-034 §Behaviour, so every diagnostic
+/// goes to stderr. The filter respects `RUST_LOG` when set; otherwise
+/// defaults to `info` for the `dec_mcp` target.
+fn init_tracing_for_mcp() {
+    use tracing_subscriber::EnvFilter;
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("info,dec_mcp=info"));
+    // Best-effort — if a subscriber is already installed (e.g. tests
+    // already set one up), `try_init` returns Err and we move on.
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .with_target(true)
+        .with_ansi(false)
+        .try_init();
 }

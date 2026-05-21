@@ -2,14 +2,16 @@
 id: TC-053
 title: dec mcp serve starts and exposes registered tools over stdio
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
-runner: cargo-test
-runner-args: tc_053_mcp_serve
-runner-timeout: 120
+runner: bash
+runner-args: tests/scripts/tc-053-dec-mcp-serve.sh
+runner-timeout: 180
+last-run: 2026-05-21T13:12:47.703888424+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

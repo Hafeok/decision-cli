@@ -2,14 +2,16 @@
 id: TC-051
 title: Every registered MCP tool follows dec_noun_verb naming
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
-runner: cargo-test
-runner-args: tc_051_mcp_naming
-runner-timeout: 120
+runner: bash
+runner-args: tests/scripts/tc-051-mcp-naming.sh
+runner-timeout: 180
+last-run: 2026-05-21T13:12:47.703888424+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

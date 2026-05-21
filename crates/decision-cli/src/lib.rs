@@ -24,6 +24,7 @@ pub use features::finalize;
 pub use features::health;
 pub use features::implement;
 pub use features::init;
+pub use features::mcp;
 pub use features::session_inspect;
 
 // Stable type re-exports for slice 1 callers.

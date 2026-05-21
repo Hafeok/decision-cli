@@ -11,4 +11,5 @@ pub mod finalize;
 pub mod health;
 pub mod implement;
 pub mod init;
+pub mod mcp;
 pub mod session_inspect;

@@ -7,6 +7,7 @@ pub mod feedback;
 pub mod health;
 pub mod implement;
 pub mod init;
+pub mod mcp;
 pub mod session;
 pub mod sparql;
 pub mod status;
