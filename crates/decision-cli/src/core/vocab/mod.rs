@@ -6,11 +6,13 @@
 
 #![allow(missing_docs)]
 
+mod auto_dispatch;
 mod feedback;
 mod verify_env;
 mod verify_graph;
 mod waiver;
 
+pub use auto_dispatch::*;
 pub use feedback::*;
 pub use verify_env::*;
 pub use verify_graph::*;

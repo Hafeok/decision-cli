@@ -1,0 +1,31 @@
+# Verify-graph-author auto-dispatch subscription seed (FT-050 / ADR-030).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs).
+# Fires on feature-create-or-update events for `dec:Feature` artifacts
+# that already list TCs; the handler enumerates configured envs, runs
+# the coverage primitive, consults the dedup ledger, and emits one
+# `dec:VerifyGraphAuthorDispatchEvent` per uncovered (feature, env) pair.
+#
+# - oxi:selectQuery   : matches Feature artifacts (the subscription
+#                       reacts on Feature create/update events from
+#                       oxi-events; the SELECT carries the per-feature
+#                       state read by the handler).
+# - oxi:mode "async"  : the verify-graph-author worker is out-of-process;
+#                       deliveries flow through the outbox / SSE transport
+#                       (FT-002 §SubscriptionMode::Async).
+# - oxi:handler       : opaque tag the slice-2.6 harness binds to the
+#                       auto-dispatch delivery handler
+#                       (core::subscriptions::verify_graph_author_dispatch).
+
+@prefix oxi:  <https://decision-cli.dev/oxi-events/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://decision-cli.dev/ns/subscription/verify-graph-author-dispatch>
+    a oxi:Subscription ;
+    rdfs:label "verify-graph-author auto-dispatch (new/updated feature has TCs and no covering graph)" ;
+    oxi:selectQuery """PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?feature WHERE {
+  ?feature a dec:Feature .
+}""" ;
+    oxi:mode "async" ;
+    oxi:handler "verify-graph-author-dispatch" .

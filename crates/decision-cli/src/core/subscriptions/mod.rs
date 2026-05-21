@@ -25,6 +25,7 @@
 
 pub mod feedback_resume;
 pub mod verifier_dispatch;
+pub mod verify_graph_author_dispatch;
 
 pub use feedback_resume::{
     handle_pending as handle_feedback_resume, FeedbackResumeError, HandledGroup,
@@ -34,4 +35,10 @@ pub use verifier_dispatch::{
     already_dispatched, dispatch_pending_groups, emit_verifier_dispatch_event,
     VerifierDispatchError, VerifierDispatchEvent, VerifierDispatchSeed,
     VERIFIER_DISPATCH_HANDLER, VERIFIER_DISPATCH_SUBSCRIPTION_IRI,
+};
+pub use verify_graph_author_dispatch::{
+    emit_dispatch_event as emit_verify_graph_author_dispatch_event,
+    AutoDispatchConfig, AutoDispatchError, AutoDispatchSeed, VerifyGraphAuthorDispatchEvent,
+    VERIFY_GRAPH_AUTHOR_DISPATCH_HANDLER, VERIFY_GRAPH_AUTHOR_DISPATCH_SEED_TTL,
+    VERIFY_GRAPH_AUTHOR_DISPATCH_SUBSCRIPTION_IRI,
 };

@@ -2,11 +2,16 @@
 id: TC-085
 title: auto-dispatched session lands in pending_review without persisting graph
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_085_auto_dispatched_session_lands_in_pending_review_wi
+runner-timeout: 120
+last-run: 2026-05-21T19:37:16.286568034+00:00
+last-run-duration: 0.3s
 ---
 
 ## Premise

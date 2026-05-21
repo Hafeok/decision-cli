@@ -191,6 +191,12 @@ pub(super) fn seed_bootstrap_subscriptions(
     // back to awaiting-action (retry) or feedback-rejected-action-blocked
     // (terminal failure).
     quads.extend(crate::core::subscriptions::feedback_resume::seed_quads());
+    // FT-050 / ADR-030: verify-graph-author auto-dispatch subscription
+    // seed. Fires on dec:Feature create/update events; the handler
+    // enumerates configured envs, consults the coverage primitive and
+    // dedup ledger, and emits one VerifyGraphAuthorDispatchEvent per
+    // uncovered (feature, env) pair.
+    quads.extend(crate::core::subscriptions::verify_graph_author_dispatch::seed_quads());
     store.transaction(|mut tx| {
         for q in &quads {
             tx.insert(q.as_ref())?;

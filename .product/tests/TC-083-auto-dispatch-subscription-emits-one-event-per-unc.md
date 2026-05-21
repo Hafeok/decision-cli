@@ -2,11 +2,16 @@
 id: TC-083
 title: auto-dispatch subscription emits one event per uncovered feature-env pair
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_083_auto_dispatch_subscription_emits_one_event_per_unc
+runner-timeout: 120
+last-run: 2026-05-21T19:37:16.286568034+00:00
+last-run-duration: 0.3s
 ---
 
 ## Premise
