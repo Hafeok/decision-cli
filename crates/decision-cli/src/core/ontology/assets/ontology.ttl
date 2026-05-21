@@ -19,7 +19,7 @@
 
 <https://decision-cli.dev/ns> a owl:Ontology ;
     rdfs:label       "decision-cli base ontology" ;
-    owl:versionInfo  "0.2.0" .
+    owl:versionInfo  "0.3.0" .
 
 # --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
 
@@ -336,3 +336,101 @@ dec:endpoint a rdf:Property ;
     rdfs:domain dec:VerificationEnvironment ;
     rdfs:range  xsd:string ;
     rdfs:comment "Required for remote environment types (e.g. remote-http); URL of the target endpoint. Local environment types MUST NOT carry an endpoint (SHACL conditional)." .
+
+# --- FT-036 / ADR-028: VerificationGraph + VerificationStep -----------------
+
+dec:VerificationGraph a rdfs:Class ;
+    rdfs:label "VerificationGraph" ;
+    rdfs:comment "A graph of typed verification steps targeting a feature or TC inside a specific VerificationEnvironment (ADR-028)." .
+
+dec:VerificationStep a rdfs:Class ;
+    rdfs:label "VerificationStep" ;
+    rdfs:comment "A typed step inside a VerificationGraph; kind-specific shape is selected by dec:stepType (ADR-028)." .
+
+dec:verifies a rdf:Property ;
+    rdfs:domain dec:VerificationGraph ;
+    rdfs:comment "The artifact the graph proves about — a feature_spec (dec:Feature) or a test criterion (dec:TC). Polymorphic per ADR-028." .
+
+dec:environment a rdf:Property ;
+    rdfs:domain dec:VerificationGraph ;
+    rdfs:range  dec:VerificationEnvironment ;
+    rdfs:comment "The VerificationEnvironment this graph executes against (ADR-028)." .
+
+dec:steps a rdf:Property ;
+    rdfs:domain dec:VerificationGraph ;
+    rdfs:comment "rdf:List of VerificationStep IRIs in execution order. May be empty during authoring; non-empty is a pre-dispatch invariant (ADR-028)." .
+
+dec:stepType a rdf:Property ;
+    rdfs:domain dec:VerificationStep ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Step kind tag — one of {shell-command, sparql-assertion, file-assertion, http-request, wait-for, capture} in slice 2.5 (ADR-028)." .
+
+dec:requiredOps a rdf:Property ;
+    rdfs:domain dec:VerificationStep ;
+    rdfs:comment "rdf:List of operation tokens the step requires (consumed by FT-037 safety enforcement)." .
+
+dec:providesEvidenceFor a rdf:Property ;
+    rdfs:domain dec:VerificationStep ;
+    rdfs:comment "Optional, multi-valued — TC IRIs this step provides evidence for (ADR-028 coverage predicate)." .
+
+dec:command a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Shell-command step body (ADR-028)." .
+
+dec:expectExitCode a rdf:Property ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Shell-command exit-code expectation (ADR-028)." .
+
+dec:captureOutput a rdf:Property ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Shell-command bind-stdout flag (ADR-028)." .
+
+dec:target a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Sparql-assertion target store path or endpoint (ADR-028)." .
+
+dec:query a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Sparql-assertion query text (ADR-028)." .
+
+dec:expectRows a rdf:Property ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Sparql-assertion row-count expectation (ADR-028)." .
+
+dec:path a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "File-assertion target path (ADR-028)." .
+
+dec:expectHash a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "File-assertion hash expectation (ADR-028)." .
+
+dec:expectContent a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "File-assertion content expectation (ADR-028)." .
+
+dec:method a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Http-request method (ADR-028)." .
+
+dec:url a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Http-request target URL (ADR-028)." .
+
+dec:expectStatus a rdf:Property ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Http-request status-code expectation (ADR-028)." .
+
+dec:condition a rdf:Property ;
+    rdfs:comment "Wait-for sub-condition reference (ADR-028)." .
+
+dec:timeout a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Wait-for timeout (ISO 8601 duration; ADR-028)." .
+
+dec:fromStep a rdf:Property ;
+    rdfs:comment "Capture step source step reference (ADR-028)." .
+
+dec:bindAs a rdf:Property ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Capture step binding name (ADR-028)." .

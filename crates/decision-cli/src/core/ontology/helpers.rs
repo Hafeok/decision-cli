@@ -79,6 +79,8 @@ pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), On
         "VerificationVerdict",
         "Feedback",
         "VerificationEnvironment",
+        "VerificationGraph",
+        "VerificationStep",
     ] {
         let iri = format!("https://decision-cli.dev/ns#{class}");
         let q = format!(
@@ -158,6 +160,16 @@ const VERIFICATION_ENV_PROPS: &[&str] = &[
     "https://decision-cli.dev/ns#allowedOps",
 ];
 
+const VERIFICATION_GRAPH_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#verifies",
+    "https://decision-cli.dev/ns#environment",
+    "https://decision-cli.dev/ns#steps",
+];
+
+const VERIFICATION_STEP_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#stepType",
+];
+
 fn required_shape_properties() -> &'static [(&'static str, &'static [&'static str])] {
     &[
         ("https://decision-cli.dev/ns#ValueStream", VALUE_STREAM_PROPS),
@@ -175,6 +187,14 @@ fn required_shape_properties() -> &'static [(&'static str, &'static [&'static st
         (
             "https://decision-cli.dev/ns#VerificationEnvironment",
             VERIFICATION_ENV_PROPS,
+        ),
+        (
+            "https://decision-cli.dev/ns#VerificationGraph",
+            VERIFICATION_GRAPH_PROPS,
+        ),
+        (
+            "https://decision-cli.dev/ns#VerificationStep",
+            VERIFICATION_STEP_PROPS,
         ),
     ]
 }

@@ -565,3 +565,169 @@ dec:VerificationEnvironmentShape a sh:NodeShape ;
             }
         """
     ] .
+
+# --- VerificationGraph shape (FT-036 / ADR-028) -----------------------------
+# Requires dec:verifies and dec:environment; dec:steps is an rdf:List
+# (may be empty during authoring per FT-036 §Outputs).
+
+dec:VerificationGraphShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationGraph ;
+
+    sh:property [
+        sh:path     dec:verifies ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:VerificationGraph requires exactly one dec:verifies (IRI of a feature or TC)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:environment ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:VerificationGraph requires exactly one dec:environment (IRI of a VerificationEnvironment)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:steps ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:VerificationGraph requires exactly one dec:steps rdf:List head."
+    ] .
+
+# --- VerificationStep base shape (FT-036 / ADR-028) -------------------------
+# Asserts the universal step invariants: every step has a stepType in the
+# seed vocabulary, and (optionally) dec:providesEvidenceFor IRIs.
+
+dec:VerificationStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+
+    sh:property [
+        sh:path     dec:stepType ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in       ( "shell-command" "sparql-assertion" "file-assertion"
+                      "http-request" "wait-for" "capture" ) ;
+        sh:message  "dec:VerificationStep requires exactly one dec:stepType from the seed vocabulary (ADR-028)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:providesEvidenceFor ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:providesEvidenceFor entries (optional, multi-valued) must be IRIs."
+    ] .
+
+# --- Per-step-kind shapes (FT-036 / ADR-028) --------------------------------
+# Each kind selects its target by the stepType literal via sh:sparql, and
+# enforces the required fields for that kind. Optional fields are simply
+# not listed (sh:maxCount 1 where applicable).
+
+dec:ShellCommandStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+    sh:sparql [
+        sh:message "shell-command step requires dec:command (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "shell-command" .
+              FILTER NOT EXISTS { $this dec:command ?c }
+            }
+        """
+    ] .
+
+dec:SparqlAssertionStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+    sh:sparql [
+        sh:message "sparql-assertion step requires dec:query (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "sparql-assertion" .
+              FILTER NOT EXISTS { $this dec:query ?q }
+            }
+        """
+    ] ;
+    sh:sparql [
+        sh:message "sparql-assertion step requires dec:target (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "sparql-assertion" .
+              FILTER NOT EXISTS { $this dec:target ?t }
+            }
+        """
+    ] .
+
+dec:FileAssertionStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+    sh:sparql [
+        sh:message "file-assertion step requires dec:path (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "file-assertion" .
+              FILTER NOT EXISTS { $this dec:path ?p }
+            }
+        """
+    ] .
+
+dec:HttpRequestStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+    sh:sparql [
+        sh:message "http-request step requires dec:url (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "http-request" .
+              FILTER NOT EXISTS { $this dec:url ?u }
+            }
+        """
+    ] ;
+    sh:sparql [
+        sh:message "http-request step requires dec:method (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "http-request" .
+              FILTER NOT EXISTS { $this dec:method ?m }
+            }
+        """
+    ] .
+
+dec:WaitForStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+    sh:sparql [
+        sh:message "wait-for step requires dec:timeout (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "wait-for" .
+              FILTER NOT EXISTS { $this dec:timeout ?t }
+            }
+        """
+    ] ;
+    sh:sparql [
+        sh:message "wait-for step requires dec:condition (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "wait-for" .
+              FILTER NOT EXISTS { $this dec:condition ?c }
+            }
+        """
+    ] .
+
+dec:CaptureStepShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationStep ;
+    sh:sparql [
+        sh:message "capture step requires dec:bindAs (ADR-028)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:stepType "capture" .
+              FILTER NOT EXISTS { $this dec:bindAs ?b }
+            }
+        """
+    ] .

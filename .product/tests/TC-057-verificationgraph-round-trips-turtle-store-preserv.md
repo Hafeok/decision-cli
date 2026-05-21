@@ -2,11 +2,16 @@
 id: TC-057
 title: VerificationGraph round-trips Turtle ↔ store preserving step order
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_057_verificationgraph_round_trips_turtle_store_preserv
+runner-timeout: 180
+last-run: 2026-05-21T14:21:01.952195724+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description
