@@ -2,7 +2,7 @@
 id: TC-026
 title: per_stream_working_directory_discovery
 type: invariant
-status: unrunnable
+status: passing
 validates:
   features: []
   adrs:
@@ -12,7 +12,8 @@ runner: bash
 runner-args: scripts/checks/per-stream-workdir.sh
 runner-timeout: 60
 last-run: 2026-05-20T11:41:36.841111001+00:00
-failure-message: "ERROR: expected crates/decision-cli/src/scope/mod.rs (ADR-012 anchor)\n"
+failure-message: |
+  ERROR: expected crates/decision-cli/src/scope/mod.rs (ADR-012 anchor)
 last-run-duration: 0.0s
 ---
 

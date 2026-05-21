@@ -15,7 +15,7 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   cd "$REPO_ROOT"
 fi
 
-SCOPE_DIR="crates/decision-cli/src/scope"
+SCOPE_DIR="crates/decision-cli/src/core/scope"
 if [ ! -d "$SCOPE_DIR" ]; then
   echo "ERROR: expected $SCOPE_DIR (ADR-005 anchor)" >&2
   exit 1

@@ -2,12 +2,12 @@
 id: TC-087
 title: internal product-cli graph is the source of truth for dec preflight
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
-  - FT-015
+  - FT-052
   adrs: []
-phase: 1
+phase: 2
 runner: cargo-test
 runner-args: tc_087_internal_product_graph_source_of_truth
 runner-timeout: 120
@@ -15,7 +15,9 @@ runner-timeout: 120
 
 ## Purpose
 
-Exit criterion for [FT-015](FT-015): `dec preflight FT-XXX` reads the internal product-cli graph (not the markdown files) as the source of truth, matching `product preflight` exactly on coverage and gaps.
+Exit criterion for [FT-052](FT-052): `dec preflight FT-XXX` reads the internal product-cli graph (not the markdown files) as the source of truth, matching `product preflight` exactly on coverage and gaps.
+
+This TC was originally scoped to FT-015 (the rules-live-in-`.product/` convention). FT-015's deliverables were satisfied without `dec preflight` existing — the command surface is separate work. FT-052 is the feature that actually delivers it; TC-087 was reparented there in phase 2.
 
 ## Given
 

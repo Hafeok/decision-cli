@@ -2,13 +2,13 @@
 id: TC-092
 title: feedback artifact transitions through open then closed via the writer
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
   - FT-027
   adrs:
   - ADR-024
-phase: 1
+phase: 2
 runner: cargo-test
 runner-args: tc_092_feedback_transition_open_to_closed
 runner-timeout: 120

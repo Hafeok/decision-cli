@@ -2,13 +2,13 @@
 id: TC-088
 title: verifier role-catalog entry resolves to a known role at dispatch
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
   - FT-019
   adrs:
   - ADR-027
-phase: 1
+phase: 2
 runner: cargo-test
 runner-args: tc_088_verifier_role_catalog_resolves
 runner-timeout: 120

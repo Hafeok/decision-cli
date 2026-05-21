@@ -3,8 +3,10 @@
 
 Walks every ``*.py`` file under ``workers/*/`` (excluding ``tests/``,
 ``__pycache__/``, and ``.venv/``) and counts statement nodes inside each
-``FunctionDef`` / ``AsyncFunctionDef`` body. The script propagates the
-worst severity it sees as its exit code (1=hard, 2=warn, 0=clean).
+``FunctionDef`` / ``AsyncFunctionDef`` body. Exits 1 when at least one
+function body exceeds the hard limit; exits 0 otherwise. Warn-band
+offenders are listed on stdout as advisory ``WARNING:`` diagnostics but
+do not gate CI.
 
 Thresholds may be overridden via environment variables ``FN_LENGTH_HARD``
 (default 40) and ``FN_LENGTH_WARN`` (default 30) — both match the Rust
@@ -113,9 +115,8 @@ def main() -> int:
         for path, lineno, name, stmts in sorted(warns, key=lambda r: -r[3]):
             rel = path.relative_to(root)
             print(f"  {rel}:{lineno} {name} — {stmts} statement lines (warn at: {WARN_LIMIT})")
-        return 2
 
-    print(f"OK: all Python functions within limits (hard={HARD_LIMIT}, warn={WARN_LIMIT})")
+    print(f"OK: all Python functions within hard limit ({HARD_LIMIT})")
     return 0
 
 

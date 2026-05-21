@@ -2,7 +2,7 @@
 id: TC-025
 title: value_stream_scope_chokepoint_in_place
 type: invariant
-status: unrunnable
+status: passing
 validates:
   features: []
   adrs:
@@ -12,7 +12,8 @@ runner: bash
 runner-args: scripts/checks/value-stream-scope.sh
 runner-timeout: 60
 last-run: 2026-05-20T11:41:36.841111001+00:00
-failure-message: "ERROR: expected crates/decision-cli/src/scope (ADR-005 anchor)\n"
+failure-message: |
+  ERROR: expected crates/decision-cli/src/scope (ADR-005 anchor)
 last-run-duration: 0.0s
 ---
 

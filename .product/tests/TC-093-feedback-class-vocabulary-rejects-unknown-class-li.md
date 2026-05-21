@@ -2,13 +2,13 @@
 id: TC-093
 title: feedback class vocabulary rejects unknown class literals at write time
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
   - FT-028
   adrs:
   - ADR-023
-phase: 1
+phase: 2
 runner: cargo-test
 runner-args: tc_093_feedback_class_vocabulary_rejection
 runner-timeout: 120

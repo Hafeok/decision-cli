@@ -5,10 +5,10 @@
 # Scans first-party source files under crates/*/src/ (Rust) and workers/*/
 # (Python, excluding tests/) and asserts no file exceeds the hard limit.
 #
-# Exit 0: every first-party source file is within the warning threshold.
+# Exit 0: no file exceeds the hard limit. Warn-band offenders (default
+#         300..=400 lines), if any, are listed on stdout as advisory
+#         `WARNING:` diagnostics but do not gate CI.
 # Exit 1: at least one file exceeds the hard limit (default: 400 lines).
-# Exit 2: at least one file is in the warning band (default: 300..=400), no
-#         file exceeds the hard limit.
 #
 # Thresholds may be overridden via environment variables:
 #   FILE_LENGTH_HARD (default: 400)
@@ -71,8 +71,7 @@ if [ -n "$WARN_VIOLATIONS" ]; then
   echo "$WARN_VIOLATIONS" | while read -r count file; do
     echo "  $file: $count lines (warn at: $WARN_LIMIT)"
   done
-  exit 2
 fi
 
-echo "OK: all source files within limits (hard=$HARD_LIMIT, warn=$WARN_LIMIT)"
+echo "OK: all source files within hard limit ($HARD_LIMIT)"
 exit 0

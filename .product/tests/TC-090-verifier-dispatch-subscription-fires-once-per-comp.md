@@ -2,12 +2,12 @@
 id: TC-090
 title: verifier dispatch subscription fires once per completed implementer session
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
   - FT-022
   adrs: []
-phase: 1
+phase: 2
 runner: cargo-test
 runner-args: tc_090_verifier_dispatch_subscription_fires_once
 runner-timeout: 120

@@ -2,13 +2,13 @@
 id: TC-091
 title: Python verifier worker returns a structured VerificationVerdict over a bundled run
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
   - FT-023
   adrs:
   - ADR-018
-phase: 1
+phase: 2
 runner: bash
 runner-args: workers/verifier/tests/run-verifier-tc.sh
 runner-timeout: 180

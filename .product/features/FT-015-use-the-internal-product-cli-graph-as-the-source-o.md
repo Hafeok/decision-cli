@@ -10,7 +10,6 @@ adrs:
 tests:
 - TC-016
 - TC-017
-- TC-087
 domains: []
 domains-acknowledged:
   ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-015 has no feedback to gate.

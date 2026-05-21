@@ -2,13 +2,13 @@
 id: TC-089
 title: VerificationVerdict round-trips through writer and reader
 type: exit-criteria
-status: unrunnable
+status: unimplemented
 validates:
   features:
   - FT-020
   adrs:
   - ADR-018
-phase: 1
+phase: 2
 runner: cargo-test
 runner-args: tc_089_verdict_round_trip
 runner-timeout: 120

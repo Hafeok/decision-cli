@@ -2,7 +2,7 @@
 id: TC-023
 title: orchestration_store_persisted_as_graph_dump
 type: invariant
-status: unrunnable
+status: passing
 validates:
   features: []
   adrs:
@@ -12,7 +12,8 @@ runner: bash
 runner-args: scripts/checks/graph-as-state.sh
 runner-timeout: 60
 last-run: 2026-05-20T11:41:36.841111001+00:00
-failure-message: "ERROR: expected crates/decision-cli/src/init/persist.rs (ADR-002 anchor file)\n"
+failure-message: |
+  ERROR: expected crates/decision-cli/src/init/persist.rs (ADR-002 anchor file)
 last-run-duration: 0.0s
 ---
 

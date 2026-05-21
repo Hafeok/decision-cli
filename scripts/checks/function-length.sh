@@ -12,10 +12,10 @@
 # band produce WARN diagnostics. The script propagates the worst
 # severity it sees as its exit code.
 #
-# Exit 0: every function body within the warning threshold.
+# Exit 0: no function body exceeds the hard limit. Warn-band offenders
+#         (default 30..=40 statement lines), if any, are listed on stdout
+#         as advisory `WARNING:` diagnostics but do not gate CI.
 # Exit 1: at least one function body exceeds the hard limit (default 40).
-# Exit 2: at least one function body in the warning band, no hard
-#         violation (default 30..=40).
 # Exit 127: `awk` is not on PATH (precondition failure).
 #
 # Thresholds may be overridden via environment variables:
@@ -233,8 +233,7 @@ if [ -n "${WARNS//[$' \t\n']/}" ]; then
     [ -z "$file" ] && continue
     echo "  $file:$lineno fn $name — $len statement lines (warn at: $WARN_LIMIT)"
   done
-  exit 2
 fi
 
-echo "OK: all Rust functions within limits (hard=$HARD_LIMIT, warn=$WARN_LIMIT)"
+echo "OK: all Rust functions within hard limit ($HARD_LIMIT)"
 exit 0

@@ -2,7 +2,8 @@
 id: ADR-031
 title: Chain-integrity invariant for worker dispatch
 status: accepted
-features: []
+features:
+- FT-052
 supersedes: []
 superseded-by: []
 domains: []

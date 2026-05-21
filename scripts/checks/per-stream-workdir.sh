@@ -13,7 +13,7 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   cd "$REPO_ROOT"
 fi
 
-SCOPE_MOD="crates/decision-cli/src/scope/mod.rs"
+SCOPE_MOD="crates/decision-cli/src/core/scope/mod.rs"
 if [ ! -f "$SCOPE_MOD" ]; then
   echo "ERROR: expected $SCOPE_MOD (ADR-012 anchor)" >&2
   exit 1

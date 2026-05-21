@@ -2,7 +2,7 @@
 id: TC-086
 title: code-structure fitness functions all green on a clean tree
 type: exit-criteria
-status: unrunnable
+status: passing
 validates:
   features:
   - FT-014
