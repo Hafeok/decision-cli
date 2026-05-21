@@ -61,6 +61,45 @@ For the full architectural picture, read [`docs/ddd/Implementing_DDD.md`](docs/d
 
 Direct file edits in `crates/` and `workers/` should happen only as the *implementation* of an existing feature_spec, after the spec has been authored in product-cli and any required ADRs are in place. If you find yourself wanting to make a structural change with no corresponding feature_spec or ADR, stop and author one first.
 
+## Definition of done (read this before touching code)
+
+**A feature is complete if and only if `product verify FT-XXX` exits 0.** Nothing else counts. Not "cargo test passes," not "I wrote the code and a test," not `product feature status FT-XXX complete` — that command only flips a status field; it does not certify anything. The verify pipeline does.
+
+`product verify FT-XXX` walks every TC linked to FT-XXX, executes each TC's configured runner, and only succeeds when all of them pass. So "make verify pass" decomposes into one obligation per linked TC: **the test the TC points to must exist, must be discoverable by the declared runner, and must pass.**
+
+### The implementation lifecycle (the flow that must be completed every time)
+
+1. **Pick** — `product feature next` returns the next feature whose dependencies are satisfied. Do not skip the dependency order.
+2. **Plan** — Read the spec and what governs it:
+   ```bash
+   product feature show FT-XXX        # spec, linked ADRs, linked TCs
+   product context FT-XXX --depth 2   # the bundle the implementer reads
+   product preflight FT-XXX           # domain & cross-cutting coverage
+   product gap check FT-XXX           # spec gaps that would block work
+   ```
+   If preflight or gap surfaces something missing, fix the upstream artifact first (author an ADR, extend a feature) — do not paper over it in code.
+3. **Implement** — Write the feature code in the slice (`crates/decision-cli/src/features/ft_NNN_*/` or the worker directory) following the SDP rules below.
+4. **Wire the TC runners** *(this is the step that gets skipped — do not skip it)*. For every TC reported by `product feature show FT-XXX`:
+   1. `product test show TC-YYY` — read the acceptance criteria and the current `runner` / `runner-args` / `runner-timeout` fields in the frontmatter.
+   2. Write the test the TC describes (`#[test]` in the right crate, `pytest` in the worker, or a bash script under `tests/scripts/`). The test must produce a binary pass/fail via its exit code; the product-cli runner contract is two-tier (0 = pass, 1 = fail; anything else is `unrunnable`, per ADR-013).
+   3. Set or update the runner so it actually points at what you wrote:
+      ```bash
+      product test runner TC-YYY --runner cargo-test --args "<test name>" --timeout 120s
+      product test runner TC-YYY --runner bash       --args "tests/scripts/tc-yyy-foo.sh" --timeout 60s
+      product test runner TC-YYY --runner pytest     --args "workers/code-writer/tests/test_tc_yyy.py::test_x" --timeout 60s
+      ```
+      If the TC was pre-seeded with a `runner-args` value (most are), either honour that name when writing the test, or update it here to match what you actually wrote. **The TC frontmatter and your test file must agree — verify cannot guess.**
+   4. Run that single TC end-to-end via its runner (e.g. `cargo test -p <crate> --test <name>`, `bash tests/scripts/...`, `pytest <path>`) and watch it pass before moving on.
+5. **Verify the whole feature** — `product verify FT-XXX`. If any linked TC is `unimplemented` or fails, you are not done; loop back to step 4 for that TC. The feature is only complete when this command exits 0.
+6. **Commit** — Reference the feature in the message (see Commit messages below). `dec implement` (or the headless `product implement` path) handles commit + status flip automatically on success; for manual runs, commit the working tree and let `product implement` / `product verify` do the status update — do not hand-edit feature status to `complete` to make a green dashboard out of a red verify.
+
+### Common failure modes in headless `implement-all` runs
+
+- **Test written, runner not updated.** `cargo test` passes locally, but the TC's `runner-args` still references the pre-seeded name from when the TC was authored. `product verify` invokes the wrong target, fails. Fix: always run `product test runner TC-YYY --args ...` after writing the test, even if it feels redundant.
+- **Status flipped without verify.** Calling `product feature status FT-XXX complete` does not run any tests. Do not call it as a shortcut to "finish" a feature. Let `product verify` decide.
+- **Runner pointing at a missing path.** A `bash` runner with `runner-args: tests/scripts/tc-yyy.sh` will report `unrunnable` if that script doesn't exist. Always create the script (and `chmod +x` it) before updating the runner.
+- **`product verify FT-XXX` skipped entirely.** If the loop exits "successfully" without `verify` having run and returned exit 0 for this feature, the feature is not done — regardless of what the session log says. Run verify explicitly.
+
 ## The line that must not be crossed (crate-level SDP)
 
 `crates/oxi-events/` cannot depend on `crates/decision-cli/`. It cannot reference DDD concepts (roles, bundles, sessions, policies, model bindings, autonomy levels). Its public API speaks only of mutations, subscriptions, events, and delivery. This is the Stable Dependency Principle at the crate boundary — see [`decision-cli-slice-1-bounds.md`](decision-cli-slice-1-bounds.md) §5.1.
@@ -93,9 +132,14 @@ cd workers/code-writer && uv sync   # or your Python tool of choice
 ### Running tests
 
 ```bash
-cargo test --workspace
-cd workers/code-writer && pytest
+cargo test --workspace                # raw Rust tests
+cd workers/code-writer && pytest      # raw worker tests
+product verify FT-XXX                 # the only completion signal for a feature — runs every linked TC's runner
+product verify                        # full six-stage pipeline (FT-044) across the repo
+product verify --platform             # cross-cutting / fitness TCs only (ADR-013, ADR-014)
 ```
+
+`cargo test` and `pytest` are debugging aids while you iterate. `product verify FT-XXX` is the gate — see "Definition of done" above.
 
 ### Authoring an artifact in product-cli
 
@@ -175,7 +219,9 @@ Commits that don't trace to an artifact should be rare and explainable (typos, f
 
 ### Tests as exit criteria
 
-Every feature_spec exits with at least one test criterion (TC). The TC's success criteria are the acceptance test. Failing TCs block release per fitness function policy. When implementing a feature, the TCs are the definition of done — not "the code compiles" or "I think it works."
+Every feature_spec exits with at least one test criterion (TC). The TC's success criteria are the acceptance test, and the gate that decides "done" is `product verify FT-XXX` — see "Definition of done" near the top of this file for the full lifecycle and the runner-wiring step that headless runs keep skipping.
+
+In short: a TC carries a `runner` + `runner-args` pair in its frontmatter. Writing a test is not enough — the runner has to point at it (`product test runner TC-YYY --runner ... --args ...`), and then `product verify FT-XXX` has to come back green. Failing or `unimplemented` TCs block release per fitness-function policy; flipping `feature status complete` by hand does not.
 
 ## When something is unclear
 
