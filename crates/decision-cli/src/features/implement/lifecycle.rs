@@ -148,6 +148,7 @@ pub(super) fn assemble_implement_outcome(
         .iter()
         .map(|f| ctx.workspace_dir.join(&f.path))
         .collect();
+    let waiver_iri = ctx.waiver_iri.as_ref().map(|n| n.as_str().to_string());
     ImplementOutcome {
         session_iri: ctx.session_iri.as_str().to_string(),
         dispatch_iri: ctx.dispatch_iri.as_str().to_string(),
@@ -160,6 +161,7 @@ pub(super) fn assemble_implement_outcome(
         turn_count: response.telemetry.turn_count,
         latency_seconds: response.telemetry.latency_seconds,
         finalize: Some(finalize_outcome),
+        waiver_iri,
     }
 }
 

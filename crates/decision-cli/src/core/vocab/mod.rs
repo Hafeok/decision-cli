@@ -9,10 +9,12 @@
 mod feedback;
 mod verify_env;
 mod verify_graph;
+mod waiver;
 
 pub use feedback::*;
 pub use verify_env::*;
 pub use verify_graph::*;
+pub use waiver::*;
 
 use oxigraph::model::NamedNodeRef;
 

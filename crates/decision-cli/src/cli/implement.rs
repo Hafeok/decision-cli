@@ -1,8 +1,16 @@
 //! `dec implement` — slice-1 implementer dispatch (FT-011 + FT-013).
+//!
+//! FT-047 / ADR-031: every feature-targeted dispatch passes through the
+//! chain-integrity gate before any session is opened. The CLI maps the
+//! gate's structured errors to the exit codes spec'd by the TC:
+//!
+//!   * `Error::ChainIntegrity` → exit 1 with the actionable message.
+//!   * `Error::InvalidArgument(waiver.reason)` → exit 2.
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use decision_cli::core::verify::WaiverIntent;
 use decision_cli::finalize::FinalizeOutcome;
 use decision_cli::implement::{self, ImplementArgs};
 
@@ -24,6 +32,12 @@ pub struct ImplementCmdArgs {
     /// Bundle assembly depth handed to `product context`.
     #[arg(long, default_value_t = 1)]
     pub bundle_depth: usize,
+    /// FT-047 / ADR-031: override the chain-integrity gate when the
+    /// target feature's TCs are not fully covered. The reason must be
+    /// at least 16 non-whitespace characters and is persisted as a
+    /// `dec:CoverageWaiver` artifact.
+    #[arg(long, value_name = "REASON")]
+    pub waive_coverage: Option<String>,
 }
 
 pub fn run(workdir: &Path, args: ImplementCmdArgs) -> ExitCode {
@@ -34,7 +48,18 @@ pub fn run(workdir: &Path, args: ImplementCmdArgs) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(err) => {
-            eprintln!("dec implement failed: {err:#}");
+            let rendered = format!("{err:#}");
+            // FT-047 §Error handling: bad waiver reason maps to exit 2.
+            // The gate's error type renders the `Error::InvalidArgument`
+            // prefix; we detect it on the rendered chain so the mapping
+            // does not depend on downcasting through `anyhow`.
+            if rendered.contains("Error::InvalidArgument")
+                && rendered.contains("waiver.reason")
+            {
+                eprintln!("dec implement failed: {rendered}");
+                return ExitCode::from(2);
+            }
+            eprintln!("dec implement failed: {rendered}");
             ExitCode::from(1)
         }
     }
@@ -46,6 +71,7 @@ fn build_implement_args(args: ImplementCmdArgs) -> ImplementArgs {
     implement_args.product_root = args.product_root;
     implement_args.worker_command = args.worker;
     implement_args.bundle_depth = args.bundle_depth;
+    implement_args.waiver = args.waive_coverage.map(WaiverIntent::new);
     implement_args
 }
 

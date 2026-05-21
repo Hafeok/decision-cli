@@ -94,6 +94,7 @@ pub(super) fn finalize_blocked_run(
     ctx.group.status = DispatchStatus::PausedForFeedback;
     persist_store(&ctx.store, &ctx.dump_path)?;
     let workspace_dir = ctx.workspace_dir.clone();
+    let waiver_iri = ctx.waiver_iri.as_ref().map(|n| n.as_str().to_string());
     Ok(ImplementOutcome {
         session_iri: ctx.session_iri.as_str().to_string(),
         dispatch_iri: ctx.dispatch_iri.as_str().to_string(),
@@ -109,5 +110,6 @@ pub(super) fn finalize_blocked_run(
         turn_count: response.telemetry.turn_count,
         latency_seconds: response.telemetry.latency_seconds,
         finalize: None,
+        waiver_iri,
     })
 }

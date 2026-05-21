@@ -31,13 +31,27 @@ use super::worker::preflight_implementer;
 use super::{DispatchContext, ImplementArgs, IMPLEMENT_GOAL, IMPLEMENTER_ROLE, SLICE1_MODEL_ID};
 use crate::core::dispatch::DispatchGroup;
 use crate::core::scope::ActiveScope;
+use crate::core::verify::chain_integrity::{
+    run_chain_integrity_gate, ChainIntegrityError, GateInputs, GateOutcome,
+};
+use crate::core::vocab::{orchestration_graph, IRI_DEC_DISPATCH, IRI_PROV_USED};
 use crate::core::StreamWriter;
+use oxigraph::model::{GraphName, NamedNodeRef, Quad};
 
 pub(super) fn prepare_dispatch(
     workdir: &Path,
     args: &ImplementArgs,
 ) -> Result<DispatchContext> {
     validate_scope(workdir)?;
+    let bundle = prepare_bundle(workdir, args)?;
+    let (store, writer, dump_path) = load_store_and_writer(workdir)?;
+
+    // FT-047 / ADR-031 — chain-integrity gate fires BEFORE any session
+    // PROV-O activity is opened and BEFORE the worker is preflighted.
+    // If the gate refuses, no session, no dispatch, no group, no worker
+    // invocation.
+    let waiver_iri = run_gate(workdir, args, &bundle, &store, &writer, &dump_path)?;
+
     // FT-016 / TC-049: worker preflight runs BEFORE any session is
     // opened. A missing worker aborts here with the install-hint block
     // and never touches the orchestration graph.
@@ -48,10 +62,12 @@ pub(super) fn prepare_dispatch(
                 IMPLEMENTER_ROLE
             )
         })?;
-    let bundle = prepare_bundle(workdir, args)?;
-    let (store, writer, dump_path) = load_store_and_writer(workdir)?;
     let iris = mint_dispatch_iris(args, &bundle)?;
     commit_initial_session(&writer, &store, &dump_path, args, &bundle, &iris)?;
+    // FT-047 / ADR-031: record waiver in the session's PROV-O chain.
+    if let Some(waiver) = &waiver_iri {
+        record_waiver_on_session(&writer, &store, &dump_path, &iris, waiver)?;
+    }
     // FT-021 / ADR-017: mint the DispatchGroup at command entry, status
     // `awaiting-action`. The state machine transitions on the action
     // worker's terminal outcome below.
@@ -69,7 +85,81 @@ pub(super) fn prepare_dispatch(
         writer,
         worker_argv,
         group,
+        waiver_iri,
     })
+}
+
+/// FT-047 / ADR-031 — fire the chain-integrity gate.
+///
+/// Returns `Some(waiver_iri)` when a waiver was minted; `None` when
+/// coverage was already complete. Errors propagate the structured gate
+/// failure (mapped to exit codes by the CLI wrapper).
+fn run_gate(
+    workdir: &Path,
+    args: &ImplementArgs,
+    bundle: &PreparedBundle,
+    store: &Store,
+    writer: &StreamWriter,
+    dump_path: &Path,
+) -> Result<Option<oxigraph::model::NamedNode>> {
+    let outcome = run_chain_integrity_gate(GateInputs {
+        workdir,
+        product_root: &bundle.product_root,
+        store,
+        writer,
+        feature_short_id: &args.feature_id,
+        waiver: args.waiver.as_ref(),
+        attributed_to: oxigraph::model::NamedNode::new_unchecked("urn:dec:agent:cli"),
+        known_envs: &[],
+    })
+    .map_err(|err| match err {
+        ChainIntegrityError::ChainIntegrity { .. } => anyhow!("{err}"),
+        ChainIntegrityError::InvalidWaiverReason(_) => anyhow!("{err}"),
+        ChainIntegrityError::Coverage(c) => anyhow!("coverage primitive failed: {c}"),
+        ChainIntegrityError::WaiverPersistFailed(p) => {
+            anyhow!("waiver persistence failed: {p}")
+        }
+    })?;
+    match outcome {
+        GateOutcome::Clean => Ok(None),
+        GateOutcome::Waived { waiver } => {
+            // The waiver was persisted via StreamWriter; flush the store
+            // dump so a subsequent process picks up the waiver record
+            // even if we crash before completing the dispatch.
+            persist_store(store, dump_path)?;
+            Ok(Some(waiver.iri))
+        }
+    }
+}
+
+/// Record `<session> prov:used <waiver>` and `<dispatch> prov:used <waiver>`
+/// so the PROV-O chain captures the waiver per FT-047 §State.
+fn record_waiver_on_session(
+    writer: &StreamWriter,
+    store: &Store,
+    dump_path: &Path,
+    iris: &MintedIris,
+    waiver_iri: &oxigraph::model::NamedNode,
+) -> Result<()> {
+    let g: GraphName = orchestration_graph().into_owned().into();
+    let prov_used = NamedNodeRef::new_unchecked(IRI_PROV_USED).into_owned();
+    let quads = vec![
+        Quad::new(
+            iris.session.clone(),
+            prov_used.clone(),
+            waiver_iri.clone(),
+            g.clone(),
+        ),
+        Quad::new(iris.dispatch.clone(), prov_used, waiver_iri.clone(), g),
+    ];
+    // Silence the unused-import warning when build features don't pull it.
+    let _ = IRI_DEC_DISPATCH;
+    let mutation =
+        oxi_events::Mutation::insert(quads.iter().cloned()).with_cause("dec implement: prov:used waiver");
+    writer
+        .commit(mutation)
+        .context("recording prov:used waiver on session")?;
+    persist_store(store, dump_path)
 }
 
 /// Mint a fresh `dec:DispatchGroup` paired with the action session

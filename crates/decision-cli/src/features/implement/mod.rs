@@ -76,6 +76,11 @@ pub struct ImplementArgs {
     pub worker_command: Option<String>,
     pub product_root: Option<PathBuf>,
     pub bundle_depth: usize,
+    /// FT-047 / ADR-031 — optional waiver supplied via `--waive-coverage`
+    /// (CLI) or `accept_waiver: { reason }` (MCP). When present, the
+    /// chain-integrity gate mints a `dec:CoverageWaiver` rather than
+    /// refusing the dispatch.
+    pub waiver: Option<crate::core::verify::WaiverIntent>,
 }
 
 impl ImplementArgs {
@@ -88,6 +93,7 @@ impl ImplementArgs {
             worker_command: None,
             product_root: None,
             bundle_depth: 1,
+            waiver: None,
         }
     }
 }
@@ -109,6 +115,10 @@ pub struct ImplementOutcome {
     /// FT-017 finalisation: commit + status transition. `None` when the
     /// run errored before finalisation could run.
     pub finalize: Option<crate::finalize::FinalizeOutcome>,
+    /// FT-047 / ADR-031: IRI of the persisted `dec:CoverageWaiver`, when
+    /// the chain-integrity gate accepted a `--waive-coverage` reason.
+    /// `None` when the gate passed cleanly.
+    pub waiver_iri: Option<String>,
 }
 
 struct DispatchContext {
@@ -124,6 +134,10 @@ struct DispatchContext {
     worker_argv: Vec<String>,
     /// FT-021 / ADR-017: the paired DispatchGroup minted at command entry.
     group: DispatchGroup,
+    /// FT-047 / ADR-031: persisted waiver IRI when the chain-integrity
+    /// gate accepted a `--waive-coverage` reason. `None` when coverage
+    /// was already complete.
+    waiver_iri: Option<NamedNode>,
 }
 
 fn record_worker_failure(ctx: &mut DispatchContext, detail: &str) {

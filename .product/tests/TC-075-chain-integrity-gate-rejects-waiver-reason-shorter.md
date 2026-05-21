@@ -2,11 +2,16 @@
 id: TC-075
 title: chain-integrity gate rejects waiver reason shorter than minimum length
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: tc_075_chain_integrity_gate_rejects_waiver_reason_shorter
+runner-timeout: 120
+last-run: 2026-05-21T18:43:26.367911919+00:00
+last-run-duration: 0.3s
 ---
 
 ## Premise

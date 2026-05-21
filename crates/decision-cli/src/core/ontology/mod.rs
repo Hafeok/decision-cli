@@ -18,6 +18,7 @@
 //!   persist any triples into the orchestration store (FT-009).
 
 mod helpers;
+pub mod coverage_waiver;
 pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;
