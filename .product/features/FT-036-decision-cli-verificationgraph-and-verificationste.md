@@ -55,6 +55,7 @@ Substrate consumed by [FT-037](FT-037) (safety enforcement) and the graph / step
   - `dec:VerificationGraph`, `dec:VerificationStep` (classes).
   - `dec:verifies`, `dec:environment`, `dec:steps`, `dec:stepType`, `dec:requiredOps` (graph + step structural properties).
   - Per-step-type fields: `dec:command`, `dec:expectExitCode`, `dec:captureOutput`, `dec:target`, `dec:query`, `dec:expectRows`, `dec:path`, `dec:expectHash`, `dec:method`, `dec:url`, `dec:expectStatus`, `dec:condition`, `dec:timeout`, `dec:bindAs`.
+  - `dec:providesEvidenceFor` (per [ADR-028](ADR-028)'s coverage-predicate section) — optional on every step kind, range is `dec:TC`, cardinality zero-or-more. Consumed by [FT-045](FT-045) (coverage primitive), [ADR-030](ADR-030)'s verify-graph-author, and [ADR-031](ADR-031)'s chain-integrity gate ([FT-047](FT-047)).
 - Rust types under `core::ontology::verification_graph`:
   - `enum StepKind { ShellCommand, SparqlAssertion, FileAssertion, HttpRequest, WaitFor, Capture }`.
   - `enum StepFields { ShellCommand { command, expect_exit_code, capture_output }, SparqlAssertion { target, query, expect_rows }, FileAssertion { path, expect_hash, expect_content }, HttpRequest { method, url, expect_status }, WaitFor { condition, timeout }, Capture { from_step, bind_as } }` — discriminated union mirroring the SHACL shapes.
@@ -83,6 +84,7 @@ Substrate consumed by [FT-037](FT-037) (safety enforcement) and the graph / step
 
 - Every graph has `dec:verifies` pointing at a `dec:Feature` or `dec:TC`, and `dec:environment` pointing at a `dec:VerificationEnvironment`.
 - Every step has `dec:stepType` in the seed vocabulary; the step-kind-specific shape gates its other properties.
+- Every step shape carries an OPTIONAL `dec:providesEvidenceFor` predicate (range `dec:TC`, multi-valued); SHACL accepts zero or more values. Coverage tooling ([FT-045](FT-045)) interprets absence as "this step covers no TC", not as an error.
 - Step order is the rdf:List order in `dec:steps`; loaders and serialisers preserve it.
 - `${name}` placeholder strings appear verbatim in serialised step bodies; this feature does not resolve them and does not warn about unresolved references.
 - Step IRIs are derived deterministically from `(graph_id, index)` — append-only authoring produces stable IRIs.
@@ -97,7 +99,7 @@ Substrate consumed by [FT-037](FT-037) (safety enforcement) and the graph / step
 
 ### Boundaries
 
-- **In scope.** SHACL shapes for graph + each step kind, IRI scheme, Rust types, on-disk layout, store projection, step-kind discriminated union, polymorphic `dec:verifies`, `${name}` literal preservation, `dec:requiredOps` declarations per step kind.
+- **In scope.** SHACL shapes for graph + each step kind, IRI scheme, Rust types, on-disk layout, store projection, step-kind discriminated union, polymorphic `dec:verifies`, `${name}` literal preservation, `dec:requiredOps` declarations per step kind, optional `dec:providesEvidenceFor` predicate on every step shape.
 - **Out of scope.** Authoring CLI commands (separate slices). Safety op-subset check ([FT-037](FT-037) — this feature *declares* `requiredOps` per step kind; FT-037 *enforces* the subset). `${name}` resolution (slice 3). Step executors (slice 3). Pre-dispatch non-empty-steps check (slice 3).
 
 ## Out of scope

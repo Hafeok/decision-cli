@@ -101,6 +101,31 @@ Step bodies may contain `${name}` references to prior `capture` bindings. **The 
 
 Later slices may extend the registry (`dagger-pipeline`, `git-state`, `metric-window`, `llm-judgment`). Extensions land as separate features that add a SHACL shape and an executor entry — the ADR does not need amendment unless a new step type is judgment-laden enough to alter the verifier role's contract.
 
+### Coverage predicate: `dec:providesEvidenceFor`
+
+Each `dec:VerificationStep` carries an **optional** `dec:providesEvidenceFor` predicate whose object is a TC IRI. Multiple values are allowed: a single step (e.g. a `shell-command` that compiles + tests + asserts) may provide evidence for several TCs.
+
+```turtle
+<step:2> a dec:VerificationStep ;
+    dec:stepType        "sparql-assertion" ;
+    dec:target          ".dec/store" ;
+    dec:query           "SELECT ?s WHERE { ?s a dec:ValueStream }" ;
+    dec:expectRows      1 ;
+    dec:providesEvidenceFor <tc:TC-007>, <tc:TC-008> .
+```
+
+This predicate is what makes **coverage structural and queryable**. A feature `F` is covered by a graph `G` iff for every TC `T` in `F.tests`, some step in `G` declares `dec:providesEvidenceFor T`. Coverage becomes a SPARQL query, not a free-text match against the TC body.
+
+The predicate is OPTIONAL on the SHACL shape — graphs authored before this predicate existed remain SHACL-valid; their measured coverage is simply zero until annotated. This preserves slice-2.5 forward-compatibility.
+
+The predicate is consumed by:
+
+- [ADR-030](ADR-030)'s verify-graph-author role (the coverage report it returns is computed over this predicate).
+- [ADR-031](ADR-031)'s chain-integrity dispatch gate (it refuses dispatch when uncovered TCs exist).
+- Slice 3's graph executor (it can map per-step trace back to TC verdicts using the same predicate).
+
+[FT-036](FT-036) carries the SHACL change; FT-036 is still `planned`, so the shape update lives in its body directly and no separate amendment feature is needed.
+
 ### Safety gating
 
 The authoring CLI and the dispatch handler refuse to persist or dispatch a graph whose `step.requiredOps ⊄ env.allowedOps`. The check is structural and runs twice:
