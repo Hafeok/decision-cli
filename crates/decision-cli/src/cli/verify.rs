@@ -15,6 +15,7 @@ use decision_cli::core::handler::Error as HandlerError;
 use decision_cli::verify_env_list::{self, EnvListRequest, OutputFormat as ListFormat};
 use decision_cli::verify_env_new::{self, EnvNewRequest};
 use decision_cli::verify_env_show::{self, EnvShowRequest, OutputFormat as ShowFormat};
+use decision_cli::verify_graph_new::{self, GraphNewRequest};
 
 /// Names of every MCP tool the `dec verify` clap tree pairs with. The
 /// TC-052 surface-symmetry harness asserts this list matches the MCP
@@ -25,6 +26,7 @@ pub const PAIRED_TOOL_NAMES: &[&str] = &[
     "dec_verify_env_list",
     "dec_verify_env_new",
     "dec_verify_env_show",
+    "dec_verify_graph_new",
 ];
 
 #[derive(Debug, Subcommand)]
@@ -32,6 +34,9 @@ pub enum VerifyCmd {
     /// Manage `dec:VerificationEnvironment` artifacts.
     #[command(subcommand)]
     Env(EnvCmd),
+    /// Manage `dec:VerificationGraph` artifacts.
+    #[command(subcommand)]
+    Graph(GraphCmd),
 }
 
 #[derive(Debug, Subcommand)]
@@ -42,6 +47,25 @@ pub enum EnvCmd {
     List(EnvListArgs),
     /// Show a single VerificationEnvironment in detail (FT-040).
     Show(EnvShowArgs),
+}
+
+#[derive(Debug, Subcommand)]
+pub enum GraphCmd {
+    /// Create a new VerificationGraph (FT-041).
+    New(GraphNewArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct GraphNewArgs {
+    /// Caller-supplied id (e.g. VG-007). Omitted → mints the next free VG-NNN.
+    #[arg(long)]
+    pub id: Option<String>,
+    /// Feature or TC the graph proves about (e.g. `FT-001`, `TC-013`).
+    #[arg(long)]
+    pub verifies: String,
+    /// VerificationEnvironment the graph executes against (e.g. `ENV-001-ephemeral-cli`).
+    #[arg(long)]
+    pub environment: String,
 }
 
 #[derive(Debug, clap::Args)]
@@ -131,6 +155,18 @@ pub fn env_show_request(args: &EnvShowArgs, workdir: &Path) -> Result<EnvShowReq
     })
 }
 
+/// Convert clap args into the structured `GraphNewRequest`. Exposed so
+/// the TC-052 unit test can build the same request the binary does.
+#[must_use]
+pub fn graph_new_request(args: &GraphNewArgs, workdir: &Path) -> GraphNewRequest {
+    GraphNewRequest {
+        id: args.id.clone(),
+        verifies: args.verifies.clone(),
+        environment: args.environment.clone(),
+        workdir: Some(workdir.to_path_buf()),
+    }
+}
+
 /// Convert clap args into the structured `EnvNewRequest`. Exposed so
 /// the TC-052 unit test can build the same request the binary does.
 #[must_use]
@@ -160,6 +196,24 @@ pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
             EnvCmd::List(args) => run_env_list(workdir, args),
             EnvCmd::Show(args) => run_env_show(workdir, args),
         },
+        VerifyCmd::Graph(graph_cmd) => match graph_cmd {
+            GraphCmd::New(args) => run_graph_new(workdir, args),
+        },
+    }
+}
+
+fn run_graph_new(workdir: &Path, args: GraphNewArgs) -> ExitCode {
+    let req = graph_new_request(&args, workdir);
+    match verify_graph_new::run(&req) {
+        Ok(outcome) => {
+            println!("Created VerificationGraph {id}", id = outcome.id);
+            println!("  Path: {}", outcome.path.display());
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("dec verify graph new: {err}");
+            ExitCode::from(exit_code_for(&err))
+        }
     }
 }
 

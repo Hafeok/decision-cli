@@ -86,6 +86,8 @@ fn build_production_registry(_workdir: &Path) -> ToolRegistry {
         .expect("register verify_env_list");
     reg.register(decision_cli::verify_env_show::tool_descriptor())
         .expect("register verify_env_show");
+    reg.register(decision_cli::verify_graph_new::tool_descriptor())
+        .expect("register verify_graph_new");
     reg
 }
 
@@ -141,6 +143,7 @@ const PAIRED_TOOL_NAMES: &[&str] = &[
     "dec_verify_env_list",
     "dec_verify_env_new",
     "dec_verify_env_show",
+    "dec_verify_graph_new",
 ];
 
 // --- AC #2: single handler — no surface-specific business logic ----------

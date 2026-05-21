@@ -2,11 +2,16 @@
 id: TC-063
 title: dec verify graph new accepts empty steps and rejects dangling refs
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: []
   adrs: []
 phase: 2
+runner: cargo-test
+runner-args: -p decision-cli --test tc_063_dec_verify_graph_new_accepts_empty_steps_and_rejec
+runner-timeout: 120
+last-run: 2026-05-21T15:35:15.825293869+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

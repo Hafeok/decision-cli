@@ -123,6 +123,19 @@ pub enum Error {
         id: String,
     },
 
+    /// A reference field (e.g. `dec:verifies`, `dec:environment`) does
+    /// not resolve to a known artifact. Per FT-041 / ADR-028, both the
+    /// raw reference and the kind of field it appeared in are surfaced
+    /// so renderers can present an actionable diagnostic.
+    #[error("dangling reference: {kind} ref {reference:?} does not resolve")]
+    DanglingRef {
+        /// The unresolved reference value as supplied by the caller.
+        #[serde(rename = "ref")]
+        reference: String,
+        /// Which field carried the reference (`"verifies"`, `"environment"`, …).
+        kind: String,
+    },
+
     /// A safety constraint refused the operation per FT-037 / ADR-028
     /// §Safety gating: a step's `requiredOps` escaped the environment's
     /// `allowedOps`. Carries the full diagnostic context surfaced by
@@ -176,6 +189,7 @@ impl Error {
             Self::ArtifactNotFound { .. } => "ArtifactNotFound",
             Self::SchemaViolation { .. } => "SchemaViolation",
             Self::DuplicateId { .. } => "DuplicateId",
+            Self::DanglingRef { .. } => "DanglingRef",
             Self::SafetyViolation(_) => "SafetyViolation",
             Self::UnknownOp { .. } => "UnknownOp",
             Self::Internal { .. } => "Internal",
