@@ -2,7 +2,8 @@
 id: ADR-028
 title: Verification as a typed graph in a typed environment
 status: accepted
-features: []
+features:
+- FT-053
 supersedes: []
 superseded-by: []
 domains: []
