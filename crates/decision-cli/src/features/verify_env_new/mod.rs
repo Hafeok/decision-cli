@@ -19,6 +19,8 @@ use std::sync::Arc;
 
 use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
+use oxigraph::sparql::QueryResults;
+use oxigraph::store::Store;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -30,7 +32,9 @@ use crate::core::ontology::verification_env::{
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use crate::core::vocab::{
-    verify_env_graph, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
+    verify_env_graph, IRI_DEC_ENV_PREFIX, IRI_DEC_GRAPH_VERIFY_ENV,
+    IRI_DEC_VERIFICATION_ENVIRONMENT, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY,
+    SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 use crate::core::StreamWriter;
 
@@ -174,7 +178,7 @@ pub fn run(req: &EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
         })?;
     validate::pre_validate(req)?;
     let env_dir = workdir.join(".dec").join("verify").join("env");
-    let id = resolve_id(req, &env_dir)?;
+    let id = resolve_id(req, workdir, &env_dir)?;
     let env = build_env(&id, req)?;
     write_through_writer(workdir, &env)?;
     let path = persist::write_env_file(&env_dir, &id, &env)?;
@@ -184,16 +188,63 @@ pub fn run(req: &EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
     })
 }
 
-fn resolve_id(req: &EnvNewRequest, env_dir: &Path) -> Result<String, HandlerError> {
+/// Resolve the env id, consulting both the on-disk `.ttl` directory and
+/// the orchestration store. Per TC-094 / FT-038 §Invariants, duplicate
+/// detection must consult the **store** (the authoritative source) and
+/// not just the on-disk `.ttl` file. Disk/store drift (a missing `.ttl`
+/// with the artifact still in the store — e.g. after `rm`, a gitignore
+/// mismatch, or test cleanup) used to slip past file-only detection and
+/// silently appended a second `dec:allowedOps` head, corrupting the env.
+fn resolve_id(
+    req: &EnvNewRequest,
+    workdir: &Path,
+    env_dir: &Path,
+) -> Result<String, HandlerError> {
     match &req.id {
         Some(id) => {
-            if mint::id_exists(env_dir, id).map_err(io_err)? {
+            let file_dup = mint::id_exists(env_dir, id).map_err(io_err)?;
+            let store_dup = env_exists_in_store(workdir, id)?;
+            if file_dup || store_dup {
                 Err(HandlerError::DuplicateId { id: id.clone() })
             } else {
                 Ok(id.clone())
             }
         }
         None => mint::mint_next_id(env_dir).map_err(io_err),
+    }
+}
+
+/// True iff the orchestration store already contains a
+/// `dec:VerificationEnvironment` whose IRI is `<env-prefix><id>`. Used
+/// alongside the on-disk check so drift between `.dec/verify/env/` and
+/// the store cannot produce a silent multi-headed env (TC-094).
+fn env_exists_in_store(workdir: &Path, id: &str) -> Result<bool, HandlerError> {
+    let dump_path = orchestration_dump_path(workdir);
+    if !dump_path.exists() {
+        return Ok(false);
+    }
+    let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
+        detail: format!("loading orchestration store: {e}"),
+    })?;
+    env_iri_exists(&store, id)
+}
+
+/// SPARQL ASK helper: true iff `<env-prefix><id>` is typed
+/// `dec:VerificationEnvironment` in the verify-env named graph.
+fn env_iri_exists(store: &Store, id: &str) -> Result<bool, HandlerError> {
+    let q = format!(
+        "ASK {{ GRAPH <{graph}> {{ <{prefix}{id}> a <{cls}> }} }}",
+        graph = IRI_DEC_GRAPH_VERIFY_ENV,
+        prefix = IRI_DEC_ENV_PREFIX,
+        cls = IRI_DEC_VERIFICATION_ENVIRONMENT,
+    );
+    match store.query(q.as_str()).map_err(|e| HandlerError::Internal {
+        detail: format!("env-exists ASK: {e}"),
+    })? {
+        QueryResults::Boolean(b) => Ok(b),
+        _ => Err(HandlerError::Internal {
+            detail: "env-exists ASK returned non-boolean result".to_string(),
+        }),
     }
 }
 
@@ -299,5 +350,35 @@ mod tests {
         assert!(names.contains(&"env_type"));
         assert!(names.contains(&"safety_class"));
         assert!(names.contains(&"allowed_ops"));
+    }
+
+    /// TC-094: an env that exists only in the store (file removed)
+    /// must still be detected by [`env_iri_exists`]. Empty store
+    /// returns false; a typed subject returns true.
+    #[test]
+    fn env_iri_exists_consults_store_not_disk() {
+        let store = Store::new().expect("store");
+        // Empty store: no env known.
+        assert!(!env_iri_exists(&store, "ENV-T").expect("empty"));
+
+        // Seed a `dec:VerificationEnvironment` typed subject directly
+        // into the verify-env named graph — mirrors what
+        // `StreamWriter::commit(env_to_quads)` would persist.
+        let iri = NamedNode::new(format!("{IRI_DEC_ENV_PREFIX}ENV-T")).expect("iri");
+        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+            .expect("rdf:type");
+        let cls = NamedNode::new(IRI_DEC_VERIFICATION_ENVIRONMENT).expect("cls");
+        let graph = NamedNode::new(IRI_DEC_GRAPH_VERIFY_ENV).expect("graph");
+        let quad = oxigraph::model::Quad::new(
+            iri,
+            rdf_type,
+            cls,
+            oxigraph::model::GraphName::NamedNode(graph),
+        );
+        store
+            .transaction(|mut tx| tx.insert(quad.as_ref()).map(|_| ()))
+            .expect("insert");
+        assert!(env_iri_exists(&store, "ENV-T").expect("seeded"));
+        assert!(!env_iri_exists(&store, "ENV-U").expect("other id"));
     }
 }

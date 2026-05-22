@@ -10,8 +10,8 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-051-mcp-naming.sh
 runner-timeout: 180
-last-run: 2026-05-21T16:44:25.249046608+00:00
-last-run-duration: 0.9s
+last-run: 2026-05-22T10:32:43.401516252+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description

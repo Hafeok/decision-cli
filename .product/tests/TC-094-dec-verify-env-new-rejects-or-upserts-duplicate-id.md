@@ -2,7 +2,7 @@
 id: TC-094
 title: dec_verify_env_new_rejects_or_upserts_duplicate_id
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-038
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-094-env-new-duplicate-id.sh
 runner-timeout: 120
+last-run: 2026-05-22T10:32:43.401516252+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

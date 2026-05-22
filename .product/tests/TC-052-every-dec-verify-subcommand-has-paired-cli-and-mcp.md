@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_052_every_dec_verify_subcommand_has_paired_cli_and_mcp
 runner-timeout: 120
-last-run: 2026-05-21T16:44:25.249046608+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-22T10:32:43.401516252+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
