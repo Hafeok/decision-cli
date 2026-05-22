@@ -26,7 +26,7 @@ use crate::core::vocab::{
     SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 
-pub use render::{render_json, render_table};
+pub use render::{render_json, render_stderr_warnings, render_table};
 
 /// MCP tool name — referenced by `cli::verify` for the parity TC.
 pub const TOOL_NAME: &str = "dec_verify_env_list";
@@ -88,7 +88,9 @@ pub struct EnvSummary {
     /// `dec:endpoint` value (omitted when absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
-    /// Ordered list of allowed-ops tokens.
+    /// Ordered list of allowed-ops tokens. Empty when [`error`] flags the
+    /// row as corrupt (TC-096): we cannot render an authoritative list, so
+    /// downstream consumers should branch on `error.is_some()` first.
     pub allowed_ops: Vec<String>,
     /// `dec:setup` snippet (omitted when absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -96,6 +98,58 @@ pub struct EnvSummary {
     /// `dec:teardown` snippet (omitted when absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub teardown: Option<String>,
+    /// Structured per-row error marker (TC-096). Absent for healthy envs;
+    /// present when the row could not be fully projected — e.g. an env
+    /// with two `dec:allowedOps` heads from a write-path bug or a manual
+    /// store edit. The listing surfaces the row anyway so an operator
+    /// can triage rather than seeing the whole command abort.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error: Option<EnvRowError>,
+}
+
+/// Structured per-row error marker for corrupt env entries (TC-096).
+///
+/// Carries enough information for an operator to identify what went
+/// wrong: the discriminant lives on `kind`, and `detail` is a human-
+/// readable description. Additional structured context lives on the
+/// variant fields (e.g. [`EnvRowErrorKind::MultipleAllowedOpsHeads`]
+/// carries the head count).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EnvRowError {
+    /// Discriminant identifying the failure mode (e.g.
+    /// `"MultipleAllowedOpsHeads"`).
+    pub kind: String,
+    /// Optional head count — populated for
+    /// `MultipleAllowedOpsHeads`/`CyclicAllowedOps`, omitted otherwise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub count: Option<usize>,
+    /// One-line human-readable description.
+    pub detail: String,
+}
+
+impl EnvRowError {
+    /// Build a `MultipleAllowedOpsHeads` marker. Used when the SPARQL
+    /// projection observes more than one `dec:allowedOps` triple bound
+    /// to the same env subject.
+    #[must_use]
+    pub fn multiple_allowed_ops_heads(count: usize) -> Self {
+        Self {
+            kind: "MultipleAllowedOpsHeads".to_string(),
+            count: Some(count),
+            detail: format!("env declares {count} dec:allowedOps heads"),
+        }
+    }
+
+    /// Generic fallback marker — used when a corruption shape doesn't
+    /// match one of the structured kinds. Carries no count.
+    #[must_use]
+    pub fn corrupt(detail: impl Into<String>) -> Self {
+        Self {
+            kind: "Corrupt".to_string(),
+            count: None,
+            detail: detail.into(),
+        }
+    }
 }
 
 /// Structured response — surfaced verbatim by MCP, rendered as text or
@@ -177,6 +231,16 @@ fn env_summary_schema() -> Value {
             },
             "setup": { "type": "string" },
             "teardown": { "type": "string" },
+            "error": {
+                "type": "object",
+                "description": "Per-row corruption marker (TC-096). Present iff the row could not be fully projected.",
+                "required": ["kind", "detail"],
+                "properties": {
+                    "kind": { "type": "string" },
+                    "count": { "type": "integer" },
+                    "detail": { "type": "string" },
+                },
+            },
         },
     })
 }

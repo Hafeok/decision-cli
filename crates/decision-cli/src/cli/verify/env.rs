@@ -168,6 +168,18 @@ fn run_env_list(workdir: &Path, args: EnvListArgs) -> ExitCode {
                 ListFormat::Table => print!("{}", verify_env_list::render_table(&outcome)),
                 ListFormat::Json => println!("{}", verify_env_list::render_json(&outcome)),
             }
+            // TC-096 AC #5: emit a one-line stderr advisory naming each
+            // corrupt env id and its failure mode. The listing itself
+            // exits 0 (or 2 on partial success) — stdout stays
+            // machine-parseable, stderr carries the human triage hint.
+            let warnings = verify_env_list::render_stderr_warnings(&outcome);
+            if !warnings.is_empty() {
+                eprint!("{warnings}");
+                // Exit 2 to signal "partial success" — the listing
+                // completed but at least one row could not be fully
+                // projected.
+                return ExitCode::from(2);
+            }
             ExitCode::SUCCESS
         }
         Err(err) => {

@@ -33,19 +33,26 @@ cd "$WORKDIR"
 "$DEC" verify env new --id ENV-HEALTHY-B --type ephemeral-tempdir --safety-class isolated \
   --allowed-ops shell,filesystem,sparql-local >/dev/null
 
-# Manufacture a corrupt env via the TC-094 disk/store drift path: create
-# the env, remove the .ttl while the store still holds it, then re-create
-# — which today silently appends a second `allowedOps` list to the store.
-# If TC-094 lands first and `env new` becomes upsert/refuse, this block
-# stops producing corruption; at that point this script must be updated
-# to seed corruption a different way (write raw quads into
-# `.dec/store/orchestration.nq` directly). The list-resilience invariant
-# under test does not depend on how the corruption is produced.
+# Manufacture a corrupt env by appending a second `dec:allowedOps` list
+# head directly to the N-Quads dump. The original disk/store drift path
+# (TC-094 silent-append bug) used to produce this state via `dec verify
+# env new`; once TC-094 landed and `env new` became upsert/refuse-safe,
+# the only reliable way to manufacture the state is a raw write.
+# The list-resilience invariant under test does not depend on how the
+# corruption is produced — only that it exists.
 "$DEC" verify env new --id ENV-BROKEN --type ephemeral-tempdir --safety-class isolated \
   --allowed-ops shell,filesystem >/dev/null
-rm -f .dec/verify/env/ENV-BROKEN.ttl
-"$DEC" verify env new --id ENV-BROKEN --type ephemeral-tempdir --safety-class isolated \
-  --allowed-ops shell,filesystem,sparql-local >/dev/null 2>&1 || true
+
+# Append a second allowedOps head pointing at a fresh blank-node-based
+# list. Two heads bound to the same env subject is the canonical
+# corruption shape FT-039's list handler must tolerate (TC-096 AC #3/#4).
+cat >>.dec/store/orchestration.nq <<'NQUADS'
+_:corrupt-broken-1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <https://decision-cli.dev/ns/graph/verify-env> .
+_:corrupt-broken-1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "sparql-local" <https://decision-cli.dev/ns/graph/verify-env> .
+_:corrupt-broken-0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:corrupt-broken-1 <https://decision-cli.dev/ns/graph/verify-env> .
+_:corrupt-broken-0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "http" <https://decision-cli.dev/ns/graph/verify-env> .
+<https://decision-cli.dev/ns/env/ENV-BROKEN> <https://decision-cli.dev/ns#allowedOps> _:corrupt-broken-0 <https://decision-cli.dev/ns/graph/verify-env> .
+NQUADS
 
 # The invariant: list must not abort. It may return 0 or a documented
 # partial-success exit, but stderr/stdout must include all three env ids.

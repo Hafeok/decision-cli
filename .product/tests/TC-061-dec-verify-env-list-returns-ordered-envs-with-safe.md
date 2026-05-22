@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_061_dec_verify_env_list_returns_ordered_envs_with_safe
 runner-timeout: 120
-last-run: 2026-05-22T11:17:11.472368967+00:00
-last-run-duration: 2.0s
+last-run: 2026-05-22T11:28:35.457836624+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

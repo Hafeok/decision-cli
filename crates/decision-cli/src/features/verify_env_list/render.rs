@@ -43,14 +43,28 @@ pub fn render_table(resp: &EnvListResponse) -> String {
 
 fn render_row(env: &EnvSummary) -> String {
     let endpoint = env.endpoint.as_deref().unwrap_or("(none)");
-    let ops = env.allowed_ops.join(",");
+    // For corrupt rows (TC-096), replace the allowed-ops column with a
+    // bracketed error marker so the operator can spot the failure mode
+    // without consulting the JSON output. The marker carries the
+    // structured kind (e.g. `MultipleAllowedOpsHeads`) and, when
+    // applicable, the count.
+    let ops_display: String = match &env.error {
+        Some(err) => {
+            let detail = match err.count {
+                Some(n) => format!("<corrupt: {kind}: {n}>", kind = err.kind),
+                None => format!("<corrupt: {kind}>", kind = err.kind),
+            };
+            detail
+        }
+        None => env.allowed_ops.join(","),
+    };
     format!(
         "{id:<22}  {ty:<22}  {sc:<22}  {ep:<width_ep$}  {ops}\n",
         id = truncate(&env.id, 22),
         ty = truncate(&env.env_type, 22),
         sc = truncate(&env.safety_class, 22),
         ep = truncate(endpoint, ENDPOINT_WIDTH),
-        ops = truncate(&ops, ALLOWED_OPS_WIDTH),
+        ops = truncate(&ops_display, ALLOWED_OPS_WIDTH),
         width_ep = ENDPOINT_WIDTH,
     )
 }
@@ -73,6 +87,26 @@ pub fn render_json(resp: &EnvListResponse) -> String {
     serde_json::to_string_pretty(&resp.envs).unwrap_or_else(|_| "[]".to_string())
 }
 
+/// Render one-line stderr warnings for corrupt rows (TC-096 AC #5). Each
+/// line names the offending env id and the failure mode; the operator
+/// can grep the broken id without re-parsing JSON. Returns an empty
+/// string when no rows are corrupt, so callers can `eprint!` it
+/// unconditionally without producing trailing blank output.
+#[must_use]
+pub fn render_stderr_warnings(resp: &EnvListResponse) -> String {
+    let mut out = String::new();
+    for env in &resp.envs {
+        if let Some(err) = &env.error {
+            out.push_str(&format!(
+                "warning: env {id} is corrupt — {detail} (run `dec verify env show {id}` to triage)\n",
+                id = env.id,
+                detail = err.detail,
+            ));
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,6 +120,7 @@ mod tests {
             allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
             setup: None,
             teardown: None,
+            error: None,
         }
     }
 
@@ -145,5 +180,64 @@ mod tests {
         let long = truncate("abcdefghij", 5);
         assert!(long.ends_with('…'));
         assert!(long.chars().count() == 5);
+    }
+
+    #[test]
+    fn table_marks_corrupt_row_with_marker() {
+        let mut env = sample();
+        env.id = "ENV-BROKEN".to_string();
+        env.allowed_ops.clear();
+        env.error = Some(super::super::EnvRowError::multiple_allowed_ops_heads(2));
+        let resp = EnvListResponse { envs: vec![env] };
+        let s = render_table(&resp);
+        // The ALLOWED_OPS column is bounded; the marker's prefix
+        // (`<corrupt:`) survives truncation, the long kind name
+        // (`MultipleAllowedOpsHeads`) may be elided. The TC-096
+        // invariant is that the offending env id and an error-shape
+        // keyword are both visible.
+        assert!(s.contains("ENV-BROKEN"));
+        assert!(
+            s.contains("corrupt"),
+            "table missing corruption marker: {s}"
+        );
+    }
+
+    #[test]
+    fn json_emits_typed_error_field_on_corrupt_row() {
+        let mut env = sample();
+        env.id = "ENV-BROKEN".to_string();
+        env.allowed_ops.clear();
+        env.error = Some(super::super::EnvRowError::multiple_allowed_ops_heads(2));
+        let resp = EnvListResponse { envs: vec![env] };
+        let s = render_json(&resp);
+        let v: Value = serde_json::from_str(&s).expect("json");
+        let arr = v.as_array().expect("array");
+        let err = &arr[0]["error"];
+        assert_eq!(err["kind"], "MultipleAllowedOpsHeads");
+        assert_eq!(err["count"], 2);
+        assert!(err["detail"].is_string());
+    }
+
+    #[test]
+    fn stderr_warnings_lists_each_broken_env() {
+        let mut env = sample();
+        env.id = "ENV-BROKEN".to_string();
+        env.allowed_ops.clear();
+        env.error = Some(super::super::EnvRowError::multiple_allowed_ops_heads(3));
+        let resp = EnvListResponse { envs: vec![env] };
+        let w = render_stderr_warnings(&resp);
+        assert!(w.contains("ENV-BROKEN"), "missing id in warning: {w}");
+        assert!(
+            w.contains("dec verify env show"),
+            "missing triage hint: {w}"
+        );
+    }
+
+    #[test]
+    fn stderr_warnings_empty_for_healthy_envs() {
+        let resp = EnvListResponse {
+            envs: vec![sample()],
+        };
+        assert_eq!(render_stderr_warnings(&resp), "");
     }
 }
