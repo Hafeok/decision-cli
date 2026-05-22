@@ -5,6 +5,7 @@ status: accepted
 features:
 - FT-056
 - FT-063
+- FT-054
 supersedes: []
 superseded-by: []
 domains:

@@ -6,9 +6,32 @@ status: planned
 depends-on:
 - FT-059
 adrs:
+- ADR-001
+- ADR-002
+- ADR-004
+- ADR-005
 - ADR-008
+- ADR-012
+- ADR-013
+- ADR-014
+- ADR-015
+- ADR-016
+- ADR-017
+- ADR-018
+- ADR-020
+- ADR-021
+- ADR-022
+- ADR-023
+- ADR-024
+- ADR-025
+- ADR-027
 - ADR-033
+- ADR-034
+- ADR-035
+- ADR-036
+- ADR-037
 tests:
+
 - TC-106
 domains:
 - api

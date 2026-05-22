@@ -4,6 +4,7 @@ title: Graph-as-state over event-sourced
 status: accepted
 features:
 - FT-058
+- FT-054
 supersedes: []
 superseded-by: []
 domains: []

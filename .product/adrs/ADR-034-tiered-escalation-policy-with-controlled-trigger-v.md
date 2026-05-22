@@ -6,6 +6,7 @@ features:
 - FT-055
 - FT-057
 - FT-062
+- FT-054
 supersedes: []
 superseded-by: []
 domains:
