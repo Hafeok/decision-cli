@@ -9,8 +9,8 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 use cli::{
     check_goal::CheckGoalArgs, doctor::DoctorArgs, events::EventsCmd, feedback::FeedbackCmd,
-    implement::ImplementCmdArgs, init::InitArgs, mcp::McpCmd, session::SessionCmd,
-    sparql::SparqlArgs, verify::VerifyCmd,
+    implement::ImplementCmdArgs, init::InitArgs, mcp::McpCmd, preflight::PreflightArgs,
+    session::SessionCmd, sparql::SparqlArgs, verify::VerifyCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -42,6 +42,10 @@ enum Command {
     CheckGoal(CheckGoalArgs),
     /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
+    /// Feature-coverage and gap report sourced from the internal
+    /// product-cli graph projection (FT-052 / TC-087). Reads
+    /// `.product/graph/index.ttl`; does not re-parse markdown.
+    Preflight(PreflightArgs),
     /// Liveness check (FT-012). Runs outside an initialised working tree.
     Health,
     /// Worker preflight audit (FT-016 / TC-047).
@@ -74,6 +78,7 @@ fn main() -> ExitCode {
         Command::Sparql(args) => cli::sparql::run(&workdir, args),
         Command::CheckGoal(args) => cli::check_goal::run(&workdir, args),
         Command::Implement(args) => cli::implement::run(&workdir, args),
+        Command::Preflight(args) => cli::preflight::run(&workdir, args),
         Command::Health => cli::health::run(&workdir),
         Command::Doctor(args) => cli::doctor::run(&workdir, args),
         Command::Events(cmd) => cli::events::run(&workdir, cmd),

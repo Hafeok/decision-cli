@@ -2,15 +2,17 @@
 id: TC-087
 title: internal product-cli graph is the source of truth for dec preflight
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-052
   adrs: []
 phase: 2
 runner: cargo-test
-runner-args: tc_087_internal_product_graph_source_of_truth
+runner-args: -p decision-cli --test tc_087_internal_product_graph_source_of_truth
 runner-timeout: 120
+last-run: 2026-05-22T08:59:28.519148205+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
