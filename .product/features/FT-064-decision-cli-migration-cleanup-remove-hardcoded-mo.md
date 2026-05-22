@@ -8,6 +8,7 @@ depends-on:
 - FT-061
 - FT-062
 - FT-063
+- FT-065
 adrs:
 - ADR-033
 - ADR-008

@@ -22,13 +22,18 @@ Add a Scaleway OpenAI-compatible client wrapper in `workers/_shared/` so every P
 
 This is the worker-side counterpart to [FT-061](FT-061)'s dispatcher capability resolution: when the dispatcher resolves a role to a capability with `endpoint = scaleway`, the worker uses this client to make the model call.
 
+PRD §14 confirmed two Scaleway-specific behaviors this feature relies on (verified against the live API):
+
+- **`reasoning_effort` is a standard top-level kwarg** on the OpenAI chat-completions surface for `gpt-oss-120b`. No `extra_body` workaround needed. Valid values: `'none'`, `'low'`, `'medium'`, `'high'`. Server-validated via Pydantic.
+- **`message.reasoning` exposes the reasoning trace** for `qwen3.5-397b-a17b` as a top-level field on the message object (not `reasoning_content`, not `<think>` tags). Worker reads it separately from `message.content`; see [FT-060](FT-060) §10.6 for the artifact-side wiring.
+
 ## Functional Specification
 
 ### Inputs
 
 - The `openai` Python SDK (`pip install openai`) added as a dependency of `workers/_shared`.
 - `SCW_SECRET_KEY` environment variable available to the worker process.
-- A capability-resolved dispatch payload from [FT-061](FT-061): `{ endpoint: "scaleway", model_identifier: "<exact-id>", parameters: {…} }`.
+- A capability-resolved dispatch payload from [FT-061](FT-061): `{ endpoint: "scaleway", model_identifier: "<exact-id>", parameters: {…} }` where `parameters` may include `reasoning_effort` for `configurable_effort` capabilities ([FT-063](FT-063)).
 
 ### Outputs
 
@@ -45,15 +50,17 @@ This is the worker-side counterpart to [FT-061](FT-061)'s dispatcher capability 
   def build_client() -> OpenAI: ...
   def missing_key_error_or_none() -> ScalewayClientError | None: ...
   ```
-- A `ModelCaller`-shaped helper compatible with the verifier worker's existing `ModelCaller` signature (`(system, user, model_id, max_tokens) -> (raw_json_string, tokens_in, tokens_out)`):
+- Callers compatible with the verifier worker's `ModelCaller` signature (`(system, user, model_id, max_tokens) -> (raw_json_string, tokens_in, tokens_out)`):
   ```python
-  def scaleway_chat_caller(client: OpenAI) -> ModelCaller: ...
-  # returns a callable that issues a chat.completions.create call and
-  # returns the text + usage tuple in the same shape as verifier's call_claude.
+  def scaleway_chat_caller(client: OpenAI, *, reasoning_effort: str | None = None) -> ModelCaller: ...
+  # Returns a callable that issues chat.completions.create. When reasoning_effort
+  # is set, passes it as a top-level kwarg (not extra_body). Parses message.content
+  # for the text and message.reasoning for the trace; returns both via the structured
+  # result shape consumed by FT-060's ModelRouter.
   ```
 - Optional tool-call and structured-output adapters used by [FT-060](FT-060):
-  - `def scaleway_tool_caller(client, tools, tool_choice="auto")` — supports OpenAI function-tools format.
-  - `def scaleway_json_caller(client, response_schema)` — uses `response_format = {"type": "json_schema", ...}` with the SHACL-derived JSON schema.
+  - `def scaleway_tool_caller(client, tools, tool_choice="auto", reasoning_effort=None)` — supports OpenAI function-tools format.
+  - `def scaleway_json_caller(client, response_schema, reasoning_effort=None)` — uses `response_format = {"type": "json_schema", ...}` with the SHACL-derived JSON schema.
 
 ### State
 
@@ -64,13 +71,14 @@ This is the worker-side counterpart to [FT-061](FT-061)'s dispatcher capability 
 1. `build_client` returns `OpenAI(base_url=SCALEWAY_BASE_URL, api_key=environ[SCALEWAY_KEY_ENV])`. Raises `ScalewayClientError` with a specific message if `SCW_SECRET_KEY` is missing.
 2. `missing_key_error_or_none` returns an error object (not raising) so callers can surface "the worker cannot dispatch because Scaleway key is missing" as a session error vs. crashing.
 3. `scaleway_chat_caller` returns a closure that:
-   - Issues `client.chat.completions.create(model=model_id, messages=[{role:"system",…},{role:"user",…}], max_tokens=max_tokens, temperature=<from params or 0.0>)`.
-   - Extracts `response.choices[0].message.content` as the text.
+   - Issues `client.chat.completions.create(model=model_id, messages=[{role:"system",…},{role:"user",…}], max_tokens=max_tokens, temperature=<from params or 0.0>, reasoning_effort=<from params, if set>)`. `reasoning_effort` is a top-level kwarg per PRD §14 resolution; do not wrap in `extra_body`.
+   - Extracts `response.choices[0].message.content` as the text. May be `None` for capabilities with `exposes_reasoning_trace = true` mid-stream while the model is still reasoning — caller treats that as "still thinking, keep accumulating," not failure (see [FT-060](FT-060) §10.6).
+   - Extracts `response.choices[0].message.reasoning` (via `getattr(message, "reasoning", None)`) when the dispatched capability has `exposes_reasoning_trace = true`. Returns this alongside the text content.
    - Extracts `response.usage.prompt_tokens` and `response.usage.completion_tokens` as `(tokens_in, tokens_out)`.
-   - Returns `(text, tokens_in, tokens_out)`.
-4. `scaleway_tool_caller` passes `tools=tools` and `tool_choice=tool_choice` through to the API; returns the structured tool-call response shape that [FT-060](FT-060)'s adapter consumes.
-5. `scaleway_json_caller` passes `response_format={"type": "json_schema", "json_schema": response_schema}`; the open question from PRD §14 (whether Scaleway requires an `extra_body` field for non-standard parameters like `reasoning_effort`) is verified empirically and the wrapper documents whichever path Scaleway accepts.
-6. All callers honour `parameters.reasoning_effort` from the dispatch payload when present; on `gpt-oss-120b` and any other `configurable_effort = true` capability ([FT-054](FT-054)), the value is passed through. See [FT-063](FT-063) for the stakes→effort mapping.
+   - For Scaleway, `input_tokens_cache_write` and `input_tokens_cache_hit` are always 0 (no prompt caching on Scaleway currently). The result returns the base counts; [FT-057](FT-057)'s session record records zeros for the cache fields on Scaleway dispatches.
+4. `scaleway_tool_caller` passes `tools=tools` and `tool_choice=tool_choice` through to the API; returns the structured tool-call response shape that [FT-060](FT-060)'s adapter consumes. Honours `reasoning_effort` when set.
+5. `scaleway_json_caller` passes `response_format={"type": "json_schema", "json_schema": response_schema}` and honours `reasoning_effort`.
+6. All callers honour `parameters.reasoning_effort` from the dispatch payload when present; on `gpt-oss-120b` and any other `configurable_effort = true` capability ([FT-054](FT-054)), the value is passed through as a top-level kwarg. Valid values: `'none'`, `'low'`, `'medium'`, `'high'`. See [FT-063](FT-063) for the stakes→effort mapping.
 
 ### Invariants
 
@@ -78,6 +86,9 @@ This is the worker-side counterpart to [FT-061](FT-061)'s dispatcher capability 
 - The wrapper does not catch and retry network errors silently — failures surface as `ScalewayClientError` so the dispatcher can record the session as failed and (optionally) escalate per [ADR-034](ADR-034).
 - `SCW_SECRET_KEY` is read once per client construction; the wrapper does not log the key.
 - Token counts in the returned tuple are non-negative integers; absent usage data (network error mid-response) returns `(0, 0)` with the exception still raised.
+- `reasoning_effort` is passed as a top-level kwarg (`openai.OpenAI().chat.completions.create(..., reasoning_effort=...)`); never inside `extra_body`. Verified against the live Scaleway API per PRD §14.
+- `reasoning_effort` is silently ignored by the Scaleway server for capabilities that don't support it; the wrapper does not pre-filter, but [FT-061](FT-061)'s `compute_params` only sets it when the resolved capability has `configurable_effort = true`.
+- `message.reasoning` is read via `getattr` with default `None`; capabilities that don't expose it simply produce no trace, and the worker treats `None` as "no trace available".
 
 ### Error handling
 
@@ -85,15 +96,18 @@ This is the worker-side counterpart to [FT-061](FT-061)'s dispatcher capability 
 - Network error (timeout, connection refused) → `ScalewayClientError` wrapping the underlying `openai.APIError`.
 - Rate limit (429) → `ScalewayClientError` with category `rate_limited`; dispatcher decides retry / fail (out of scope for this feature — PRD §13 defers rate-limit handling to the worker layer).
 - Authentication failure (401) → `ScalewayClientError` with category `auth_failed`; surfaced to operator via session telemetry.
-- Empty response content → returned as `("", tokens_in, tokens_out)`; downstream validation (Pydantic schema, [FT-060](FT-060)) treats empty as a validation error.
+- Empty response content with non-empty `message.reasoning` → return `("", trace, tokens_in, tokens_out)`; this is the long-chain case described in PRD §10.6 where the model is still reasoning. [FT-060](FT-060) decides whether to treat as completion or as mid-stream depending on whether the caller is streaming.
+- Empty response content with empty `message.reasoning` → return `("", None, tokens_in, tokens_out)`; downstream validation treats empty content as a validation error.
+- Invalid `reasoning_effort` value (e.g. typo in the dispatcher params) → Scaleway server returns a 400 with a Pydantic error message; the wrapper surfaces this as `ScalewayClientError(category="invalid_params")`.
 
 ### Boundaries
 
-- **In scope.** The client wrapper, chat-completion caller, tool-call adapter, JSON-schema adapter, env-var handling.
+- **In scope.** The client wrapper, chat-completion caller, tool-call adapter, JSON-schema adapter, env-var handling, top-level `reasoning_effort` plumbing, `message.reasoning` extraction.
 - **Out of scope.** Worker-specific integration (which worker calls which caller — [FT-060](FT-060)).
 - **Out of scope.** Anthropic client — already present at `workers/verifier/.../worker.py`; [FT-060](FT-060) abstracts the two endpoints behind a uniform shape.
 - **Out of scope.** Cross-region failover (PRD §3 deferred).
-- **Out of scope.** Caching of repeated bundles (PRD §3 deferred).
+- **Out of scope.** Caching of repeated bundles (PRD §3 deferred; Scaleway does not currently support prompt caching).
+- **Out of scope.** Attaching `message.reasoning` to the produced artifact as `rationale_trace` — that's [FT-060](FT-060)'s `ModelRouter` and the artifact schema, not the Scaleway-client wrapper.
 
 ## Out of scope
 
@@ -101,3 +115,4 @@ This is the worker-side counterpart to [FT-061](FT-061)'s dispatcher capability 
 - Streaming response support (the current verifier worker uses single-shot completion; streaming is a Phase 3+ concern).
 - Image / vision endpoint support for the `vision-*` capabilities — those capabilities are catalog entries with no current role binding ([ADR-037](ADR-037)), so no worker integration is required yet.
 - Audio transcription endpoint for `audio-transcribe` — same reasoning.
+- Prompt caching for Scaleway — Scaleway does not currently support prompt caching; if added in future, [FT-065](FT-065)'s breakpoint logic generalises to any endpoint with non-null `cost_cache_hit_per_m`.

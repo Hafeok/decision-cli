@@ -11,7 +11,11 @@ domains:
 - data-model
 - storage
 scope: cross-cutting
-content-hash: sha256:2be396595684de8a354beb2e6583da475ecbbdd7d7342cd980eb83ae5ca1d7f6
+content-hash: sha256:9203a523074e14606d46d7f972dabbb32fc74c17439ecc8271b0544c6944d47e
+amendments:
+- date: 2026-05-22T18:47:09Z
+  reason: Updated PRD §10.7 fixes the bootstrap path layout (`config/capabilities.yaml`, `config/role-bindings.yaml`, `scripts/bootstrap_catalog.py`) and specifies strict divergence-handling (script errors and exits on YAML/graph mismatch, never silently overwrites). Update to record the path constants and the divergence-handling discipline so the directional rule "YAML is doc, graph is authoritative" cannot be subverted by a re-run that silently rewrites graph state.
+  previous-hash: sha256:2be396595684de8a354beb2e6583da475ecbbdd7d7342cd980eb83ae5ca1d7f6
 ---
 
 ## Context
@@ -36,17 +40,43 @@ The forces pulling toward YAML are also real:
 
 The resolution is to use both, with a clear directionality: **YAML is documentation and bootstrap input; the graph is the runtime source of truth.**
 
-See the parent PRD: §5 (Capability catalog), §14 (open question on YAML vs graph-native).
+See the parent PRD: §5 (Capability catalog), §10.7 (bootstrap script), §14 (resolved question on YAML vs graph-native).
 
 ## Decision
 
 Capability and RoleBinding catalogs are **graph artifacts at runtime, sourced from YAML at bootstrap**.
 
+### Path layout (PRD §10.7)
+
+```
+decision-cli/
+  config/
+    capabilities.yaml      # initial Capability artifacts
+    role-bindings.yaml     # initial RoleBinding artifacts
+  scripts/
+    bootstrap_catalog.py   # idempotent populator
+```
+
+Paths are repo-root-relative and fixed by this ADR. The dispatcher does not have a config option to read elsewhere; the catalog is in the graph or it does not exist.
+
 ### Bootstrap path
 
-A YAML file (`crates/decision-cli/seeds/capabilities.yaml` and `seeds/role_bindings.yaml`) holds the human-curated catalog. A bootstrap step in `dec init` reads the YAML and writes one `dec:Capability` (or `dec:RoleBinding`) artifact per entry into the orchestration store, via `core::graph::GraphWriter` (so SHACL validation runs and version pins are recorded). The YAML's content hash is recorded on each artifact's `dec:bootstrap_source` field for audit. See [FT-058](FT-058).
+The `scripts/bootstrap_catalog.py` script reads both YAML files and writes one `dec:Capability` (or `dec:RoleBinding`) artifact per entry into the orchestration store, via `core::graph::GraphWriter` (so SHACL validation runs and version pins are recorded). The YAML's content hash is recorded on each artifact's `dec:bootstrap_source` field for audit. See [FT-058](FT-058).
 
 After bootstrap, the YAML file is documentation. Operators may edit it; nothing reads it at dispatch time. The graph is authoritative.
+
+### Idempotence and strict divergence handling
+
+The script is idempotent **by refusal**, not by overwrite. For each YAML entry:
+
+1. Compute a stable identifier from `(capability_id, version)` or `(role, version)`.
+2. Query the graph: does an artifact with that identifier already exist?
+3. If yes: compare YAML content to graph content. **If identical, skip silently. If different, error and exit** — the graph and YAML are out of sync; the human must decide (either update the YAML to match the graph, or bump the version field in YAML and re-run to create a new versioned artifact alongside the existing one).
+4. If no: write the artifact via `GraphWriter`. Validate against SHACL.
+
+This means bootstrap is safe to re-run after a fresh clone or after pulling new YAML. It **does not silently overwrite graph state**. The script's only authoritative job is the initial seed; after that, capability evolution happens through the meta-loop's normal policy-revision path (a new `Capability` version artifact is written, role bindings update to reference it).
+
+The strict-divergence behavior is the load-bearing piece. A YAML that silently overwrites the graph would let stale operator edits clobber meta-loop revisions; the graph is supposed to be authoritative after bootstrap, and silent overwrite would undermine that. The error-and-exit path forces the human to confront the divergence and decide.
 
 ### Update path
 
@@ -70,6 +100,10 @@ The bootstrap reads the YAML, constructs `dec:Capability` / `dec:RoleBinding` Tu
 
 This means SHACL on `dec:Capability` ([FT-054](FT-054)) and `dec:RoleBinding` ([FT-055](FT-055)) is the *only* schema validation; the YAML loader does not duplicate schema checks. The YAML loader is a serialization adapter, not a validation layer.
 
+### Ordering constraint
+
+The script enforces strict ordering: **capabilities are bootstrapped first, then role-bindings**. A role-binding YAML entry that references a capability not yet present in the graph would fail SHACL with a confusing "unknown reference" error; ordering avoids this. The script will reject role-bindings.yaml entries whose `default_capability` is not in capabilities.yaml of the same run.
+
 ## Consequences
 
 **Positive.**
@@ -78,18 +112,21 @@ This means SHACL on `dec:Capability` ([FT-054](FT-054)) and `dec:RoleBinding` ([
 - New operators get a reviewable starting catalog (the YAML in the repo). The PR review burden lands on a YAML file, not a Rust constant.
 - The graph is the single audit source. Session records cite Capability artifacts by version; the meta-loop reads the same artifacts; the dispatcher resolves through them. Three paths, one truth.
 - Adding new endpoints (a fictional `gcp-vertex` endpoint) requires only a new YAML entry and (separately) a client wrapper. No dispatcher changes, no ontology changes.
+- Strict divergence handling means an operator cannot silently lose meta-loop revisions by re-running bootstrap with stale YAML. The error path forces a deliberate decision.
 
 **Negative / accepted costs.**
 
-- Drift between YAML and graph is possible. An operator who hand-edits the YAML expecting it to take effect at next dispatch will be confused. The mitigation (`dec capability sync` to regenerate YAML from graph) is real but is one more command operators must learn.
+- Drift between YAML and graph is *expected* once the meta-loop starts evolving capabilities. An operator who hand-edits the YAML expecting it to take effect at next dispatch will be confused. The mitigation (`dec capability sync` to regenerate YAML from graph) is real but is one more command operators must learn.
 - Bootstrap is now a load-bearing step. `dec init` failing means no catalog, which means no dispatch. The graph-write atomicity from [FT-001](FT-001) handles partial failures; SHACL surfaces schema errors clearly.
 - Two artifacts must agree (YAML in repo + graph at runtime). The mitigation is to treat the YAML as documentation only — operators reading the YAML to understand the catalog is fine; operators editing the YAML expecting runtime changes is not.
+- A re-bootstrap after meta-loop revisions will error out (mismatch). This is intended — but it means deploying onto an existing store from a fresh clone requires the operator to either skip bootstrap (graph already has the catalog) or accept that the YAML is documentation only.
 
 **Boundary enforcement.**
 
-- The YAML file path is fixed (`crates/decision-cli/seeds/`). The dispatcher does not have a config option to read elsewhere; the catalog is in the graph or it does not exist.
+- The YAML file paths are fixed (`config/capabilities.yaml`, `config/role-bindings.yaml`). The dispatcher does not have a config option to read elsewhere; the catalog is in the graph or it does not exist.
 - `dec init --skip-catalog` is *not* offered. Operators get the seeded catalog or they fail init explicitly.
 - Worker binaries do not read the YAML or the graph for capability data. They read the dispatch payload. [ADR-008](ADR-008) is preserved.
+- The bootstrap script must never silently overwrite graph state. Mismatch errors out.
 
 ## Relationship to existing ADRs
 
@@ -99,4 +136,4 @@ This means SHACL on `dec:Capability` ([FT-054](FT-054)) and `dec:RoleBinding` ([
 
 ## Status
 
-Proposed. Governs [FT-058](FT-058) (catalog bootstrap). Companion to [ADR-033](ADR-033) (capability routing).
+Proposed. Governs [FT-058](FT-058) (catalog bootstrap). Companion to [ADR-033](ADR-033) (capability routing). Path layout and strict divergence-handling recorded by amendment per PRD §10.7.
