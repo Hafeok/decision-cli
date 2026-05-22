@@ -2,7 +2,7 @@
 id: TC-095
 title: dec_verify_graph_new_rejects_or_upserts_duplicate_id
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-095-graph-new-duplicate-id.sh
 runner-timeout: 120
+last-run: 2026-05-22T11:32:27.628246642+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose

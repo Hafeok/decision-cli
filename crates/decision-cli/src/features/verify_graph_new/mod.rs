@@ -20,6 +20,8 @@ use std::sync::Arc;
 
 use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
+use oxigraph::sparql::QueryResults;
+use oxigraph::store::Store;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -28,7 +30,10 @@ use crate::core::mcp::{ToolDescriptor, ToolHandler};
 use crate::core::ontology::verification_graph::{ArtifactRef, VerificationGraph};
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
-use crate::core::vocab::verify_graph_named_graph;
+use crate::core::vocab::{
+    verify_graph_named_graph, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFICATION_GRAPH,
+    IRI_DEC_VERIFY_GRAPH_PREFIX,
+};
 use crate::core::StreamWriter;
 
 /// MCP tool name — referenced by `cli::verify` for the parity TC.
@@ -155,7 +160,7 @@ pub fn run(req: &GraphNewRequest) -> Result<GraphNewResponse, HandlerError> {
     let environment_iri = resolve::resolve_environment(workdir, &req.environment)?;
 
     let graph_dir = workdir.join(".dec").join("verify").join("graph");
-    let id = resolve_id(req, &graph_dir)?;
+    let id = resolve_id(req, workdir, &graph_dir)?;
     let graph = VerificationGraph::new(&id, ArtifactRef(verifies_iri), environment_iri, Vec::new());
     write_through_writer(workdir, &graph)?;
     let path = persist::write_graph_file(&graph_dir, &id, &graph)?;
@@ -165,16 +170,64 @@ pub fn run(req: &GraphNewRequest) -> Result<GraphNewResponse, HandlerError> {
     })
 }
 
-fn resolve_id(req: &GraphNewRequest, graph_dir: &Path) -> Result<String, HandlerError> {
+/// Resolve the graph id, consulting both the on-disk `.ttl` directory and
+/// the orchestration store. Per TC-095 / FT-041 §Invariants, duplicate
+/// detection must consult the **store** (the authoritative source) and
+/// not just the on-disk `.ttl` file. Disk/store drift (a missing `.ttl`
+/// with the artifact still in the store — e.g. after `rm`, a gitignore
+/// mismatch, or test cleanup) used to slip past file-only detection and
+/// silently appended a second `dec:environment` binding (and other
+/// triples) into the graph, producing a multi-headed projection.
+fn resolve_id(
+    req: &GraphNewRequest,
+    workdir: &Path,
+    graph_dir: &Path,
+) -> Result<String, HandlerError> {
     match &req.id {
         Some(id) => {
-            if mint::id_exists(graph_dir, id).map_err(io_err)? {
+            let file_dup = mint::id_exists(graph_dir, id).map_err(io_err)?;
+            let store_dup = graph_exists_in_store(workdir, id)?;
+            if file_dup || store_dup {
                 Err(HandlerError::DuplicateId { id: id.clone() })
             } else {
                 Ok(id.clone())
             }
         }
         None => mint::mint_next_id(graph_dir).map_err(io_err),
+    }
+}
+
+/// True iff the orchestration store already contains a
+/// `dec:VerificationGraph` whose IRI is `<graph-prefix><id>`. Used
+/// alongside the on-disk check so drift between `.dec/verify/graph/` and
+/// the store cannot produce a silent multi-headed graph (TC-095).
+fn graph_exists_in_store(workdir: &Path, id: &str) -> Result<bool, HandlerError> {
+    let dump_path = orchestration_dump_path(workdir);
+    if !dump_path.exists() {
+        return Ok(false);
+    }
+    let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
+        detail: format!("loading orchestration store: {e}"),
+    })?;
+    graph_iri_exists(&store, id)
+}
+
+/// SPARQL ASK helper: true iff `<graph-prefix><id>` is typed
+/// `dec:VerificationGraph` in the verify-graph named graph.
+fn graph_iri_exists(store: &Store, id: &str) -> Result<bool, HandlerError> {
+    let q = format!(
+        "ASK {{ GRAPH <{graph}> {{ <{prefix}{id}> a <{cls}> }} }}",
+        graph = IRI_DEC_GRAPH_VERIFY_GRAPH,
+        prefix = IRI_DEC_VERIFY_GRAPH_PREFIX,
+        cls = IRI_DEC_VERIFICATION_GRAPH,
+    );
+    match store.query(q.as_str()).map_err(|e| HandlerError::Internal {
+        detail: format!("graph-exists ASK: {e}"),
+    })? {
+        QueryResults::Boolean(b) => Ok(b),
+        _ => Err(HandlerError::Internal {
+            detail: "graph-exists ASK returned non-boolean result".to_string(),
+        }),
     }
 }
 
@@ -300,5 +353,36 @@ mod tests {
             HandlerError::InvalidArgument { field, .. } => assert_eq!(field, "id"),
             other => panic!("expected InvalidArgument, got {other:?}"),
         }
+    }
+
+    /// TC-095: a graph that exists only in the store (file removed)
+    /// must still be detected by [`graph_iri_exists`]. Empty store
+    /// returns false; a typed subject returns true.
+    #[test]
+    fn graph_iri_exists_consults_store_not_disk() {
+        let store = Store::new().expect("store");
+        // Empty store: no graph known.
+        assert!(!graph_iri_exists(&store, "VG-T").expect("empty"));
+
+        // Seed a `dec:VerificationGraph` typed subject directly into
+        // the verify-graph named graph — mirrors what
+        // `StreamWriter::commit(graph_to_quads)` would persist.
+        let iri =
+            NamedNode::new(format!("{IRI_DEC_VERIFY_GRAPH_PREFIX}VG-T")).expect("iri");
+        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+            .expect("rdf:type");
+        let cls = NamedNode::new(IRI_DEC_VERIFICATION_GRAPH).expect("cls");
+        let graph = NamedNode::new(IRI_DEC_GRAPH_VERIFY_GRAPH).expect("graph");
+        let quad = oxigraph::model::Quad::new(
+            iri,
+            rdf_type,
+            cls,
+            oxigraph::model::GraphName::NamedNode(graph),
+        );
+        store
+            .transaction(|mut tx| tx.insert(quad.as_ref()).map(|_| ()))
+            .expect("insert");
+        assert!(graph_iri_exists(&store, "VG-T").expect("seeded"));
+        assert!(!graph_iri_exists(&store, "VG-U").expect("other id"));
     }
 }
