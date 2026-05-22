@@ -12,7 +12,6 @@ runner: bash
 runner-args: scripts/checks/graph-as-state.sh
 runner-timeout: 60
 last-run: 2026-05-21T15:20:45.039212350+00:00
-  ERROR: expected crates/decision-cli/src/init/persist.rs (ADR-002 anchor file)
 last-run-duration: 0.0s
 ---
 
