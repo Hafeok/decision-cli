@@ -11,6 +11,9 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-096-env-list-corrupt-resilience.sh
 runner-timeout: 120
+last-run: 2026-05-22T11:17:11.472368967+00:00
+last-run-duration: 0.3s
+failure-message: "TC-096 FAIL: no error marker present for ENV-BROKEN\n--- stdout ---\n[\n  {\n    \"id\": \"ENV-001-ephemeral-cli\",\n    \"env_type\": \"ephemeral-tempdir\",\n    \"safety_class\": \"isolated\",\n    \"allowed_ops\": [\n      \"shell\",\n      \"filesystem\",\n      \"sparql-local\"\n    ],\n    \"setup\": \"mkdir -p \\\"$TMPDIR\\\" && cd \\\"$TMPDIR\\\"\",\n    \"teardown\": \"rm -rf \\\"$TMPDIR\\\"\"\n  },\n  {\n    \"id\": \"ENV-BROKEN\",\n    \"env_type\": \"ephemeral-tempdir\",\n    \"safety_class\": \"isolated\",\n    \"allowed_ops\": [\n      \"shell\",\n      \"fi"
 ---
 
 ## Purpose
