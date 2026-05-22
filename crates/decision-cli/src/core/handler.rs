@@ -1,4 +1,4 @@
-//! Single-handler discipline shared by the CLI and MCP surfaces (FT-034 / ADR-029).
+//! Single-handler discipline shared by every content-management surface (FT-034 / ADR-029).
 //!
 //! Every content-management subcommand routes through one handler. The
 //! handler accepts a [`Request`] (a structured argument shape) and

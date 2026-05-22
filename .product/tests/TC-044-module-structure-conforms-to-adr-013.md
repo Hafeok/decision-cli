@@ -2,7 +2,7 @@
 id: TC-044
 title: module_structure_conforms_to_adr_013
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs:
@@ -11,9 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/module-structure.sh
 runner-timeout: 60
-last-run: 2026-05-21T15:21:18.505743289+00:00
+last-run: 2026-05-22T10:27:09.181909747+00:00
 last-run-duration: 0.0s
-failure-message: ""
 ---
 
 ## Purpose

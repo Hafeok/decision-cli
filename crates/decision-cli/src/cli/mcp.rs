@@ -38,6 +38,7 @@ pub enum McpCmd {
 }
 
 pub fn run(workdir: &Path, cmd: McpCmd) -> ExitCode {
+    init_tracing();
     match cmd {
         McpCmd::Serve => match build_and_serve(workdir) {
             Ok(()) => ExitCode::SUCCESS,
@@ -47,6 +48,24 @@ pub fn run(workdir: &Path, cmd: McpCmd) -> ExitCode {
             }
         },
     }
+}
+
+/// Initialise `tracing` for the MCP server. Stdout is reserved for the
+/// JSON-RPC wire protocol per FT-034 §Behaviour, so every diagnostic
+/// goes to stderr. The filter respects `RUST_LOG` when set; otherwise
+/// defaults to `info` for the `dec_mcp` target. Best-effort — if a
+/// subscriber is already installed (e.g. tests already set one up),
+/// `try_init` returns Err which we ignore.
+fn init_tracing() {
+    use tracing_subscriber::EnvFilter;
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,dec_mcp=info"));
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .with_target(true)
+        .with_ansi(false)
+        .try_init();
 }
 
 fn build_and_serve(workdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
