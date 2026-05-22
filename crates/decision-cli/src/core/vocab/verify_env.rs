@@ -24,6 +24,8 @@ pub const IRI_DEC_SETUP: &str = "https://decision-cli.dev/ns#setup";
 pub const IRI_DEC_TEARDOWN: &str = "https://decision-cli.dev/ns#teardown";
 /// `dec:endpoint` predicate.
 pub const IRI_DEC_ENDPOINT: &str = "https://decision-cli.dev/ns#endpoint";
+/// `dec:fixtureSource` predicate (FT-053 / ADR-032).
+pub const IRI_DEC_FIXTURE_SOURCE: &str = "https://decision-cli.dev/ns#fixtureSource";
 
 /// Named graph holding the verification-environment projections (ADR-028 §State).
 pub const IRI_DEC_GRAPH_VERIFY_ENV: &str = "https://decision-cli.dev/ns/graph/verify-env";
@@ -71,6 +73,11 @@ pub fn teardown_pred() -> NamedNodeRef<'static> {
 #[must_use]
 pub fn endpoint_pred() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_ENDPOINT)
+}
+
+#[must_use]
+pub fn fixture_source_pred() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_FIXTURE_SOURCE)
 }
 
 #[must_use]

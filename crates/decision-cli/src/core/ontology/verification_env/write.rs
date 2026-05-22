@@ -12,7 +12,7 @@ use super::types::VerificationEnvironment;
 /// The byte layout is fixed so seed reproducibility (TC-055) does not
 /// depend on an external serialiser's whims. Order of properties is
 /// fixed: `a`, `dec:envType`, `dec:safetyClass`, `dec:allowedOps`,
-/// `dec:setup`, `dec:teardown`, `dec:endpoint`.
+/// `dec:setup`, `dec:teardown`, `dec:endpoint`, `dec:fixtureSource`.
 #[must_use]
 pub fn to_canonical_turtle(env: &VerificationEnvironment) -> String {
     let mut out = String::new();
@@ -63,6 +63,13 @@ fn write_env_optional_fields(out: &mut String, env: &VerificationEnvironment) {
     }
     if let Some(s) = &env.endpoint {
         let _ = writeln!(out, "    dec:endpoint {value} ;", value = turtle_string(s));
+    }
+    if let Some(s) = &env.fixture_source {
+        let _ = writeln!(
+            out,
+            "    dec:fixtureSource {value} ;",
+            value = turtle_string(s)
+        );
     }
 }
 

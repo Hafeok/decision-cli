@@ -14,7 +14,8 @@ use thiserror::Error;
 
 use crate::core::vocab::{
     IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_PREFIX, IRI_DEC_ENV_TYPE,
-    IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_TEARDOWN, IRI_DEC_VERIFICATION_ENVIRONMENT,
+    IRI_DEC_FIXTURE_SOURCE, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_TEARDOWN,
+    IRI_DEC_VERIFICATION_ENVIRONMENT,
 };
 
 use super::types::{SafetyClass, VerificationEnvironment, RDF_FIRST, RDF_NIL, RDF_REST};
@@ -152,6 +153,7 @@ fn extract_env(
     let setup = single_literal(store, subject, IRI_DEC_SETUP, path)?;
     let teardown = single_literal(store, subject, IRI_DEC_TEARDOWN, path)?;
     let endpoint = single_literal(store, subject, IRI_DEC_ENDPOINT, path)?;
+    let fixture_source = single_literal(store, subject, IRI_DEC_FIXTURE_SOURCE, path)?;
     let allowed_ops = read_allowed_ops_list(store, subject, path)?;
     Ok(VerificationEnvironment {
         id,
@@ -161,6 +163,7 @@ fn extract_env(
         allowed_ops,
         safety_class,
         endpoint,
+        fixture_source,
     })
 }
 

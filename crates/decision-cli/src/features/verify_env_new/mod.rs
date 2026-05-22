@@ -62,6 +62,11 @@ pub struct EnvNewRequest {
     /// Required iff `env_type` matches `remote-*`; forbidden otherwise.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
+    /// Optional repo-relative path to a fixture tree materialised before
+    /// steps execute (FT-053 / ADR-032). `None` when the env carries no
+    /// fixture.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixture_source: Option<String>,
     /// Working directory the handler runs against. Surface adapters set
     /// this; the MCP server overrides any client-supplied value with its
     /// own launch workdir before invoking the handler.
@@ -161,6 +166,7 @@ pub fn input_schema() -> Value {
             "setup": { "type": "string" },
             "teardown": { "type": "string" },
             "endpoint": { "type": "string" },
+            "fixture_source": { "type": "string", "minLength": 1 },
             "workdir": { "type": "string" },
         },
     })
@@ -195,11 +201,7 @@ pub fn run(req: &EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
 /// with the artifact still in the store — e.g. after `rm`, a gitignore
 /// mismatch, or test cleanup) used to slip past file-only detection and
 /// silently appended a second `dec:allowedOps` head, corrupting the env.
-fn resolve_id(
-    req: &EnvNewRequest,
-    workdir: &Path,
-    env_dir: &Path,
-) -> Result<String, HandlerError> {
+fn resolve_id(req: &EnvNewRequest, workdir: &Path, env_dir: &Path) -> Result<String, HandlerError> {
     match &req.id {
         Some(id) => {
             let file_dup = mint::id_exists(env_dir, id).map_err(io_err)?;
@@ -238,9 +240,11 @@ fn env_iri_exists(store: &Store, id: &str) -> Result<bool, HandlerError> {
         prefix = IRI_DEC_ENV_PREFIX,
         cls = IRI_DEC_VERIFICATION_ENVIRONMENT,
     );
-    match store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("env-exists ASK: {e}"),
-    })? {
+    match store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("env-exists ASK: {e}"),
+        })? {
         QueryResults::Boolean(b) => Ok(b),
         _ => Err(HandlerError::Internal {
             detail: "env-exists ASK returned non-boolean result".to_string(),
@@ -262,6 +266,7 @@ fn build_env(id: &str, req: &EnvNewRequest) -> Result<VerificationEnvironment, H
         allowed_ops: req.allowed_ops.clone(),
         safety_class,
         endpoint: req.endpoint.clone().filter(|s| !s.is_empty()),
+        fixture_source: req.fixture_source.clone().filter(|s| !s.is_empty()),
     })
 }
 
@@ -332,6 +337,7 @@ mod tests {
             setup: Some("echo hi".to_string()),
             teardown: None,
             endpoint: None,
+            fixture_source: None,
             workdir: None,
         };
         let v = serde_json::to_value(&req).expect("ser");
@@ -365,8 +371,8 @@ mod tests {
         // into the verify-env named graph — mirrors what
         // `StreamWriter::commit(env_to_quads)` would persist.
         let iri = NamedNode::new(format!("{IRI_DEC_ENV_PREFIX}ENV-T")).expect("iri");
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-            .expect("rdf:type");
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("rdf:type");
         let cls = NamedNode::new(IRI_DEC_VERIFICATION_ENVIRONMENT).expect("cls");
         let graph = NamedNode::new(IRI_DEC_GRAPH_VERIFY_ENV).expect("graph");
         let quad = oxigraph::model::Quad::new(

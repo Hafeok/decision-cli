@@ -28,5 +28,6 @@ pub fn ephemeral_cli_env() -> VerificationEnvironment {
         ],
         safety_class: SafetyClass::Isolated,
         endpoint: None,
+        fixture_source: None,
     }
 }

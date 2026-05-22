@@ -337,6 +337,11 @@ dec:endpoint a rdf:Property ;
     rdfs:range  xsd:string ;
     rdfs:comment "Required for remote environment types (e.g. remote-http); URL of the target endpoint. Local environment types MUST NOT carry an endpoint (SHACL conditional)." .
 
+dec:fixtureSource a rdf:Property ;
+    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Optional repo-relative path to a fixture tree materialised before steps execute (FT-053 / ADR-032). Per ADR-032, by convention fixtures live under tests/fixtures/<name>/." .
+
 # --- FT-036 / ADR-028: VerificationGraph + VerificationStep -----------------
 
 dec:VerificationGraph a rdfs:Class ;

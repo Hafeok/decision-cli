@@ -21,8 +21,8 @@ use crate::core::sparql::{term_iri_string, term_literal_string};
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::vocab::{
     IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_PREFIX, IRI_DEC_ENV_TYPE,
-    IRI_DEC_GRAPH_VERIFY_ENV, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_TEARDOWN,
-    IRI_DEC_VERIFICATION_ENVIRONMENT,
+    IRI_DEC_FIXTURE_SOURCE, IRI_DEC_GRAPH_VERIFY_ENV, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP,
+    IRI_DEC_TEARDOWN, IRI_DEC_VERIFICATION_ENVIRONMENT,
 };
 
 use super::{EnvRowError, EnvSummary};
@@ -107,6 +107,7 @@ fn summary_from_solution(
     let endpoint = optional_literal(sol, "endpoint");
     let setup = optional_literal(sol, "setup");
     let teardown = optional_literal(sol, "teardown");
+    let fixture_source = optional_literal(sol, "fixture_source");
     EnvSummary {
         id,
         env_type,
@@ -115,6 +116,7 @@ fn summary_from_solution(
         allowed_ops,
         setup,
         teardown,
+        fixture_source,
         error: row_error,
     }
 }
@@ -135,7 +137,7 @@ fn build_query(safety_class: Option<&str>, env_type: Option<&str>) -> String {
     let safety_filter = filter_clause("safety", safety_class);
     let type_filter = filter_clause("type", env_type);
     format!(
-        "SELECT ?env ?type ?safety ?endpoint ?setup ?teardown WHERE {{\n  \
+        "SELECT ?env ?type ?safety ?endpoint ?setup ?teardown ?fixture_source WHERE {{\n  \
          GRAPH <{graph}> {{\n    \
          ?env a <{cls}> ;\n         \
          <{p_type}> ?type ;\n         \
@@ -143,7 +145,8 @@ fn build_query(safety_class: Option<&str>, env_type: Option<&str>) -> String {
          {safety_filter}{type_filter}    \
          OPTIONAL {{ ?env <{p_endpoint}> ?endpoint }}\n    \
          OPTIONAL {{ ?env <{p_setup}> ?setup }}\n    \
-         OPTIONAL {{ ?env <{p_teardown}> ?teardown }}\n  \
+         OPTIONAL {{ ?env <{p_teardown}> ?teardown }}\n    \
+         OPTIONAL {{ ?env <{p_fixture_source}> ?fixture_source }}\n  \
          }}\n\
          }} ORDER BY ?env",
         graph = IRI_DEC_GRAPH_VERIFY_ENV,
@@ -153,6 +156,7 @@ fn build_query(safety_class: Option<&str>, env_type: Option<&str>) -> String {
         p_endpoint = IRI_DEC_ENDPOINT,
         p_setup = IRI_DEC_SETUP,
         p_teardown = IRI_DEC_TEARDOWN,
+        p_fixture_source = IRI_DEC_FIXTURE_SOURCE,
     )
 }
 
@@ -199,10 +203,7 @@ fn escape_sparql_literal(s: &str) -> String {
 ///   shape** — surfaced as a generic `Corrupt` marker with the detail
 ///   string from the underlying walker.
 /// - **Malformed env IRI** — surfaced as `Corrupt`.
-fn read_allowed_ops_resilient(
-    store: &Store,
-    env_iri: &str,
-) -> (Vec<String>, Option<EnvRowError>) {
+fn read_allowed_ops_resilient(store: &Store, env_iri: &str) -> (Vec<String>, Option<EnvRowError>) {
     let env_node = match NamedNode::new(env_iri) {
         Ok(n) => n,
         Err(e) => {

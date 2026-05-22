@@ -300,6 +300,7 @@ fn ac5_filter_by_environment() {
         setup: None,
         teardown: None,
         endpoint: None,
+        fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     };
     decision_cli::verify_env_new::run(&env2_req).expect("env new");
@@ -330,6 +331,7 @@ fn ac6_combined_filters_are_conjunctive() {
         setup: None,
         teardown: None,
         endpoint: None,
+        fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     };
     decision_cli::verify_env_new::run(&env2_req).expect("env new");

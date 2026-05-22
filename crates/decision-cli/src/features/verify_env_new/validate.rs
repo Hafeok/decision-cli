@@ -22,8 +22,59 @@ pub(super) fn pre_validate(req: &EnvNewRequest) -> Result<(), HandlerError> {
     validate_safety_class(&req.safety_class)?;
     validate_allowed_ops(&req.allowed_ops)?;
     validate_endpoint(&req.env_type, req.endpoint.as_deref())?;
+    validate_fixture_source(req.fixture_source.as_deref(), req.workdir.as_deref())?;
     if let Some(id) = &req.id {
         validate_id_format(id)?;
+    }
+    Ok(())
+}
+
+/// FT-053 / ADR-032 — `fixture_source` must be repo-relative and point
+/// at an existing directory under the workdir. `None` is always valid.
+fn validate_fixture_source(
+    fixture_source: Option<&str>,
+    workdir: Option<&std::path::Path>,
+) -> Result<(), HandlerError> {
+    let Some(raw) = fixture_source else {
+        return Ok(());
+    };
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Err(HandlerError::InvalidArgument {
+            field: "fixture_source".to_string(),
+            detail: "fixture_source must be a non-empty string".to_string(),
+        });
+    }
+    if trimmed.starts_with('/') {
+        return Err(HandlerError::InvalidArgument {
+            field: "fixture_source".to_string(),
+            detail: "fixture_source must be repo-relative".to_string(),
+        });
+    }
+    let p = std::path::Path::new(trimmed);
+    if p.components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
+        return Err(HandlerError::InvalidArgument {
+            field: "fixture_source".to_string(),
+            detail: "fixture_source must not contain `..`".to_string(),
+        });
+    }
+    let Some(workdir) = workdir else {
+        return Ok(());
+    };
+    let resolved = workdir.join(trimmed);
+    if !resolved.exists() {
+        return Err(HandlerError::InvalidArgument {
+            field: "fixture_source".to_string(),
+            detail: format!("fixture_source {trimmed:?} does not exist"),
+        });
+    }
+    if !resolved.is_dir() {
+        return Err(HandlerError::InvalidArgument {
+            field: "fixture_source".to_string(),
+            detail: format!("fixture_source {trimmed:?} is not a directory"),
+        });
     }
     Ok(())
 }
@@ -126,7 +177,108 @@ mod tests {
             setup: None,
             teardown: None,
             endpoint: None,
+            fixture_source: None,
             workdir: None,
+        }
+    }
+
+    /// FT-053: absolute paths are rejected.
+    #[test]
+    fn rejects_absolute_fixture_source() {
+        let mut req = ephemeral_req();
+        req.fixture_source = Some("/etc".to_string());
+        let err = pre_validate(&req).expect_err("absolute fixture_source must fail");
+        match err {
+            HandlerError::InvalidArgument { field, detail } => {
+                assert_eq!(field, "fixture_source");
+                assert!(detail.contains("repo-relative"), "{detail}");
+            }
+            other => panic!("expected InvalidArgument, got {other:?}"),
+        }
+    }
+
+    /// FT-053: `..` segments are rejected.
+    #[test]
+    fn rejects_parent_dir_fixture_source() {
+        let mut req = ephemeral_req();
+        req.fixture_source = Some("foo/../bar".to_string());
+        let err = pre_validate(&req).expect_err("`..` fixture_source must fail");
+        match err {
+            HandlerError::InvalidArgument { field, detail } => {
+                assert_eq!(field, "fixture_source");
+                assert!(detail.contains(".."), "{detail}");
+            }
+            other => panic!("expected InvalidArgument, got {other:?}"),
+        }
+    }
+
+    /// FT-053: workdir-relative path that doesn't resolve is rejected
+    /// (only when a workdir is set).
+    #[test]
+    fn rejects_missing_fixture_source_dir() {
+        let mut req = ephemeral_req();
+        req.fixture_source = Some("tests/fixtures/__does_not_exist__".to_string());
+        req.workdir = Some(std::env::temp_dir());
+        let err = pre_validate(&req).expect_err("missing dir must fail");
+        match err {
+            HandlerError::InvalidArgument { field, detail } => {
+                assert_eq!(field, "fixture_source");
+                assert!(detail.contains("does not exist"), "{detail}");
+            }
+            other => panic!("expected InvalidArgument, got {other:?}"),
+        }
+    }
+
+    /// FT-053: a real directory under workdir passes.
+    #[test]
+    fn accepts_existing_fixture_source_dir() {
+        let tmp = std::env::temp_dir();
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let fixture = tmp.join(format!("dec-fixture-validate-{nonce}"));
+        std::fs::create_dir_all(&fixture).expect("mkdir");
+        let mut req = ephemeral_req();
+        req.fixture_source = Some(
+            fixture
+                .file_name()
+                .expect("name")
+                .to_string_lossy()
+                .into_owned(),
+        );
+        req.workdir = Some(tmp.clone());
+        let result = pre_validate(&req);
+        let _ = std::fs::remove_dir_all(&fixture);
+        result.expect("real dir under workdir must pass");
+    }
+
+    /// FT-053: a file (not directory) is rejected.
+    #[test]
+    fn rejects_fixture_source_pointing_at_file() {
+        let tmp = std::env::temp_dir();
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let path = tmp.join(format!("dec-fixture-validate-file-{nonce}"));
+        std::fs::write(&path, b"not a directory").expect("touch");
+        let mut req = ephemeral_req();
+        req.fixture_source = Some(
+            path.file_name()
+                .expect("name")
+                .to_string_lossy()
+                .into_owned(),
+        );
+        req.workdir = Some(tmp.clone());
+        let err = pre_validate(&req).expect_err("file path must fail");
+        let _ = std::fs::remove_file(&path);
+        match err {
+            HandlerError::InvalidArgument { field, detail } => {
+                assert_eq!(field, "fixture_source");
+                assert!(detail.contains("not a directory"), "{detail}");
+            }
+            other => panic!("expected InvalidArgument, got {other:?}"),
         }
     }
 

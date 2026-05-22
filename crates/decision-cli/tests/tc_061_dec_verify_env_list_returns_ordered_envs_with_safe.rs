@@ -100,6 +100,7 @@ fn seed_three_envs(workdir: &Path) {
             setup: None,
             teardown: None,
             endpoint: None,
+            fixture_source: None,
             workdir: Some(workdir.to_path_buf()),
         },
     );
@@ -113,6 +114,7 @@ fn seed_three_envs(workdir: &Path) {
             setup: None,
             teardown: None,
             endpoint: Some("https://dev.example.com".to_string()),
+            fixture_source: None,
             workdir: Some(workdir.to_path_buf()),
         },
     );
@@ -126,6 +128,7 @@ fn seed_three_envs(workdir: &Path) {
             setup: None,
             teardown: None,
             endpoint: Some("https://prod.example.com".to_string()),
+            fixture_source: None,
             workdir: Some(workdir.to_path_buf()),
         },
     );

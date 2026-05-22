@@ -98,6 +98,9 @@ pub struct EnvSummary {
     /// `dec:teardown` snippet (omitted when absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub teardown: Option<String>,
+    /// `dec:fixtureSource` path (omitted when absent). FT-053 / ADR-032.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixture_source: Option<String>,
     /// Structured per-row error marker (TC-096). Absent for healthy envs;
     /// present when the row could not be fully projected — e.g. an env
     /// with two `dec:allowedOps` heads from a write-path bug or a manual

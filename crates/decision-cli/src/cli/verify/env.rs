@@ -45,6 +45,10 @@ pub struct EnvNewArgs {
     /// Required iff `--type` is `remote-*`; forbidden for local types.
     #[arg(long)]
     pub endpoint: Option<String>,
+    /// Optional repo-relative path to a fixture tree (FT-053 / ADR-032).
+    /// Must point at a directory under the working directory.
+    #[arg(long = "fixture-source", value_name = "PATH")]
+    pub fixture_source: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -126,6 +130,7 @@ pub fn env_new_request(args: &EnvNewArgs, workdir: &Path) -> EnvNewRequest {
         setup: args.setup.clone(),
         teardown: args.teardown.clone(),
         endpoint: args.endpoint.clone(),
+        fixture_source: args.fixture_source.clone(),
         workdir: Some(workdir.to_path_buf()),
     }
 }

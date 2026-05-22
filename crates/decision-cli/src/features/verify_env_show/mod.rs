@@ -93,6 +93,9 @@ pub struct EnvDocument {
     /// `dec:teardown` snippet (omitted when absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub teardown: Option<String>,
+    /// `dec:fixtureSource` path (omitted when absent). FT-053 / ADR-032.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixture_source: Option<String>,
 }
 
 impl EnvDocument {
@@ -107,6 +110,7 @@ impl EnvDocument {
             allowed_ops: env.allowed_ops.clone(),
             setup: env.setup.clone(),
             teardown: env.teardown.clone(),
+            fixture_source: env.fixture_source.clone(),
         }
     }
 
@@ -130,6 +134,7 @@ impl EnvDocument {
             allowed_ops: self.allowed_ops.clone(),
             safety_class: safety,
             endpoint: self.endpoint.clone(),
+            fixture_source: self.fixture_source.clone(),
         })
     }
 }
@@ -371,9 +376,32 @@ mod tests {
             allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
             safety_class: SafetyClass::Isolated,
             endpoint: None,
+            fixture_source: None,
         };
         let doc = EnvDocument::from_env(&env);
         let back = doc.to_env().expect("to_env");
         assert_eq!(env, back);
+    }
+
+    /// FT-053: EnvDocument round-trips with a non-None fixture_source.
+    #[test]
+    fn env_document_round_trips_with_fixture_source() {
+        let env = VerificationEnvironment {
+            id: "ENV-008".to_string(),
+            env_type: "ephemeral-tempdir".to_string(),
+            setup: None,
+            teardown: None,
+            allowed_ops: vec!["shell".to_string()],
+            safety_class: SafetyClass::Isolated,
+            endpoint: None,
+            fixture_source: Some("tests/fixtures/dec-implement-basic".to_string()),
+        };
+        let doc = EnvDocument::from_env(&env);
+        let back = doc.to_env().expect("to_env");
+        assert_eq!(env, back);
+        assert_eq!(
+            doc.fixture_source.as_deref(),
+            Some("tests/fixtures/dec-implement-basic"),
+        );
     }
 }

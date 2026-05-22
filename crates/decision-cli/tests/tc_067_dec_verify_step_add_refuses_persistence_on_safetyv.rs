@@ -106,6 +106,7 @@ fn workdir_with_prod_env_and_graph(tag: &str) -> (TmpDir, String) {
         setup: None,
         teardown: None,
         endpoint: Some("https://prod.example.com".to_string()),
+        fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     })
     .expect("env new");

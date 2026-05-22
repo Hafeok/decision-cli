@@ -120,8 +120,33 @@ mod tests {
             allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
             setup: None,
             teardown: None,
+            fixture_source: None,
             error: None,
         }
+    }
+
+    /// FT-053: list JSON includes `fixture_source` when set.
+    #[test]
+    fn json_includes_fixture_source_when_set() {
+        let mut env = sample();
+        env.fixture_source = Some("tests/fixtures/demo".to_string());
+        let resp = EnvListResponse { envs: vec![env] };
+        let s = render_json(&resp);
+        let v: Value = serde_json::from_str(&s).expect("json");
+        let arr = v.as_array().expect("array");
+        assert_eq!(arr[0]["fixture_source"], "tests/fixtures/demo");
+    }
+
+    /// FT-053: list JSON omits `fixture_source` when unset.
+    #[test]
+    fn json_omits_fixture_source_when_absent() {
+        let resp = EnvListResponse {
+            envs: vec![sample()],
+        };
+        let s = render_json(&resp);
+        let v: Value = serde_json::from_str(&s).expect("json");
+        let arr = v.as_array().expect("array");
+        assert!(arr[0].get("fixture_source").is_none());
     }
 
     #[test]

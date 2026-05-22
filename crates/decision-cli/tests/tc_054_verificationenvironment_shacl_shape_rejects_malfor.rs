@@ -33,6 +33,7 @@ fn ephemeral_env() -> VerificationEnvironment {
         ],
         safety_class: SafetyClass::Isolated,
         endpoint: None,
+        fixture_source: None,
     }
 }
 

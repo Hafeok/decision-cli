@@ -5,8 +5,8 @@ use oxigraph::model::{
 };
 
 use crate::core::vocab::{
-    allowed_ops, endpoint_pred, env_type, safety_class, setup_pred, teardown_pred,
-    verification_environment_class, IRI_DEC_ENV_PREFIX, SAFETY_ISOLATED,
+    allowed_ops, endpoint_pred, env_type, fixture_source_pred, safety_class, setup_pred,
+    teardown_pred, verification_environment_class, IRI_DEC_ENV_PREFIX, SAFETY_ISOLATED,
     SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 
@@ -71,6 +71,9 @@ pub struct VerificationEnvironment {
     pub safety_class: SafetyClass,
     /// Required for remote env types; forbidden for local types.
     pub endpoint: Option<String>,
+    /// Repo-relative path to a fixture tree materialised before steps
+    /// execute (FT-053 / ADR-032). `None` when the env carries no fixture.
+    pub fixture_source: Option<String>,
 }
 
 impl VerificationEnvironment {
@@ -121,6 +124,9 @@ impl VerificationEnvironment {
         }
         if let Some(e) = &self.endpoint {
             quads.push(literal_quad(subject, endpoint_pred(), e, g));
+        }
+        if let Some(f) = &self.fixture_source {
+            quads.push(literal_quad(subject, fixture_source_pred(), f, g));
         }
         quads
     }

@@ -40,6 +40,7 @@ fn env(id: &str, allowed: &[&str], class: SafetyClass) -> VerificationEnvironmen
         allowed_ops: allowed.iter().map(|s| (*s).to_string()).collect(),
         safety_class: class,
         endpoint,
+        fixture_source: None,
     }
 }
 

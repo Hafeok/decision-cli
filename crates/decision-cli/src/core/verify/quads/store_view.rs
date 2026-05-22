@@ -12,9 +12,9 @@ use crate::core::ontology::verification_env::{SafetyClass, VerificationEnvironme
 use crate::core::ontology::verification_graph::{StepFields, StepKind, VerificationStep};
 use crate::core::vocab::{
     IRI_DEC_ALLOWED_OPS, IRI_DEC_BIND_AS, IRI_DEC_COMMAND, IRI_DEC_CONDITION, IRI_DEC_ENDPOINT,
-    IRI_DEC_ENV_TYPE, IRI_DEC_METHOD, IRI_DEC_PATH, IRI_DEC_QUERY, IRI_DEC_SAFETY_CLASS,
-    IRI_DEC_SETUP, IRI_DEC_STEP_TYPE, IRI_DEC_TARGET, IRI_DEC_TEARDOWN, IRI_DEC_TIMEOUT,
-    IRI_DEC_URL,
+    IRI_DEC_ENV_TYPE, IRI_DEC_FIXTURE_SOURCE, IRI_DEC_METHOD, IRI_DEC_PATH, IRI_DEC_QUERY,
+    IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_STEP_TYPE, IRI_DEC_TARGET, IRI_DEC_TEARDOWN,
+    IRI_DEC_TIMEOUT, IRI_DEC_URL,
 };
 
 use super::super::safety::{OpSource, SafetyError};
@@ -128,6 +128,7 @@ pub(super) fn load_env(
     let setup = literal_for(inserts, store, env_iri, IRI_DEC_SETUP);
     let teardown = literal_for(inserts, store, env_iri, IRI_DEC_TEARDOWN);
     let endpoint = literal_for(inserts, store, env_iri, IRI_DEC_ENDPOINT);
+    let fixture_source = literal_for(inserts, store, env_iri, IRI_DEC_FIXTURE_SOURCE);
     let allowed_ops = list_for(inserts, store, env_iri, IRI_DEC_ALLOWED_OPS);
     Some(VerificationEnvironment {
         id,
@@ -137,6 +138,7 @@ pub(super) fn load_env(
         allowed_ops,
         safety_class,
         endpoint,
+        fixture_source,
     })
 }
 

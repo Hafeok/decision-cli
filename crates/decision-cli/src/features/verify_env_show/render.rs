@@ -23,6 +23,9 @@ pub fn render_text(resp: &EnvShowResponse) -> String {
     if let Some(ep) = &env.endpoint {
         out.push_str(&format!("  endpoint:     {ep}\n"));
     }
+    if let Some(fs) = &env.fixture_source {
+        out.push_str(&format!("  fixture:      {fs}\n"));
+    }
     push_allowed_ops(&mut out, &env.allowed_ops);
     push_optional_block(&mut out, "setup", env.setup.as_deref());
     push_optional_block(&mut out, "teardown", env.teardown.as_deref());
@@ -84,6 +87,7 @@ mod tests {
                 ],
                 setup: Some("mkdir -p \"$TMPDIR\" && cd \"$TMPDIR\"".to_string()),
                 teardown: Some("rm -rf \"$TMPDIR\"".to_string()),
+                fixture_source: None,
             },
             path: PathBuf::from("/tmp/.dec/verify/env/ENV-001-ephemeral-cli.ttl"),
         }
@@ -143,5 +147,33 @@ mod tests {
         let s = render_json(&resp);
         let v: Value = serde_json::from_str(&s).expect("json");
         assert_eq!(v["endpoint"], "https://example.com");
+    }
+
+    /// FT-053: text render shows `fixture:` row when set.
+    #[test]
+    fn text_includes_fixture_when_present() {
+        let mut resp = sample();
+        resp.env.fixture_source = Some("tests/fixtures/demo".to_string());
+        let s = render_text(&resp);
+        assert!(s.contains("fixture:"));
+        assert!(s.contains("tests/fixtures/demo"));
+    }
+
+    /// FT-053: text render omits `fixture:` row when unset.
+    #[test]
+    fn text_omits_fixture_when_absent() {
+        let resp = sample();
+        let s = render_text(&resp);
+        assert!(!s.contains("fixture:"));
+    }
+
+    /// FT-053: JSON render includes `fixture_source` field when set.
+    #[test]
+    fn json_includes_fixture_source_when_present() {
+        let mut resp = sample();
+        resp.env.fixture_source = Some("tests/fixtures/demo".to_string());
+        let s = render_json(&resp);
+        let v: Value = serde_json::from_str(&s).expect("json");
+        assert_eq!(v["fixture_source"], "tests/fixtures/demo");
     }
 }

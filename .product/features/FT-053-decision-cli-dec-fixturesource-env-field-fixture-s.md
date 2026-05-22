@@ -2,7 +2,7 @@
 id: FT-053
 title: 'decision-cli: dec:fixtureSource env field + --fixture-source CLI flag'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-035
 - FT-038
@@ -11,7 +11,10 @@ depends-on:
 adrs:
 - ADR-032
 - ADR-028
-tests: []
+tests:
+- TC-097
+- TC-098
+- TC-099
 domains: []
 domains-acknowledged: {}
 ---

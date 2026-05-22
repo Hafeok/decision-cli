@@ -73,6 +73,7 @@ mod tests {
             allowed_ops: vec!["shell".to_string()],
             safety_class: SafetyClass::Isolated,
             endpoint: None,
+            fixture_source: None,
         };
         let p = write_env_file(dir.path(), "ENV-042", &env).expect("write");
         let bytes = fs::read_to_string(&p).expect("read");

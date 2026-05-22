@@ -195,6 +195,7 @@ fn cli_and_mcp_produce_identical_request_shapes() {
         setup: None,
         teardown: None,
         endpoint: None,
+        fixture_source: None,
         workdir: Some(workdir.clone()),
     };
     // MCP: build the matching JSON args, parse them through the same
@@ -229,6 +230,7 @@ fn cli_and_mcp_produce_identical_response_values() {
         setup: None,
         teardown: None,
         endpoint: None,
+        fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     };
     let cli = decision_cli::verify_env_new::run(&req).expect("cli ok");

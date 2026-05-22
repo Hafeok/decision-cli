@@ -528,6 +528,15 @@ dec:VerificationEnvironmentShape a sh:NodeShape ;
         sh:message  "dec:VerificationEnvironment carries at most one dec:endpoint (string)."
     ] ;
 
+    # FT-053 / ADR-032: optional repo-relative fixture path.
+    sh:property [
+        sh:path      dec:fixtureSource ;
+        sh:datatype  xsd:string ;
+        sh:maxCount  1 ;
+        sh:minLength 1 ;
+        sh:message   "dec:VerificationEnvironment carries at most one non-empty dec:fixtureSource (string)."
+    ] ;
+
     # Remote env types (matching the remote-* prefix) must carry dec:endpoint.
     sh:sparql [
         sh:message "remote env types (envType starts with \"remote-\") require dec:endpoint" ;

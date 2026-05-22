@@ -132,6 +132,7 @@ fn cli_happy_path_creates_env_file_and_returns_minted_id() {
         setup: None,
         teardown: None,
         endpoint: None,
+        fixture_source: None,
         workdir: None,
     };
     let outcome = invoke_cli(tmp.path(), req).expect("env new succeeds");
@@ -173,6 +174,7 @@ fn cli_and_mcp_produce_byte_equal_turtle_modulo_id() {
         setup: None,
         teardown: None,
         endpoint: None,
+        fixture_source: None,
         workdir: None,
     };
     let cli_out = invoke_cli(cli_tmp.path(), req.clone()).expect("cli");
@@ -221,6 +223,7 @@ fn missing_endpoint_on_remote_type_rejected_on_both_surfaces() {
             setup: None,
             teardown: None,
             endpoint: None,
+            fixture_source: None,
             workdir: None,
         },
     )
@@ -268,6 +271,7 @@ fn caller_supplied_id_collision_fails_with_duplicate_id() {
             setup: None,
             teardown: None,
             endpoint: None,
+            fixture_source: None,
             workdir: None,
         },
     )
@@ -283,6 +287,7 @@ fn caller_supplied_id_collision_fails_with_duplicate_id() {
             setup: None,
             teardown: None,
             endpoint: None,
+            fixture_source: None,
             workdir: None,
         },
     )
@@ -337,6 +342,7 @@ fn remote_env_with_endpoint_succeeds() {
             setup: None,
             teardown: None,
             endpoint: Some("https://example.com".to_string()),
+            fixture_source: None,
             workdir: None,
         },
     )

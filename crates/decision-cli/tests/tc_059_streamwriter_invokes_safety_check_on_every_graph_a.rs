@@ -41,6 +41,7 @@ fn ephemeral_env() -> VerificationEnvironment {
         ],
         safety_class: SafetyClass::Isolated,
         endpoint: None,
+        fixture_source: None,
     }
 }
 
@@ -53,6 +54,7 @@ fn prod_readonly_env() -> VerificationEnvironment {
         allowed_ops: vec!["http-readonly".to_string()],
         safety_class: SafetyClass::ProductionReadonly,
         endpoint: Some("https://decision-cli.dev".to_string()),
+        fixture_source: None,
     }
 }
 

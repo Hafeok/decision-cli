@@ -98,6 +98,7 @@ fn seed_extra_env(workdir: &Path) {
         setup: None,
         teardown: None,
         endpoint: Some("https://dev.example.com".to_string()),
+        fixture_source: None,
         workdir: Some(workdir.to_path_buf()),
     })
     .expect("env new must succeed for fixture");

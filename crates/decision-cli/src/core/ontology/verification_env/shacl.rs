@@ -12,9 +12,9 @@ use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_TYPE, IRI_DEC_SAFETY_CLASS,
-    IRI_DEC_VERIFICATION_ENVIRONMENT, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY,
-    SAFETY_SHARED_NON_DESTRUCTIVE,
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_TYPE, IRI_DEC_FIXTURE_SOURCE,
+    IRI_DEC_SAFETY_CLASS, IRI_DEC_VERIFICATION_ENVIRONMENT, SAFETY_ISOLATED,
+    SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 
 use super::types::{RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE};
@@ -89,7 +89,35 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<EnvViolation> {
     check_safety_class(quads, subject, &mut violations);
     check_allowed_ops(quads, subject, &mut violations);
     check_endpoint_conditional(quads, subject, &env_type_values, &mut violations);
+    check_fixture_source(quads, subject, &mut violations);
     violations
+}
+
+/// FT-053 / ADR-032 — `dec:fixtureSource` is optional, max-count 1,
+/// non-empty string. The path's filesystem presence is the authoring
+/// surface's responsibility (`features::verify_env_new::validate`); the
+/// shape only enforces shape.
+fn check_fixture_source(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<EnvViolation>) {
+    let values = literal_values(quads, subject, IRI_DEC_FIXTURE_SOURCE);
+    if values.len() > 1 {
+        violations.push(violation(
+            subject,
+            IRI_DEC_FIXTURE_SOURCE,
+            &format!(
+                "expected at most one dec:fixtureSource, found {}",
+                values.len()
+            ),
+        ));
+    }
+    for v in &values {
+        if v.is_empty() {
+            violations.push(violation(
+                subject,
+                IRI_DEC_FIXTURE_SOURCE,
+                "dec:fixtureSource must be a non-empty string (sh:minLength 1)",
+            ));
+        }
+    }
 }
 
 fn check_env_type(subject: &NamedNode, values: &[String], violations: &mut Vec<EnvViolation>) {

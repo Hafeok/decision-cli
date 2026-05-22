@@ -3,9 +3,9 @@
 use std::path::PathBuf;
 
 use super::io::from_turtle_bytes;
-use super::write::to_canonical_turtle;
 use super::shacl::validate_quads;
 use super::types::{SafetyClass, VerificationEnvironment};
+use super::write::to_canonical_turtle;
 use crate::core::vocab::verify_env_graph;
 
 fn ephemeral_cli_env() -> VerificationEnvironment {
@@ -21,6 +21,7 @@ fn ephemeral_cli_env() -> VerificationEnvironment {
         ],
         safety_class: SafetyClass::Isolated,
         endpoint: None,
+        fixture_source: None,
     }
 }
 
