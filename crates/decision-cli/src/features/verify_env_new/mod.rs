@@ -30,8 +30,7 @@ use crate::core::ontology::verification_env::{
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use crate::core::vocab::{
-    verify_env_graph, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY,
-    SAFETY_SHARED_NON_DESTRUCTIVE,
+    verify_env_graph, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 use crate::core::StreamWriter;
 
@@ -95,7 +94,18 @@ pub fn parse_request(req: &Request) -> Result<EnvNewRequest, HandlerError> {
 /// MCP tool descriptor — registered by `features::mcp::build_registry`.
 #[must_use]
 pub fn tool_descriptor() -> ToolDescriptor {
-    let handler: ToolHandler = Arc::new(|req: Request| {
+    ToolDescriptor::new(
+        TOOL_NAME,
+        "Create a new dec:VerificationEnvironment artifact (FT-038 / ADR-028).",
+        input_schema(),
+        tool_handler(),
+    )
+    .with_output_schema(output_schema())
+}
+
+/// MCP handler closure — runs the single handler and renders the response.
+fn tool_handler() -> ToolHandler {
+    Arc::new(|req: Request| {
         let parsed = parse_request(&req)?;
         let outcome = run(&parsed)?;
         let summary = format!(
@@ -110,21 +120,19 @@ pub fn tool_descriptor() -> ToolDescriptor {
             }),
             summary,
         ))
-    });
-    ToolDescriptor::new(
-        TOOL_NAME,
-        "Create a new dec:VerificationEnvironment artifact (FT-038 / ADR-028).",
-        input_schema(),
-        handler,
-    )
-    .with_output_schema(json!({
+    })
+}
+
+/// JSON Schema for the MCP tool's structured output.
+fn output_schema() -> Value {
+    json!({
         "type": "object",
         "required": ["id", "path"],
         "properties": {
             "id": { "type": "string" },
             "path": { "type": "string" },
         },
-    }))
+    })
 }
 
 /// JSON Schema describing the MCP tool's input arguments.
@@ -156,11 +164,14 @@ pub fn input_schema() -> Value {
 
 /// Single handler — both CLI and MCP surfaces invoke this.
 pub fn run(req: &EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
-    let workdir = req.workdir.as_deref().ok_or_else(|| HandlerError::InvalidArgument {
-        field: "workdir".to_string(),
-        detail: "no working directory available; run from a `dec init`-bootstrapped tree"
-            .to_string(),
-    })?;
+    let workdir = req
+        .workdir
+        .as_deref()
+        .ok_or_else(|| HandlerError::InvalidArgument {
+            field: "workdir".to_string(),
+            detail: "no working directory available; run from a `dec init`-bootstrapped tree"
+                .to_string(),
+        })?;
     validate::pre_validate(req)?;
     let env_dir = workdir.join(".dec").join("verify").join("env");
     let id = resolve_id(req, &env_dir)?;
@@ -205,10 +216,7 @@ fn build_env(id: &str, req: &EnvNewRequest) -> Result<VerificationEnvironment, H
 
 /// Project the env into the persisted orchestration store through
 /// `StreamWriter` (SHACL chokepoint) and persist the dump back to disk.
-fn write_through_writer(
-    workdir: &Path,
-    env: &VerificationEnvironment,
-) -> Result<(), HandlerError> {
+fn write_through_writer(workdir: &Path, env: &VerificationEnvironment) -> Result<(), HandlerError> {
     let scope = ActiveScope::load(workdir).map_err(|e| HandlerError::Internal {
         detail: format!("loading active scope: {e}"),
     })?;
@@ -220,11 +228,10 @@ fn write_through_writer(
     let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| HandlerError::Internal {
         detail: format!("active stream iri {iri}: {e}", iri = scope.stream_iri),
     })?;
-    let writer = StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| {
-        HandlerError::Internal {
+    let writer =
+        StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| HandlerError::Internal {
             detail: format!("opening stream writer: {e}"),
-        }
-    })?;
+        })?;
     let quads = env.to_quads(verify_env_graph());
     writer.commit(Mutation::insert(quads)).map_err(|e| {
         let msg = format!("{e:#}");

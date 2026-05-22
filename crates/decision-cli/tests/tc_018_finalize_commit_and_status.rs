@@ -190,29 +190,33 @@ fn fresh_workdir(tag: &str) -> PathBuf {
 }
 
 fn init_git_repo(workdir: &Path) {
-    run_must_succeed(Command::new("git").arg("-C").arg(workdir).args(["init", "-q"]));
+    run_must_succeed(
+        Command::new("git")
+            .arg("-C")
+            .arg(workdir)
+            .args(["init", "-q"]),
+    );
     // Local user.* config so commit doesn't depend on the host's git
     // identity (tests must be hermetic).
-    run_must_succeed(
-        Command::new("git")
-            .arg("-C")
-            .arg(workdir)
-            .args(["config", "user.email", "tc-018@decision-cli.test"]),
-    );
-    run_must_succeed(
-        Command::new("git")
-            .arg("-C")
-            .arg(workdir)
-            .args(["config", "user.name", "tc-018"]),
-    );
+    run_must_succeed(Command::new("git").arg("-C").arg(workdir).args([
+        "config",
+        "user.email",
+        "tc-018@decision-cli.test",
+    ]));
+    run_must_succeed(Command::new("git").arg("-C").arg(workdir).args([
+        "config",
+        "user.name",
+        "tc-018",
+    ]));
     // Ensure HEAD exists so the implementer's commit lands on top of
     // something. The TC spec calls this out explicitly.
-    run_must_succeed(
-        Command::new("git")
-            .arg("-C")
-            .arg(workdir)
-            .args(["commit", "--allow-empty", "-q", "-m", "initial"]),
-    );
+    run_must_succeed(Command::new("git").arg("-C").arg(workdir).args([
+        "commit",
+        "--allow-empty",
+        "-q",
+        "-m",
+        "initial",
+    ]));
 }
 
 fn seed_product_fixture(workdir: &Path, feature_id: &str) {
@@ -351,9 +355,7 @@ fn product_feature_status_json(workdir: &Path, feature_id: &str) -> String {
     );
     let raw = String::from_utf8_lossy(&out.stdout).into_owned();
     extract_status_field(&raw).unwrap_or_else(|| {
-        panic!(
-            "TC-018 #5: could not find \"status\" in product feature show JSON: {raw}"
-        )
+        panic!("TC-018 #5: could not find \"status\" in product feature show JSON: {raw}")
     })
 }
 

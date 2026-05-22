@@ -144,7 +144,10 @@ fn run_list(workdir: &Path, req: EnvListRequest) -> Vec<EnvSummary> {
     resp.envs
 }
 
-fn mcp_invoke(workdir: &Path, args: Value) -> Result<verify_env_list::EnvListResponse, HandlerError> {
+fn mcp_invoke(
+    workdir: &Path,
+    args: Value,
+) -> Result<verify_env_list::EnvListResponse, HandlerError> {
     let mut obj = args;
     obj.as_object_mut()
         .expect("args is object")
@@ -359,7 +362,10 @@ fn binary_cli_table_format_smoke() {
         .expect("spawn dec verify env list");
     assert!(output.status.success(), "non-zero exit: {output:?}");
     let stdout = String::from_utf8(output.stdout).expect("utf8");
-    assert!(stdout.contains("ENV-001"), "expected ENV-001 in output: {stdout}");
+    assert!(
+        stdout.contains("ENV-001"),
+        "expected ENV-001 in output: {stdout}"
+    );
 }
 
 #[test]

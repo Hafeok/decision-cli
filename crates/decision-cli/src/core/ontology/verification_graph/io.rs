@@ -19,8 +19,8 @@ use crate::core::vocab::{
 };
 
 use super::parse::{parse_kind_fields, read_iri_list, single_iri, single_literal};
-use super::shacl::UnknownStepKindError;
 pub use super::serialize::to_canonical_turtle;
+use super::shacl::UnknownStepKindError;
 use super::types::{
     ArtifactRef, StepKind, VerificationGraph, VerificationStep, RDF_FIRST, RDF_NIL, RDF_REST,
 };
@@ -75,10 +75,7 @@ pub fn from_turtle(path: &Path) -> Result<VerificationGraph, GraphIoError> {
 
 /// Variant of [`from_turtle`] that consumes bytes directly. The `path`
 /// argument is only used for error reporting.
-pub fn from_turtle_bytes(
-    path: &Path,
-    bytes: &[u8],
-) -> Result<VerificationGraph, GraphIoError> {
+pub fn from_turtle_bytes(path: &Path, bytes: &[u8]) -> Result<VerificationGraph, GraphIoError> {
     let store = new_staging_store(path)?;
     let graph_iri = "urn:decision-cli:verify-graph-parse-staging";
     let graph = NamedNode::new_unchecked(graph_iri);
@@ -119,6 +116,14 @@ fn find_graph_subject(store: &Store, path: &Path) -> Result<NamedNode, GraphIoEr
             detail: "SPARQL query for VerificationGraph returned non-solutions".to_string(),
         });
     };
+    let subjects = collect_graph_subjects(sols, path)?;
+    pick_single_graph_subject(subjects, path)
+}
+
+fn collect_graph_subjects(
+    sols: oxigraph::sparql::QuerySolutionIter,
+    path: &Path,
+) -> Result<Vec<NamedNode>, GraphIoError> {
     let mut subjects: Vec<NamedNode> = Vec::new();
     for sol in sols {
         let sol = sol.map_err(|e| GraphIoError::ParseFailed {
@@ -129,6 +134,13 @@ fn find_graph_subject(store: &Store, path: &Path) -> Result<NamedNode, GraphIoEr
             subjects.push(n.clone());
         }
     }
+    Ok(subjects)
+}
+
+fn pick_single_graph_subject(
+    mut subjects: Vec<NamedNode>,
+    path: &Path,
+) -> Result<NamedNode, GraphIoError> {
     match subjects.len() {
         0 => Err(GraphIoError::MalformedShape {
             path: path.to_path_buf(),
@@ -147,16 +159,18 @@ fn extract_graph(
     subject: &NamedNode,
     path: &Path,
 ) -> Result<VerificationGraph, GraphIoError> {
-    let verifies = single_iri(store, subject, IRI_DEC_VERIFIES, path)?
-        .ok_or_else(|| GraphIoError::MalformedShape {
+    let verifies = single_iri(store, subject, IRI_DEC_VERIFIES, path)?.ok_or_else(|| {
+        GraphIoError::MalformedShape {
             path: path.to_path_buf(),
             detail: "missing dec:verifies".to_string(),
-        })?;
-    let environment = single_iri(store, subject, IRI_DEC_ENVIRONMENT, path)?
-        .ok_or_else(|| GraphIoError::MalformedShape {
+        }
+    })?;
+    let environment = single_iri(store, subject, IRI_DEC_ENVIRONMENT, path)?.ok_or_else(|| {
+        GraphIoError::MalformedShape {
             path: path.to_path_buf(),
             detail: "missing dec:environment".to_string(),
-        })?;
+        }
+    })?;
     let steps = read_steps_list(store, subject, path)?;
     let id_str = subject
         .as_str()
@@ -198,18 +212,17 @@ fn read_steps_list(
     if heads.len() > 1 {
         return Err(GraphIoError::MalformedShape {
             path: path.to_path_buf(),
-            detail: format!("expected exactly one dec:steps list head, found {}", heads.len()),
+            detail: format!(
+                "expected exactly one dec:steps list head, found {}",
+                heads.len()
+            ),
         });
     }
     let head = heads.remove(0);
     walk_steps_list(store, head, path)
 }
 
-fn walk_steps_list(
-    store: &Store,
-    head: Term,
-    path: &Path,
-) -> Result<Vec<NamedNode>, GraphIoError> {
+fn walk_steps_list(store: &Store, head: Term, path: &Path) -> Result<Vec<NamedNode>, GraphIoError> {
     let mut out: Vec<NamedNode> = Vec::new();
     let mut current = head;
     let mut seen = std::collections::BTreeSet::<String>::new();
@@ -278,10 +291,7 @@ fn list_rest(store: &Store, head: &Term, path: &Path) -> Result<Term, GraphIoErr
     })
 }
 
-fn term_to_subject_ref(
-    t: &Term,
-    path: &Path,
-) -> Result<oxigraph::model::Subject, GraphIoError> {
+fn term_to_subject_ref(t: &Term, path: &Path) -> Result<oxigraph::model::Subject, GraphIoError> {
     match t {
         Term::NamedNode(n) => Ok(oxigraph::model::Subject::NamedNode(n.clone())),
         Term::BlankNode(b) => Ok(oxigraph::model::Subject::BlankNode(b.clone())),

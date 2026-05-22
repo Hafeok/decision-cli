@@ -184,34 +184,44 @@ struct GroupAccumulator {
 impl GroupAccumulator {
     fn absorb(&mut self, q: &oxigraph::model::Quad) {
         match q.predicate.as_str() {
-            RDF_TYPE => {
-                if let Term::NamedNode(n) = &q.object {
-                    if n.as_str() == IRI_DEC_DISPATCH_GROUP {
-                        self.typed = true;
-                    }
-                }
-            }
-            IRI_DEC_DISPATCH_STATUS => {
-                if let Term::Literal(lit) = &q.object {
-                    self.status = DispatchStatus::parse(lit.value());
-                }
-            }
-            IRI_DISPATCHED_FOR => {
-                if let Term::Literal(lit) = &q.object {
-                    self.feature_id = Some(lit.value().to_string());
-                }
-            }
-            IRI_HAS_ACTION => {
-                if let Term::NamedNode(n) = &q.object {
-                    self.action_session = Some(n.clone());
-                }
-            }
-            IRI_HAS_INTERP => {
-                if let Term::NamedNode(n) = &q.object {
-                    self.interpretation_session = Some(n.clone());
-                }
-            }
+            RDF_TYPE => self.absorb_type(&q.object),
+            IRI_DEC_DISPATCH_STATUS => self.absorb_status(&q.object),
+            IRI_DISPATCHED_FOR => self.absorb_feature_id(&q.object),
+            IRI_HAS_ACTION => self.absorb_action(&q.object),
+            IRI_HAS_INTERP => self.absorb_interpretation(&q.object),
             _ => {}
+        }
+    }
+
+    fn absorb_type(&mut self, object: &Term) {
+        if let Term::NamedNode(n) = object {
+            if n.as_str() == IRI_DEC_DISPATCH_GROUP {
+                self.typed = true;
+            }
+        }
+    }
+
+    fn absorb_status(&mut self, object: &Term) {
+        if let Term::Literal(lit) = object {
+            self.status = DispatchStatus::parse(lit.value());
+        }
+    }
+
+    fn absorb_feature_id(&mut self, object: &Term) {
+        if let Term::Literal(lit) = object {
+            self.feature_id = Some(lit.value().to_string());
+        }
+    }
+
+    fn absorb_action(&mut self, object: &Term) {
+        if let Term::NamedNode(n) = object {
+            self.action_session = Some(n.clone());
+        }
+    }
+
+    fn absorb_interpretation(&mut self, object: &Term) {
+        if let Term::NamedNode(n) = object {
+            self.interpretation_session = Some(n.clone());
         }
     }
 }

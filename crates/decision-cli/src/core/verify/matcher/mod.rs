@@ -52,12 +52,8 @@ pub enum MatchError {
 impl From<CoverageError> for MatchError {
     fn from(e: CoverageError) -> Self {
         match e {
-            CoverageError::ArtifactNotFound { kind, id } => {
-                Self::ArtifactNotFound { kind, id }
-            }
-            CoverageError::StoreUnreachable { detail } => {
-                Self::StoreUnreachable { detail }
-            }
+            CoverageError::ArtifactNotFound { kind, id } => Self::ArtifactNotFound { kind, id },
+            CoverageError::StoreUnreachable { detail } => Self::StoreUnreachable { detail },
         }
     }
 }
@@ -96,8 +92,18 @@ pub fn best_matching_graphs(
         return Ok(assemble::none_report(feature_iri, env_iri, all_tcs));
     }
     if let Some(single) = assemble::pick_complete_single(&non_empty, &all_tcs) {
-        return Ok(assemble::single_report(feature_iri, env_iri, &all_tcs, single));
+        return Ok(assemble::single_report(
+            feature_iri,
+            env_iri,
+            &all_tcs,
+            single,
+        ));
     }
     let cover = greedy::minimum_cover(&non_empty, &all_tcs);
-    Ok(assemble::cover_report(feature_iri, env_iri, &all_tcs, &cover))
+    Ok(assemble::cover_report(
+        feature_iri,
+        env_iri,
+        &all_tcs,
+        &cover,
+    ))
 }

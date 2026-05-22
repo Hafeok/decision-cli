@@ -122,32 +122,53 @@ fn parse_verdict_from_quads(iri: &str, quads: &[Quad]) -> Result<VerdictArtifact
     let verdict = parse_verdict_field(iri, quads, &subject)?;
     let rationale_value =
         take_one_literal(iri, quads, &subject, IRI_DEC_RATIONALE, "dec:rationale")?;
+    let amendment = take_optional_literal(iri, quads, &subject, IRI_DEC_AMENDMENT_GUIDANCE)?;
+    let refs = parse_verdict_references(iri, quads, &subject)?;
+    Ok(VerdictArtifact {
+        iri: subject,
+        verdict,
+        rationale: rationale_value,
+        violates: refs.violates,
+        amendment_guidance: amendment,
+        generated_by: refs.generated_by,
+        used: refs.used,
+        in_stream: refs.in_stream,
+    })
+}
+
+struct VerdictReferences {
+    generated_by: NamedNode,
+    in_stream: NamedNode,
+    used: Vec<NamedNode>,
+    violates: Vec<NamedNode>,
+}
+
+fn parse_verdict_references(
+    iri: &str,
+    quads: &[Quad],
+    subject: &NamedNode,
+) -> Result<VerdictReferences, ReadError> {
     let generated_by = take_one_iri(
         iri,
         quads,
-        &subject,
+        subject,
         PROV_WAS_GENERATED_BY,
         "prov:wasGeneratedBy",
     )?;
-    let in_stream_iri = take_one_iri(iri, quads, &subject, IRI_DEC_IN_STREAM, "dec:inStream")?;
-    let used = collect_iris(quads, &subject, PROV_USED);
-    let violates_refs = collect_iris(quads, &subject, IRI_DEC_VIOLATES);
-    let amendment = take_optional_literal(iri, quads, &subject, IRI_DEC_AMENDMENT_GUIDANCE)?;
+    let in_stream = take_one_iri(iri, quads, subject, IRI_DEC_IN_STREAM, "dec:inStream")?;
+    let used = collect_iris(quads, subject, PROV_USED);
+    let violates = collect_iris(quads, subject, IRI_DEC_VIOLATES);
     if used.is_empty() {
         return Err(ReadError::MalformedVerdict {
             iri: iri.to_string(),
             detail: "no prov:used references".to_string(),
         });
     }
-    Ok(VerdictArtifact {
-        iri: subject,
-        verdict,
-        rationale: rationale_value,
-        violates: violates_refs,
-        amendment_guidance: amendment,
+    Ok(VerdictReferences {
         generated_by,
+        in_stream,
         used,
-        in_stream: in_stream_iri,
+        violates,
     })
 }
 

@@ -3,7 +3,7 @@
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 
 use crate::core::vocab::{
-    blocked_by, dispatch_status, dispatched_for, dispatch_group_class, has_action_session,
+    blocked_by, dispatch_group_class, dispatch_status, dispatched_for, has_action_session,
     has_interpretation_session, orchestration_graph, IRI_DEC_DISPATCH_STATUS,
 };
 
@@ -31,7 +31,12 @@ pub fn build_group_creation_quads(
     let status_pred = dispatch_status().into_owned();
     vec![
         Quad::new(group_iri.clone(), rdf_type, group_cls, g.clone()),
-        Quad::new(group_iri.clone(), has_action, action_session.clone(), g.clone()),
+        Quad::new(
+            group_iri.clone(),
+            has_action,
+            action_session.clone(),
+            g.clone(),
+        ),
         Quad::new(
             group_iri.clone(),
             dispatched_pred,

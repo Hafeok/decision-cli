@@ -65,11 +65,7 @@ pub enum ChainIntegrityError {
     Coverage(#[from] CoverageError),
 }
 
-fn render_chain_integrity(
-    feature: &str,
-    uncovered: &[String],
-    known_envs: &[String],
-) -> String {
+fn render_chain_integrity(feature: &str, uncovered: &[String], known_envs: &[String]) -> String {
     use std::fmt::Write;
     let mut out = String::new();
     let _ = writeln!(
@@ -77,11 +73,24 @@ fn render_chain_integrity(
         "Error::ChainIntegrity: feature {feature} has uncovered TCs and no waiver."
     );
     let _ = writeln!(out);
+    render_uncovered_block(&mut out, uncovered);
+    let _ = writeln!(out);
+    render_next_actions(&mut out, feature, known_envs);
+    let _ = writeln!(out);
+    render_escape_hatch(&mut out, feature);
+    out
+}
+
+fn render_uncovered_block(out: &mut String, uncovered: &[String]) {
+    use std::fmt::Write;
     let _ = writeln!(out, "Uncovered TCs ({}):", uncovered.len());
     for tc in uncovered {
         let _ = writeln!(out, "  - {tc}");
     }
-    let _ = writeln!(out);
+}
+
+fn render_next_actions(out: &mut String, feature: &str, known_envs: &[String]) {
+    use std::fmt::Write;
     let _ = writeln!(out, "Next actions:");
     if known_envs.is_empty() {
         let _ = writeln!(
@@ -92,24 +101,23 @@ fn render_chain_integrity(
             out,
             "      dec verify graph generate {feature} --environment ENV-NNN"
         );
-    } else {
-        for env in known_envs {
-            let _ = writeln!(
-                out,
-                "  * dec verify graph generate {feature} --environment {env}"
-            );
-        }
+        return;
     }
-    let _ = writeln!(out);
-    let _ = writeln!(
-        out,
-        "Escape hatch (records a CoverageWaiver artifact):"
-    );
+    for env in known_envs {
+        let _ = writeln!(
+            out,
+            "  * dec verify graph generate {feature} --environment {env}"
+        );
+    }
+}
+
+fn render_escape_hatch(out: &mut String, feature: &str) {
+    use std::fmt::Write;
+    let _ = writeln!(out, "Escape hatch (records a CoverageWaiver artifact):");
     let _ = writeln!(
         out,
         "      dec implement {feature} --waive-coverage \"<reason ≥ 16 non-whitespace chars>\""
     );
-    out
 }
 
 /// Inputs for [`run_chain_integrity_gate`].
@@ -144,8 +152,15 @@ pub struct GateInputs<'a> {
 /// matches FT-047 §Behaviour step 1's "not applicable" carve-out for
 /// non-feature targets: with no product graph the orchestrator has no
 /// source of truth for the feature's TC list and nothing to gate against.
-pub fn run_chain_integrity_gate(inputs: GateInputs<'_>) -> Result<GateOutcome, ChainIntegrityError> {
-    if !inputs.product_root.join(".product").join("features").is_dir() {
+pub fn run_chain_integrity_gate(
+    inputs: GateInputs<'_>,
+) -> Result<GateOutcome, ChainIntegrityError> {
+    if !inputs
+        .product_root
+        .join(".product")
+        .join("features")
+        .is_dir()
+    {
         return Ok(GateOutcome::Clean);
     }
 
@@ -170,34 +185,42 @@ pub fn run_chain_integrity_gate(inputs: GateInputs<'_>) -> Result<GateOutcome, C
         .collect();
 
     let Some(intent) = inputs.waiver else {
-        // No waiver: refuse the dispatch with a structured, actionable
-        // error. FT-047 §Error handling — exit 1.
-        return Err(ChainIntegrityError::ChainIntegrity {
-            feature: coverage.feature,
-            uncovered_tcs: coverage
-                .uncovered
-                .iter()
-                .map(|iri| short_tc(iri))
-                .collect(),
-            known_envs: inputs.known_envs.to_vec(),
-        });
+        return Err(no_waiver_error(&coverage, inputs.known_envs));
     };
 
     // Validate the reason BEFORE touching disk. Exit 2 path.
     let _ = validate_waiver_reason(&intent.reason)?;
 
-    let feature_iri = NamedNode::new_unchecked(feature_iri_for(inputs.feature_short_id));
+    let persisted = mint_waiver(&inputs, intent, uncovered_iris)?;
+    Ok(GateOutcome::Waived { waiver: persisted })
+}
 
-    let persisted = persist_waiver(
+/// Build the structured "no waiver" failure. FT-047 §Error handling — exit 1.
+fn no_waiver_error(
+    coverage: &crate::core::verify::coverage::CoverageReport,
+    known_envs: &[String],
+) -> ChainIntegrityError {
+    ChainIntegrityError::ChainIntegrity {
+        feature: coverage.feature.clone(),
+        uncovered_tcs: coverage.uncovered.iter().map(|iri| short_tc(iri)).collect(),
+        known_envs: known_envs.to_vec(),
+    }
+}
+
+fn mint_waiver(
+    inputs: &GateInputs<'_>,
+    intent: &WaiverIntent,
+    uncovered_iris: Vec<NamedNode>,
+) -> Result<PersistedWaiver, ChainIntegrityError> {
+    let feature_iri = NamedNode::new_unchecked(feature_iri_for(inputs.feature_short_id));
+    Ok(persist_waiver(
         inputs.workdir,
         inputs.writer,
         feature_iri,
         intent,
         uncovered_iris,
-        inputs.attributed_to,
-    )?;
-
-    Ok(GateOutcome::Waived { waiver: persisted })
+        inputs.attributed_to.clone(),
+    )?)
 }
 
 /// Strip the canonical TC IRI prefix back to `TC-NNN` for the error
@@ -222,9 +245,7 @@ mod tests {
         assert!(s.contains("Error::ChainIntegrity"));
         assert!(s.contains("FT-U"));
         assert!(s.contains("TC-T2"));
-        assert!(s.contains(
-            "dec verify graph generate FT-U --environment ENV-001-ephemeral-cli"
-        ));
+        assert!(s.contains("dec verify graph generate FT-U --environment ENV-001-ephemeral-cli"));
         assert!(s.contains("--waive-coverage"));
     }
 

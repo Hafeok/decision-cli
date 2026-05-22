@@ -44,6 +44,22 @@ fn resolve_path(env_dir: &Path, id: &str) -> Result<PathBuf, HandlerError> {
     if !env_dir.exists() {
         return Err(not_found(id));
     }
+    let mut matches = collect_suffix_matches(env_dir, id)?;
+    match matches.len() {
+        0 => Err(not_found(id)),
+        1 => Ok(matches.remove(0)),
+        n => Err(HandlerError::Internal {
+            detail: format!(
+                "ambiguous env id {id:?}: {n} files match (under {dir})",
+                dir = env_dir.display()
+            ),
+        }),
+    }
+}
+
+/// Walk `env_dir` and collect `.ttl` files whose stem matches `id`
+/// exactly OR begins with `id + "-"` (suffixed siblings).
+fn collect_suffix_matches(env_dir: &Path, id: &str) -> Result<Vec<PathBuf>, HandlerError> {
     let prefix = format!("{id}-");
     let mut matches: Vec<PathBuf> = Vec::new();
     for entry in fs::read_dir(env_dir).map_err(|e| HandlerError::Internal {
@@ -57,22 +73,13 @@ fn resolve_path(env_dir: &Path, id: &str) -> Result<PathBuf, HandlerError> {
         let Some(stem) = name.strip_suffix(".ttl") else {
             continue;
         };
-        // An exact stem match is already handled above; consider
+        // An exact stem match is already handled by the caller; consider
         // suffixed siblings only.
         if stem == id || stem.starts_with(&prefix) {
             matches.push(entry.path());
         }
     }
-    match matches.len() {
-        0 => Err(not_found(id)),
-        1 => Ok(matches.remove(0)),
-        n => Err(HandlerError::Internal {
-            detail: format!(
-                "ambiguous env id {id:?}: {n} files match (under {dir})",
-                dir = env_dir.display()
-            ),
-        }),
-    }
+    Ok(matches)
 }
 
 fn not_found(id: &str) -> HandlerError {

@@ -36,10 +36,7 @@ pub(super) const IRI_TC_PREFIX: &str = "https://decision-cli.dev/ns/tc/";
 /// shape `TC-NNN` looks up under `<workdir>/.product/tests/`. A reference
 /// that resolves to no file surfaces as
 /// [`HandlerError::DanglingRef`] with `kind: "verifies"` (FT-041 §Error handling).
-pub(super) fn resolve_verifies(
-    workdir: &Path,
-    reference: &str,
-) -> Result<NamedNode, HandlerError> {
+pub(super) fn resolve_verifies(workdir: &Path, reference: &str) -> Result<NamedNode, HandlerError> {
     if reference.trim().is_empty() {
         return Err(HandlerError::InvalidArgument {
             field: "verifies".to_string(),
@@ -53,9 +50,7 @@ pub(super) fn resolve_verifies(
     } else {
         return Err(HandlerError::InvalidArgument {
             field: "verifies".to_string(),
-            detail: format!(
-                "verifies reference must start with FT- or TC-; got {reference:?}"
-            ),
+            detail: format!("verifies reference must start with FT- or TC-; got {reference:?}"),
         });
     };
     let dir = workdir.join(kind_dir);
@@ -87,18 +82,15 @@ pub(super) fn resolve_environment(
     if !reference.starts_with("ENV-") {
         return Err(HandlerError::InvalidArgument {
             field: "environment".to_string(),
-            detail: format!(
-                "environment reference must start with ENV-; got {reference:?}"
-            ),
+            detail: format!("environment reference must start with ENV-; got {reference:?}"),
         });
     }
     let env_dir = workdir.join(".dec").join("verify").join("env");
-    let resolved_id = resolve_env_id(&env_dir, reference)?.ok_or_else(|| {
-        HandlerError::DanglingRef {
+    let resolved_id =
+        resolve_env_id(&env_dir, reference)?.ok_or_else(|| HandlerError::DanglingRef {
             reference: reference.to_string(),
             kind: "environment".to_string(),
-        }
-    })?;
+        })?;
     let iri = format!("{IRI_DEC_ENV_PREFIX}{resolved_id}");
     NamedNode::new(iri).map_err(|e| HandlerError::Internal {
         detail: format!("constructing environment IRI: {e}"),
@@ -144,6 +136,11 @@ fn resolve_env_id(env_dir: &Path, reference: &str) -> Result<Option<String>, Han
     if exact.is_file() {
         return Ok(Some(reference.to_string()));
     }
+    let matches = collect_env_stems(env_dir, reference)?;
+    pick_unique_env_stem(matches, env_dir, reference)
+}
+
+fn collect_env_stems(env_dir: &Path, reference: &str) -> Result<Vec<String>, HandlerError> {
     let prefix = format!("{reference}-");
     let mut matches: Vec<String> = Vec::new();
     for entry in fs::read_dir(env_dir).map_err(|e| HandlerError::Internal {
@@ -161,6 +158,14 @@ fn resolve_env_id(env_dir: &Path, reference: &str) -> Result<Option<String>, Han
             matches.push(stem.to_string());
         }
     }
+    Ok(matches)
+}
+
+fn pick_unique_env_stem(
+    mut matches: Vec<String>,
+    env_dir: &Path,
+    reference: &str,
+) -> Result<Option<String>, HandlerError> {
     match matches.len() {
         0 => Ok(None),
         1 => Ok(Some(matches.remove(0))),
@@ -217,10 +222,7 @@ mod tests {
         let features = dir.path().join(".product/features");
         touch(&features, "FT-001-the-thing.md");
         let iri = resolve_verifies(dir.path(), "FT-001").expect("ok");
-        assert_eq!(
-            iri.as_str(),
-            "https://decision-cli.dev/ns/feature/FT-001",
-        );
+        assert_eq!(iri.as_str(), "https://decision-cli.dev/ns/feature/FT-001",);
     }
 
     #[test]

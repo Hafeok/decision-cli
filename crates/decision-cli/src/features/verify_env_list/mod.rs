@@ -124,48 +124,61 @@ pub fn parse_request(req: &Request) -> Result<EnvListRequest, HandlerError> {
 /// MCP tool descriptor — registered by the binary in `cli::mcp`.
 #[must_use]
 pub fn tool_descriptor() -> ToolDescriptor {
-    let handler: ToolHandler = Arc::new(|req: Request| {
-        let parsed = parse_request(&req)?;
-        let outcome = run(&parsed)?;
-        let summary = format!("listed {n} environment(s)", n = outcome.envs.len());
-        Ok(Response::with_summary(
-            json!({
-                "envs": outcome.envs,
-            }),
-            summary,
-        ))
-    });
     ToolDescriptor::new(
         TOOL_NAME,
         "List dec:VerificationEnvironment artifacts (FT-039 / ADR-028).",
         input_schema(),
-        handler,
+        tool_handler(),
     )
-    .with_output_schema(json!({
+    .with_output_schema(output_schema())
+}
+
+/// MCP handler closure — builds an [`EnvListRequest`] from the wire
+/// envelope and renders the response back as a structured Value.
+fn tool_handler() -> ToolHandler {
+    Arc::new(|req: Request| {
+        let parsed = parse_request(&req)?;
+        let outcome = run(&parsed)?;
+        let summary = format!("listed {n} environment(s)", n = outcome.envs.len());
+        Ok(Response::with_summary(
+            json!({ "envs": outcome.envs }),
+            summary,
+        ))
+    })
+}
+
+/// JSON Schema for the MCP tool's structured output.
+fn output_schema() -> Value {
+    json!({
         "type": "object",
         "required": ["envs"],
         "properties": {
             "envs": {
                 "type": "array",
-                "items": {
-                    "type": "object",
-                    "required": ["id", "env_type", "safety_class", "allowed_ops"],
-                    "properties": {
-                        "id": { "type": "string" },
-                        "env_type": { "type": "string" },
-                        "safety_class": { "type": "string" },
-                        "endpoint": { "type": "string" },
-                        "allowed_ops": {
-                            "type": "array",
-                            "items": { "type": "string" },
-                        },
-                        "setup": { "type": "string" },
-                        "teardown": { "type": "string" },
-                    },
-                },
+                "items": env_summary_schema(),
             },
         },
-    }))
+    })
+}
+
+/// JSON Schema fragment describing one [`EnvSummary`] row.
+fn env_summary_schema() -> Value {
+    json!({
+        "type": "object",
+        "required": ["id", "env_type", "safety_class", "allowed_ops"],
+        "properties": {
+            "id": { "type": "string" },
+            "env_type": { "type": "string" },
+            "safety_class": { "type": "string" },
+            "endpoint": { "type": "string" },
+            "allowed_ops": {
+                "type": "array",
+                "items": { "type": "string" },
+            },
+            "setup": { "type": "string" },
+            "teardown": { "type": "string" },
+        },
+    })
 }
 
 /// JSON Schema describing the MCP tool's input arguments.
@@ -228,7 +241,11 @@ pub fn run(req: &EnvListRequest) -> Result<EnvListResponse, HandlerError> {
             detail: "no working directory available; run from a `dec init`-bootstrapped tree"
                 .to_string(),
         })?;
-    let mut envs = query::query_envs(workdir, req.safety_class.as_deref(), req.env_type.as_deref())?;
+    let mut envs = query::query_envs(
+        workdir,
+        req.safety_class.as_deref(),
+        req.env_type.as_deref(),
+    )?;
     envs.sort_by(|a, b| query::env_sort_key(&a.id).cmp(&query::env_sort_key(&b.id)));
     Ok(EnvListResponse { envs })
 }
@@ -297,7 +314,10 @@ mod tests {
     #[test]
     fn input_schema_advertises_optional_filters() {
         let s = input_schema();
-        let props = s.get("properties").and_then(|v| v.as_object()).expect("props");
+        let props = s
+            .get("properties")
+            .and_then(|v| v.as_object())
+            .expect("props");
         assert!(props.contains_key("safety_class"));
         assert!(props.contains_key("env_type"));
         assert!(props.contains_key("format"));

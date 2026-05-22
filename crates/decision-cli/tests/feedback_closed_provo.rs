@@ -81,8 +81,8 @@ fn closed_without_closed_by_fails_shacl() {
     let mut f = closed_feedback();
     f.closed_by = None;
     let quads = f.to_quads(orchestration_graph());
-    let err = validate_quads(&quads)
-        .expect_err("closed feedback missing dec:closedBy must fail SHACL");
+    let err =
+        validate_quads(&quads).expect_err("closed feedback missing dec:closedBy must fail SHACL");
     assert!(
         err.report.contains("dec:closedBy"),
         "report must reference dec:closedBy; got:\n{}",
@@ -201,10 +201,7 @@ fn closed_feedback_links_to_addressing_artifact_via_query() {
         addr = ADDRESSING_IRI,
         closer = CLOSER_SESSION_IRI,
     );
-    let answered = matches!(
-        store.query(q.as_str()),
-        Ok(QueryResults::Boolean(true))
-    );
+    let answered = matches!(store.query(q.as_str()), Ok(QueryResults::Boolean(true)));
     assert!(
         answered,
         "SPARQL ASK must confirm the full closed/closedBy/addressingArtifact triple shape"

@@ -64,44 +64,16 @@ impl CoverageWaiver {
     pub fn to_quads(&self, graph: NamedNodeRef<'_>) -> Vec<Quad> {
         let g: GraphName = graph.into_owned().into();
         let subject = self.iri();
-        let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE);
-        let cls = coverage_waiver_class();
-        let mut quads = vec![
-            Quad::new(subject.clone(), rdf_type, cls, g.clone()),
-            Quad::new(
-                subject.clone(),
-                waiver_for(),
-                self.waiver_for.clone(),
-                g.clone(),
-            ),
-            Quad::new(
-                subject.clone(),
-                waiver_reason(),
-                Literal::new_simple_literal(&self.reason),
-                g.clone(),
-            ),
-            Quad::new(
-                subject.clone(),
-                was_attributed_to(),
-                self.attributed_to.clone(),
-                g.clone(),
-            ),
-            Quad::new(
-                subject.clone(),
-                dcterms_created(),
-                Literal::new_simple_literal(self.created.to_rfc3339()),
-                g.clone(),
-            ),
-        ];
-        for tc in &self.uncovered_at_waive {
-            quads.push(Quad::new(
-                subject.clone(),
-                uncovered_at_waive(),
-                tc.clone(),
-                g.clone(),
-            ));
-        }
+        let mut quads = waiver_core_quads(&subject, self, &g);
+        quads.extend(self.uncovered_at_waive_quads(&subject, &g));
         quads
+    }
+
+    fn uncovered_at_waive_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
+        self.uncovered_at_waive
+            .iter()
+            .map(|tc| Quad::new(subject.clone(), uncovered_at_waive(), tc.clone(), g.clone()))
+            .collect()
     }
 
     /// Render the waiver as canonical Turtle for the on-disk file.
@@ -110,55 +82,105 @@ impl CoverageWaiver {
     /// without an external prefix table.
     pub fn to_canonical_turtle(&self) -> Result<String, WaiverIoError> {
         let mut out = String::new();
-        writeln!(out, "@prefix dec: <https://decision-cli.dev/ns#> .")
-            .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(out, "@prefix prov: <http://www.w3.org/ns/prov#> .")
-            .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(out, "@prefix dcterms: <http://purl.org/dc/terms/> .")
-            .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(out).map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(out, "<{}>", self.iri().as_str())
-            .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(out, "    a dec:CoverageWaiver ;")
-            .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(
-            out,
-            "    dec:waiverFor <{}> ;",
-            self.waiver_for.as_str()
-        )
-        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(
-            out,
-            "    dec:waiverReason {} ;",
-            escape_turtle_literal(&self.reason)
-        )
-        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(
-            out,
-            "    prov:wasAttributedTo <{}> ;",
-            self.attributed_to.as_str()
-        )
-        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        writeln!(
-            out,
-            "    dcterms:created {} ;",
-            escape_turtle_literal(&self.created.to_rfc3339())
-        )
-        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-        if self.uncovered_at_waive.is_empty() {
-            // Last triple — close with `.`
-            // Strip trailing " ;\n" of the previous line.
-            replace_last_semicolon_with_dot(&mut out);
-        } else {
-            let last = self.uncovered_at_waive.len() - 1;
-            for (i, tc) in self.uncovered_at_waive.iter().enumerate() {
-                let term = if i == last { "." } else { ";" };
-                writeln!(out, "    dec:uncoveredAtWaive <{}> {}", tc.as_str(), term)
-                    .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
-            }
-        }
+        write_turtle_prefixes(&mut out)?;
+        write_turtle_header(&mut out, self)?;
+        write_turtle_fixed_predicates(&mut out, self)?;
+        finalise_turtle_with_optional_uncovered(&mut out, &self.uncovered_at_waive)?;
         Ok(out)
     }
+}
+
+fn waiver_core_quads(subject: &NamedNode, w: &CoverageWaiver, g: &GraphName) -> Vec<Quad> {
+    let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE);
+    let cls = coverage_waiver_class();
+    vec![
+        Quad::new(subject.clone(), rdf_type, cls, g.clone()),
+        Quad::new(
+            subject.clone(),
+            waiver_for(),
+            w.waiver_for.clone(),
+            g.clone(),
+        ),
+        Quad::new(
+            subject.clone(),
+            waiver_reason(),
+            Literal::new_simple_literal(&w.reason),
+            g.clone(),
+        ),
+        Quad::new(
+            subject.clone(),
+            was_attributed_to(),
+            w.attributed_to.clone(),
+            g.clone(),
+        ),
+        Quad::new(
+            subject.clone(),
+            dcterms_created(),
+            Literal::new_simple_literal(w.created.to_rfc3339()),
+            g.clone(),
+        ),
+    ]
+}
+
+fn write_turtle_prefixes(out: &mut String) -> Result<(), WaiverIoError> {
+    writeln!(out, "@prefix dec: <https://decision-cli.dev/ns#> .")
+        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(out, "@prefix prov: <http://www.w3.org/ns/prov#> .")
+        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(out, "@prefix dcterms: <http://purl.org/dc/terms/> .")
+        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(out).map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    Ok(())
+}
+
+fn write_turtle_header(out: &mut String, w: &CoverageWaiver) -> Result<(), WaiverIoError> {
+    writeln!(out, "<{}>", w.iri().as_str()).map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(out, "    a dec:CoverageWaiver ;").map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    Ok(())
+}
+
+fn write_turtle_fixed_predicates(
+    out: &mut String,
+    w: &CoverageWaiver,
+) -> Result<(), WaiverIoError> {
+    writeln!(out, "    dec:waiverFor <{}> ;", w.waiver_for.as_str())
+        .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(
+        out,
+        "    dec:waiverReason {} ;",
+        escape_turtle_literal(&w.reason)
+    )
+    .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(
+        out,
+        "    prov:wasAttributedTo <{}> ;",
+        w.attributed_to.as_str()
+    )
+    .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    writeln!(
+        out,
+        "    dcterms:created {} ;",
+        escape_turtle_literal(&w.created.to_rfc3339())
+    )
+    .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    Ok(())
+}
+
+fn finalise_turtle_with_optional_uncovered(
+    out: &mut String,
+    uncovered: &[NamedNode],
+) -> Result<(), WaiverIoError> {
+    if uncovered.is_empty() {
+        replace_last_semicolon_with_dot(out);
+        return Ok(());
+    }
+    let last = uncovered.len() - 1;
+    for (i, tc) in uncovered.iter().enumerate() {
+        let term = if i == last { "." } else { ";" };
+        writeln!(out, "    dec:uncoveredAtWaive <{}> {}", tc.as_str(), term)
+            .map_err(|e| WaiverIoError::Emit(e.to_string()))?;
+    }
+    Ok(())
 }
 
 fn replace_last_semicolon_with_dot(s: &mut String) {
@@ -194,11 +216,8 @@ mod tests {
     fn fixture() -> CoverageWaiver {
         CoverageWaiver {
             id: "CW-001".to_string(),
-            waiver_for: NamedNode::new_unchecked(
-                "https://decision-cli.dev/ns/feature/FT-U",
-            ),
-            reason: "Doc-only feature; verification is review-based per ADR-NNN"
-                .to_string(),
+            waiver_for: NamedNode::new_unchecked("https://decision-cli.dev/ns/feature/FT-U"),
+            reason: "Doc-only feature; verification is review-based per ADR-NNN".to_string(),
             attributed_to: NamedNode::new_unchecked("urn:dec:agent:cli"),
             created: chrono::DateTime::parse_from_rfc3339("2026-05-21T18:00:00Z")
                 .expect("rfc3339")
@@ -226,12 +245,13 @@ mod tests {
         assert!(quads.iter().any(|q| q.predicate.as_str() == RDF_TYPE));
         assert!(quads
             .iter()
-            .any(|q| q.predicate.as_str()
-                == crate::core::vocab::IRI_DEC_WAIVER_FOR));
-        assert!(quads.iter().any(|q| q.predicate.as_str()
-            == crate::core::vocab::IRI_DEC_WAIVER_REASON));
-        assert!(quads.iter().any(|q| q.predicate.as_str()
-            == crate::core::vocab::IRI_DEC_UNCOVERED_AT_WAIVE));
+            .any(|q| q.predicate.as_str() == crate::core::vocab::IRI_DEC_WAIVER_FOR));
+        assert!(quads
+            .iter()
+            .any(|q| q.predicate.as_str() == crate::core::vocab::IRI_DEC_WAIVER_REASON));
+        assert!(quads
+            .iter()
+            .any(|q| q.predicate.as_str() == crate::core::vocab::IRI_DEC_UNCOVERED_AT_WAIVE));
     }
 
     #[test]

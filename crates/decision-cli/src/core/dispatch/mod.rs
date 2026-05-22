@@ -14,7 +14,7 @@ pub mod quads;
 pub use group::{DispatchGroup, GroupError};
 pub use lifecycle::{DispatchEvent, DispatchStatus, LifecycleError};
 pub use pause::{
-    list_blocked_by, list_paused_groups_for_feedback, pause_on_feedback, resume_check,
-    PauseError, ResumeError, ResumeOutcome,
+    list_blocked_by, list_paused_groups_for_feedback, pause_on_feedback, resume_check, PauseError,
+    ResumeError, ResumeOutcome,
 };
 pub use quads::{build_blocked_by_quad, build_group_creation_quads, build_status_transition_quads};

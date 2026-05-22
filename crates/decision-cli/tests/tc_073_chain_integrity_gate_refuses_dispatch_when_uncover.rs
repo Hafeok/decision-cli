@@ -41,9 +41,8 @@ fn tc_073_chain_integrity_gate_refuses_dispatch_when_uncover() {
 
     let mut args = ImplementArgs::new(FEATURE_ID);
     args.product_root = Some(workdir.clone());
-    let err = implement_run(&workdir, &args).expect_err(
-        "TC-073: dispatch must fail when uncovered TCs and no waiver",
-    );
+    let err = implement_run(&workdir, &args)
+        .expect_err("TC-073: dispatch must fail when uncovered TCs and no waiver");
 
     let chain = format!("{err:#}");
 

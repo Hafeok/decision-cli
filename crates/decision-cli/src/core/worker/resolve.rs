@@ -255,7 +255,10 @@ fn which_on_path(bin: &str) -> WhichResult {
 }
 
 fn sibling_workspace_probe(workdir: &Path, role: &str, console_script: &str) -> Option<PathBuf> {
-    let mut dir = workdir.canonicalize().ok().or_else(|| Some(workdir.to_path_buf()))?;
+    let mut dir = workdir
+        .canonicalize()
+        .ok()
+        .or_else(|| Some(workdir.to_path_buf()))?;
     for _ in 0..10 {
         if dir.join("Cargo.toml").is_file() {
             let candidate = dir

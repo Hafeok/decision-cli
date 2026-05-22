@@ -17,8 +17,8 @@
 //!   user-supplied definition documents (FT-008) and it does **not**
 //!   persist any triples into the orchestration store (FT-009).
 
-mod helpers;
 pub mod coverage_waiver;
+mod helpers;
 pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;

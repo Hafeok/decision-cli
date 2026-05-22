@@ -7,10 +7,11 @@ use thiserror::Error;
 
 use crate::core::vocab::{
     FEEDBACK_TERMINAL_STATES, IRI_DEC_ADDRESSING_ARTIFACT, IRI_DEC_CLOSED_BY,
-    IRI_DEC_DISPOSITION_OVERRIDE, IRI_DEC_DISPOSITION_RATIONALE, IRI_DEC_EVIDENCE, IRI_DEC_FEEDBACK,
-    IRI_DEC_FEEDBACK_CLASS, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE, IRI_DEC_RECEIVING_SESSION,
-    IRI_DEC_RECOMMENDATION, IRI_DEC_REJECTION_REASON, IRI_DEC_ROUTED_AT, IRI_DEC_SEVERITY,
-    IRI_DEC_SOURCE_ARTIFACT, IRI_DEC_SOURCE_SESSION, IRI_DEC_SUPERSEDED_BY, IRI_DEC_TARGET_ROLE,
+    IRI_DEC_DISPOSITION_OVERRIDE, IRI_DEC_DISPOSITION_RATIONALE, IRI_DEC_EVIDENCE,
+    IRI_DEC_FEEDBACK, IRI_DEC_FEEDBACK_CLASS, IRI_DEC_IN_STREAM, IRI_DEC_LIFECYCLE_STATE,
+    IRI_DEC_RECEIVING_SESSION, IRI_DEC_RECOMMENDATION, IRI_DEC_REJECTION_REASON, IRI_DEC_ROUTED_AT,
+    IRI_DEC_SEVERITY, IRI_DEC_SOURCE_ARTIFACT, IRI_DEC_SOURCE_SESSION, IRI_DEC_SUPERSEDED_BY,
+    IRI_DEC_TARGET_ROLE,
 };
 
 use super::artifact::{Feedback, Severity};
@@ -194,42 +195,88 @@ fn has_feedback_type(quads: &[Quad], iri: &NamedNode) -> bool {
 }
 
 fn parse_feedback(iri: &NamedNode, quads: &[Quad]) -> Result<Feedback, FeedbackReadError> {
-    let class = take_one_literal(iri, quads, IRI_DEC_FEEDBACK_CLASS, "dec:feedbackClass")?;
-    let lifecycle_state = take_one_literal(iri, quads, IRI_DEC_LIFECYCLE_STATE, "dec:lifecycleState")?;
-    let target_role = take_one_literal(iri, quads, IRI_DEC_TARGET_ROLE, "dec:targetRole")?;
-    let evidence = take_one_literal(iri, quads, IRI_DEC_EVIDENCE, "dec:evidence")?;
-    let severity = parse_severity(iri, quads)?;
-    let source_session = take_one_iri(iri, quads, IRI_DEC_SOURCE_SESSION, "dec:sourceSession")?;
-    let in_stream = take_one_iri(iri, quads, IRI_DEC_IN_STREAM, "dec:inStream")?;
-    let recommendation = take_optional_literal(iri, quads, IRI_DEC_RECOMMENDATION)?;
-    let source_artifact = take_optional_iri(iri, quads, IRI_DEC_SOURCE_ARTIFACT)?;
-    let addressing_artifact = take_optional_iri(iri, quads, IRI_DEC_ADDRESSING_ARTIFACT)?;
-    let closed_by = take_optional_iri(iri, quads, IRI_DEC_CLOSED_BY)?;
-    let rejection_reason = take_optional_literal(iri, quads, IRI_DEC_REJECTION_REASON)?;
-    let superseded_by = take_optional_iri(iri, quads, IRI_DEC_SUPERSEDED_BY)?;
-    let routed_at = take_optional_literal(iri, quads, IRI_DEC_ROUTED_AT)?;
-    let receiving_session = take_optional_iri(iri, quads, IRI_DEC_RECEIVING_SESSION)?;
-    let disposition_override = take_optional_literal(iri, quads, IRI_DEC_DISPOSITION_OVERRIDE)?;
-    let disposition_rationale = take_optional_literal(iri, quads, IRI_DEC_DISPOSITION_RATIONALE)?;
+    let required = parse_required_fields(iri, quads)?;
+    let optional = parse_optional_fields(iri, quads)?;
     Ok(Feedback {
         iri: iri.clone(),
-        class,
-        severity,
-        target_role,
-        evidence,
-        recommendation,
-        lifecycle_state,
-        source_session,
-        source_artifact,
-        addressing_artifact,
-        closed_by,
-        rejection_reason,
-        superseded_by,
-        routed_at,
-        receiving_session,
-        disposition_override,
-        disposition_rationale,
-        in_stream,
+        class: required.class,
+        severity: required.severity,
+        target_role: required.target_role,
+        evidence: required.evidence,
+        recommendation: optional.recommendation,
+        lifecycle_state: required.lifecycle_state,
+        source_session: required.source_session,
+        source_artifact: optional.source_artifact,
+        addressing_artifact: optional.addressing_artifact,
+        closed_by: optional.closed_by,
+        rejection_reason: optional.rejection_reason,
+        superseded_by: optional.superseded_by,
+        routed_at: optional.routed_at,
+        receiving_session: optional.receiving_session,
+        disposition_override: optional.disposition_override,
+        disposition_rationale: optional.disposition_rationale,
+        in_stream: required.in_stream,
+    })
+}
+
+struct RequiredFields {
+    class: String,
+    lifecycle_state: String,
+    target_role: String,
+    evidence: String,
+    severity: Severity,
+    source_session: NamedNode,
+    in_stream: NamedNode,
+}
+
+fn parse_required_fields(
+    iri: &NamedNode,
+    quads: &[Quad],
+) -> Result<RequiredFields, FeedbackReadError> {
+    Ok(RequiredFields {
+        class: take_one_literal(iri, quads, IRI_DEC_FEEDBACK_CLASS, "dec:feedbackClass")?,
+        lifecycle_state: take_one_literal(
+            iri,
+            quads,
+            IRI_DEC_LIFECYCLE_STATE,
+            "dec:lifecycleState",
+        )?,
+        target_role: take_one_literal(iri, quads, IRI_DEC_TARGET_ROLE, "dec:targetRole")?,
+        evidence: take_one_literal(iri, quads, IRI_DEC_EVIDENCE, "dec:evidence")?,
+        severity: parse_severity(iri, quads)?,
+        source_session: take_one_iri(iri, quads, IRI_DEC_SOURCE_SESSION, "dec:sourceSession")?,
+        in_stream: take_one_iri(iri, quads, IRI_DEC_IN_STREAM, "dec:inStream")?,
+    })
+}
+
+struct OptionalFields {
+    recommendation: Option<String>,
+    source_artifact: Option<NamedNode>,
+    addressing_artifact: Option<NamedNode>,
+    closed_by: Option<NamedNode>,
+    rejection_reason: Option<String>,
+    superseded_by: Option<NamedNode>,
+    routed_at: Option<String>,
+    receiving_session: Option<NamedNode>,
+    disposition_override: Option<String>,
+    disposition_rationale: Option<String>,
+}
+
+fn parse_optional_fields(
+    iri: &NamedNode,
+    quads: &[Quad],
+) -> Result<OptionalFields, FeedbackReadError> {
+    Ok(OptionalFields {
+        recommendation: take_optional_literal(iri, quads, IRI_DEC_RECOMMENDATION)?,
+        source_artifact: take_optional_iri(iri, quads, IRI_DEC_SOURCE_ARTIFACT)?,
+        addressing_artifact: take_optional_iri(iri, quads, IRI_DEC_ADDRESSING_ARTIFACT)?,
+        closed_by: take_optional_iri(iri, quads, IRI_DEC_CLOSED_BY)?,
+        rejection_reason: take_optional_literal(iri, quads, IRI_DEC_REJECTION_REASON)?,
+        superseded_by: take_optional_iri(iri, quads, IRI_DEC_SUPERSEDED_BY)?,
+        routed_at: take_optional_literal(iri, quads, IRI_DEC_ROUTED_AT)?,
+        receiving_session: take_optional_iri(iri, quads, IRI_DEC_RECEIVING_SESSION)?,
+        disposition_override: take_optional_literal(iri, quads, IRI_DEC_DISPOSITION_OVERRIDE)?,
+        disposition_rationale: take_optional_literal(iri, quads, IRI_DEC_DISPOSITION_RATIONALE)?,
     })
 }
 

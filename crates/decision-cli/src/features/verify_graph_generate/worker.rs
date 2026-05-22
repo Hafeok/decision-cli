@@ -76,9 +76,7 @@ pub fn reset_subprocess_invocation_count() {
 /// `python3 -m verify_graph_author --stdin` and pipes the bundle to
 /// stdin; the worker writes a single JSON line of `GraphProposal` to
 /// stdout, which we parse here.
-pub fn invoke_worker(
-    bundle: &VerifyGraphAuthorInputJson,
-) -> Result<GraphProposal, HandlerError> {
+pub fn invoke_worker(bundle: &VerifyGraphAuthorInputJson) -> Result<GraphProposal, HandlerError> {
     if let Some(mock_result) = try_invoke_mock(bundle) {
         return mock_result;
     }
@@ -98,6 +96,19 @@ fn try_invoke_mock(
 fn invoke_real_subprocess(
     bundle: &VerifyGraphAuthorInputJson,
 ) -> Result<GraphProposal, HandlerError> {
+    let mut child = spawn_worker_subprocess()?;
+    write_bundle_to_stdin(&mut child, bundle)?;
+    let output = child
+        .wait_with_output()
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("worker: waiting for subprocess: {e}"),
+        })?;
+    check_subprocess_exit(&output)?;
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    parse_proposal_from_stdout(&stdout)
+}
+
+fn spawn_worker_subprocess() -> Result<std::process::Child, HandlerError> {
     let mut cmd = Command::new("python3");
     cmd.arg("-m")
         .arg("verify_graph_author")
@@ -105,38 +116,43 @@ fn invoke_real_subprocess(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    let mut child = cmd.spawn().map_err(|e| HandlerError::Internal {
+    cmd.spawn().map_err(|e| HandlerError::Internal {
         detail: format!(
             "worker: spawning verify-graph-author subprocess failed: {e} \
              (set up a mock via verify_graph_generate::worker::install_mock for tests)"
         ),
-    })?;
+    })
+}
+
+fn write_bundle_to_stdin(
+    child: &mut std::process::Child,
+    bundle: &VerifyGraphAuthorInputJson,
+) -> Result<(), HandlerError> {
     let payload = serde_json::to_vec(bundle).map_err(|e| HandlerError::Internal {
         detail: format!("worker: serialising bundle: {e}"),
     })?;
-    {
-        let mut stdin = child.stdin.take().ok_or_else(|| HandlerError::Internal {
-            detail: "worker: stdin closed".to_string(),
-        })?;
-        stdin
-            .write_all(&payload)
-            .map_err(|e| HandlerError::Internal {
-                detail: format!("worker: writing bundle: {e}"),
-            })?;
-    }
-    let output = child.wait_with_output().map_err(|e| HandlerError::Internal {
-        detail: format!("worker: waiting for subprocess: {e}"),
+    let mut stdin = child.stdin.take().ok_or_else(|| HandlerError::Internal {
+        detail: "worker: stdin closed".to_string(),
     })?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-        return Err(HandlerError::Internal {
-            detail: format!(
-                "worker: subprocess exited with {}: {stderr}",
-                output.status
-            ),
-        });
+    stdin
+        .write_all(&payload)
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("worker: writing bundle: {e}"),
+        })?;
+    Ok(())
+}
+
+fn check_subprocess_exit(output: &std::process::Output) -> Result<(), HandlerError> {
+    if output.status.success() {
+        return Ok(());
     }
-    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    Err(HandlerError::Internal {
+        detail: format!("worker: subprocess exited with {}: {stderr}", output.status),
+    })
+}
+
+fn parse_proposal_from_stdout(stdout: &str) -> Result<GraphProposal, HandlerError> {
     let line = stdout
         .lines()
         .rev()
@@ -147,10 +163,7 @@ fn invoke_real_subprocess(
     let value: Value = serde_json::from_str(line).map_err(|e| HandlerError::Internal {
         detail: format!("worker: parsing stdout JSON: {e} (line: {line})"),
     })?;
-    let proposal: GraphProposal = serde_json::from_value(value).map_err(|e| {
-        HandlerError::Internal {
-            detail: format!("worker: GraphProposal shape mismatch: {e}"),
-        }
-    })?;
-    Ok(proposal)
+    serde_json::from_value(value).map_err(|e| HandlerError::Internal {
+        detail: format!("worker: GraphProposal shape mismatch: {e}"),
+    })
 }

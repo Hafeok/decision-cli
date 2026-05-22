@@ -131,12 +131,29 @@ pub fn apply(
     let session = resolve_source_session(emission, active_session)?;
     let in_stream = writer.active_stream().clone();
     let iri = mint_feedback_iri()?;
+    let feedback = build_feedback(emission, iri.clone(), session, in_stream);
+    let quads = feedback.to_quads(orchestration_graph());
+    let mutation = Mutation {
+        inserts: quads,
+        ..Mutation::default()
+    };
+    writer
+        .commit(mutation)
+        .map_err(|e| FeedbackApplyError::Commit(format!("{e:#}")))?;
+    Ok(iri)
+}
+
+fn build_feedback(
+    emission: &FeedbackEmission,
+    iri: NamedNode,
+    session: NamedNode,
+    in_stream: NamedNode,
+) -> Feedback {
     let target_role = resolve_target_role(emission);
     let severity = resolve_severity(&emission.severity);
     let (disposition_override, disposition_rationale) = resolve_disposition(emission);
-
-    let feedback = Feedback {
-        iri: iri.clone(),
+    Feedback {
+        iri,
         class: emission.feedback_class.clone(),
         severity,
         target_role,
@@ -154,17 +171,7 @@ pub fn apply(
         disposition_override,
         disposition_rationale,
         in_stream,
-    };
-
-    let quads = feedback.to_quads(orchestration_graph());
-    let mutation = Mutation {
-        inserts: quads,
-        ..Mutation::default()
-    };
-    writer
-        .commit(mutation)
-        .map_err(|e| FeedbackApplyError::Commit(format!("{e:#}")))?;
-    Ok(iri)
+    }
 }
 
 fn resolve_source_session(
@@ -213,8 +220,8 @@ fn resolve_disposition(emission: &FeedbackEmission) -> (Option<String>, Option<S
     } else {
         Disposition::NonBlocking
     };
-    let class_default = FeedbackClass::from_iri_value(&emission.feedback_class)
-        .map(|c| c.default_disposition());
+    let class_default =
+        FeedbackClass::from_iri_value(&emission.feedback_class).map(|c| c.default_disposition());
     if class_default == Some(explicit) {
         // The worker requested the class default — no override recorded.
         return (None, None);

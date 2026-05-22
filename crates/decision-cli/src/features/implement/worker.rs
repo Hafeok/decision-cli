@@ -13,7 +13,7 @@ use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::core::worker::{
-    self, format_report_text, role_entry, ResolveInputs, Resolution, WorkerReport,
+    self, format_report_text, role_entry, Resolution, ResolveInputs, WorkerReport,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -168,10 +168,7 @@ pub(super) struct WorkerRun {
     pub raw_stdout: String,
 }
 
-pub(super) fn run_worker(
-    argv: &[String],
-    payload: &DispatchPayloadJson,
-) -> Result<WorkerRun> {
+pub(super) fn run_worker(argv: &[String], payload: &DispatchPayloadJson) -> Result<WorkerRun> {
     let mut cmd = build_command_from_argv(argv)?;
     cmd.stdin(Stdio::piped())
         .stdout(Stdio::piped())

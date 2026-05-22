@@ -56,13 +56,11 @@ impl Drop for WorkdirGuard {
     }
 }
 
-const STREAM_TTL: &str = include_str!(
-    "../src/core/bundled/assets/streams/engineering-development.ttl"
-);
+const STREAM_TTL: &str =
+    include_str!("../src/core/bundled/assets/streams/engineering-development.ttl");
 
 const ENV_CLASS_IRI: &str = "https://decision-cli.dev/ns#VerificationEnvironment";
-const EXPECTED_ENV_IRI: &str =
-    "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli";
+const EXPECTED_ENV_IRI: &str = "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli";
 
 fn write_seed_definition(dir: &Path) -> PathBuf {
     let p = dir.join("stream.ttl");
@@ -119,7 +117,10 @@ fn ephemeral_cli_env_seed_exists_after_init() {
         "dec:setup must be non-empty"
     );
     assert!(
-        env.teardown.as_ref().map(|s| !s.is_empty()).unwrap_or(false),
+        env.teardown
+            .as_ref()
+            .map(|s| !s.is_empty())
+            .unwrap_or(false),
         "dec:teardown must be non-empty"
     );
     assert!(env.endpoint.is_none(), "local env must not carry endpoint");
@@ -155,14 +156,12 @@ fn seed_file_byte_content_is_stable_after_re_init_attempt() {
     let count = fs::read_dir(env_dir(workdir))
         .expect("env dir readable")
         .filter_map(Result::ok)
-        .filter(|e| {
-            e.path()
-                .extension()
-                .map(|x| x == "ttl")
-                .unwrap_or(false)
-        })
+        .filter(|e| e.path().extension().map(|x| x == "ttl").unwrap_or(false))
         .count();
-    assert_eq!(count, 1, "exactly one env file must exist under .dec/verify/env/");
+    assert_eq!(
+        count, 1,
+        "exactly one env file must exist under .dec/verify/env/"
+    );
 }
 
 #[test]

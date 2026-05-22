@@ -37,22 +37,13 @@ pub(super) fn query_envs(
     safety_class: Option<&str>,
     env_type: Option<&str>,
 ) -> Result<Vec<EnvSummary>, HandlerError> {
-    let dump_path = orchestration_dump_path(workdir);
-    if !dump_path.exists() {
-        return Err(HandlerError::Internal {
-            detail: format!(
-                "no orchestration store at {} — run `dec init` first",
-                dump_path.display()
-            ),
-        });
-    }
-    let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
-        detail: format!("loading orchestration store: {e}"),
-    })?;
+    let store = open_store(workdir)?;
     let q = build_query(safety_class, env_type);
-    let results = store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("env-list SPARQL: {e}"),
-    })?;
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("env-list SPARQL: {e}"),
+        })?;
     let QueryResults::Solutions(sols) = results else {
         return Err(HandlerError::Internal {
             detail: "env-list: unexpected SPARQL result shape".to_string(),
@@ -67,32 +58,62 @@ pub(super) fn query_envs(
         let Some(id) = env_iri.strip_prefix(IRI_DEC_ENV_PREFIX).map(str::to_string) else {
             continue;
         };
-        let env_type_v = sol.get("type").map(term_literal_string).unwrap_or_default();
-        let safety = sol.get("safety").map(term_literal_string).unwrap_or_default();
-        let endpoint = sol
-            .get("endpoint")
-            .map(term_literal_string)
-            .filter(|s| !s.is_empty());
-        let setup = sol
-            .get("setup")
-            .map(term_literal_string)
-            .filter(|s| !s.is_empty());
-        let teardown = sol
-            .get("teardown")
-            .map(term_literal_string)
-            .filter(|s| !s.is_empty());
         let allowed_ops = read_allowed_ops(&store, &env_iri)?;
-        out.push(EnvSummary {
-            id,
-            env_type: env_type_v,
-            safety_class: safety,
-            endpoint,
-            allowed_ops,
-            setup,
-            teardown,
-        });
+        out.push(summary_from_solution(id, &sol, allowed_ops));
     }
     Ok(out)
+}
+
+/// Load the orchestration store dump, returning a structured error when
+/// the dump is missing (typical pre-`dec init` state).
+fn open_store(workdir: &Path) -> Result<Store, HandlerError> {
+    let dump_path = orchestration_dump_path(workdir);
+    if !dump_path.exists() {
+        return Err(HandlerError::Internal {
+            detail: format!(
+                "no orchestration store at {} — run `dec init` first",
+                dump_path.display()
+            ),
+        });
+    }
+    load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
+        detail: format!("loading orchestration store: {e}"),
+    })
+}
+
+/// Project a single SPARQL solution row into an [`EnvSummary`]. The
+/// `allowed_ops` list is read separately because it lives as an rdf:List
+/// of blank nodes that SPARQL cannot bind through `WHERE`.
+fn summary_from_solution(
+    id: String,
+    sol: &oxigraph::sparql::QuerySolution,
+    allowed_ops: Vec<String>,
+) -> EnvSummary {
+    let env_type = sol.get("type").map(term_literal_string).unwrap_or_default();
+    let safety_class = sol
+        .get("safety")
+        .map(term_literal_string)
+        .unwrap_or_default();
+    let endpoint = optional_literal(sol, "endpoint");
+    let setup = optional_literal(sol, "setup");
+    let teardown = optional_literal(sol, "teardown");
+    EnvSummary {
+        id,
+        env_type,
+        safety_class,
+        endpoint,
+        allowed_ops,
+        setup,
+        teardown,
+    }
+}
+
+/// Read an optional literal binding, mapping the empty string to `None`
+/// so absent OPTIONAL columns and explicit empty strings collapse the same way.
+fn optional_literal(sol: &oxigraph::sparql::QuerySolution, name: &str) -> Option<String> {
+    sol.get(name)
+        .map(term_literal_string)
+        .filter(|s| !s.is_empty())
 }
 
 /// SPARQL SELECT for env summaries with optional filters.
@@ -100,22 +121,8 @@ pub(super) fn query_envs(
 /// The FILTER predicates collapse to no-ops when the corresponding
 /// option is `None`; conjunctive when both are `Some`.
 fn build_query(safety_class: Option<&str>, env_type: Option<&str>) -> String {
-    let safety_filter = safety_class
-        .map(|s| {
-            format!(
-                "    FILTER(?safety = \"{escaped}\")\n",
-                escaped = escape_sparql_literal(s)
-            )
-        })
-        .unwrap_or_default();
-    let type_filter = env_type
-        .map(|t| {
-            format!(
-                "    FILTER(?type = \"{escaped}\")\n",
-                escaped = escape_sparql_literal(t)
-            )
-        })
-        .unwrap_or_default();
+    let safety_filter = filter_clause("safety", safety_class);
+    let type_filter = filter_clause("type", env_type);
     format!(
         "SELECT ?env ?type ?safety ?endpoint ?setup ?teardown WHERE {{\n  \
          GRAPH <{graph}> {{\n    \
@@ -136,6 +143,19 @@ fn build_query(safety_class: Option<&str>, env_type: Option<&str>) -> String {
         p_setup = IRI_DEC_SETUP,
         p_teardown = IRI_DEC_TEARDOWN,
     )
+}
+
+/// Build a single `FILTER(?<var> = "...")` clause when the value is
+/// `Some`, or the empty string otherwise (so the FILTER is omitted).
+fn filter_clause(var: &str, value: Option<&str>) -> String {
+    value
+        .map(|v| {
+            format!(
+                "    FILTER(?{var} = \"{escaped}\")\n",
+                escaped = escape_sparql_literal(v)
+            )
+        })
+        .unwrap_or_default()
 }
 
 fn escape_sparql_literal(s: &str) -> String {
@@ -228,47 +248,39 @@ fn key_for(t: &Term) -> String {
 /// Read `rdf:first` (literal) and `rdf:rest` (term) for one list cell.
 fn step_list(store: &Store, head: &Term) -> Result<(String, Term), HandlerError> {
     let head_subject = term_as_subject(head)?;
+    let first_value = read_first_literal(store, &head_subject)?;
+    let rest_term = read_rest_term(store, &head_subject)?;
+    Ok((first_value, rest_term))
+}
+
+/// Pull the `rdf:first` literal for an rdf:List cell.
+fn read_first_literal(store: &Store, head: &Subject) -> Result<String, HandlerError> {
     let first_pred = NamedNode::new_unchecked(RDF_FIRST);
-    let rest_pred = NamedNode::new_unchecked(RDF_REST);
-    let mut first_value: Option<String> = None;
     for quad in store
-        .quads_for_pattern(
-            Some(head_subject.as_ref()),
-            Some(first_pred.as_ref()),
-            None,
-            None,
-        )
+        .quads_for_pattern(Some(head.as_ref()), Some(first_pred.as_ref()), None, None)
         .filter_map(Result::ok)
     {
         if let Term::Literal(lit) = &quad.object {
-            first_value = Some(lit.value().to_string());
-            break;
+            return Ok(lit.value().to_string());
         }
     }
-    let Some(first_value) = first_value else {
-        return Err(HandlerError::Internal {
-            detail: "dec:allowedOps list node missing rdf:first literal".to_string(),
-        });
-    };
-    let mut rest_term: Option<Term> = None;
+    Err(HandlerError::Internal {
+        detail: "dec:allowedOps list node missing rdf:first literal".to_string(),
+    })
+}
+
+/// Pull the `rdf:rest` term (named/blank node) for an rdf:List cell.
+fn read_rest_term(store: &Store, head: &Subject) -> Result<Term, HandlerError> {
+    let rest_pred = NamedNode::new_unchecked(RDF_REST);
     for quad in store
-        .quads_for_pattern(
-            Some(head_subject.as_ref()),
-            Some(rest_pred.as_ref()),
-            None,
-            None,
-        )
+        .quads_for_pattern(Some(head.as_ref()), Some(rest_pred.as_ref()), None, None)
         .filter_map(Result::ok)
     {
-        rest_term = Some(quad.object);
-        break;
+        return Ok(quad.object);
     }
-    let Some(rest_term) = rest_term else {
-        return Err(HandlerError::Internal {
-            detail: "dec:allowedOps list node missing rdf:rest".to_string(),
-        });
-    };
-    Ok((first_value, rest_term))
+    Err(HandlerError::Internal {
+        detail: "dec:allowedOps list node missing rdf:rest".to_string(),
+    })
 }
 
 fn term_as_subject(t: &Term) -> Result<Subject, HandlerError> {

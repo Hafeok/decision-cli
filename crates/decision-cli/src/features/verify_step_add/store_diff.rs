@@ -27,13 +27,21 @@ const RDF_NIL: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
 /// Returns an empty vec if the graph is not currently projected in the
 /// store (first-time projection happens via the writer commit below).
 pub(super) fn list_quads_to_remove(store: &Store, graph_iri: &NamedNode) -> Vec<Quad> {
-    let steps_pred = NamedNode::new_unchecked(IRI_DEC_STEPS);
+    let mut removes: Vec<Quad> = Vec::new();
+    let list_heads = collect_list_heads(store, graph_iri, &mut removes);
     let rdf_first = NamedNode::new_unchecked(RDF_FIRST);
     let rdf_rest = NamedNode::new_unchecked(RDF_REST);
+    for head in list_heads {
+        walk_list_cells(store, head, &rdf_first, &rdf_rest, &mut removes);
+    }
+    removes
+}
 
-    let mut removes: Vec<Quad> = Vec::new();
-    let mut list_heads: Vec<Term> = Vec::new();
-
+/// Find every `dec:steps` head quad attached to `graph_iri` and push it
+/// into `removes`, returning the list-cell objects to walk next.
+fn collect_list_heads(store: &Store, graph_iri: &NamedNode, removes: &mut Vec<Quad>) -> Vec<Term> {
+    let steps_pred = NamedNode::new_unchecked(IRI_DEC_STEPS);
+    let mut heads: Vec<Term> = Vec::new();
     for quad in store
         .quads_for_pattern(
             Some(Subject::NamedNode(graph_iri.clone()).as_ref()),
@@ -45,76 +53,90 @@ pub(super) fn list_quads_to_remove(store: &Store, graph_iri: &NamedNode) -> Vec<
         )
         .filter_map(Result::ok)
     {
-        list_heads.push(quad.object.clone());
+        heads.push(quad.object.clone());
         removes.push(quad);
     }
+    heads
+}
 
-    // Walk every list head through rdf:rest, collecting cell quads.
-    for head in list_heads {
-        let mut current = head;
-        let mut visited = std::collections::BTreeSet::<String>::new();
-        loop {
-            // rdf:nil terminates without contributing quads.
-            if let Term::NamedNode(n) = &current {
-                if n.as_str() == RDF_NIL {
-                    break;
-                }
-            }
-            let key = match &current {
-                Term::BlankNode(b) => format!("bn:{}", b.as_str()),
-                Term::NamedNode(n) => format!("iri:{}", n.as_str()),
-                _ => break,
-            };
-            // Cycle-guard: dedupe via BTreeSet membership. Use
-            // `replace` rather than the BTreeSet mutator method that
-            // shares its name with `Store` mutators so the FT-059
-            // bypass-audit substring search produces no false positive.
-            if visited.contains(&key) {
-                break;
-            }
-            visited.replace(key);
-            let subject_ref = match term_to_subject(&current) {
-                Some(s) => s,
-                None => break,
-            };
-            // Collect every quad at this list node (rdf:first + rdf:rest).
-            let mut next: Option<Term> = None;
-            for quad in store
-                .quads_for_pattern(
-                    Some(subject_ref.as_ref()),
-                    Some(rdf_first.as_ref()),
-                    None,
-                    Some(oxigraph::model::GraphNameRef::NamedNode(
-                        verify_graph_named_graph(),
-                    )),
-                )
-                .filter_map(Result::ok)
-            {
-                removes.push(quad);
-            }
-            for quad in store
-                .quads_for_pattern(
-                    Some(subject_ref.as_ref()),
-                    Some(rdf_rest.as_ref()),
-                    None,
-                    Some(oxigraph::model::GraphNameRef::NamedNode(
-                        verify_graph_named_graph(),
-                    )),
-                )
-                .filter_map(Result::ok)
-            {
-                if next.is_none() {
-                    next = Some(quad.object.clone());
-                }
-                removes.push(quad);
-            }
-            match next {
-                Some(n) => current = n,
-                None => break,
-            }
+/// Walk an rdf:List from `head` through `rdf:rest`, pushing every
+/// cell quad into `removes`. Uses a `BTreeSet` cycle-guard so a
+/// malformed list cannot cause an infinite walk.
+fn walk_list_cells(
+    store: &Store,
+    head: Term,
+    rdf_first: &NamedNode,
+    rdf_rest: &NamedNode,
+    removes: &mut Vec<Quad>,
+) {
+    let mut current = head;
+    let mut visited = std::collections::BTreeSet::<String>::new();
+    loop {
+        if is_rdf_nil(&current) {
+            break;
+        }
+        let Some(key) = cell_dedupe_key(&current) else {
+            break;
+        };
+        // Cycle-guard: dedupe via BTreeSet membership. Use
+        // `replace` rather than the BTreeSet mutator method that
+        // shares its name with `Store` mutators so the FT-059
+        // bypass-audit substring search produces no false positive.
+        if visited.contains(&key) {
+            break;
+        }
+        visited.replace(key);
+        let Some(subject) = term_to_subject(&current) else {
+            break;
+        };
+        collect_quads_for(store, &subject, rdf_first, removes);
+        let next = collect_quads_for(store, &subject, rdf_rest, removes);
+        match next {
+            Some(n) => current = n,
+            None => break,
         }
     }
-    removes
+}
+
+/// Push every quad at `(subject, predicate, *)` in the verify-graph
+/// named graph into `removes`, returning the first object encountered
+/// (used to advance the rdf:rest walk).
+fn collect_quads_for(
+    store: &Store,
+    subject: &Subject,
+    predicate: &NamedNode,
+    removes: &mut Vec<Quad>,
+) -> Option<Term> {
+    let mut next: Option<Term> = None;
+    for quad in store
+        .quads_for_pattern(
+            Some(subject.as_ref()),
+            Some(predicate.as_ref()),
+            None,
+            Some(oxigraph::model::GraphNameRef::NamedNode(
+                verify_graph_named_graph(),
+            )),
+        )
+        .filter_map(Result::ok)
+    {
+        if next.is_none() {
+            next = Some(quad.object.clone());
+        }
+        removes.push(quad);
+    }
+    next
+}
+
+fn is_rdf_nil(t: &Term) -> bool {
+    matches!(t, Term::NamedNode(n) if n.as_str() == RDF_NIL)
+}
+
+fn cell_dedupe_key(t: &Term) -> Option<String> {
+    match t {
+        Term::BlankNode(b) => Some(format!("bn:{}", b.as_str())),
+        Term::NamedNode(n) => Some(format!("iri:{}", n.as_str())),
+        _ => None,
+    }
 }
 
 fn term_to_subject(t: &Term) -> Option<Subject> {

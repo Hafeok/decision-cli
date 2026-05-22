@@ -156,31 +156,7 @@ pub fn format_list_json(rows: &[FeedbackRow]) -> String {
     }
     let mut out = String::from("[\n");
     for (i, row) in rows.iter().enumerate() {
-        out.push_str("  {");
-        out.push_str(&format!("\"iri\": \"{}\", ", json_escape(&row.iri)));
-        out.push_str(&format!("\"class\": \"{}\", ", json_escape(&row.class)));
-        out.push_str(&format!(
-            "\"target_role\": \"{}\", ",
-            json_escape(&row.target_role)
-        ));
-        out.push_str(&format!(
-            "\"lifecycle_state\": \"{}\", ",
-            json_escape(&row.lifecycle_state)
-        ));
-        out.push_str(&format!("\"severity\": \"{}\", ", json_escape(&row.severity)));
-        out.push_str(&format!(
-            "\"evidence\": \"{}\", ",
-            json_escape(&row.evidence)
-        ));
-        out.push_str(&format!(
-            "\"routed_at\": {}, ",
-            json_opt(row.routed_at.as_deref())
-        ));
-        out.push_str(&format!(
-            "\"source_session\": \"{}\"",
-            json_escape(&row.source_session)
-        ));
-        out.push('}');
+        append_row_json(&mut out, row);
         if i + 1 < rows.len() {
             out.push(',');
         }
@@ -188,6 +164,37 @@ pub fn format_list_json(rows: &[FeedbackRow]) -> String {
     }
     out.push_str("]\n");
     out
+}
+
+fn append_row_json(out: &mut String, row: &FeedbackRow) {
+    out.push_str("  {");
+    out.push_str(&format!("\"iri\": \"{}\", ", json_escape(&row.iri)));
+    out.push_str(&format!("\"class\": \"{}\", ", json_escape(&row.class)));
+    out.push_str(&format!(
+        "\"target_role\": \"{}\", ",
+        json_escape(&row.target_role)
+    ));
+    out.push_str(&format!(
+        "\"lifecycle_state\": \"{}\", ",
+        json_escape(&row.lifecycle_state)
+    ));
+    out.push_str(&format!(
+        "\"severity\": \"{}\", ",
+        json_escape(&row.severity)
+    ));
+    out.push_str(&format!(
+        "\"evidence\": \"{}\", ",
+        json_escape(&row.evidence)
+    ));
+    out.push_str(&format!(
+        "\"routed_at\": {}, ",
+        json_opt(row.routed_at.as_deref())
+    ));
+    out.push_str(&format!(
+        "\"source_session\": \"{}\"",
+        json_escape(&row.source_session)
+    ));
+    out.push('}');
 }
 
 #[cfg(test)]

@@ -28,9 +28,7 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use crate::core::stream_writer::StreamWriter;
-use crate::core::vocab::{
-    auto_dispatch_ledger_graph, IRI_DEC_GRAPH_AUTO_DISPATCH_LEDGER,
-};
+use crate::core::vocab::{auto_dispatch_ledger_graph, IRI_DEC_GRAPH_AUTO_DISPATCH_LEDGER};
 
 pub use self::config::{
     parse_from_str as parse_config_from_str, AutoDispatchConfig, DEFAULT_DEDUP_TTL_SECONDS,
@@ -42,8 +40,8 @@ pub use self::ledger::{
 };
 pub use self::quads::{build_event_quads as build_dispatch_event_quads, DispatchEventQuadInput};
 pub use self::session::{
-    load_proposal_document, persist_pending_review_session, PendingReviewError,
-    PendingReviewInput, PendingReviewSession,
+    load_proposal_document, persist_pending_review_session, PendingReviewError, PendingReviewInput,
+    PendingReviewSession,
 };
 
 /// Stable IRI of the seeded verify-graph-author auto-dispatch subscription
@@ -206,15 +204,27 @@ pub fn seed_quads() -> Vec<Quad> {
     let subs_graph: GraphName =
         NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_GRAPH_SUBSCRIPTIONS).into();
     let sub = NamedNode::new_unchecked(VERIFY_GRAPH_AUTHOR_DISPATCH_SUBSCRIPTION_IRI);
+    let mut quads = seed_type_quads(&sub, &subs_graph);
+    quads.extend(seed_query_quads(&sub, &subs_graph));
+    quads.extend(seed_metadata_quads(sub, &subs_graph));
+    quads
+}
+
+fn seed_type_quads(sub: &NamedNode, subs_graph: &GraphName) -> Vec<Quad> {
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
     let sub_cls = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
+    vec![Quad::new(
+        sub.clone(),
+        rdf_type,
+        sub_cls,
+        subs_graph.clone(),
+    )]
+}
+
+fn seed_query_quads(sub: &NamedNode, subs_graph: &GraphName) -> Vec<Quad> {
     let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
     let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
-    let handler_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_HANDLER);
-    let label_pred =
-        NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
     vec![
-        Quad::new(sub.clone(), rdf_type, sub_cls, subs_graph.clone()),
         Quad::new(
             sub.clone(),
             select_pred,
@@ -229,6 +239,13 @@ pub fn seed_quads() -> Vec<Quad> {
             Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_ASYNC),
             subs_graph.clone(),
         ),
+    ]
+}
+
+fn seed_metadata_quads(sub: NamedNode, subs_graph: &GraphName) -> Vec<Quad> {
+    let handler_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_HANDLER);
+    let label_pred = NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
+    vec![
         Quad::new(
             sub.clone(),
             handler_pred,
@@ -241,7 +258,7 @@ pub fn seed_quads() -> Vec<Quad> {
             Literal::new_simple_literal(
                 "verify-graph-author auto-dispatch (new/updated feature has TCs and no covering graph)",
             ),
-            subs_graph,
+            subs_graph.clone(),
         ),
     ]
 }

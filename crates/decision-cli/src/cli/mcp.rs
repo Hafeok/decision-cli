@@ -21,9 +21,7 @@ use clap::Subcommand;
 use serde_json::json;
 
 use decision_cli::core::handler::{Error as HandlerError, Request, Response};
-use decision_cli::core::mcp::{
-    RegisterError, ToolDescriptor, ToolHandler, ToolRegistry,
-};
+use decision_cli::core::mcp::{RegisterError, ToolDescriptor, ToolHandler, ToolRegistry};
 use decision_cli::mcp;
 use decision_cli::verify_env_list;
 use decision_cli::verify_env_new;
@@ -63,11 +61,10 @@ fn build_and_serve(workdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
 /// `tool_descriptor()`, binding the workdir into the handler closure so
 /// MCP invocations target the server's launch directory.
 fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterError> {
-    let mut registry = mcp::build_registry(workdir)
-        .map_err(|e| match e {
-            mcp::McpError::Register(r) => r,
-            mcp::McpError::Serve(_) => unreachable!("build_registry never returns Serve"),
-        })?;
+    let mut registry = mcp::build_registry(workdir).map_err(|e| match e {
+        mcp::McpError::Register(r) => r,
+        mcp::McpError::Serve(_) => unreachable!("build_registry never returns Serve"),
+    })?;
     register_verify_env_new(&mut registry, workdir)?;
     register_verify_env_list(&mut registry, workdir)?;
     register_verify_env_show(&mut registry, workdir)?;
@@ -183,10 +180,7 @@ fn register_verify_graph_list(
 }
 
 fn verify_graph_list_response(outcome: &verify_graph_list::GraphListResponse) -> Response {
-    let summary = format!(
-        "listed {n} verification graph(s)",
-        n = outcome.graphs.len()
-    );
+    let summary = format!("listed {n} verification graph(s)", n = outcome.graphs.len());
     Response::with_summary(
         json!({
             "graphs": outcome.graphs,

@@ -11,10 +11,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use decision_cli::core::ontology::verification_graph::{
     validate_quads, ArtifactRef, StepFields, VerificationGraph, VerificationStep,
 };
+use decision_cli::core::verify::coverage::feature_coverage;
 use decision_cli::core::verify::coverage::feature_resolver::{
     feature_iri_for, graph_iri_for, tc_iri_for,
 };
-use decision_cli::core::verify::coverage::feature_coverage;
 use decision_cli::vocab::verify_graph_named_graph;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
@@ -112,13 +112,8 @@ fn tc_069_absent_providesevidencefor_yields_zero_coverage() {
     let vg = build_vg_y_without_evidence();
     insert_quads(&store, &vg.to_quads(verify_graph_named_graph()));
 
-    let report = feature_coverage(
-        "FT-Y",
-        Some(vec!["VG-Y".to_string()]),
-        &store,
-        wd.path(),
-    )
-    .expect("feature_coverage ok");
+    let report = feature_coverage("FT-Y", Some(vec!["VG-Y".to_string()]), &store, wd.path())
+        .expect("feature_coverage ok");
 
     // Acceptance: covered = [], uncovered = FT-Y.tests.
     assert!(report.covered.is_empty(), "no covering hits expected");

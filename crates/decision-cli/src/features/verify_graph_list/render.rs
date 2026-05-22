@@ -96,7 +96,9 @@ mod tests {
 
     #[test]
     fn table_renders_rows_with_headers() {
-        let resp = GraphListResponse { graphs: vec![sample()] };
+        let resp = GraphListResponse {
+            graphs: vec![sample()],
+        };
         let s = render_table(&resp);
         assert!(s.contains("ID"));
         assert!(s.contains("VERIFIES"));

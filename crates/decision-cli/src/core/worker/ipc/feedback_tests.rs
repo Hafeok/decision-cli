@@ -115,8 +115,7 @@ fn apply_writes_one_feedback_artifact_in_produced_state() {
         iri = iri.as_str(),
     );
     let store = writer.inner().store();
-    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask")
-    else {
+    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask") else {
         panic!("expected boolean")
     };
     assert!(b, "feedback artifact must satisfy the ASK pattern");
@@ -143,8 +142,7 @@ fn apply_uses_target_role_override_when_provided() {
          ASK {{ GRAPH ?g {{ <{iri}> dec:targetRole \"architect\" . }} }}",
         iri = iri.as_str(),
     );
-    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask")
-    else {
+    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask") else {
         panic!("expected boolean")
     };
     assert!(b, "target role override must be persisted");
@@ -175,8 +173,7 @@ fn apply_records_disposition_override_when_blocking_differs_from_default() {
                                     dec:dispositionRationale ?r . }} }}",
         iri = iri.as_str(),
     );
-    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask")
-    else {
+    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask") else {
         panic!("expected boolean")
     };
     assert!(b, "disposition override + rationale must be persisted");
@@ -205,11 +202,13 @@ fn apply_does_not_record_override_when_blocking_matches_class_default() {
          ASK {{ GRAPH ?g {{ <{iri}> dec:dispositionOverride ?o . }} }}",
         iri = iri.as_str(),
     );
-    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask")
-    else {
+    let oxigraph::sparql::QueryResults::Boolean(b) = store.query(q.as_str()).expect("ask") else {
         panic!("expected boolean")
     };
-    assert!(!b, "no override should be recorded when blocking matches default");
+    assert!(
+        !b,
+        "no override should be recorded when blocking matches default"
+    );
 }
 
 #[test]

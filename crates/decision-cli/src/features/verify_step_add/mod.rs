@@ -27,7 +27,9 @@ use serde_json::{json, Value};
 
 use crate::core::handler::{Error as HandlerError, Request, Response};
 use crate::core::mcp::{ToolDescriptor, ToolHandler};
-use crate::core::ontology::verification_graph::{step_iri_for, StepKind, VerificationStep};
+use crate::core::ontology::verification_graph::{
+    step_iri_for, StepFields, StepKind, VerificationStep,
+};
 use crate::core::verify::coverage::feature_resolver::tc_iri_for;
 use crate::core::verify::safety::check_step_against_env;
 
@@ -155,63 +157,78 @@ pub fn input_schema() -> Value {
 
 /// Single handler — both CLI and MCP surfaces invoke this.
 pub fn run(req: &StepAddRequest) -> Result<StepAddResponse, HandlerError> {
-    let workdir = req
-        .workdir
+    let workdir = require_workdir(req)?;
+    let kind = parse_step_kind(&req.step_type)?;
+    let step_fields = fields::build_step_fields(kind, &req.fields)?;
+
+    // Resolve the graph file → parse it.
+    let graph_dir = workdir.join(".dec").join("verify").join("graph");
+    let (_graph_path, graph) = commit::load_graph(&graph_dir, &req.graph_id)?;
+    let graph_id_str = graph.id_str().to_string();
+
+    // Mint the new step at the next position.
+    let next_index = graph.steps.len();
+    let new_step_iri = step_iri_for(&graph_id_str, next_index);
+    let new_step = build_verification_step(new_step_iri.clone(), kind, step_fields, req)?;
+
+    // Pre-flight safety check (FT-037) — refuses persistence on
+    // SafetyViolation. Runs BEFORE any disk write or store mutation
+    // so TC-067 §AC #2-3 hold.
+    let env = commit::load_env_for_graph(workdir, &graph)?;
+    check_step_against_env(&new_step, &env).map_err(HandlerError::from)?;
+
+    // Build the new in-memory graph with the appended step, commit
+    // through StreamWriter (SHACL chokepoint), then atomically rewrite
+    // the on-disk Turtle.
+    let mut new_graph = graph;
+    new_graph.steps.push(new_step);
+    commit::commit_graph_update(workdir, &new_graph)?;
+    let written_path = persist::rewrite_graph_file(&graph_dir, &graph_id_str, &new_graph)?;
+    Ok(StepAddResponse {
+        step_id: new_step_iri.as_str().to_string(),
+        position: next_index + 1, // 1-based per FT-044 §Outputs.
+        graph_path: written_path.canonicalize().unwrap_or(written_path),
+    })
+}
+
+/// Surface the workdir as a borrowed path, surfacing `InvalidArgument`
+/// when no working directory was supplied (uninitialised tree).
+fn require_workdir(req: &StepAddRequest) -> Result<&std::path::Path, HandlerError> {
+    req.workdir
         .as_deref()
         .ok_or_else(|| HandlerError::InvalidArgument {
             field: "workdir".to_string(),
             detail: "no working directory available; run from a `dec init`-bootstrapped tree"
                 .to_string(),
-        })?;
-    // 1. Validate step kind (InvalidArgument → exit 2).
-    let kind = StepKind::parse(&req.step_type).ok_or_else(|| HandlerError::InvalidArgument {
+        })
+}
+
+/// Parse `step_type` into the typed [`StepKind`], surfacing
+/// `InvalidArgument` (→ CLI exit 2) when unknown.
+fn parse_step_kind(step_type: &str) -> Result<StepKind, HandlerError> {
+    StepKind::parse(step_type).ok_or_else(|| HandlerError::InvalidArgument {
         field: "step_type".to_string(),
         detail: format!(
             "unknown step kind {got:?}; expected one of {known:?}",
-            got = req.step_type,
+            got = step_type,
             known = crate::core::vocab::SEED_STEP_KINDS,
         ),
-    })?;
-    // 2. Validate per-kind fields (InvalidArgument on unknown keys,
-    //    SchemaViolation on missing required keys).
-    let step_fields = fields::build_step_fields(kind, &req.fields)?;
+    })
+}
 
-    // 3. Resolve the graph file → parse it.
-    let graph_dir = workdir.join(".dec").join("verify").join("graph");
-    let (_graph_path, graph) = commit::load_graph(&graph_dir, &req.graph_id)?;
-    let graph_id_str = graph.id_str().to_string();
-
-    // 4. Mint the new step at the next position.
-    let next_index = graph.steps.len();
-    let new_step_iri = step_iri_for(&graph_id_str, next_index);
+/// Assemble the typed [`VerificationStep`] from the validated parts.
+fn build_verification_step(
+    id: NamedNode,
+    kind: StepKind,
+    fields: StepFields,
+    req: &StepAddRequest,
+) -> Result<VerificationStep, HandlerError> {
     let evidence_iris = parse_evidence_ids(&req.provides_evidence_for)?;
-    let new_step = VerificationStep {
-        id: new_step_iri.clone(),
+    Ok(VerificationStep {
+        id,
         kind,
-        fields: step_fields,
+        fields,
         provides_evidence_for: evidence_iris,
-    };
-
-    // 5. Pre-flight safety check (FT-037) — refuses persistence on
-    //    SafetyViolation. Runs BEFORE any disk write or store mutation
-    //    so TC-067 §AC #2-3 hold.
-    let env = commit::load_env_for_graph(workdir, &graph)?;
-    check_step_against_env(&new_step, &env).map_err(HandlerError::from)?;
-
-    // 6. Build the new in-memory graph with the appended step.
-    let mut new_graph = graph;
-    new_graph.steps.push(new_step.clone());
-
-    // 7. Commit through StreamWriter (SHACL chokepoint).
-    commit::commit_graph_update(workdir, &new_graph)?;
-
-    // 8. Atomically rewrite the on-disk Turtle.
-    let written_path = persist::rewrite_graph_file(&graph_dir, &graph_id_str, &new_graph)?;
-    let position = next_index + 1; // 1-based per FT-044 §Outputs.
-    Ok(StepAddResponse {
-        step_id: new_step_iri.as_str().to_string(),
-        position,
-        graph_path: written_path.canonicalize().unwrap_or(written_path),
     })
 }
 
@@ -252,10 +269,9 @@ mod tests {
         // so the FT-059 bypass-audit substring search (looking for raw
         // store mutations) sees no false positive. BTreeMap-from-iter
         // has identical semantics here.
-        let fields: BTreeMap<String, String> =
-            [("command".to_string(), "dec init".to_string())]
-                .into_iter()
-                .collect();
+        let fields: BTreeMap<String, String> = [("command".to_string(), "dec init".to_string())]
+            .into_iter()
+            .collect();
         let req = StepAddRequest {
             graph_id: "VG-001".to_string(),
             step_type: "shell-command".to_string(),

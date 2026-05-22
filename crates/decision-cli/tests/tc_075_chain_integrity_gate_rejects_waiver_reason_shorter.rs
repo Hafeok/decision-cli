@@ -42,9 +42,8 @@ fn too_short_reason_rejected() {
     args.product_root = Some(workdir.clone());
     args.waiver = Some(WaiverIntent::new("too short"));
 
-    let err = implement_run(&workdir, &args).expect_err(
-        "TC-075: dispatch must fail with InvalidArgument when reason is too short",
-    );
+    let err = implement_run(&workdir, &args)
+        .expect_err("TC-075: dispatch must fail with InvalidArgument when reason is too short");
     let chain = format!("{err:#}");
 
     assert!(

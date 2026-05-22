@@ -49,34 +49,57 @@ pub fn show(workdir: &Path, iri: &str) -> Result<Feedback, ShowError> {
 #[must_use]
 pub fn format_show(fb: &Feedback) -> String {
     let mut out = String::new();
+    write_show_required_fields(&mut out, fb);
+    write_show_optional_iri_fields(&mut out, fb);
+    write_show_optional_string_fields(&mut out, fb);
+    out.push_str("evidence:\n");
+    out.push_str(&indent_block(&fb.evidence, "  "));
+    out.push('\n');
+    out
+}
+
+fn write_show_required_fields(out: &mut String, fb: &Feedback) {
     out.push_str(&format!("iri:                  {}\n", fb.iri.as_str()));
     out.push_str(&format!("class:                {}\n", fb.class));
     out.push_str(&format!("lifecycle_state:      {}\n", fb.lifecycle_state));
     out.push_str(&format!("severity:             {}\n", fb.severity.as_str()));
     out.push_str(&format!("target_role:          {}\n", fb.target_role));
-    out.push_str(&format!("in_stream:            {}\n", fb.in_stream.as_str()));
+    out.push_str(&format!(
+        "in_stream:            {}\n",
+        fb.in_stream.as_str()
+    ));
     out.push_str(&format!(
         "source_session:       {}\n",
         fb.source_session.as_str()
     ));
-    push_optional(&mut out, "source_artifact", opt_iri(&fb.source_artifact));
-    push_optional(&mut out, "addressing_artifact", opt_iri(&fb.addressing_artifact));
-    push_optional(&mut out, "closed_by", opt_iri(&fb.closed_by));
-    push_optional(&mut out, "superseded_by", opt_iri(&fb.superseded_by));
-    push_optional(&mut out, "receiving_session", opt_iri(&fb.receiving_session));
-    push_optional(&mut out, "routed_at", fb.routed_at.clone());
-    push_optional(&mut out, "rejection_reason", fb.rejection_reason.clone());
-    push_optional(&mut out, "recommendation", fb.recommendation.clone());
-    push_optional(&mut out, "disposition_override", fb.disposition_override.clone());
+}
+
+fn write_show_optional_iri_fields(out: &mut String, fb: &Feedback) {
+    push_optional(out, "source_artifact", opt_iri(&fb.source_artifact));
     push_optional(
-        &mut out,
+        out,
+        "addressing_artifact",
+        opt_iri(&fb.addressing_artifact),
+    );
+    push_optional(out, "closed_by", opt_iri(&fb.closed_by));
+    push_optional(out, "superseded_by", opt_iri(&fb.superseded_by));
+    push_optional(out, "receiving_session", opt_iri(&fb.receiving_session));
+}
+
+fn write_show_optional_string_fields(out: &mut String, fb: &Feedback) {
+    push_optional(out, "routed_at", fb.routed_at.clone());
+    push_optional(out, "rejection_reason", fb.rejection_reason.clone());
+    push_optional(out, "recommendation", fb.recommendation.clone());
+    push_optional(
+        out,
+        "disposition_override",
+        fb.disposition_override.clone(),
+    );
+    push_optional(
+        out,
         "disposition_rationale",
         fb.disposition_rationale.clone(),
     );
-    out.push_str("evidence:\n");
-    out.push_str(&indent_block(&fb.evidence, "  "));
-    out.push('\n');
-    out
 }
 
 /// Render the feedback as a JSON object suitable for `--format json`.
@@ -86,7 +109,10 @@ pub fn format_show_json(fb: &Feedback) -> String {
     write_required_json_fields(&mut out, fb);
     write_optional_iri_json_fields(&mut out, fb);
     write_optional_string_json_fields(&mut out, fb);
-    out.push_str(&format!("  \"evidence\": \"{}\"\n", json_escape(&fb.evidence)));
+    out.push_str(&format!(
+        "  \"evidence\": \"{}\"\n",
+        json_escape(&fb.evidence)
+    ));
     out.push_str("}\n");
     out
 }
@@ -110,19 +136,47 @@ fn write_required_json_fields(out: &mut String, fb: &Feedback) {
 }
 
 fn write_optional_iri_json_fields(out: &mut String, fb: &Feedback) {
-    push_optional_json(out, "source_artifact", fb.source_artifact.as_ref().map(NamedNode::as_str));
-    push_optional_json(out, "addressing_artifact", fb.addressing_artifact.as_ref().map(NamedNode::as_str));
-    push_optional_json(out, "closed_by", fb.closed_by.as_ref().map(NamedNode::as_str));
-    push_optional_json(out, "superseded_by", fb.superseded_by.as_ref().map(NamedNode::as_str));
-    push_optional_json(out, "receiving_session", fb.receiving_session.as_ref().map(NamedNode::as_str));
+    push_optional_json(
+        out,
+        "source_artifact",
+        fb.source_artifact.as_ref().map(NamedNode::as_str),
+    );
+    push_optional_json(
+        out,
+        "addressing_artifact",
+        fb.addressing_artifact.as_ref().map(NamedNode::as_str),
+    );
+    push_optional_json(
+        out,
+        "closed_by",
+        fb.closed_by.as_ref().map(NamedNode::as_str),
+    );
+    push_optional_json(
+        out,
+        "superseded_by",
+        fb.superseded_by.as_ref().map(NamedNode::as_str),
+    );
+    push_optional_json(
+        out,
+        "receiving_session",
+        fb.receiving_session.as_ref().map(NamedNode::as_str),
+    );
 }
 
 fn write_optional_string_json_fields(out: &mut String, fb: &Feedback) {
     push_optional_json(out, "routed_at", fb.routed_at.as_deref());
     push_optional_json(out, "rejection_reason", fb.rejection_reason.as_deref());
     push_optional_json(out, "recommendation", fb.recommendation.as_deref());
-    push_optional_json(out, "disposition_override", fb.disposition_override.as_deref());
-    push_optional_json(out, "disposition_rationale", fb.disposition_rationale.as_deref());
+    push_optional_json(
+        out,
+        "disposition_override",
+        fb.disposition_override.as_deref(),
+    );
+    push_optional_json(
+        out,
+        "disposition_rationale",
+        fb.disposition_rationale.as_deref(),
+    );
 }
 
 /// Render an error payload as JSON for the `--format json` error path

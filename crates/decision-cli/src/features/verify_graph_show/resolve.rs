@@ -44,6 +44,11 @@ fn resolve_path(graph_dir: &Path, id: &str) -> Result<PathBuf, HandlerError> {
     if !graph_dir.exists() {
         return Err(not_found(id));
     }
+    let matches = collect_id_matches(graph_dir, id)?;
+    pick_unique_match(matches, graph_dir, id)
+}
+
+fn collect_id_matches(graph_dir: &Path, id: &str) -> Result<Vec<PathBuf>, HandlerError> {
     let prefix = format!("{id}-");
     let mut matches: Vec<PathBuf> = Vec::new();
     for entry in fs::read_dir(graph_dir).map_err(|e| HandlerError::Internal {
@@ -61,6 +66,14 @@ fn resolve_path(graph_dir: &Path, id: &str) -> Result<PathBuf, HandlerError> {
             matches.push(entry.path());
         }
     }
+    Ok(matches)
+}
+
+fn pick_unique_match(
+    mut matches: Vec<PathBuf>,
+    graph_dir: &Path,
+    id: &str,
+) -> Result<PathBuf, HandlerError> {
     match matches.len() {
         0 => Err(not_found(id)),
         1 => Ok(matches.remove(0)),

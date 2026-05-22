@@ -49,10 +49,7 @@ pub(super) fn build_dispatch_payload(
 /// FT-030: look up `role_id` in the orchestration store and project its
 /// `dec:Authority` declaration into the wire shape consumed by workers.
 /// Returns `None` on legacy stores that haven't been re-seeded.
-fn lookup_role_authority(
-    store: &oxigraph::store::Store,
-    role_id: &str,
-) -> Option<AuthorityJson> {
+fn lookup_role_authority(store: &oxigraph::store::Store, role_id: &str) -> Option<AuthorityJson> {
     let role = role_catalog::lookup(store, role_id).ok().flatten()?;
     let authority = role.authority?;
     Some(AuthorityJson {

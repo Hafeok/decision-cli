@@ -70,7 +70,10 @@ fn init_workdir(tag: &str) -> TmpDir {
         .current_dir(tmp.path())
         .status()
         .expect("dec init");
-    assert!(matches!(status.code(), Some(0) | Some(2)), "init: {status:?}");
+    assert!(
+        matches!(status.code(), Some(0) | Some(2)),
+        "init: {status:?}"
+    );
     tmp
 }
 

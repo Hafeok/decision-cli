@@ -122,8 +122,7 @@ fn author_empty_graph(workdir: &Path, id: &str, verifies: &str, environment: &st
         environment: environment.to_string(),
         workdir: Some(workdir.to_path_buf()),
     };
-    verify_graph_new::run(&req)
-        .unwrap_or_else(|e| panic!("author empty graph {id}: {e}"));
+    verify_graph_new::run(&req).unwrap_or_else(|e| panic!("author empty graph {id}: {e}"));
 }
 
 /// Author a graph with `n` shell-command steps. Writes directly through

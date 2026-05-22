@@ -126,27 +126,22 @@ fn tc_071_matcher_returns_completemultiple_deterministic_greedy_cover() {
     // VG-7 covers [T3, T4]; VG-9 covers [T4].
     insert_quads(
         &store,
-        &build_graph("VG-3", &env_iri_full, &["T1", "T2"])
-            .to_quads(verify_graph_named_graph()),
+        &build_graph("VG-3", &env_iri_full, &["T1", "T2"]).to_quads(verify_graph_named_graph()),
     );
     insert_quads(
         &store,
-        &build_graph("VG-5", &env_iri_full, &["T2", "T3"])
-            .to_quads(verify_graph_named_graph()),
+        &build_graph("VG-5", &env_iri_full, &["T2", "T3"]).to_quads(verify_graph_named_graph()),
     );
     insert_quads(
         &store,
-        &build_graph("VG-7", &env_iri_full, &["T3", "T4"])
-            .to_quads(verify_graph_named_graph()),
+        &build_graph("VG-7", &env_iri_full, &["T3", "T4"]).to_quads(verify_graph_named_graph()),
     );
     insert_quads(
         &store,
-        &build_graph("VG-9", &env_iri_full, &["T4"])
-            .to_quads(verify_graph_named_graph()),
+        &build_graph("VG-9", &env_iri_full, &["T4"]).to_quads(verify_graph_named_graph()),
     );
 
-    let report =
-        best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("matcher ok");
+    let report = best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("matcher ok");
 
     // Acceptance: two-graph cover [VG-3, VG-7], in that order.
     assert_eq!(report.kind, MatchKind::CompleteMultiple);
@@ -203,11 +198,9 @@ fn tc_071_matcher_is_deterministic_across_100_runs() {
         );
     }
 
-    let first =
-        best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("first");
+    let first = best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("first");
     for _ in 0..99 {
-        let r = best_matching_graphs("FT-W", env_short, &store, wd.path())
-            .expect("repeat");
+        let r = best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("repeat");
         assert_eq!(r, first, "matcher output must be deterministic");
     }
 }

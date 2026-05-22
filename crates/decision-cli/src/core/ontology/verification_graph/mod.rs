@@ -19,10 +19,8 @@ pub mod shacl;
 pub mod types;
 
 pub use io::{from_turtle, from_turtle_bytes, to_canonical_turtle, GraphIoError};
-pub use shacl::{
-    validate_quads, GraphShaclError, GraphViolation, UnknownStepKindError,
-};
+pub use shacl::{validate_quads, GraphShaclError, GraphViolation, UnknownStepKindError};
 pub use types::{
-    step_iri_for, ArtifactRef, GraphIri, StepFields, StepIri, StepKind,
-    VerificationGraph, VerificationStep,
+    step_iri_for, ArtifactRef, GraphIri, StepFields, StepIri, StepKind, VerificationGraph,
+    VerificationStep,
 };

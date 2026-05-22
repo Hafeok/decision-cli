@@ -18,6 +18,7 @@
 //! a sibling feature.
 
 pub mod handler;
+mod handler_parts;
 pub mod seed;
 pub mod table;
 

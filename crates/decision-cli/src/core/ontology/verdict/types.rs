@@ -111,12 +111,7 @@ impl VerdictArtifact {
     }
 }
 
-pub(super) fn literal_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    value: &str,
-    g: &GraphName,
-) -> Quad {
+pub(super) fn literal_quad(s: &NamedNode, p: NamedNodeRef<'_>, value: &str, g: &GraphName) -> Quad {
     Quad::new(
         s.clone(),
         p.into_owned(),
@@ -125,11 +120,6 @@ pub(super) fn literal_quad(
     )
 }
 
-pub(super) fn named_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    o: &NamedNode,
-    g: &GraphName,
-) -> Quad {
+pub(super) fn named_quad(s: &NamedNode, p: NamedNodeRef<'_>, o: &NamedNode, g: &GraphName) -> Quad {
     Quad::new(s.clone(), p.into_owned(), o.clone(), g.clone())
 }

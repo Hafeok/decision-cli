@@ -123,9 +123,30 @@ impl Feedback {
 
     fn optional_quads(&self, g: &GraphName) -> Vec<Quad> {
         let mut out: Vec<Quad> = Vec::new();
+        self.push_optional_literals(&mut out, g);
+        self.push_optional_named(&mut out, g);
+        out
+    }
+
+    fn push_optional_literals(&self, out: &mut Vec<Quad>, g: &GraphName) {
         if let Some(rec) = &self.recommendation {
             out.push(literal_quad(&self.iri, recommendation(), rec, g));
         }
+        if let Some(reason) = &self.rejection_reason {
+            out.push(literal_quad(&self.iri, rejection_reason(), reason, g));
+        }
+        if let Some(ts) = &self.routed_at {
+            out.push(literal_quad(&self.iri, routed_at(), ts, g));
+        }
+        if let Some(disp) = &self.disposition_override {
+            out.push(literal_quad(&self.iri, disposition_override(), disp, g));
+        }
+        if let Some(reason) = &self.disposition_rationale {
+            out.push(literal_quad(&self.iri, disposition_rationale(), reason, g));
+        }
+    }
+
+    fn push_optional_named(&self, out: &mut Vec<Quad>, g: &GraphName) {
         if let Some(art) = &self.source_artifact {
             out.push(named_quad(&self.iri, source_artifact(), art, g));
         }
@@ -135,34 +156,16 @@ impl Feedback {
         if let Some(actor) = &self.closed_by {
             out.push(named_quad(&self.iri, closed_by(), actor, g));
         }
-        if let Some(reason) = &self.rejection_reason {
-            out.push(literal_quad(&self.iri, rejection_reason(), reason, g));
-        }
         if let Some(sup) = &self.superseded_by {
             out.push(named_quad(&self.iri, superseded_by(), sup, g));
-        }
-        if let Some(ts) = &self.routed_at {
-            out.push(literal_quad(&self.iri, routed_at(), ts, g));
         }
         if let Some(sess) = &self.receiving_session {
             out.push(named_quad(&self.iri, receiving_session(), sess, g));
         }
-        if let Some(disp) = &self.disposition_override {
-            out.push(literal_quad(&self.iri, disposition_override(), disp, g));
-        }
-        if let Some(reason) = &self.disposition_rationale {
-            out.push(literal_quad(&self.iri, disposition_rationale(), reason, g));
-        }
-        out
     }
 }
 
-pub(super) fn literal_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    value: &str,
-    g: &GraphName,
-) -> Quad {
+pub(super) fn literal_quad(s: &NamedNode, p: NamedNodeRef<'_>, value: &str, g: &GraphName) -> Quad {
     Quad::new(
         s.clone(),
         p.into_owned(),
@@ -171,11 +174,6 @@ pub(super) fn literal_quad(
     )
 }
 
-pub(super) fn named_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    o: &NamedNode,
-    g: &GraphName,
-) -> Quad {
+pub(super) fn named_quad(s: &NamedNode, p: NamedNodeRef<'_>, o: &NamedNode, g: &GraphName) -> Quad {
     Quad::new(s.clone(), p.into_owned(), o.clone(), g.clone())
 }

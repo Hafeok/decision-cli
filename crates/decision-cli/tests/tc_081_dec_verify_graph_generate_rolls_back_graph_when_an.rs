@@ -21,9 +21,8 @@ use decision_cli::verify_graph_generate::{
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 
-const STREAM_TTL: &str = include_str!(
-    "../src/core/bundled/assets/streams/engineering-development.ttl"
-);
+const STREAM_TTL: &str =
+    include_str!("../src/core/bundled/assets/streams/engineering-development.ttl");
 
 struct WorkdirGuard(PathBuf);
 
@@ -74,8 +73,7 @@ fn write_feature_fixture(workdir: &Path, feature_id: &str, tcs: &[&str]) {
         body.push_str(&format!("- {t}\n"));
     }
     body.push_str("---\n\nFixture for TC-081.\n");
-    fs::write(dir.join(format!("{feature_id}-fixture.md")), body)
-        .expect("write feature fixture");
+    fs::write(dir.join(format!("{feature_id}-fixture.md")), body).expect("write feature fixture");
 }
 
 /// Build a two-step proposal where:
@@ -147,8 +145,7 @@ fn tc_081_dec_verify_graph_generate_rolls_back_graph_when_an() {
     match &err {
         HandlerError::SchemaViolation { detail } => {
             assert!(
-                detail.to_lowercase().contains("query")
-                    || detail.to_lowercase().contains("sparql"),
+                detail.to_lowercase().contains("query") || detail.to_lowercase().contains("sparql"),
                 "SchemaViolation diagnostic should mention the failing field; \
                  got {detail}"
             );

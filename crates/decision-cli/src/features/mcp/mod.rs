@@ -158,7 +158,10 @@ mod tests {
             let reg = build_registry(&tmp).expect("build registry");
             // FT-034 (this module) ships no production tools.
             // Production tool composition happens in the binary.
-            assert!(reg.is_empty(), "features::mcp must not register feature tools");
+            assert!(
+                reg.is_empty(),
+                "features::mcp must not register feature tools"
+            );
         });
     }
 

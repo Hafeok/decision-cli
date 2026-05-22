@@ -188,10 +188,16 @@ mod tests {
         let mut reg = ToolRegistry::new();
         // TC-051 AC #1: a name with a space is rejected.
         let err = reg.register(descriptor("bad name")).unwrap_err();
-        assert!(matches!(err, RegisterError::Naming(NamingError::MissingPrefix(_))));
+        assert!(matches!(
+            err,
+            RegisterError::Naming(NamingError::MissingPrefix(_))
+        ));
         // TC-051 AC #1: a name missing the `dec_` prefix is rejected.
         let err = reg.register(descriptor("verify_env_new")).unwrap_err();
-        assert!(matches!(err, RegisterError::Naming(NamingError::MissingPrefix(_))));
+        assert!(matches!(
+            err,
+            RegisterError::Naming(NamingError::MissingPrefix(_))
+        ));
         assert!(reg.is_empty());
     }
 

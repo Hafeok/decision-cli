@@ -93,8 +93,8 @@ fn main() -> ExitCode {
 /// defaults to `info` for the `dec_mcp` target.
 fn init_tracing_for_mcp() {
     use tracing_subscriber::EnvFilter;
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,dec_mcp=info"));
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,dec_mcp=info"));
     // Best-effort — if a subscriber is already installed (e.g. tests
     // already set one up), `try_init` returns Err and we move on.
     let _ = tracing_subscriber::fmt()

@@ -11,9 +11,7 @@
 
 use std::sync::Arc;
 
-use decision_cli::core::ontology::verification_env::{
-    SafetyClass, VerificationEnvironment,
-};
+use decision_cli::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
 use decision_cli::vocab::verify_env_graph;
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
@@ -83,7 +81,12 @@ fn missing_env_type_is_rejected() {
     );
     // No persistence on failure.
     let exists = store
-        .quads_for_pattern(Some(Subject::NamedNode(env.iri()).as_ref()), None, None, None)
+        .quads_for_pattern(
+            Some(Subject::NamedNode(env.iri()).as_ref()),
+            None,
+            None,
+            None,
+        )
         .next()
         .is_some();
     assert!(!exists, "env quads must NOT persist after SHACL failure");
@@ -170,8 +173,8 @@ fn local_env_with_endpoint_is_rejected() {
 fn embedded_shapes_declare_verification_environment_shape() {
     use decision_cli::OntologyHandle;
     let h = OntologyHandle::load().expect("load ontology");
-    let target = NamedNode::new("https://decision-cli.dev/ns#VerificationEnvironment")
-        .expect("class iri");
+    let target =
+        NamedNode::new("https://decision-cli.dev/ns#VerificationEnvironment").expect("class iri");
     let mut has_shape = false;
     for q in h.shapes_graph() {
         if q.predicate.as_str() == "http://www.w3.org/ns/shacl#targetClass" {

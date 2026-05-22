@@ -14,8 +14,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::CoverageError;
 use super::report::TcId;
+use super::CoverageError;
 
 /// IRI prefix for feature artifacts referenced via `dec:verifies`
 /// (mirrors `features/verify_graph_new/resolve.rs`).
@@ -86,23 +86,34 @@ pub fn resolve_feature_tcs_short(
     Ok(parse_tests_list(&body))
 }
 
-fn find_feature_file(
-    product_root: &Path,
-    feature_id: &str,
-) -> Result<PathBuf, CoverageError> {
+fn find_feature_file(product_root: &Path, feature_id: &str) -> Result<PathBuf, CoverageError> {
     let features_dir = product_root.join(".product").join("features");
     if !features_dir.exists() {
-        return Err(CoverageError::ArtifactNotFound {
-            kind: "Feature".to_string(),
-            id: feature_id.to_string(),
-        });
+        return Err(artifact_not_found(feature_id));
     }
     let exact = features_dir.join(format!("{feature_id}.md"));
     if exact.is_file() {
         return Ok(exact);
     }
+    if let Some(path) = scan_features_dir_for_match(&features_dir, feature_id)? {
+        return Ok(path);
+    }
+    Err(artifact_not_found(feature_id))
+}
+
+fn artifact_not_found(feature_id: &str) -> CoverageError {
+    CoverageError::ArtifactNotFound {
+        kind: "Feature".to_string(),
+        id: feature_id.to_string(),
+    }
+}
+
+fn scan_features_dir_for_match(
+    features_dir: &Path,
+    feature_id: &str,
+) -> Result<Option<PathBuf>, CoverageError> {
     let prefix = format!("{feature_id}-");
-    let entries = fs::read_dir(&features_dir).map_err(|e| CoverageError::StoreUnreachable {
+    let entries = fs::read_dir(features_dir).map_err(|e| CoverageError::StoreUnreachable {
         detail: format!("reading {d}: {e}", d = features_dir.display()),
     })?;
     for entry in entries {
@@ -115,13 +126,10 @@ fn find_feature_file(
             continue;
         };
         if stem == feature_id || stem.starts_with(&prefix) {
-            return Ok(entry.path());
+            return Ok(Some(entry.path()));
         }
     }
-    Err(CoverageError::ArtifactNotFound {
-        kind: "Feature".to_string(),
-        id: feature_id.to_string(),
-    })
+    Ok(None)
 }
 
 /// Extract the `tests:` list from a markdown body's YAML frontmatter.
@@ -143,7 +151,6 @@ fn extract_frontmatter(body: &str) -> Option<&str> {
 }
 
 fn extract_yaml_list(fm: &str, key: &str) -> Vec<String> {
-    let mut out = Vec::new();
     let mut lines = fm.lines().enumerate().peekable();
     let key_prefix = format!("{key}:");
     while let Some((_, line)) = lines.next() {
@@ -154,42 +161,59 @@ fn extract_yaml_list(fm: &str, key: &str) -> Vec<String> {
         // skip past the key (also allow `tests :` etc.)
         let after = trimmed[key_prefix.len()..].trim();
         if let Some(inline) = after.strip_prefix('[').and_then(|s| s.strip_suffix(']')) {
-            for raw in inline.split(',') {
-                let v = clean_item(raw);
-                if !v.is_empty() {
-                    out.push(v);
-                }
-            }
-            return out;
+            return parse_inline_list(inline);
         }
         if !after.is_empty() {
-            let v = clean_item(after);
-            if !v.is_empty() {
-                out.push(v);
-            }
-            return out;
+            return single_item_list(after);
         }
-        while let Some((_, peek)) = lines.peek() {
-            let t = peek.trim_end();
-            if t.is_empty() {
-                lines.next();
-                continue;
-            }
-            if let Some(item) = t.trim_start().strip_prefix("- ") {
-                if t.starts_with(char::is_whitespace) || t.starts_with("- ") {
-                    let v = clean_item(item);
-                    if !v.is_empty() {
-                        out.push(v);
-                    }
-                    lines.next();
-                    continue;
-                }
-                break;
-            }
+        return collect_block_list(&mut lines);
+    }
+    Vec::new()
+}
+
+fn parse_inline_list(inline: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for raw in inline.split(',') {
+        let v = clean_item(raw);
+        if !v.is_empty() {
+            out.push(v);
+        }
+    }
+    out
+}
+
+fn single_item_list(after: &str) -> Vec<String> {
+    let v = clean_item(after);
+    if v.is_empty() {
+        Vec::new()
+    } else {
+        vec![v]
+    }
+}
+
+fn collect_block_list<'a, I>(lines: &mut std::iter::Peekable<I>) -> Vec<String>
+where
+    I: Iterator<Item = (usize, &'a str)>,
+{
+    let mut out = Vec::new();
+    while let Some((_, peek)) = lines.peek() {
+        let t = peek.trim_end();
+        if t.is_empty() {
+            lines.next();
+            continue;
+        }
+        let Some(item) = t.trim_start().strip_prefix("- ") else {
             // Reached a non-list, non-blank line — list block ends here.
             break;
+        };
+        if !(t.starts_with(char::is_whitespace) || t.starts_with("- ")) {
+            break;
         }
-        return out;
+        let v = clean_item(item);
+        if !v.is_empty() {
+            out.push(v);
+        }
+        lines.next();
     }
     out
 }
@@ -234,9 +258,18 @@ mod tests {
 
     #[test]
     fn iri_prefixes_are_correct() {
-        assert_eq!(feature_iri_for("FT-001"), "https://decision-cli.dev/ns/feature/FT-001");
-        assert_eq!(tc_iri_for("TC-068"), "https://decision-cli.dev/ns/tc/TC-068");
-        assert_eq!(graph_iri_for("VG-001"), "https://decision-cli.dev/ns/graph/VG-001");
+        assert_eq!(
+            feature_iri_for("FT-001"),
+            "https://decision-cli.dev/ns/feature/FT-001"
+        );
+        assert_eq!(
+            tc_iri_for("TC-068"),
+            "https://decision-cli.dev/ns/tc/TC-068"
+        );
+        assert_eq!(
+            graph_iri_for("VG-001"),
+            "https://decision-cli.dev/ns/graph/VG-001"
+        );
     }
 
     #[test]

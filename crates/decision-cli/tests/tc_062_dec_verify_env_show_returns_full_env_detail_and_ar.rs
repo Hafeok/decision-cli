@@ -297,10 +297,7 @@ fn ac5_unknown_id_returns_artifact_not_found() {
         stderr.contains("VerificationEnvironment"),
         "stderr must name kind: {stderr}"
     );
-    assert!(
-        stderr.contains("ENV-999"),
-        "stderr must name id: {stderr}"
-    );
+    assert!(stderr.contains("ENV-999"), "stderr must name id: {stderr}");
 }
 
 // --- AC #6: malformed id surfaces InvalidArgument -------------------------

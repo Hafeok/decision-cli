@@ -28,7 +28,7 @@ use super::bundle::{assemble_bundle, persist_store, resolve_product_root, sha256
 use super::quads::{build_dispatch_quads, build_session_quads};
 use super::vocab::{DISPATCH_PREFIX, SESSION_PREFIX};
 use super::worker::preflight_implementer;
-use super::{DispatchContext, ImplementArgs, IMPLEMENT_GOAL, IMPLEMENTER_ROLE, SLICE1_MODEL_ID};
+use super::{DispatchContext, ImplementArgs, IMPLEMENTER_ROLE, IMPLEMENT_GOAL, SLICE1_MODEL_ID};
 use crate::core::dispatch::DispatchGroup;
 use crate::core::scope::ActiveScope;
 use crate::core::verify::chain_integrity::{
@@ -38,10 +38,7 @@ use crate::core::vocab::{orchestration_graph, IRI_DEC_DISPATCH, IRI_PROV_USED};
 use crate::core::StreamWriter;
 use oxigraph::model::{GraphName, NamedNodeRef, Quad};
 
-pub(super) fn prepare_dispatch(
-    workdir: &Path,
-    args: &ImplementArgs,
-) -> Result<DispatchContext> {
+pub(super) fn prepare_dispatch(workdir: &Path, args: &ImplementArgs) -> Result<DispatchContext> {
     validate_scope(workdir)?;
     let bundle = prepare_bundle(workdir, args)?;
     let (store, writer, dump_path) = load_store_and_writer(workdir)?;
@@ -52,16 +49,7 @@ pub(super) fn prepare_dispatch(
     // invocation.
     let waiver_iri = run_gate(workdir, args, &bundle, &store, &writer, &dump_path)?;
 
-    // FT-016 / TC-049: worker preflight runs BEFORE any session is
-    // opened. A missing worker aborts here with the install-hint block
-    // and never touches the orchestration graph.
-    let worker_argv =
-        preflight_implementer(workdir, args.worker_command.as_deref()).map_err(|fail| {
-            anyhow!(
-                "no worker found for role `{}`. Pre-flight aborted before session open.\n\n{fail}",
-                IMPLEMENTER_ROLE
-            )
-        })?;
+    let worker_argv = preflight_worker(workdir, args)?;
     let iris = mint_dispatch_iris(args, &bundle)?;
     commit_initial_session(&writer, &store, &dump_path, args, &bundle, &iris)?;
     // FT-047 / ADR-031: record waiver in the session's PROV-O chain.
@@ -86,6 +74,18 @@ pub(super) fn prepare_dispatch(
         worker_argv,
         group,
         waiver_iri,
+    })
+}
+
+/// FT-016 / TC-049: worker preflight runs BEFORE any session is opened.
+/// A missing worker aborts here with the install-hint block and never
+/// touches the orchestration graph.
+fn preflight_worker(workdir: &Path, args: &ImplementArgs) -> Result<Vec<String>> {
+    preflight_implementer(workdir, args.worker_command.as_deref()).map_err(|fail| {
+        anyhow!(
+            "no worker found for role `{}`. Pre-flight aborted before session open.\n\n{fail}",
+            IMPLEMENTER_ROLE
+        )
     })
 }
 
@@ -154,8 +154,8 @@ fn record_waiver_on_session(
     ];
     // Silence the unused-import warning when build features don't pull it.
     let _ = IRI_DEC_DISPATCH;
-    let mutation =
-        oxi_events::Mutation::insert(quads.iter().cloned()).with_cause("dec implement: prov:used waiver");
+    let mutation = oxi_events::Mutation::insert(quads.iter().cloned())
+        .with_cause("dec implement: prov:used waiver");
     writer
         .commit(mutation)
         .context("recording prov:used waiver on session")?;

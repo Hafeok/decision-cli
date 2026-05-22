@@ -15,8 +15,8 @@ use crate::core::handler::Error as HandlerError;
 use crate::core::sparql::term_iri_string;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::vocab::{
-    environment_pred, steps_pred, verification_graph_class, verifies_pred,
-    IRI_DEC_ENV_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX,
+    environment_pred, steps_pred, verification_graph_class, verifies_pred, IRI_DEC_ENV_PREFIX,
+    IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX,
 };
 
 use super::GraphSummary;
@@ -37,9 +37,11 @@ pub(super) fn query_graphs(
 ) -> Result<Vec<GraphSummary>, HandlerError> {
     let store = load_orchestration_store(workdir)?;
     let q = build_query(verifies, environment);
-    let results = store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("graph-list SPARQL: {e}"),
-    })?;
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("graph-list SPARQL: {e}"),
+        })?;
     let QueryResults::Solutions(sols) = results else {
         return Err(HandlerError::Internal {
             detail: "graph-list: unexpected SPARQL result shape".to_string(),
@@ -126,18 +128,8 @@ fn canonicalize_verifies(iri: &str) -> String {
 /// The FILTER predicates collapse to no-ops when the corresponding
 /// option is `None`; conjunctive when both are `Some`.
 fn build_query(verifies: Option<&str>, environment: Option<&str>) -> String {
-    let verifies_filter = verifies
-        .map(|v| {
-            let iri = verifies_to_iri(v);
-            format!("    FILTER(?verifies = <{iri}>)\n")
-        })
-        .unwrap_or_default();
-    let env_filter = environment
-        .map(|e| {
-            let iri = format!("{IRI_DEC_ENV_PREFIX}{e}");
-            format!("    FILTER(?env = <{iri}>)\n")
-        })
-        .unwrap_or_default();
+    let verifies_filter = build_verifies_filter(verifies);
+    let env_filter = build_env_filter(environment);
     format!(
         "SELECT ?graph ?verifies ?env (COUNT(?step) AS ?count) WHERE {{\n  \
          GRAPH <{graph_iri}> {{\n    \
@@ -156,6 +148,23 @@ fn build_query(verifies: Option<&str>, environment: Option<&str>) -> String {
         rdf_rest = RDF_REST,
         rdf_first = RDF_FIRST,
     )
+}
+
+fn build_verifies_filter(verifies: Option<&str>) -> String {
+    verifies
+        .map(|v| {
+            format!(
+                "    FILTER(?verifies = <{iri}>)\n",
+                iri = verifies_to_iri(v)
+            )
+        })
+        .unwrap_or_default()
+}
+
+fn build_env_filter(environment: Option<&str>) -> String {
+    environment
+        .map(|e| format!("    FILTER(?env = <{IRI_DEC_ENV_PREFIX}{e}>)\n"))
+        .unwrap_or_default()
 }
 
 /// Build the canonical IRI for a `verifies` short id (`FT-NNN`, `TC-NNN`).
@@ -209,9 +218,9 @@ mod tests {
     #[test]
     fn build_query_inlines_env_filter() {
         let q = build_query(None, Some("ENV-001-ephemeral-cli"));
-        assert!(q.contains(
-            "FILTER(?env = <https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli>)"
-        ));
+        assert!(
+            q.contains("FILTER(?env = <https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli>)")
+        );
         assert!(!q.contains("FILTER(?verifies"));
     }
 

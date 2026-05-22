@@ -120,44 +120,11 @@ pub fn route(
     let ws = WritableStore::open(workdir).map_err(|e| RouteError::Other(format!("{e:#}")))?;
     let fb_node = NamedNode::new(feedback_iri)
         .map_err(|_| RouteError::InvalidIri(feedback_iri.to_string()))?;
-
-    let fb = get(&ws.store, &fb_node).map_err(|e| match e {
-        crate::core::feedback::FeedbackReadError::NotFound { iri } => RouteError::NotFound(iri),
-        other => RouteError::Other(format!("{other}")),
-    })?;
-
-    let prior =
-        read_prior_state(&ws.store, &fb_node).map_err(|e| RouteError::Other(format!("{e}")))?;
-    if prior != LifecycleState::Produced {
-        return Err(RouteError::WrongState {
-            feedback: feedback_iri.to_string(),
-            state: prior.as_str().to_string(),
-        });
-    }
-
-    let class = FeedbackClass::from_iri_value(&fb.class).ok_or_else(|| RouteError::UnknownClass {
-        feedback: feedback_iri.to_string(),
-        class: fb.class.clone(),
-    })?;
-
-    if !override_permitted_for(class, OverrideActor::Human) {
-        return Err(RouteError::OverrideNotPermitted {
-            class: fb.class.clone(),
-            actor: OverrideActor::Human,
-        });
-    }
-
-    // Validate the override role exists in the catalog. The routing
-    // handler ALSO validates this (defensive against direct graph
-    // edits), but failing fast at the CLI surface gives the operator
-    // a structured error instead of a silent "unknown-target-role"
-    // rejection on the next routing pass.
-    let role = lookup_role(&ws.store, target_role)
-        .map_err(|e| RouteError::Other(format!("role catalog lookup: {e:#}")))?;
-    if role.is_none() {
-        return Err(RouteError::UnknownTargetRole(target_role.to_string()));
-    }
-
+    let fb = load_feedback(&ws, &fb_node)?;
+    ensure_produced_state(&ws, &fb_node, feedback_iri)?;
+    let class = parse_class(&fb, feedback_iri)?;
+    ensure_override_permitted(class, &fb.class)?;
+    ensure_target_role_exists(&ws, target_role)?;
     apply_override(&ws, &fb_node, target_role, actor)?;
     ws.persist()
         .map_err(|e| RouteError::Other(format!("persisting store: {e:#}")))?;
@@ -166,6 +133,66 @@ pub fn route(
         target_role: target_role.to_string(),
         actor: actor.to_string(),
     })
+}
+
+fn load_feedback(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+) -> Result<crate::core::feedback::Feedback, RouteError> {
+    get(&ws.store, fb_node).map_err(|e| match e {
+        crate::core::feedback::FeedbackReadError::NotFound { iri } => RouteError::NotFound(iri),
+        other => RouteError::Other(format!("{other}")),
+    })
+}
+
+fn ensure_produced_state(
+    ws: &WritableStore,
+    fb_node: &NamedNode,
+    feedback_iri: &str,
+) -> Result<(), RouteError> {
+    let prior =
+        read_prior_state(&ws.store, fb_node).map_err(|e| RouteError::Other(format!("{e}")))?;
+    if prior != LifecycleState::Produced {
+        return Err(RouteError::WrongState {
+            feedback: feedback_iri.to_string(),
+            state: prior.as_str().to_string(),
+        });
+    }
+    Ok(())
+}
+
+fn parse_class(
+    fb: &crate::core::feedback::Feedback,
+    feedback_iri: &str,
+) -> Result<FeedbackClass, RouteError> {
+    FeedbackClass::from_iri_value(&fb.class).ok_or_else(|| RouteError::UnknownClass {
+        feedback: feedback_iri.to_string(),
+        class: fb.class.clone(),
+    })
+}
+
+fn ensure_override_permitted(class: FeedbackClass, class_literal: &str) -> Result<(), RouteError> {
+    if !override_permitted_for(class, OverrideActor::Human) {
+        return Err(RouteError::OverrideNotPermitted {
+            class: class_literal.to_string(),
+            actor: OverrideActor::Human,
+        });
+    }
+    Ok(())
+}
+
+// Validate the override role exists in the catalog. The routing
+// handler ALSO validates this (defensive against direct graph
+// edits), but failing fast at the CLI surface gives the operator
+// a structured error instead of a silent "unknown-target-role"
+// rejection on the next routing pass.
+fn ensure_target_role_exists(ws: &WritableStore, target_role: &str) -> Result<(), RouteError> {
+    let role = lookup_role(&ws.store, target_role)
+        .map_err(|e| RouteError::Other(format!("role catalog lookup: {e:#}")))?;
+    if role.is_none() {
+        return Err(RouteError::UnknownTargetRole(target_role.to_string()));
+    }
+    Ok(())
 }
 
 fn apply_override(
@@ -220,8 +247,7 @@ fn collect_prior_overrides(store: &Store, fb_node: &NamedNode) -> Vec<Quad> {
         // routingOverrideActor literals so calling `dec feedback route`
         // twice doesn't accumulate stale targets.
         let p = q.predicate.as_str();
-        if p == IRI_DEC_ROUTING_OVERRIDE
-            || p == "https://decision-cli.dev/ns#routingOverrideActor"
+        if p == IRI_DEC_ROUTING_OVERRIDE || p == "https://decision-cli.dev/ns#routingOverrideActor"
         {
             prior.push(q);
         }

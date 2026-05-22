@@ -22,9 +22,8 @@ use serde_json::json;
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 
-const STREAM_TTL: &str = include_str!(
-    "../src/core/bundled/assets/streams/engineering-development.ttl"
-);
+const STREAM_TTL: &str =
+    include_str!("../src/core/bundled/assets/streams/engineering-development.ttl");
 
 struct WorkdirGuard(PathBuf);
 
@@ -75,8 +74,7 @@ fn write_feature_fixture(workdir: &Path, feature_id: &str, tcs: &[&str]) {
         body.push_str(&format!("- {t}\n"));
     }
     body.push_str("---\n\nFixture for TC-079.\n");
-    fs::write(dir.join(format!("{feature_id}-fixture.md")), body)
-        .expect("write feature fixture");
+    fs::write(dir.join(format!("{feature_id}-fixture.md")), body).expect("write feature fixture");
 }
 
 fn build_three_step_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {

@@ -253,4 +253,3 @@ pub fn value_stream_class() -> NamedNodeRef<'static> {
 pub fn orchestration_graph() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_GRAPH_ORCHESTRATION)
 }
-

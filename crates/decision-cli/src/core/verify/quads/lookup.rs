@@ -30,9 +30,7 @@ pub fn touches_verification_artifacts(inserts: &[Quad]) -> bool {
         let Term::NamedNode(cls) = &q.object else {
             continue;
         };
-        if cls.as_str() == IRI_DEC_VERIFICATION_GRAPH
-            || cls.as_str() == IRI_DEC_VERIFICATION_STEP
-        {
+        if cls.as_str() == IRI_DEC_VERIFICATION_GRAPH || cls.as_str() == IRI_DEC_VERIFICATION_STEP {
             return true;
         }
     }
@@ -101,7 +99,12 @@ fn env_via_store(store: &Store, step: &NamedNode) -> Option<NamedNode> {
     let step_term: Term = step.clone().into();
     let rdf_first = NamedNode::new_unchecked(RDF_FIRST);
     for quad in store
-        .quads_for_pattern(None, Some(rdf_first.as_ref()), Some(step_term.as_ref()), None)
+        .quads_for_pattern(
+            None,
+            Some(rdf_first.as_ref()),
+            Some(step_term.as_ref()),
+            None,
+        )
         .filter_map(Result::ok)
     {
         let list_head = quad.subject;
@@ -126,34 +129,51 @@ fn env_via_store(store: &Store, step: &NamedNode) -> Option<NamedNode> {
 
 fn walk_back_to_graph_in_store(store: &Store, list_node: &Subject) -> Option<NamedNode> {
     let steps_pred = NamedNode::new_unchecked(IRI_DEC_STEPS);
+    let rdf_rest = NamedNode::new_unchecked(RDF_REST);
     let mut current: Subject = list_node.clone();
     for _ in 0..1024 {
-        let term: Term = match &current {
-            Subject::NamedNode(n) => n.clone().into(),
-            Subject::BlankNode(b) => b.clone().into(),
-            Subject::Triple(_) => return None,
-        };
-        for q in store
-            .quads_for_pattern(None, Some(steps_pred.as_ref()), Some(term.as_ref()), None)
-            .filter_map(Result::ok)
-        {
-            if let Subject::NamedNode(graph) = q.subject {
-                return Some(graph);
-            }
+        let term = subject_as_term(&current)?;
+        if let Some(graph) = graph_via_steps_predicate(store, &steps_pred, &term) {
+            return Some(graph);
         }
-        let rdf_rest = NamedNode::new_unchecked(RDF_REST);
-        let mut moved = false;
-        for q in store
-            .quads_for_pattern(None, Some(rdf_rest.as_ref()), Some(term.as_ref()), None)
-            .filter_map(Result::ok)
-        {
-            current = q.subject;
-            moved = true;
-            break;
-        }
-        if !moved {
+        let Some(next) = step_back_one_rest_cell(store, &rdf_rest, &term) else {
             return None;
+        };
+        current = next;
+    }
+    None
+}
+
+fn subject_as_term(subject: &Subject) -> Option<Term> {
+    match subject {
+        Subject::NamedNode(n) => Some(n.clone().into()),
+        Subject::BlankNode(b) => Some(b.clone().into()),
+        Subject::Triple(_) => None,
+    }
+}
+
+fn graph_via_steps_predicate(
+    store: &Store,
+    steps_pred: &NamedNode,
+    term: &Term,
+) -> Option<NamedNode> {
+    for q in store
+        .quads_for_pattern(None, Some(steps_pred.as_ref()), Some(term.as_ref()), None)
+        .filter_map(Result::ok)
+    {
+        if let Subject::NamedNode(graph) = q.subject {
+            return Some(graph);
         }
+    }
+    None
+}
+
+fn step_back_one_rest_cell(store: &Store, rdf_rest: &NamedNode, term: &Term) -> Option<Subject> {
+    for q in store
+        .quads_for_pattern(None, Some(rdf_rest.as_ref()), Some(term.as_ref()), None)
+        .filter_map(Result::ok)
+    {
+        return Some(q.subject);
     }
     None
 }

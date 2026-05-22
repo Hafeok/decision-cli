@@ -52,7 +52,11 @@ pub(super) fn coverage_preview_from_report(report: &MatchReport) -> CoverageRepo
             .iter()
             .map(|t| short_tc_id(t))
             .collect(),
-        considered: report.graphs.iter().map(|g| short_graph_id(&g.id)).collect(),
+        considered: report
+            .graphs
+            .iter()
+            .map(|g| short_graph_id(&g.id))
+            .collect(),
     }
 }
 

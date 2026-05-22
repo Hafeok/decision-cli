@@ -59,8 +59,7 @@ pub const IRI_DEC_DISPOSITION_RATIONALE: &str = "https://decision-cli.dev/ns#dis
 /// `dec:routingOverride` predicate — manual target-role override (FT-033 / ADR-026).
 pub const IRI_DEC_ROUTING_OVERRIDE: &str = "https://decision-cli.dev/ns#routingOverride";
 /// `dec:routingOverrideActor` predicate — operator identity for an override (FT-033).
-pub const IRI_DEC_ROUTING_OVERRIDE_ACTOR: &str =
-    "https://decision-cli.dev/ns#routingOverrideActor";
+pub const IRI_DEC_ROUTING_OVERRIDE_ACTOR: &str = "https://decision-cli.dev/ns#routingOverrideActor";
 
 #[must_use]
 pub fn feedback_class() -> NamedNodeRef<'static> {

@@ -142,30 +142,7 @@ impl StreamWriter {
                 // (rdf:type missing); skip transition validation.
                 continue;
             };
-            let from = LifecycleState::parse(&prior_raw).ok_or_else(|| {
-                anyhow!(
-                    "SHACL violation: prior dec:lifecycleState for <{subj}> is malformed: {prior_raw:?}",
-                    subj = subject.as_str(),
-                )
-            })?;
-            let to = LifecycleState::parse(&raw_to).ok_or_else(|| {
-                anyhow!(
-                    "SHACL violation: feedback mutation refused — unknown target lifecycle state {raw_to:?}",
-                )
-            })?;
-            if from == to {
-                // No-op transitions are dropped here: the mutation simply
-                // re-asserts the same state. The underlying writer is
-                // free to commit it, but we don't run the transition
-                // validator on a self-loop.
-                continue;
-            }
-            validate_transition(from, to).map_err(|err| {
-                anyhow!(
-                    "SHACL violation: feedback mutation refused — invalid lifecycle transition for <{subj}>: {err}",
-                    subj = subject.as_str(),
-                )
-            })?;
+            validate_single_transition(&subject, &prior_raw, &raw_to)?;
         }
         Ok(())
     }
@@ -208,6 +185,34 @@ impl StreamWriter {
     }
 }
 
+/// Validate a single lifecycle transition for `subject` going from
+/// `prior_raw` to `raw_to`. Self-loops (`from == to`) are dropped to
+/// allow re-asserts; unknown labels surface as `SHACL violation` errors.
+fn validate_single_transition(subject: &NamedNode, prior_raw: &str, raw_to: &str) -> Result<()> {
+    let from = LifecycleState::parse(prior_raw).ok_or_else(|| {
+        anyhow!(
+            "SHACL violation: prior dec:lifecycleState for <{subj}> is malformed: {prior_raw:?}",
+            subj = subject.as_str(),
+        )
+    })?;
+    let to = LifecycleState::parse(raw_to).ok_or_else(|| {
+        anyhow!(
+            "SHACL violation: feedback mutation refused — unknown target lifecycle state {raw_to:?}",
+        )
+    })?;
+    if from == to {
+        // No-op transitions are dropped here: mutation re-asserts the
+        // same state; we skip the validator on a self-loop.
+        return Ok(());
+    }
+    validate_transition(from, to).map_err(|err| {
+        anyhow!(
+            "SHACL violation: feedback mutation refused — invalid lifecycle transition for <{subj}>: {err}",
+            subj = subject.as_str(),
+        )
+    })
+}
+
 /// SHACL-validate every VerificationVerdict subject present in `quads`,
 /// converting a failure into an `anyhow` error tagged with the
 /// `SHACL violation` prefix so callers can detect verdict failures
@@ -226,12 +231,8 @@ fn validate_verdicts(quads: &[Quad]) -> Result<()> {
 /// prefix used by [`validate_verdicts`] so existing callers that match
 /// on the prefix continue to work uniformly.
 fn validate_feedback(quads: &[Quad]) -> Result<()> {
-    validate_feedback_quads(quads).map_err(|err| {
-        anyhow!(
-            "SHACL violation: feedback mutation refused\n{}",
-            err.report
-        )
-    })
+    validate_feedback_quads(quads)
+        .map_err(|err| anyhow!("SHACL violation: feedback mutation refused\n{}", err.report))
 }
 
 /// SHACL-validate every `dec:VerificationEnvironment` subject present in

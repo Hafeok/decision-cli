@@ -115,10 +115,7 @@ pub fn feature_coverage(
 
 /// Translate a caller-supplied candidate id list into a vector of full
 /// IRIs, validating each exists in the verify-graph named graph.
-fn resolve_candidate_set(
-    store: &Store,
-    ids: Vec<String>,
-) -> Result<Vec<GraphId>, CoverageError> {
+fn resolve_candidate_set(store: &Store, ids: Vec<String>) -> Result<Vec<GraphId>, CoverageError> {
     let mut out = Vec::with_capacity(ids.len());
     for id in ids {
         let iri = feature_resolver::graph_iri_for(&id);

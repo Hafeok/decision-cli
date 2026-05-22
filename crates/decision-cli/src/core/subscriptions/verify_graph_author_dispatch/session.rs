@@ -18,8 +18,8 @@ use thiserror::Error;
 
 use crate::core::stream_writer::StreamWriter;
 use crate::core::vocab::{
-    orchestration_graph, proposal_document, IRI_DEC_ENVIRONMENT, IRI_DEC_SESSION,
-    IRI_DEC_VERIFIES, SESSION_STATUS_PENDING_REVIEW,
+    orchestration_graph, proposal_document, IRI_DEC_ENVIRONMENT, IRI_DEC_SESSION, IRI_DEC_VERIFIES,
+    SESSION_STATUS_PENDING_REVIEW,
 };
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -82,12 +82,11 @@ pub fn persist_pending_review_session(
 ) -> Result<PendingReviewSession, PendingReviewError> {
     let session_iri = mint_session_iri(input.feature, input.env)?;
     let quads = build_session_quads(&session_iri, input);
-    let mutation = Mutation::insert(quads.iter().cloned())
-        .with_cause(format!(
-            "FT-050 pending-review session for ({feat}, {env})",
-            feat = input.feature,
-            env = input.env
-        ));
+    let mutation = Mutation::insert(quads.iter().cloned()).with_cause(format!(
+        "FT-050 pending-review session for ({feat}, {env})",
+        feat = input.feature,
+        env = input.env
+    ));
     writer
         .commit(mutation)
         .map_err(|e| PendingReviewError::Commit(format!("{e:#}")))?;
@@ -107,22 +106,47 @@ fn mint_session_iri(feature: &str, env: &str) -> Result<NamedNode, PendingReview
     .map_err(|e| PendingReviewError::IriMint(e.to_string()))
 }
 
-fn build_session_quads(
-    session_iri: &NamedNode,
-    input: &PendingReviewInput<'_>,
-) -> Vec<Quad> {
+fn build_session_quads(session_iri: &NamedNode, input: &PendingReviewInput<'_>) -> Vec<Quad> {
     let g: GraphName = orchestration_graph().into_owned().into();
+    let mut quads = session_type_quads(session_iri, &g);
+    quads.extend(session_payload_quads(session_iri, input, &g));
+    quads
+}
+
+fn session_type_quads(session_iri: &NamedNode, g: &GraphName) -> Vec<Quad> {
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
     let session_class = NamedNodeRef::new_unchecked(IRI_DEC_SESSION).into_owned();
     let activity = NamedNodeRef::new_unchecked(PROV_ACTIVITY).into_owned();
+    vec![
+        Quad::new(
+            session_iri.clone(),
+            rdf_type.clone(),
+            session_class,
+            g.clone(),
+        ),
+        Quad::new(session_iri.clone(), rdf_type, activity, g.clone()),
+    ]
+}
+
+fn session_payload_quads(
+    session_iri: &NamedNode,
+    input: &PendingReviewInput<'_>,
+    g: &GraphName,
+) -> Vec<Quad> {
+    let mut quads = session_identity_quads(session_iri, input, g);
+    quads.extend(session_artifact_quads(session_iri, input, g));
+    quads
+}
+
+fn session_identity_quads(
+    session_iri: &NamedNode,
+    input: &PendingReviewInput<'_>,
+    g: &GraphName,
+) -> Vec<Quad> {
     let status_pred = NamedNodeRef::new_unchecked(DEC_STATUS).into_owned();
     let feature_id_pred = NamedNodeRef::new_unchecked(DEC_FEATURE_ID).into_owned();
-    let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT).into_owned();
     let verifies_pred = NamedNodeRef::new_unchecked(IRI_DEC_VERIFIES).into_owned();
-    let at_time = NamedNodeRef::new_unchecked(PROV_AT_TIME).into_owned();
     vec![
-        Quad::new(session_iri.clone(), rdf_type.clone(), session_class, g.clone()),
-        Quad::new(session_iri.clone(), rdf_type, activity, g.clone()),
         Quad::new(
             session_iri.clone(),
             status_pred,
@@ -141,6 +165,17 @@ fn build_session_quads(
             Literal::new_simple_literal(input.feature),
             g.clone(),
         ),
+    ]
+}
+
+fn session_artifact_quads(
+    session_iri: &NamedNode,
+    input: &PendingReviewInput<'_>,
+    g: &GraphName,
+) -> Vec<Quad> {
+    let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT).into_owned();
+    let at_time = NamedNodeRef::new_unchecked(PROV_AT_TIME).into_owned();
+    vec![
         Quad::new(
             session_iri.clone(),
             environment_pred,
@@ -157,7 +192,7 @@ fn build_session_quads(
             session_iri.clone(),
             at_time,
             Literal::new_simple_literal(input.started_at),
-            g,
+            g.clone(),
         ),
     ]
 }
@@ -165,14 +200,16 @@ fn build_session_quads(
 /// Look up a pending-review session by IRI, returning the stored
 /// proposal document literal (the JSON string). Returns `Ok(None)` when
 /// the session does not exist or is not `pending_review`.
-pub fn load_proposal_document(
-    store: &Store,
-    session_iri: &NamedNode,
-) -> Result<Option<String>> {
+pub fn load_proposal_document(store: &Store, session_iri: &NamedNode) -> Result<Option<String>> {
+    if !session_is_pending_review(store, session_iri) {
+        return Ok(None);
+    }
+    Ok(read_proposal_document_literal(store, session_iri))
+}
+
+fn session_is_pending_review(store: &Store, session_iri: &NamedNode) -> bool {
     use oxigraph::model::Subject;
 
-    // Confirm the session is pending_review.
-    let mut is_pending = false;
     let status_pred = NamedNodeRef::new_unchecked(DEC_STATUS);
     for q in store
         .quads_for_pattern(
@@ -185,14 +222,16 @@ pub fn load_proposal_document(
     {
         if let oxigraph::model::Term::Literal(lit) = &q.object {
             if lit.value() == SESSION_STATUS_PENDING_REVIEW {
-                is_pending = true;
-                break;
+                return true;
             }
         }
     }
-    if !is_pending {
-        return Ok(None);
-    }
+    false
+}
+
+fn read_proposal_document_literal(store: &Store, session_iri: &NamedNode) -> Option<String> {
+    use oxigraph::model::Subject;
+
     for q in store
         .quads_for_pattern(
             Some(Subject::NamedNode(session_iri.clone()).as_ref()),
@@ -203,8 +242,8 @@ pub fn load_proposal_document(
         .filter_map(Result::ok)
     {
         if let oxigraph::model::Term::Literal(lit) = &q.object {
-            return Ok(Some(lit.value().to_string()));
+            return Some(lit.value().to_string());
         }
     }
-    Ok(None)
+    None
 }

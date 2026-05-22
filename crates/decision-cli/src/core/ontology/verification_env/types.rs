@@ -126,10 +126,8 @@ impl VerificationEnvironment {
     }
 
     fn allowed_ops_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
-        let rdf_first = NamedNodeRef::new_unchecked(RDF_FIRST);
-        let rdf_rest = NamedNodeRef::new_unchecked(RDF_REST);
-        let rdf_nil = NamedNodeRef::new_unchecked(RDF_NIL);
         if self.allowed_ops.is_empty() {
+            let rdf_nil = NamedNodeRef::new_unchecked(RDF_NIL);
             return vec![Quad::new(
                 subject.clone(),
                 allowed_ops().into_owned(),
@@ -137,7 +135,6 @@ impl VerificationEnvironment {
                 g.clone(),
             )];
         }
-        // Build a deterministic chain of blank nodes for the list.
         let nodes: Vec<BlankNode> = (0..self.allowed_ops.len())
             .map(|i| BlankNode::new_unchecked(format!("ops-{id}-{i}", id = self.id)))
             .collect();
@@ -147,36 +144,35 @@ impl VerificationEnvironment {
             nodes[0].clone(),
             g.clone(),
         )];
-        for (i, op) in self.allowed_ops.iter().enumerate() {
-            let head = Subject::BlankNode(nodes[i].clone());
-            quads.push(Quad::new(
-                head.clone(),
-                rdf_first.into_owned(),
-                Literal::new_simple_literal(op),
-                g.clone(),
-            ));
-            let rest_term: Term = if i + 1 < nodes.len() {
-                Term::BlankNode(nodes[i + 1].clone())
-            } else {
-                rdf_nil.into_owned().into()
-            };
-            quads.push(Quad::new(
-                head,
-                rdf_rest.into_owned(),
-                rest_term,
-                g.clone(),
-            ));
-        }
+        quads.extend(allowed_ops_list_quads(&nodes, &self.allowed_ops, g));
         quads
     }
 }
 
-pub(super) fn literal_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    value: &str,
-    g: &GraphName,
-) -> Quad {
+fn allowed_ops_list_quads(nodes: &[BlankNode], ops: &[String], g: &GraphName) -> Vec<Quad> {
+    let rdf_first = NamedNodeRef::new_unchecked(RDF_FIRST);
+    let rdf_rest = NamedNodeRef::new_unchecked(RDF_REST);
+    let rdf_nil = NamedNodeRef::new_unchecked(RDF_NIL);
+    let mut out = Vec::with_capacity(ops.len() * 2);
+    for (i, op) in ops.iter().enumerate() {
+        let head = Subject::BlankNode(nodes[i].clone());
+        out.push(Quad::new(
+            head.clone(),
+            rdf_first.into_owned(),
+            Literal::new_simple_literal(op),
+            g.clone(),
+        ));
+        let rest_term: Term = if i + 1 < nodes.len() {
+            Term::BlankNode(nodes[i + 1].clone())
+        } else {
+            rdf_nil.into_owned().into()
+        };
+        out.push(Quad::new(head, rdf_rest.into_owned(), rest_term, g.clone()));
+    }
+    out
+}
+
+pub(super) fn literal_quad(s: &NamedNode, p: NamedNodeRef<'_>, value: &str, g: &GraphName) -> Quad {
     Quad::new(
         s.clone(),
         p.into_owned(),

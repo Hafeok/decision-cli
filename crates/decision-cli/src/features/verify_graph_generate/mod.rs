@@ -37,9 +37,8 @@ use self::persist::{persist_new_proposal, Persisted};
 use self::proposal::{CoverageReportSummary, GraphProposal, MatchProposal, ProposalKind};
 
 pub use self::surface::{
-    accept_input_schema, accept_tool_descriptor, generate_input_schema,
-    generate_tool_descriptor, parse_accept_request, parse_generate_request,
-    response_for_accept, response_for_generate,
+    accept_input_schema, accept_tool_descriptor, generate_input_schema, generate_tool_descriptor,
+    parse_accept_request, parse_generate_request, response_for_accept, response_for_generate,
 };
 
 /// MCP tool name for the generate verb.
@@ -141,14 +140,7 @@ pub struct AcceptResponse {
 /// Single handler for the generate verb. Surface adapters (CLI + MCP)
 /// route through this function per ADR-029 §Single-handler discipline.
 pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerError> {
-    let workdir = req
-        .workdir
-        .as_deref()
-        .ok_or_else(|| HandlerError::InvalidArgument {
-            field: "workdir".to_string(),
-            detail: "no working directory available; run from a `dec init`-bootstrapped tree"
-                .to_string(),
-        })?;
+    let workdir = require_workdir(req.workdir.as_deref())?;
     let product_root = req.product_root.as_deref().unwrap_or(workdir);
 
     // 1. Compute the matcher report (no I/O beyond the orchestration store).
@@ -156,7 +148,10 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
 
     // 2. Match-first dispatch — if a complete match exists, skip the
     //    worker entirely (TC-080 AC #2).
-    if matches!(report.kind, MatchKind::CompleteSingle | MatchKind::CompleteMultiple) {
+    if matches!(
+        report.kind,
+        MatchKind::CompleteSingle | MatchKind::CompleteMultiple
+    ) {
         return Ok(build_match_response(&report));
     }
 
@@ -164,27 +159,48 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
     let env_short = env_iri_to_short(&report.environment);
     let bundle = assemble_bundle(workdir, product_root, &req.feature_id, &env_short, &report)?;
     let proposal = worker::invoke_worker(&bundle)?;
-
-    // 4. Echo-check the bundle hash. Per FT-049 §Behaviour 7 the
-    //    mismatch is a protocol violation.
-    if proposal.bundle_hash != bundle.bundle_hash {
-        return Err(HandlerError::Internal {
-            detail: format!(
-                "worker protocol violation: proposal.bundle_hash ({pp:?}) != \
-                 input bundle_hash ({bp:?})",
-                pp = proposal.bundle_hash,
-                bp = bundle.bundle_hash
-            ),
-        });
-    }
+    verify_bundle_hash(&proposal, &bundle)?;
 
     let preview = coverage_preview_from_report(&report);
-    let token = proposal.bundle_hash.clone();
+    finalize_generate(req, workdir, &env_short, proposal, preview)
+}
 
-    // 5. Mode dispatch.
+fn require_workdir(workdir: Option<&Path>) -> Result<&Path, HandlerError> {
+    workdir.ok_or_else(|| HandlerError::InvalidArgument {
+        field: "workdir".to_string(),
+        detail: "no working directory available; run from a `dec init`-bootstrapped tree"
+            .to_string(),
+    })
+}
+
+fn verify_bundle_hash(
+    proposal: &GraphProposal,
+    bundle: &bundle::VerifyGraphAuthorInputJson,
+) -> Result<(), HandlerError> {
+    if proposal.bundle_hash == bundle.bundle_hash {
+        return Ok(());
+    }
+    Err(HandlerError::Internal {
+        detail: format!(
+            "worker protocol violation: proposal.bundle_hash ({pp:?}) != \
+             input bundle_hash ({bp:?})",
+            pp = proposal.bundle_hash,
+            bp = bundle.bundle_hash
+        ),
+    })
+}
+
+fn finalize_generate(
+    req: &GenerateRequest,
+    workdir: &Path,
+    env_short: &str,
+    proposal: GraphProposal,
+    preview: CoverageReportSummary,
+) -> Result<GenerateResponse, HandlerError> {
+    let token = proposal.bundle_hash.clone();
     match req.mode {
         GenerateMode::Accept => {
-            let persisted = persist_if_new(&proposal, workdir, &req.feature_id, &env_short)?;
+            let persisted = persist_if_new(&proposal, workdir, &req.feature_id, env_short)?;
             Ok(GenerateResponse {
                 proposal,
                 proposal_token: token,
@@ -203,64 +219,80 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
 
 /// Single handler for the accept verb (companion to `run_generate`).
 pub fn run_accept(req: &AcceptRequest) -> Result<AcceptResponse, HandlerError> {
-    let workdir = req
-        .workdir
-        .as_deref()
-        .ok_or_else(|| HandlerError::InvalidArgument {
-            field: "workdir".to_string(),
-            detail: "no working directory available; run from a `dec init`-bootstrapped tree"
-                .to_string(),
-        })?;
+    let workdir = require_workdir(req.workdir.as_deref())?;
     let product_root = req.product_root.as_deref().unwrap_or(workdir);
+    verify_proposal_token(req)?;
 
-    // 1. Token must match the proposal's bundle_hash.
-    if req.proposal.bundle_hash != req.proposal_token {
-        return Err(HandlerError::ProposalStale {
-            detail: format!(
-                "proposal_token ({tok:?}) does not match proposal.bundle_hash ({ph:?}); \
-                 re-run dec_verify_graph_generate to issue a fresh proposal",
-                tok = req.proposal_token,
-                ph = req.proposal.bundle_hash
-            ),
-        });
-    }
-
-    // 2. Re-run the matcher and refuse stale proposals.
+    // Re-run the matcher and refuse stale proposals.
     let report = run_matcher(workdir, product_root, &req.feature_id, &req.environment_id)?;
-    if matches!(report.kind, MatchKind::CompleteSingle | MatchKind::CompleteMultiple) {
-        return Err(HandlerError::ProposalStale {
-            detail: format!(
-                "the candidate set for ({feat}, {env}) has changed since this proposal \
-                 was issued; re-run dec_verify_graph_generate",
-                feat = req.feature_id,
-                env = req.environment_id
-            ),
-        });
-    }
+    reject_if_complete_match(&report, &req.feature_id, &req.environment_id)?;
 
-    // 3. Persist (only `New` proposals reach this path).
+    // Persist (only `New` proposals reach this path).
     let env_short = env_iri_to_short(&report.environment);
+    let persisted = persist_for_accept(req, workdir, &env_short)?;
+    Ok(AcceptResponse { persisted })
+}
+
+fn verify_proposal_token(req: &AcceptRequest) -> Result<(), HandlerError> {
+    if req.proposal.bundle_hash == req.proposal_token {
+        return Ok(());
+    }
+    Err(HandlerError::ProposalStale {
+        detail: format!(
+            "proposal_token ({tok:?}) does not match proposal.bundle_hash ({ph:?}); \
+             re-run dec_verify_graph_generate to issue a fresh proposal",
+            tok = req.proposal_token,
+            ph = req.proposal.bundle_hash
+        ),
+    })
+}
+
+fn reject_if_complete_match(
+    report: &MatchReport,
+    feature_id: &str,
+    environment_id: &str,
+) -> Result<(), HandlerError> {
+    if !matches!(
+        report.kind,
+        MatchKind::CompleteSingle | MatchKind::CompleteMultiple
+    ) {
+        return Ok(());
+    }
+    Err(HandlerError::ProposalStale {
+        detail: format!(
+            "the candidate set for ({feature_id}, {environment_id}) has changed since this proposal \
+             was issued; re-run dec_verify_graph_generate"
+        ),
+    })
+}
+
+fn persist_for_accept(
+    req: &AcceptRequest,
+    workdir: &Path,
+    env_short: &str,
+) -> Result<PersistedSummary, HandlerError> {
     let persisted = match req.proposal.kind {
-        ProposalKind::New => persist_if_new(&req.proposal, workdir, &req.feature_id, &env_short)?,
+        ProposalKind::New => persist_if_new(&req.proposal, workdir, &req.feature_id, env_short)?,
         ProposalKind::Match => {
-            return Err(HandlerError::InvalidArgument {
-                field: "proposal.kind".to_string(),
-                detail: "accept refuses Match proposals — they have nothing to persist"
-                    .to_string(),
-            })
+            return Err(refuse_proposal_kind(
+                "Match",
+                "they have nothing to persist",
+            ))
         }
         ProposalKind::Gap => {
-            return Err(HandlerError::InvalidArgument {
-                field: "proposal.kind".to_string(),
-                detail: "accept refuses Gap proposals — there is no graph to persist"
-                    .to_string(),
-            })
+            return Err(refuse_proposal_kind("Gap", "there is no graph to persist"))
         }
     };
-    let persisted = persisted.ok_or_else(|| HandlerError::Internal {
+    persisted.ok_or_else(|| HandlerError::Internal {
         detail: "persist_if_new returned None for a New proposal".to_string(),
-    })?;
-    Ok(AcceptResponse { persisted })
+    })
+}
+
+fn refuse_proposal_kind(kind: &str, reason: &str) -> HandlerError {
+    HandlerError::InvalidArgument {
+        field: "proposal.kind".to_string(),
+        detail: format!("accept refuses {kind} proposals — {reason}"),
+    }
 }
 
 fn build_match_response(report: &MatchReport) -> GenerateResponse {
@@ -295,9 +327,12 @@ fn persist_if_new(
     env_short: &str,
 ) -> Result<Option<PersistedSummary>, HandlerError> {
     let new_payload = match proposal.kind {
-        ProposalKind::New => proposal.new.as_ref().ok_or_else(|| HandlerError::Internal {
-            detail: "proposal.kind = New but proposal.new payload missing".to_string(),
-        })?,
+        ProposalKind::New => proposal
+            .new
+            .as_ref()
+            .ok_or_else(|| HandlerError::Internal {
+                detail: "proposal.kind = New but proposal.new payload missing".to_string(),
+            })?,
         _ => return Ok(None),
     };
     let persisted = persist_new_proposal(workdir, feature_id, env_short, &new_payload.steps)?;

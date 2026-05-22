@@ -23,6 +23,8 @@
 //! guard (`already_dispatched`) so re-firing across processes (or after
 //! a crash before the verifier acks) never produces a duplicate event.
 
+mod seed;
+
 use std::collections::BTreeSet;
 
 use anyhow::{Context, Result};
@@ -225,8 +227,8 @@ pub fn emit_verifier_dispatch_event(
     }
     let event_iri = mint_event_iri()?;
     let quads = build_event_quads(&event_iri, seed, emitted_at_rfc3339);
-    let mutation = Mutation::insert(quads.iter().cloned())
-        .with_cause("FT-022 emit verifier-dispatch event");
+    let mutation =
+        Mutation::insert(quads.iter().cloned()).with_cause("FT-022 emit verifier-dispatch event");
     writer
         .commit(mutation)
         .map_err(|e| VerifierDispatchError::Commit(format!("{e:#}")))?;
@@ -291,6 +293,17 @@ fn build_event_payload_quads(
     emitted_at_rfc3339: &str,
     g: &GraphName,
 ) -> Vec<Quad> {
+    let mut quads = build_event_role_quads(event_iri, g);
+    quads.extend(build_event_link_quads(
+        event_iri,
+        seed,
+        emitted_at_rfc3339,
+        g,
+    ));
+    quads
+}
+
+fn build_event_role_quads(event_iri: &NamedNode, g: &GraphName) -> Vec<Quad> {
     vec![
         Quad::new(
             event_iri.clone(),
@@ -304,6 +317,16 @@ fn build_event_payload_quads(
             Literal::new_simple_literal(VERIFIER_TARGET_ROLE),
             g.clone(),
         ),
+    ]
+}
+
+fn build_event_link_quads(
+    event_iri: &NamedNode,
+    seed: &VerifierDispatchSeed,
+    emitted_at_rfc3339: &str,
+    g: &GraphName,
+) -> Vec<Quad> {
+    vec![
         Quad::new(
             event_iri.clone(),
             dispatch_group_ref().into_owned(),
@@ -330,45 +353,7 @@ fn build_event_payload_quads(
 /// alongside the slice-1 v0 bootstrap subscriptions (FT-009).
 #[must_use]
 pub fn seed_quads() -> Vec<Quad> {
-    let subs_graph: GraphName =
-        NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_GRAPH_SUBSCRIPTIONS).into();
-    let sub = NamedNode::new_unchecked(VERIFIER_DISPATCH_SUBSCRIPTION_IRI);
-    let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
-    let sub_cls = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
-    let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
-    let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
-    let handler_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_HANDLER);
-    let label_pred =
-        NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
-    vec![
-        Quad::new(sub.clone(), rdf_type, sub_cls, subs_graph.clone()),
-        Quad::new(
-            sub.clone(),
-            select_pred,
-            Literal::new_simple_literal(PENDING_GROUPS_QUERY),
-            subs_graph.clone(),
-        ),
-        Quad::new(
-            sub.clone(),
-            mode_pred,
-            Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_ASYNC),
-            subs_graph.clone(),
-        ),
-        Quad::new(
-            sub.clone(),
-            handler_pred,
-            Literal::new_simple_literal(VERIFIER_DISPATCH_HANDLER),
-            subs_graph.clone(),
-        ),
-        Quad::new(
-            sub,
-            label_pred,
-            Literal::new_simple_literal(
-                "verifier dispatch (action complete, no verifier yet)",
-            ),
-            subs_graph,
-        ),
-    ]
+    seed::seed_quads()
 }
 
 /// Convenience: shape the `dec:inStream` predicate as a NamedNode so

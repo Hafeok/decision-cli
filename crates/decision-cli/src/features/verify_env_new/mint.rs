@@ -39,7 +39,9 @@ pub fn id_exists(env_dir: &Path, id: &str) -> io::Result<bool> {
         if !name.ends_with(".ttl") {
             continue;
         }
-        if name == format!("{id}.ttl") || name.starts_with(&prefix_dot) || name.starts_with(&prefix_dash)
+        if name == format!("{id}.ttl")
+            || name.starts_with(&prefix_dot)
+            || name.starts_with(&prefix_dash)
         {
             return Ok(true);
         }

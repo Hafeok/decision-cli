@@ -11,12 +11,10 @@ use oxigraph::model::NamedNodeRef;
 // --- Class IRIs --------------------------------------------------------------
 
 /// Class IRI for `dec:VerificationGraph` (ADR-028 §VerificationGraph).
-pub const IRI_DEC_VERIFICATION_GRAPH: &str =
-    "https://decision-cli.dev/ns#VerificationGraph";
+pub const IRI_DEC_VERIFICATION_GRAPH: &str = "https://decision-cli.dev/ns#VerificationGraph";
 
 /// Class IRI for `dec:VerificationStep` (ADR-028 §VerificationGraph).
-pub const IRI_DEC_VERIFICATION_STEP: &str =
-    "https://decision-cli.dev/ns#VerificationStep";
+pub const IRI_DEC_VERIFICATION_STEP: &str = "https://decision-cli.dev/ns#VerificationStep";
 
 // --- Graph-level structural predicates --------------------------------------
 
@@ -39,8 +37,7 @@ pub const IRI_DEC_STEP_TYPE: &str = "https://decision-cli.dev/ns#stepType";
 pub const IRI_DEC_REQUIRED_OPS: &str = "https://decision-cli.dev/ns#requiredOps";
 
 /// `dec:providesEvidenceFor` predicate — step → TC IRI; optional, multi-valued.
-pub const IRI_DEC_PROVIDES_EVIDENCE_FOR: &str =
-    "https://decision-cli.dev/ns#providesEvidenceFor";
+pub const IRI_DEC_PROVIDES_EVIDENCE_FOR: &str = "https://decision-cli.dev/ns#providesEvidenceFor";
 
 // --- Per-step-kind field predicates -----------------------------------------
 
@@ -95,8 +92,7 @@ pub const IRI_DEC_BIND_AS: &str = "https://decision-cli.dev/ns#bindAs";
 // --- Named graph + IRI prefixes ---------------------------------------------
 
 /// Named graph holding verification-graph projections (ADR-028 §State).
-pub const IRI_DEC_GRAPH_VERIFY_GRAPH: &str =
-    "https://decision-cli.dev/ns/graph/verify-graph";
+pub const IRI_DEC_GRAPH_VERIFY_GRAPH: &str = "https://decision-cli.dev/ns/graph/verify-graph";
 
 /// IRI prefix for minted graph IRIs (`https://decision-cli.dev/ns/graph/<id>`).
 pub const IRI_DEC_VERIFY_GRAPH_PREFIX: &str = "https://decision-cli.dev/ns/graph/";

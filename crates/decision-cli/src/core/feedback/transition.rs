@@ -69,16 +69,27 @@ pub fn apply(
 ) -> Result<(), ApplyError> {
     let prior = read_prior_state(store, feedback_iri)?;
     validate_transition(prior, new_state)?;
-
     let g: GraphName = graph.into_owned().into();
-    let lifecycle_pred = lifecycle_state();
+    let removes = collect_prior_state_quads(store, feedback_iri);
+    let inserts = build_state_inserts(feedback_iri, new_state, evidence, g);
+    let mutation = Mutation {
+        inserts,
+        removes,
+        ..Mutation::default()
+    };
+    writer
+        .commit(mutation)
+        .map_err(|e| ApplyError::Store(format!("{e:#}")))?;
+    Ok(())
+}
 
-    // Remove every prior dec:lifecycleState literal for this subject, in
-    // whatever graph it lives. The writer's middleware re-tags scoped
-    // artifacts; the prior-state literal is the only thing we need to
-    // explicitly retract.
-    let mut removes: Vec<Quad> = Vec::new();
-    for q in store
+// Remove every prior dec:lifecycleState literal for this subject, in
+// whatever graph it lives. The writer's middleware re-tags scoped
+// artifacts; the prior-state literal is the only thing we need to
+// explicitly retract.
+fn collect_prior_state_quads(store: &Store, feedback_iri: &NamedNode) -> Vec<Quad> {
+    let lifecycle_pred = lifecycle_state();
+    store
         .quads_for_pattern(
             Some(Subject::NamedNode(feedback_iri.clone()).as_ref()),
             Some(lifecycle_pred),
@@ -86,10 +97,16 @@ pub fn apply(
             None,
         )
         .filter_map(Result::ok)
-    {
-        removes.push(q);
-    }
+        .collect()
+}
 
+fn build_state_inserts(
+    feedback_iri: &NamedNode,
+    new_state: LifecycleState,
+    evidence: Evidence,
+    g: GraphName,
+) -> Vec<Quad> {
+    let lifecycle_pred = lifecycle_state();
     let mut inserts: Vec<Quad> = Vec::with_capacity(1 + evidence.len());
     inserts.push(Quad::new(
         feedback_iri.clone(),
@@ -98,17 +115,7 @@ pub fn apply(
         g,
     ));
     inserts.extend(evidence);
-
-    let mutation = Mutation {
-        inserts,
-        removes,
-        ..Mutation::default()
-    };
-
-    writer
-        .commit(mutation)
-        .map_err(|e| ApplyError::Store(format!("{e:#}")))?;
-    Ok(())
+    inserts
 }
 
 /// Read the current `dec:lifecycleState` literal for `feedback_iri` from

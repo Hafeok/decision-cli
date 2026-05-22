@@ -167,30 +167,42 @@ pub fn assemble_bundle(
 fn load_feature_body(product_root: &Path, feature_id: &str) -> Result<String, HandlerError> {
     let features_dir = product_root.join(".product").join("features");
     if !features_dir.exists() {
-        return Err(HandlerError::ArtifactNotFound {
-            kind: "Feature".to_string(),
-            id: feature_id.to_string(),
-        });
+        return Err(feature_not_found(feature_id));
     }
     let exact = features_dir.join(format!("{feature_id}.md"));
     if exact.is_file() {
-        return fs::read_to_string(&exact).map_err(|e| HandlerError::Internal {
-            detail: format!("bundle: reading {p}: {e}", p = exact.display()),
-        });
+        return read_feature_file(&exact);
     }
+    match find_prefixed_feature_path(&features_dir, feature_id)? {
+        Some(path) => read_feature_file(&path),
+        None => Err(feature_not_found(feature_id)),
+    }
+}
+
+fn feature_not_found(feature_id: &str) -> HandlerError {
+    HandlerError::ArtifactNotFound {
+        kind: "Feature".to_string(),
+        id: feature_id.to_string(),
+    }
+}
+
+fn read_feature_file(path: &Path) -> Result<String, HandlerError> {
+    fs::read_to_string(path).map_err(|e| HandlerError::Internal {
+        detail: format!("bundle: reading {p}: {e}", p = path.display()),
+    })
+}
+
+fn find_prefixed_feature_path(
+    features_dir: &Path,
+    feature_id: &str,
+) -> Result<Option<std::path::PathBuf>, HandlerError> {
     let prefix = format!("{feature_id}-");
-    let entries = fs::read_dir(&features_dir).map_err(|e| HandlerError::Internal {
-        detail: format!(
-            "bundle: reading {d}: {e}",
-            d = features_dir.display()
-        ),
+    let entries = fs::read_dir(features_dir).map_err(|e| HandlerError::Internal {
+        detail: format!("bundle: reading {d}: {e}", d = features_dir.display()),
     })?;
     for entry in entries {
         let entry = entry.map_err(|e| HandlerError::Internal {
-            detail: format!(
-                "bundle: walking {d}: {e}",
-                d = features_dir.display()
-            ),
+            detail: format!("bundle: walking {d}: {e}", d = features_dir.display()),
         })?;
         let name = entry.file_name();
         let Some(name) = name.to_str() else { continue };
@@ -198,15 +210,10 @@ fn load_feature_body(product_root: &Path, feature_id: &str) -> Result<String, Ha
             continue;
         };
         if stem == feature_id || stem.starts_with(&prefix) {
-            return fs::read_to_string(entry.path()).map_err(|e| HandlerError::Internal {
-                detail: format!("bundle: reading feature file: {e}"),
-            });
+            return Ok(Some(entry.path()));
         }
     }
-    Err(HandlerError::ArtifactNotFound {
-        kind: "Feature".to_string(),
-        id: feature_id.to_string(),
-    })
+    Ok(None)
 }
 
 fn load_env_record(workdir: &Path, env_short: &str) -> Result<EnvRecord, HandlerError> {
@@ -235,11 +242,10 @@ fn candidate_records_from_report(report: &MatchReport) -> Vec<ExistingGraphRecor
         .graphs
         .iter()
         .map(|g| {
-            let short_id = g
-                .id
-                .strip_prefix(IRI_DEC_VERIFY_GRAPH_PREFIX)
-                .unwrap_or(g.id.as_str())
-                .to_string();
+            let short_id =
+                g.id.strip_prefix(IRI_DEC_VERIFY_GRAPH_PREFIX)
+                    .unwrap_or(g.id.as_str())
+                    .to_string();
             let covers_short = g
                 .covers
                 .iter()
@@ -263,44 +269,58 @@ fn candidate_records_from_report(report: &MatchReport) -> Vec<ExistingGraphRecor
 /// ADR-028 §Typed step vocabulary). Mirrors `core::verify::safety`'s
 /// op-derivation table.
 fn default_step_vocabulary() -> Vec<StepKindRecord> {
+    let mut vocab = assertion_step_kinds();
+    vocab.extend(control_step_kinds());
+    vocab
+}
+
+fn assertion_step_kinds() -> Vec<StepKindRecord> {
     vec![
-        StepKindRecord {
-            kind: STEP_KIND_SHELL_COMMAND.to_string(),
-            required_ops: vec!["shell".to_string(), "filesystem".to_string()],
-            fields_schema: serde_json::json!({}),
-            description: "Run a shell command; assert exit code.".to_string(),
-        },
-        StepKindRecord {
-            kind: STEP_KIND_SPARQL_ASSERTION.to_string(),
-            required_ops: vec!["sparql-local".to_string()],
-            fields_schema: serde_json::json!({}),
-            description: "Run a SPARQL query; assert row count.".to_string(),
-        },
-        StepKindRecord {
-            kind: STEP_KIND_FILE_ASSERTION.to_string(),
-            required_ops: vec!["filesystem".to_string()],
-            fields_schema: serde_json::json!({}),
-            description: "Assert file existence or content.".to_string(),
-        },
-        StepKindRecord {
-            kind: STEP_KIND_HTTP_REQUEST.to_string(),
-            required_ops: vec!["http".to_string()],
-            fields_schema: serde_json::json!({}),
-            description: "Make an HTTP call; assert status.".to_string(),
-        },
-        StepKindRecord {
-            kind: STEP_KIND_WAIT_FOR.to_string(),
-            required_ops: Vec::new(),
-            fields_schema: serde_json::json!({}),
-            description: "Poll a sub-condition with timeout.".to_string(),
-        },
-        StepKindRecord {
-            kind: STEP_KIND_CAPTURE.to_string(),
-            required_ops: Vec::new(),
-            fields_schema: serde_json::json!({}),
-            description: "Bind a prior step's stdout/result to a name.".to_string(),
-        },
+        step_kind_record(
+            STEP_KIND_SHELL_COMMAND,
+            &["shell", "filesystem"],
+            "Run a shell command; assert exit code.",
+        ),
+        step_kind_record(
+            STEP_KIND_SPARQL_ASSERTION,
+            &["sparql-local"],
+            "Run a SPARQL query; assert row count.",
+        ),
+        step_kind_record(
+            STEP_KIND_FILE_ASSERTION,
+            &["filesystem"],
+            "Assert file existence or content.",
+        ),
+        step_kind_record(
+            STEP_KIND_HTTP_REQUEST,
+            &["http"],
+            "Make an HTTP call; assert status.",
+        ),
     ]
+}
+
+fn control_step_kinds() -> Vec<StepKindRecord> {
+    vec![
+        step_kind_record(
+            STEP_KIND_WAIT_FOR,
+            &[],
+            "Poll a sub-condition with timeout.",
+        ),
+        step_kind_record(
+            STEP_KIND_CAPTURE,
+            &[],
+            "Bind a prior step's stdout/result to a name.",
+        ),
+    ]
+}
+
+fn step_kind_record(kind: &str, required_ops: &[&str], description: &str) -> StepKindRecord {
+    StepKindRecord {
+        kind: kind.to_string(),
+        required_ops: required_ops.iter().map(|s| (*s).to_string()).collect(),
+        fields_schema: serde_json::json!({}),
+        description: description.to_string(),
+    }
 }
 
 fn compute_bundle_hash(bundle: &VerifyGraphAuthorInputJson) -> String {

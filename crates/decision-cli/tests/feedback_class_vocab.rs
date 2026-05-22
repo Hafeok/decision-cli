@@ -121,7 +121,10 @@ fn happy_class_passes_shacl() {
         let f = feedback_with_class(c.as_iri_value());
         let quads = f.to_quads(orchestration_graph());
         validate_quads(&quads).unwrap_or_else(|e| {
-            panic!("class {} must pass SHACL validation, got: {e}", c.as_iri_value())
+            panic!(
+                "class {} must pass SHACL validation, got: {e}",
+                c.as_iri_value()
+            )
         });
     }
 }
@@ -130,8 +133,8 @@ fn happy_class_passes_shacl() {
 fn unknown_class_fails_shacl() {
     let f = feedback_with_class("regression");
     let quads = f.to_quads(orchestration_graph());
-    let err = validate_quads(&quads)
-        .expect_err("a class outside the ADR-023 vocabulary must fail SHACL");
+    let err =
+        validate_quads(&quads).expect_err("a class outside the ADR-023 vocabulary must fail SHACL");
     assert!(
         err.report.contains("dec:feedbackClass"),
         "violation report must reference dec:feedbackClass; got: {}",
@@ -183,8 +186,7 @@ fn stream_writer_accepts_every_known_class() {
     for (i, c) in FeedbackClass::all().iter().enumerate() {
         let mut f = feedback_with_class(c.as_iri_value());
         // Use a unique IRI per write to avoid conflicting with prior fixtures.
-        f.iri = NamedNode::new(format!("urn:dec:feedback:tc-034:happy:{i}"))
-            .expect("feedback iri");
+        f.iri = NamedNode::new(format!("urn:dec:feedback:tc-034:happy:{i}")).expect("feedback iri");
         let quads = f.to_quads(orchestration_graph());
         writer
             .commit(Mutation::insert(quads.iter().cloned()))
@@ -211,10 +213,7 @@ fn embedded_shapes_declare_feedback_class_in_enumeration() {
          }} }}",
         g = SHAPES_GRAPH_IRI,
     );
-    let ok = matches!(
-        store.query(q.as_str()),
-        Ok(QueryResults::Boolean(true))
-    );
+    let ok = matches!(store.query(q.as_str()), Ok(QueryResults::Boolean(true)));
     assert!(
         ok,
         "shapes.ttl must declare sh:in on dec:feedbackClass in dec:FeedbackShape"

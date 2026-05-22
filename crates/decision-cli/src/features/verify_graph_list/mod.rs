@@ -112,7 +112,17 @@ pub fn parse_request(req: &Request) -> Result<GraphListRequest, HandlerError> {
 /// MCP tool descriptor — registered by the binary in `cli::mcp`.
 #[must_use]
 pub fn tool_descriptor() -> ToolDescriptor {
-    let handler: ToolHandler = Arc::new(|req: Request| {
+    ToolDescriptor::new(
+        TOOL_NAME,
+        "List dec:VerificationGraph artifacts (FT-042 / ADR-028).",
+        input_schema(),
+        build_tool_handler(),
+    )
+    .with_output_schema(output_schema())
+}
+
+fn build_tool_handler() -> ToolHandler {
+    Arc::new(|req: Request| {
         let parsed = parse_request(&req)?;
         let outcome = run(&parsed)?;
         let summary = format!("listed {n} verification graph(s)", n = outcome.graphs.len());
@@ -122,32 +132,33 @@ pub fn tool_descriptor() -> ToolDescriptor {
             }),
             summary,
         ))
-    });
-    ToolDescriptor::new(
-        TOOL_NAME,
-        "List dec:VerificationGraph artifacts (FT-042 / ADR-028).",
-        input_schema(),
-        handler,
-    )
-    .with_output_schema(json!({
+    })
+}
+
+fn output_schema() -> Value {
+    json!({
         "type": "object",
         "required": ["graphs"],
         "properties": {
             "graphs": {
                 "type": "array",
-                "items": {
-                    "type": "object",
-                    "required": ["id", "verifies", "environment", "step_count"],
-                    "properties": {
-                        "id": { "type": "string" },
-                        "verifies": { "type": "string" },
-                        "environment": { "type": "string" },
-                        "step_count": { "type": "integer", "minimum": 0 },
-                    },
-                },
+                "items": graph_summary_schema(),
             },
         },
-    }))
+    })
+}
+
+fn graph_summary_schema() -> Value {
+    json!({
+        "type": "object",
+        "required": ["id", "verifies", "environment", "step_count"],
+        "properties": {
+            "id": { "type": "string" },
+            "verifies": { "type": "string" },
+            "environment": { "type": "string" },
+            "step_count": { "type": "integer", "minimum": 0 },
+        },
+    })
 }
 
 /// JSON Schema describing the MCP tool's input arguments.
@@ -169,38 +180,42 @@ pub fn input_schema() -> Value {
 /// values surface as `InvalidArgument` (exit 2 on the CLI).
 fn validate(req: &GraphListRequest) -> Result<(), HandlerError> {
     if let Some(v) = &req.verifies {
-        let trimmed = v.trim();
-        if trimmed.is_empty() {
-            return Err(HandlerError::InvalidArgument {
-                field: "verifies".to_string(),
-                detail: "verifies filter must be a non-empty string".to_string(),
-            });
-        }
-        if !trimmed.starts_with("FT-") && !trimmed.starts_with("TC-") {
-            return Err(HandlerError::InvalidArgument {
-                field: "verifies".to_string(),
-                detail: format!(
-                    "verifies filter must start with FT- or TC-; got {trimmed:?}"
-                ),
-            });
-        }
+        validate_verifies_filter(v.trim())?;
     }
     if let Some(e) = &req.environment {
-        let trimmed = e.trim();
-        if trimmed.is_empty() {
-            return Err(HandlerError::InvalidArgument {
-                field: "environment".to_string(),
-                detail: "environment filter must be a non-empty string".to_string(),
-            });
-        }
-        if !trimmed.starts_with("ENV-") {
-            return Err(HandlerError::InvalidArgument {
-                field: "environment".to_string(),
-                detail: format!(
-                    "environment filter must start with ENV-; got {trimmed:?}"
-                ),
-            });
-        }
+        validate_environment_filter(e.trim())?;
+    }
+    Ok(())
+}
+
+fn validate_verifies_filter(trimmed: &str) -> Result<(), HandlerError> {
+    if trimmed.is_empty() {
+        return Err(HandlerError::InvalidArgument {
+            field: "verifies".to_string(),
+            detail: "verifies filter must be a non-empty string".to_string(),
+        });
+    }
+    if !trimmed.starts_with("FT-") && !trimmed.starts_with("TC-") {
+        return Err(HandlerError::InvalidArgument {
+            field: "verifies".to_string(),
+            detail: format!("verifies filter must start with FT- or TC-; got {trimmed:?}"),
+        });
+    }
+    Ok(())
+}
+
+fn validate_environment_filter(trimmed: &str) -> Result<(), HandlerError> {
+    if trimmed.is_empty() {
+        return Err(HandlerError::InvalidArgument {
+            field: "environment".to_string(),
+            detail: "environment filter must be a non-empty string".to_string(),
+        });
+    }
+    if !trimmed.starts_with("ENV-") {
+        return Err(HandlerError::InvalidArgument {
+            field: "environment".to_string(),
+            detail: format!("environment filter must start with ENV-; got {trimmed:?}"),
+        });
     }
     Ok(())
 }
@@ -216,11 +231,8 @@ pub fn run(req: &GraphListRequest) -> Result<GraphListResponse, HandlerError> {
             detail: "no working directory available; run from a `dec init`-bootstrapped tree"
                 .to_string(),
         })?;
-    let mut graphs = query::query_graphs(
-        workdir,
-        req.verifies.as_deref(),
-        req.environment.as_deref(),
-    )?;
+    let mut graphs =
+        query::query_graphs(workdir, req.verifies.as_deref(), req.environment.as_deref())?;
     graphs.sort_by(|a, b| query::graph_sort_key(&a.id).cmp(&query::graph_sort_key(&b.id)));
     Ok(GraphListResponse { graphs })
 }
@@ -304,7 +316,10 @@ mod tests {
     #[test]
     fn input_schema_advertises_optional_filters() {
         let s = input_schema();
-        let props = s.get("properties").and_then(|v| v.as_object()).expect("props");
+        let props = s
+            .get("properties")
+            .and_then(|v| v.as_object())
+            .expect("props");
         assert!(props.contains_key("verifies"));
         assert!(props.contains_key("environment"));
         assert!(props.contains_key("format"));

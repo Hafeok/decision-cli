@@ -20,12 +20,13 @@ use super::{
 
 /// Parse a `Request` envelope into a [`GenerateRequest`].
 pub fn parse_generate_request(req: &Request) -> Result<GenerateRequest, HandlerError> {
-    let mut parsed: GenerateRequest = serde_json::from_value(req.arguments.clone()).map_err(
-        |e| HandlerError::InvalidArgument {
-            field: "arguments".to_string(),
-            detail: format!("malformed dec_verify_graph_generate arguments: {e}"),
-        },
-    )?;
+    let mut parsed: GenerateRequest =
+        serde_json::from_value(req.arguments.clone()).map_err(|e| {
+            HandlerError::InvalidArgument {
+                field: "arguments".to_string(),
+                detail: format!("malformed dec_verify_graph_generate arguments: {e}"),
+            }
+        })?;
     if parsed.workdir.is_none() {
         parsed.workdir = std::env::current_dir().ok();
     }
@@ -34,12 +35,12 @@ pub fn parse_generate_request(req: &Request) -> Result<GenerateRequest, HandlerE
 
 /// Parse a `Request` envelope into an [`AcceptRequest`].
 pub fn parse_accept_request(req: &Request) -> Result<AcceptRequest, HandlerError> {
-    let mut parsed: AcceptRequest = serde_json::from_value(req.arguments.clone()).map_err(
-        |e| HandlerError::InvalidArgument {
+    let mut parsed: AcceptRequest = serde_json::from_value(req.arguments.clone()).map_err(|e| {
+        HandlerError::InvalidArgument {
             field: "arguments".to_string(),
             detail: format!("malformed dec_verify_graph_accept arguments: {e}"),
-        },
-    )?;
+        }
+    })?;
     if parsed.workdir.is_none() {
         parsed.workdir = std::env::current_dir().ok();
     }

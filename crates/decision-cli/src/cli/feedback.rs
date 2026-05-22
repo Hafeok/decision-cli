@@ -160,9 +160,7 @@ fn run_show(workdir: &Path, args: ShowArgs) -> ExitCode {
 
 fn run_close(workdir: &Path, args: CloseArgs) -> ExitCode {
     let format = args.format.into_inner();
-    let actor = args
-        .actor
-        .unwrap_or_else(feedback::resolve_actor);
+    let actor = args.actor.unwrap_or_else(feedback::resolve_actor);
     match feedback::close_feedback(workdir, &args.iri, &args.addressing, &actor) {
         Ok(outcome) => {
             if format.is_json() {
@@ -178,9 +176,7 @@ fn run_close(workdir: &Path, args: CloseArgs) -> ExitCode {
 
 fn run_route(workdir: &Path, args: RouteArgs) -> ExitCode {
     let format = args.format.into_inner();
-    let actor = args
-        .actor
-        .unwrap_or_else(feedback::resolve_actor);
+    let actor = args.actor.unwrap_or_else(feedback::resolve_actor);
     match feedback::route_feedback(workdir, &args.iri, &args.to, &actor) {
         Ok(outcome) => {
             if format.is_json() {
@@ -196,9 +192,7 @@ fn run_route(workdir: &Path, args: RouteArgs) -> ExitCode {
 
 fn run_receive(workdir: &Path, args: ReceiveArgs) -> ExitCode {
     let format = args.format.into_inner();
-    let actor = args
-        .actor
-        .unwrap_or_else(feedback::resolve_actor);
+    let actor = args.actor.unwrap_or_else(feedback::resolve_actor);
     match feedback::receive_feedback(workdir, &args.iri, &actor) {
         Ok(outcome) => {
             if format.is_json() {

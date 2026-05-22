@@ -6,7 +6,7 @@
 use std::path::Path;
 
 use super::manifest::{manifest_sha256_hex, WorkerEntry, MANIFEST};
-use super::resolve::{resolve, ResolveInputs, Resolution};
+use super::resolve::{resolve, Resolution, ResolveInputs};
 
 /// One row in the report.
 #[derive(Debug, Clone)]
@@ -100,7 +100,12 @@ pub fn build_report(
                 continue;
             }
         }
-        rows.push(row_for_entry(entry, active_roles, workdir, override_command));
+        rows.push(row_for_entry(
+            entry,
+            active_roles,
+            workdir,
+            override_command,
+        ));
     }
     WorkerReport {
         rows,
@@ -181,7 +186,10 @@ fn install_hints_for(entry: &WorkerEntry) -> Vec<String> {
     match entry.install_kind {
         "uv-tool" => {
             hints.push(format!("uv tool install {}", entry.source_hint));
-            hints.push(format!("uv tool install {}    # published package (when available)", entry.console_script));
+            hints.push(format!(
+                "uv tool install {}    # published package (when available)",
+                entry.console_script
+            ));
         }
         "pipx" => {
             hints.push(format!("pipx install {}", entry.source_hint));
@@ -190,7 +198,10 @@ fn install_hints_for(entry: &WorkerEntry) -> Vec<String> {
             hints.push(format!("cargo install --path {}", entry.source_hint));
         }
         other => {
-            hints.push(format!("(install via {other}) source: {}", entry.source_hint));
+            hints.push(format!(
+                "(install via {other}) source: {}",
+                entry.source_hint
+            ));
         }
     }
     hints.push(format!(
@@ -227,10 +238,7 @@ pub fn format_report_text(report: &WorkerReport) -> String {
 fn format_row_line(row: &WorkerRow) -> String {
     match row.status {
         RoleStatus::Ok => {
-            let argv0 = row
-                .resolved_command
-                .first()
-                .map_or("", String::as_str);
+            let argv0 = row.resolved_command.first().map_or("", String::as_str);
             let via = row.resolved_via.unwrap_or("");
             format!(
                 "  {role:<12} OK   {argv0} (resolved via {via})\n",
@@ -296,7 +304,11 @@ fn str_array_json(items: &[String]) -> serde_json::Value {
     )
 }
 
-fn build_summary_json(ok: usize, missing: usize, inactive: usize) -> serde_json::Map<String, serde_json::Value> {
+fn build_summary_json(
+    ok: usize,
+    missing: usize,
+    inactive: usize,
+) -> serde_json::Map<String, serde_json::Value> {
     let mut summary = serde_json::Map::new();
     summary.insert("ok".into(), serde_json::Value::Number(ok.into()));
     summary.insert("missing".into(), serde_json::Value::Number(missing.into()));

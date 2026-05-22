@@ -174,12 +174,15 @@ fn tc_070_matcher_returns_completesingle_when_one_graph_covers_all() {
     );
 
     let before = store.len().expect("len before");
-    let report =
-        best_matching_graphs("FT-Z", env_short, &store, wd.path()).expect("matcher ok");
+    let report = best_matching_graphs("FT-Z", env_short, &store, wd.path()).expect("matcher ok");
 
     // Acceptance criteria from TC-070:
     assert_eq!(report.kind, MatchKind::CompleteSingle);
-    assert_eq!(report.graphs.len(), 1, "only the complete graph is returned");
+    assert_eq!(
+        report.graphs.len(),
+        1,
+        "only the complete graph is returned"
+    );
     assert_eq!(report.graphs[0].id, graph_iri_for("VG-Z"));
     assert_eq!(
         report.covered_by_match,

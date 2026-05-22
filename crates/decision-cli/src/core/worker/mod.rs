@@ -26,4 +26,4 @@ pub use manifest::{
 pub use report::{
     build_report, format_report_json, format_report_text, RoleStatus, WorkerReport, WorkerRow,
 };
-pub use resolve::{resolve, ResolveInputs, Resolution, ResolutionKind};
+pub use resolve::{resolve, Resolution, ResolutionKind, ResolveInputs};

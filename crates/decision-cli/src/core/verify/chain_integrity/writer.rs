@@ -123,20 +123,8 @@ pub fn persist_waiver(
         uncovered_at_waive: uncovered_tcs.clone(),
     };
 
-    let quads = waiver.to_quads(waivers_named_graph());
-    let mutation =
-        Mutation::insert(quads.iter().cloned()).with_cause(format!("dec implement: chain-integrity waiver {id}"));
-    writer
-        .commit(mutation)
-        .map_err(|e| WaiverPersistError::SchemaViolation(format!("{e:#}")))?;
-
-    let ttl = waiver
-        .to_canonical_turtle()
-        .map_err(|e| WaiverPersistError::Emit(e.to_string()))?;
-    let path = waivers_dir.join(waiver.filename());
-    let tmp = path.with_extension("ttl.tmp");
-    fs::write(&tmp, ttl.as_bytes())?;
-    fs::rename(&tmp, &path)?;
+    commit_waiver_quads(writer, &waiver, &id)?;
+    let path = write_waiver_turtle(&waivers_dir, &waiver)?;
 
     let iri = NamedNode::new_unchecked(format!("{IRI_DEC_WAIVER_PREFIX}{id}"));
     Ok(PersistedWaiver {
@@ -144,6 +132,34 @@ pub fn persist_waiver(
         path,
         uncovered_at_waive: uncovered_tcs,
     })
+}
+
+fn commit_waiver_quads(
+    writer: &StreamWriter,
+    waiver: &CoverageWaiver,
+    id: &str,
+) -> Result<(), WaiverPersistError> {
+    let quads = waiver.to_quads(waivers_named_graph());
+    let mutation = Mutation::insert(quads.iter().cloned())
+        .with_cause(format!("dec implement: chain-integrity waiver {id}"));
+    writer
+        .commit(mutation)
+        .map_err(|e| WaiverPersistError::SchemaViolation(format!("{e:#}")))?;
+    Ok(())
+}
+
+fn write_waiver_turtle(
+    waivers_dir: &Path,
+    waiver: &CoverageWaiver,
+) -> Result<PathBuf, WaiverPersistError> {
+    let ttl = waiver
+        .to_canonical_turtle()
+        .map_err(|e| WaiverPersistError::Emit(e.to_string()))?;
+    let path = waivers_dir.join(waiver.filename());
+    let tmp = path.with_extension("ttl.tmp");
+    fs::write(&tmp, ttl.as_bytes())?;
+    fs::rename(&tmp, &path)?;
+    Ok(path)
 }
 
 #[cfg(test)]

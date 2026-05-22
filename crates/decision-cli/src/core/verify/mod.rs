@@ -19,8 +19,8 @@ pub use chain_integrity::{
     GateOutcome, NextWaiverIdResolver, WaiverIntent, WaiverPersistError, WaiverReasonError,
 };
 pub use coverage::{
-    feature_covered_by, feature_coverage, CoverageError, CoverageHit, CoverageReport,
-    FeatureId, GraphId, StepId, TcId,
+    feature_coverage, feature_covered_by, CoverageError, CoverageHit, CoverageReport, FeatureId,
+    GraphId, StepId, TcId,
 };
 pub use matcher::{
     best_matching_graphs, EnvId, GraphSummary as MatchGraphSummary, MatchError, MatchKind,
@@ -28,6 +28,6 @@ pub use matcher::{
 };
 pub use quads::{check_inserts_against_store, touches_verification_artifacts};
 pub use safety::{
-    check_graph_against_env, check_graph_against_env_all, check_step_against_env,
-    required_ops_for, OpSource, SafetyError, SafetyViolation,
+    check_graph_against_env, check_graph_against_env_all, check_step_against_env, required_ops_for,
+    OpSource, SafetyError, SafetyViolation,
 };

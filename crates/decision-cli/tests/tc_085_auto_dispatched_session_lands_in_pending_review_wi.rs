@@ -205,7 +205,10 @@ fn tc_085_auto_dispatched_session_lands_in_pending_review_wi() {
     // any `.dec/` layout in this test's workdir, so the directory
     // shouldn't exist.
     let graph_dir = guard.path().join(".dec/verify/graph");
-    assert!(!graph_dir.exists(), ".dec/verify/graph/ must remain unchanged");
+    assert!(
+        !graph_dir.exists(),
+        ".dec/verify/graph/ must remain unchanged"
+    );
 
     // AC #3: `dec session list` shows the pending-review session. The
     // structural surface is the typed session in the orchestration

@@ -192,25 +192,30 @@ fn fresh_workdir(tag: &str) -> PathBuf {
 }
 
 fn init_git_repo(workdir: &Path) {
-    run_ok(Command::new("git").arg("-C").arg(workdir).args(["init", "-q"]));
     run_ok(
         Command::new("git")
             .arg("-C")
             .arg(workdir)
-            .args(["config", "user.email", "tc-074@decision-cli.test"]),
+            .args(["init", "-q"]),
     );
+    run_ok(Command::new("git").arg("-C").arg(workdir).args([
+        "config",
+        "user.email",
+        "tc-074@decision-cli.test",
+    ]));
     run_ok(
         Command::new("git")
             .arg("-C")
             .arg(workdir)
             .args(["config", "user.name", "tc-074"]),
     );
-    run_ok(
-        Command::new("git")
-            .arg("-C")
-            .arg(workdir)
-            .args(["commit", "--allow-empty", "-q", "-m", "initial"]),
-    );
+    run_ok(Command::new("git").arg("-C").arg(workdir).args([
+        "commit",
+        "--allow-empty",
+        "-q",
+        "-m",
+        "initial",
+    ]));
 }
 
 fn run_ok(cmd: &mut Command) {
@@ -223,11 +228,7 @@ fn run_ok(cmd: &mut Command) {
     );
 }
 
-fn seed_product_fixture_with_uncovered_tcs(
-    workdir: &Path,
-    feature_id: &str,
-    tcs: &[&str],
-) {
+fn seed_product_fixture_with_uncovered_tcs(workdir: &Path, feature_id: &str, tcs: &[&str]) {
     let product_dir = workdir.join(".product");
     let features_dir = product_dir.join("features");
     fs::create_dir_all(&features_dir).expect("create .product/features");

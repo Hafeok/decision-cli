@@ -71,9 +71,7 @@ fn graph_for(env_id: &str, steps: Vec<VerificationStep>) -> VerificationGraph {
     VerificationGraph::new(
         "VG-tc058",
         ft_001_ref(),
-        NamedNode::new_unchecked(format!(
-            "https://decision-cli.dev/ns/env/{env_id}"
-        )),
+        NamedNode::new_unchecked(format!("https://decision-cli.dev/ns/env/{env_id}")),
         steps,
     )
 }
@@ -81,7 +79,11 @@ fn graph_for(env_id: &str, steps: Vec<VerificationStep>) -> VerificationGraph {
 #[test]
 fn single_step_violation_carries_full_context() {
     // (1) Single-step violation: http POST against `production-readonly` env.
-    let e = env("prod-readonly", &["http-readonly"], SafetyClass::ProductionReadonly);
+    let e = env(
+        "prod-readonly",
+        &["http-readonly"],
+        SafetyClass::ProductionReadonly,
+    );
     let s = http_post_step("VG-tc058", 0);
     let err = check_step_against_env(&s, &e).expect_err("must surface SafetyError");
     let v = err.as_violation().expect("structural violation expected");
@@ -94,7 +96,11 @@ fn single_step_violation_carries_full_context() {
 #[test]
 fn whole_graph_violation_returns_first() {
     // (2) Three-step graph where step 2 violates.
-    let e = env("dev", &["shell", "filesystem"], SafetyClass::SharedNonDestructive);
+    let e = env(
+        "dev",
+        &["shell", "filesystem"],
+        SafetyClass::SharedNonDestructive,
+    );
     let g = graph_for(
         "dev",
         vec![
@@ -125,28 +131,40 @@ fn all_violations_variant_lists_every_failure_in_order() {
     let g = graph_for(
         "dev",
         vec![
-            shell_step("VG-tc058", 0),       // passes: shell only is fine for shell?
-            http_post_step("VG-tc058", 1),   // violates
-            shell_step("VG-tc058", 2),       // shell + filesystem required ⊄ {shell}
-            http_post_step("VG-tc058", 3),   // violates
+            shell_step("VG-tc058", 0),     // passes: shell only is fine for shell?
+            http_post_step("VG-tc058", 1), // violates
+            shell_step("VG-tc058", 2),     // shell + filesystem required ⊄ {shell}
+            http_post_step("VG-tc058", 3), // violates
         ],
     );
     let errs = check_graph_against_env_all(&g, &e).expect_err("all violations");
     // shell-step requires {shell, filesystem}, env only has {shell} ⇒ 3 violations total
     // (index 0, 1, 2, 3 — but index 0 also fails because shell needs filesystem)
-    assert!(errs.len() >= 2, "expected ≥ 2 violations, got {}", errs.len());
+    assert!(
+        errs.len() >= 2,
+        "expected ≥ 2 violations, got {}",
+        errs.len()
+    );
     for err in &errs {
         assert!(err.as_violation().is_some());
     }
     // The first violating step's IRI must mention step 0 (shell on shell-only env)
     let v0 = errs[0].as_violation().expect("first violation");
-    assert!(v0.step_id.ends_with("/0"), "first violation on step 0; got {}", v0.step_id);
+    assert!(
+        v0.step_id.ends_with("/0"),
+        "first violation on step 0; got {}",
+        v0.step_id
+    );
 }
 
 #[test]
 fn op_direction_is_subset_not_superset() {
     // (4) shell against {shell, filesystem} passes; {shell, filesystem} against {shell} fails.
-    let big_env = env("dev", &["shell", "filesystem"], SafetyClass::SharedNonDestructive);
+    let big_env = env(
+        "dev",
+        &["shell", "filesystem"],
+        SafetyClass::SharedNonDestructive,
+    );
     let small_env = env("ephemeral", &["shell"], SafetyClass::Isolated);
     let s = shell_step("VG-tc058", 0);
     // shell-command requires {shell, filesystem}; against big env it's a subset.
@@ -207,8 +225,7 @@ fn conditional_sparql_local_vs_http_target() {
 fn unknown_op_token_in_env_surfaces_unknownop() {
     // (6) An env declaring `rocketship` triggers UnknownOp with source=env.
     let e = env("dev", &["rocketship"], SafetyClass::Isolated);
-    let err = check_step_against_env(&shell_step("VG-tc058", 0), &e)
-        .expect_err("unknown env op");
+    let err = check_step_against_env(&shell_step("VG-tc058", 0), &e).expect_err("unknown env op");
     match err {
         SafetyError::UnknownOp { token, source } => {
             assert_eq!(token, "rocketship");
@@ -232,9 +249,12 @@ fn rendered_message_carries_diff() {
     // The CLI rendering carries the step IRI, kind, missing op, env IRI,
     // safety class, and allowed-ops list — matching FT-037 §Error
     // handling's example diff format.
-    let e = env("prod-readonly", &["http-readonly"], SafetyClass::ProductionReadonly);
-    let err = check_step_against_env(&http_post_step("VG-tc058", 0), &e)
-        .expect_err("must surface");
+    let e = env(
+        "prod-readonly",
+        &["http-readonly"],
+        SafetyClass::ProductionReadonly,
+    );
+    let err = check_step_against_env(&http_post_step("VG-tc058", 0), &e).expect_err("must surface");
     let msg = format!("{err}");
     assert!(msg.contains("http-request"), "msg: {msg}");
     assert!(msg.contains("http-mutating"), "msg: {msg}");

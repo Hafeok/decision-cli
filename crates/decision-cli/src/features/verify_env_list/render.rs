@@ -98,7 +98,9 @@ mod tests {
 
     #[test]
     fn table_renders_rows_with_headers() {
-        let resp = EnvListResponse { envs: vec![sample()] };
+        let resp = EnvListResponse {
+            envs: vec![sample()],
+        };
         let s = render_table(&resp);
         assert!(s.contains("ID"));
         assert!(s.contains("ENV-001-ephemeral-cli"));
@@ -108,7 +110,9 @@ mod tests {
 
     #[test]
     fn json_renders_array_of_envs() {
-        let resp = EnvListResponse { envs: vec![sample()] };
+        let resp = EnvListResponse {
+            envs: vec![sample()],
+        };
         let s = render_json(&resp);
         // Parse it back so we don't depend on whitespace formatting.
         let v: Value = serde_json::from_str(&s).expect("json");

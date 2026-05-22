@@ -13,11 +13,7 @@ use super::report::{EnvId, GraphSummary, MatchKind, MatchReport};
 use crate::core::verify::coverage::TcId;
 
 /// `MatchKind::None` outcome — every TC stays in `residual_uncovered`.
-pub(super) fn none_report(
-    feature_iri: String,
-    env_iri: EnvId,
-    all_tcs: Vec<TcId>,
-) -> MatchReport {
+pub(super) fn none_report(feature_iri: String, env_iri: EnvId, all_tcs: Vec<TcId>) -> MatchReport {
     MatchReport {
         feature: feature_iri,
         environment: env_iri,
@@ -81,28 +77,9 @@ pub(super) fn cover_report(
     all_tcs: &[TcId],
     cover: &[&Candidate],
 ) -> MatchReport {
-    let mut covered_set: BTreeSet<String> = BTreeSet::new();
-    let mut graphs_out: Vec<GraphSummary> = Vec::with_capacity(cover.len());
-    for chosen in cover {
-        for tc in &chosen.2 {
-            covered_set.insert(tc.clone());
-        }
-        graphs_out.push(GraphSummary::from_iris(
-            &chosen.1,
-            &chosen.0,
-            order_tcs(all_tcs, &chosen.2),
-        ));
-    }
-    let covered_by_match: Vec<TcId> = all_tcs
-        .iter()
-        .filter(|t| covered_set.contains(*t))
-        .cloned()
-        .collect();
-    let residual_uncovered: Vec<TcId> = all_tcs
-        .iter()
-        .filter(|t| !covered_set.contains(*t))
-        .cloned()
-        .collect();
+    let (covered_set, graphs_out) = summarise_cover(cover, all_tcs);
+    let covered_by_match = filter_tcs(all_tcs, &covered_set, true);
+    let residual_uncovered = filter_tcs(all_tcs, &covered_set, false);
     let kind = if residual_uncovered.is_empty() {
         MatchKind::CompleteMultiple
     } else {
@@ -116,4 +93,35 @@ pub(super) fn cover_report(
         covered_by_match,
         residual_uncovered,
     }
+}
+
+/// Compute the union of covered TCs and a per-graph summary in the
+/// matcher's chosen order.
+fn summarise_cover(
+    cover: &[&Candidate],
+    all_tcs: &[TcId],
+) -> (BTreeSet<String>, Vec<GraphSummary>) {
+    let mut covered_set: BTreeSet<String> = BTreeSet::new();
+    let mut graphs_out: Vec<GraphSummary> = Vec::with_capacity(cover.len());
+    for chosen in cover {
+        for tc in &chosen.2 {
+            covered_set.insert(tc.clone());
+        }
+        graphs_out.push(GraphSummary::from_iris(
+            &chosen.1,
+            &chosen.0,
+            order_tcs(all_tcs, &chosen.2),
+        ));
+    }
+    (covered_set, graphs_out)
+}
+
+/// Preserve `all_tcs`'s declaration order while filtering by membership
+/// in `covered_set` (when `keep_covered` is true) or non-membership.
+fn filter_tcs(all_tcs: &[TcId], covered_set: &BTreeSet<String>, keep_covered: bool) -> Vec<TcId> {
+    all_tcs
+        .iter()
+        .filter(|t| covered_set.contains(*t) == keep_covered)
+        .cloned()
+        .collect()
 }

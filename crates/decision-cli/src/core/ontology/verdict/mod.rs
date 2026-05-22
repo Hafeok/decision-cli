@@ -11,6 +11,6 @@ mod types;
 #[cfg(test)]
 mod tests;
 
-pub use read::{list_verdicts_for_dispatch, latest_verdict_for_dispatch, ReadError};
+pub use read::{latest_verdict_for_dispatch, list_verdicts_for_dispatch, ReadError};
 pub use shacl::{validate_quads, VerdictShaclError, VerdictViolation, RATIONALE_MIN_LEN};
 pub use types::{Verdict, VerdictArtifact};

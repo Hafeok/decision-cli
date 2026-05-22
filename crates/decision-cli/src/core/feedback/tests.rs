@@ -109,7 +109,10 @@ fn get_round_trips_a_persisted_feedback() {
     assert_eq!(back.lifecycle_state, f.lifecycle_state);
     assert_eq!(back.source_session, f.source_session);
     assert_eq!(back.in_stream, f.in_stream);
-    assert_eq!(back.recommendation.as_deref(), Some("amend the spec with a worked example"));
+    assert_eq!(
+        back.recommendation.as_deref(),
+        Some("amend the spec with a worked example")
+    );
 }
 
 #[test]

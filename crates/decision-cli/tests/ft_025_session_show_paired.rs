@@ -76,12 +76,12 @@ fn action_session_renders_paired_block_with_verdict() {
         out.contains("Verdict:        approved"),
         "missing verdict value\n{out}"
     );
-    assert!(out.contains("Verdict IRI:"), "missing verdict IRI line\n{out}");
-    assert!(out.contains("Rationale:"), "missing rationale block\n{out}");
     assert!(
-        out.contains("satisfies"),
-        "missing rationale prose\n{out}"
+        out.contains("Verdict IRI:"),
+        "missing verdict IRI line\n{out}"
     );
+    assert!(out.contains("Rationale:"), "missing rationale block\n{out}");
+    assert!(out.contains("satisfies"), "missing rationale prose\n{out}");
 }
 
 #[test]
@@ -100,8 +100,8 @@ fn standalone_session_omits_paired_block() {
     // The standalone session has its own bundle/model/in-stream wires
     // but is not part of any DispatchGroup.
     let dir = TempWorkdir::new(SESSION_NQ);
-    let out = session_show(dir.path(), "urn:dec:test:ft-025:session/standalone")
-        .expect("standalone ok");
+    let out =
+        session_show(dir.path(), "urn:dec:test:ft-025:session/standalone").expect("standalone ok");
     assert!(
         !out.contains("Paired:"),
         "standalone session should NOT carry a Paired: block\n{out}"

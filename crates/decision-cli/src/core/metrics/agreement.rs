@@ -14,9 +14,7 @@ use thiserror::Error;
 use crate::core::dispatch::DispatchStatus;
 use crate::core::role_catalog;
 use crate::core::sparql::{term_iri_string, term_literal_string};
-use crate::core::vocab::{
-    VERDICT_AMENDMENT_REQUIRED, VERDICT_APPROVED, VERDICT_REJECTED,
-};
+use crate::core::vocab::{VERDICT_AMENDMENT_REQUIRED, VERDICT_APPROVED, VERDICT_REJECTED};
 
 use super::queries::build_query;
 
@@ -127,8 +125,9 @@ fn validate_role_filter(store: &Store, id: &str) -> Result<(), MetricsError> {
     if id == "implementer" {
         return Ok(());
     }
-    let lookup = role_catalog::lookup(store, id)
-        .map_err(|e| MetricsError::Sparql { detail: e.to_string() })?;
+    let lookup = role_catalog::lookup(store, id).map_err(|e| MetricsError::Sparql {
+        detail: e.to_string(),
+    })?;
     if lookup.is_none() {
         return Err(MetricsError::UnknownRole { id: id.to_string() });
     }
@@ -155,8 +154,7 @@ impl Counts {
         let agreement_rate = safe_ratio(approved_in_a, action);
         let amendment_rate = safe_ratio(self.amendment_required, action);
         let rejection_rate = safe_ratio(self.rejected, action);
-        let false_success_rate =
-            safe_ratio(self.rejected + self.amendment_required, action);
+        let false_success_rate = safe_ratio(self.rejected + self.amendment_required, action);
         AgreementReport {
             total_terminal_groups: self.total_terminal_groups,
             total_action_success: action,
@@ -184,9 +182,9 @@ fn safe_ratio(numerator: u64, denominator: u64) -> f64 {
 }
 
 fn execute_and_count(store: &Store, q: &str) -> Result<Counts, MetricsError> {
-    let results = store
-        .query(q)
-        .map_err(|e| MetricsError::Sparql { detail: e.to_string() })?;
+    let results = store.query(q).map_err(|e| MetricsError::Sparql {
+        detail: e.to_string(),
+    })?;
     let QueryResults::Solutions(sols) = results else {
         return Err(MetricsError::Sparql {
             detail: "agreement query returned unexpected result shape".to_string(),
@@ -195,38 +193,52 @@ fn execute_and_count(store: &Store, q: &str) -> Result<Counts, MetricsError> {
     let mut counts = Counts::default();
     let mut seen: HashSet<String> = HashSet::new();
     for sol in sols {
-        let sol = sol.map_err(|e| MetricsError::Sparql { detail: e.to_string() })?;
-        let group = match sol.get("group") {
-            Some(t) => term_iri_string(t),
-            None => continue,
-        };
-        // A given DispatchGroup may surface multiple solution rows when
-        // it has multiple verdicts (the verifier may emit more than
-        // once across amendment retries). We count each group at most
-        // once for the terminal totals; the verdict counters use the
-        // first verdict observed so the totals don't drift past 100%.
-        if !seen.insert(group) {
-            continue;
-        }
-        let status = sol.get("status").map(term_literal_string).unwrap_or_default();
-        let parsed = DispatchStatus::parse(&status);
-        let Some(parsed) = parsed else { continue };
-        if !parsed.is_terminal() {
-            continue;
-        }
-        counts.total_terminal_groups += 1;
-        if !matches!(parsed, DispatchStatus::ActionFailed) {
-            counts.total_action_success += 1;
-        }
-        let verdict = sol.get("verdictValue").map(term_literal_string);
-        match verdict.as_deref() {
-            Some(VERDICT_APPROVED) => counts.approved += 1,
-            Some(VERDICT_AMENDMENT_REQUIRED) => counts.amendment_required += 1,
-            Some(VERDICT_REJECTED) => counts.rejected += 1,
-            _ => {}
-        }
+        let sol = sol.map_err(|e| MetricsError::Sparql {
+            detail: e.to_string(),
+        })?;
+        absorb_solution(&sol, &mut counts, &mut seen);
     }
     Ok(counts)
+}
+
+fn absorb_solution(
+    sol: &oxigraph::sparql::QuerySolution,
+    counts: &mut Counts,
+    seen: &mut HashSet<String>,
+) {
+    let group = match sol.get("group") {
+        Some(t) => term_iri_string(t),
+        None => return,
+    };
+    // A given DispatchGroup may surface multiple solution rows when
+    // it has multiple verdicts (the verifier may emit more than
+    // once across amendment retries). We count each group at most
+    // once for the terminal totals; the verdict counters use the
+    // first verdict observed so the totals don't drift past 100%.
+    if !seen.insert(group) {
+        return;
+    }
+    let status = sol
+        .get("status")
+        .map(term_literal_string)
+        .unwrap_or_default();
+    let Some(parsed) = DispatchStatus::parse(&status) else {
+        return;
+    };
+    if !parsed.is_terminal() {
+        return;
+    }
+    counts.total_terminal_groups += 1;
+    if !matches!(parsed, DispatchStatus::ActionFailed) {
+        counts.total_action_success += 1;
+    }
+    let verdict = sol.get("verdictValue").map(term_literal_string);
+    match verdict.as_deref() {
+        Some(VERDICT_APPROVED) => counts.approved += 1,
+        Some(VERDICT_AMENDMENT_REQUIRED) => counts.amendment_required += 1,
+        Some(VERDICT_REJECTED) => counts.rejected += 1,
+        _ => {}
+    }
 }
 
 /// Render an [`AgreementReport`] as a human-readable five-row table.
@@ -237,18 +249,22 @@ fn execute_and_count(store: &Store, q: &str) -> Result<Counts, MetricsError> {
 /// [FT-025]: https://decision-cli.dev/features/FT-025
 #[must_use]
 pub fn format_report(report: &AgreementReport) -> String {
-    use std::fmt::Write;
     let mut out = String::new();
-    let window_line = report
-        .window
-        .map_or_else(
-            || "Window: (all time)".to_string(),
-            |(s, u)| format!("Window: {s} .. {u}"),
-        );
-    let role_line = report
-        .role_filter
-        .as_deref()
-        .map_or_else(|| "Role:   (all roles)".to_string(), |r| format!("Role:   {r}"));
+    write_report_header(&mut out, report);
+    write_report_rates(&mut out, report);
+    out
+}
+
+fn write_report_header(out: &mut String, report: &AgreementReport) {
+    use std::fmt::Write;
+    let window_line = report.window.map_or_else(
+        || "Window: (all time)".to_string(),
+        |(s, u)| format!("Window: {s} .. {u}"),
+    );
+    let role_line = report.role_filter.as_deref().map_or_else(
+        || "Role:   (all roles)".to_string(),
+        |r| format!("Role:   {r}"),
+    );
     let _ = writeln!(out, "{window_line}");
     let _ = writeln!(out, "{role_line}");
     let _ = writeln!(
@@ -260,14 +276,29 @@ pub fn format_report(report: &AgreementReport) -> String {
         am = report.amendment_required,
         r = report.rejected,
     );
+}
+
+fn write_report_rates(out: &mut String, report: &AgreementReport) {
+    use std::fmt::Write;
     let _ = writeln!(out);
-    let _ = writeln!(out, "  Agreement rate     {:>7.2}%", report.agreement_rate * 100.0);
-    let _ = writeln!(out, "  Amendment rate     {:>7.2}%", report.amendment_rate * 100.0);
-    let _ = writeln!(out, "  Rejection rate     {:>7.2}%", report.rejection_rate * 100.0);
+    let _ = writeln!(
+        out,
+        "  Agreement rate     {:>7.2}%",
+        report.agreement_rate * 100.0
+    );
+    let _ = writeln!(
+        out,
+        "  Amendment rate     {:>7.2}%",
+        report.amendment_rate * 100.0
+    );
+    let _ = writeln!(
+        out,
+        "  Rejection rate     {:>7.2}%",
+        report.rejection_rate * 100.0
+    );
     let _ = writeln!(
         out,
         "  False-success rate {:>7.2}%",
         report.false_success_rate * 100.0
     );
-    out
 }

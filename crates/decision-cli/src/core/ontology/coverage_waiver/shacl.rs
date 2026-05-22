@@ -8,8 +8,8 @@ use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_COVERAGE_WAIVER, IRI_DEC_WAIVER_FOR, IRI_DEC_WAIVER_REASON,
-    IRI_DCTERMS_CREATED, IRI_PROV_WAS_ATTRIBUTED_TO, WAIVER_REASON_MIN_LEN,
+    IRI_DCTERMS_CREATED, IRI_DEC_COVERAGE_WAIVER, IRI_DEC_WAIVER_FOR, IRI_DEC_WAIVER_REASON,
+    IRI_PROV_WAS_ATTRIBUTED_TO, WAIVER_REASON_MIN_LEN,
 };
 
 use super::types::RDF_TYPE;
@@ -78,12 +78,7 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<WaiverViolation>
     let mut violations = Vec::new();
     check_iri_object_once(quads, subject, IRI_DEC_WAIVER_FOR, &mut violations);
     check_reason(quads, subject, &mut violations);
-    check_iri_object_once(
-        quads,
-        subject,
-        IRI_PROV_WAS_ATTRIBUTED_TO,
-        &mut violations,
-    );
+    check_iri_object_once(quads, subject, IRI_PROV_WAS_ATTRIBUTED_TO, &mut violations);
     check_literal_once(quads, subject, IRI_DCTERMS_CREATED, &mut violations);
     violations
 }
@@ -94,6 +89,21 @@ fn check_iri_object_once(
     predicate: &str,
     violations: &mut Vec<WaiverViolation>,
 ) {
+    let count = match count_iri_objects(quads, subject, predicate) {
+        Ok(n) => n,
+        Err(()) => {
+            violations.push(violation(
+                subject,
+                predicate,
+                &format!("{predicate} must be an IRI"),
+            ));
+            return;
+        }
+    };
+    report_count_cardinality(subject, predicate, count, violations);
+}
+
+fn count_iri_objects(quads: &[Quad], subject: &NamedNode, predicate: &str) -> Result<usize, ()> {
     let mut count = 0usize;
     for q in quads {
         if q.predicate.as_str() != predicate {
@@ -103,15 +113,19 @@ fn check_iri_object_once(
             continue;
         }
         if !matches!(&q.object, Term::NamedNode(_)) {
-            violations.push(violation(
-                subject,
-                predicate,
-                &format!("{predicate} must be an IRI"),
-            ));
-            return;
+            return Err(());
         }
         count += 1;
     }
+    Ok(count)
+}
+
+fn report_count_cardinality(
+    subject: &NamedNode,
+    predicate: &str,
+    count: usize,
+    violations: &mut Vec<WaiverViolation>,
+) {
     if count == 0 {
         violations.push(violation(
             subject,
@@ -133,33 +147,7 @@ fn check_literal_once(
     predicate: &str,
     violations: &mut Vec<WaiverViolation>,
 ) {
-    let mut count = 0usize;
-    let mut had_literal = false;
-    for q in quads {
-        if q.predicate.as_str() != predicate {
-            continue;
-        }
-        if !subject_matches(q, subject) {
-            continue;
-        }
-        count += 1;
-        if let Term::Literal(lit) = &q.object {
-            had_literal = true;
-            if lit.value().is_empty() {
-                violations.push(violation(
-                    subject,
-                    predicate,
-                    &format!("{predicate} must be a non-empty literal"),
-                ));
-            }
-        } else {
-            violations.push(violation(
-                subject,
-                predicate,
-                &format!("{predicate} must be a literal"),
-            ));
-        }
-    }
+    let count = inspect_literal_objects(quads, subject, predicate, violations);
     if count == 0 {
         violations.push(violation(
             subject,
@@ -175,7 +163,51 @@ fn check_literal_once(
             &format!("expected exactly one {predicate}, found {count}"),
         ));
     }
-    let _ = had_literal;
+}
+
+fn inspect_literal_objects(
+    quads: &[Quad],
+    subject: &NamedNode,
+    predicate: &str,
+    violations: &mut Vec<WaiverViolation>,
+) -> usize {
+    let mut count = 0usize;
+    for q in quads {
+        if q.predicate.as_str() != predicate {
+            continue;
+        }
+        if !subject_matches(q, subject) {
+            continue;
+        }
+        count += 1;
+        validate_literal_object(subject, predicate, &q.object, violations);
+    }
+    count
+}
+
+fn validate_literal_object(
+    subject: &NamedNode,
+    predicate: &str,
+    object: &Term,
+    violations: &mut Vec<WaiverViolation>,
+) {
+    match object {
+        Term::Literal(lit) if lit.value().is_empty() => {
+            violations.push(violation(
+                subject,
+                predicate,
+                &format!("{predicate} must be a non-empty literal"),
+            ));
+        }
+        Term::Literal(_) => {}
+        _ => {
+            violations.push(violation(
+                subject,
+                predicate,
+                &format!("{predicate} must be a literal"),
+            ));
+        }
+    }
 }
 
 fn check_reason(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<WaiverViolation>) {
@@ -198,7 +230,15 @@ fn check_reason(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<Waiver
             ),
         ));
     }
-    for v in &values {
+    check_reason_min_length(subject, &values, violations);
+}
+
+fn check_reason_min_length(
+    subject: &NamedNode,
+    values: &[String],
+    violations: &mut Vec<WaiverViolation>,
+) {
+    for v in values {
         let non_ws = v.chars().filter(|c| !c.is_whitespace()).count();
         if non_ws < WAIVER_REASON_MIN_LEN {
             violations.push(violation(
@@ -269,9 +309,7 @@ mod tests {
     fn ok_waiver() -> CoverageWaiver {
         CoverageWaiver {
             id: "CW-001".to_string(),
-            waiver_for: NamedNode::new_unchecked(
-                "https://decision-cli.dev/ns/feature/FT-U",
-            ),
+            waiver_for: NamedNode::new_unchecked("https://decision-cli.dev/ns/feature/FT-U"),
             reason: "Doc-only feature; verification is review-based.".to_string(),
             attributed_to: NamedNode::new_unchecked("urn:dec:agent:cli"),
             created: Utc::now(),

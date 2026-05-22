@@ -15,11 +15,13 @@ pub mod io;
 pub mod seed;
 pub mod shacl;
 pub mod types;
+pub mod write;
 
 #[cfg(test)]
 mod tests;
 
-pub use io::{from_turtle, from_turtle_bytes, to_canonical_turtle, EnvIoError};
+pub use io::{from_turtle, from_turtle_bytes, EnvIoError};
 pub use seed::{ephemeral_cli_env, EPHEMERAL_CLI_ENV_FILENAME, EPHEMERAL_CLI_ENV_ID};
 pub use shacl::{validate_quads, EnvShaclError, EnvViolation, REMOTE_ENV_TYPE_PREFIX};
 pub use types::{SafetyClass, VerificationEnvironment};
+pub use write::to_canonical_turtle;

@@ -214,7 +214,10 @@ fn ac1_text_header_renders_in_documented_order() {
     assert!(verifies_at < env_at, "Verifies before Environment");
     assert!(env_at < steps_at, "Environment before Steps:");
     // Environment line carries the safety class.
-    assert!(text.contains("safety: isolated"), "expected safety class: {text}");
+    assert!(
+        text.contains("safety: isolated"),
+        "expected safety class: {text}"
+    );
     // Path footer at the end.
     assert!(text.contains("Path:"), "expected Path footer: {text}");
 }
@@ -260,17 +263,20 @@ fn ac3_step_rows_show_position_kind_and_summary() {
     let text = verify_graph_show::render_text(&resp);
     // shell-command exposes command="..." in the summary line.
     assert!(
-        text.lines().any(|l| l.contains("1. shell-command") && l.contains("command=")),
+        text.lines()
+            .any(|l| l.contains("1. shell-command") && l.contains("command=")),
         "shell-command summary missing: {text}"
     );
     // sparql-assertion exposes query="..." in the summary.
     assert!(
-        text.lines().any(|l| l.contains("2. sparql-assertion") && l.contains("query=")),
+        text.lines()
+            .any(|l| l.contains("2. sparql-assertion") && l.contains("query=")),
         "sparql-assertion summary missing: {text}"
     );
     // file-assertion exposes path="..." in the summary.
     assert!(
-        text.lines().any(|l| l.contains("3. file-assertion") && l.contains("path=")),
+        text.lines()
+            .any(|l| l.contains("3. file-assertion") && l.contains("path=")),
         "file-assertion summary missing: {text}"
     );
 }
@@ -378,8 +384,7 @@ fn ac7_unknown_id_returns_artifact_not_found() {
         other => panic!("expected ArtifactNotFound, got {other:?}"),
     }
     // MCP surface returns the same structured error.
-    let mcp_err = mcp_invoke(tmp.path(), json!({"id": "VG-999"}))
-        .expect_err("mcp must also fail");
+    let mcp_err = mcp_invoke(tmp.path(), json!({"id": "VG-999"})).expect_err("mcp must also fail");
     match mcp_err {
         HandlerError::ArtifactNotFound { kind, id } => {
             assert_eq!(kind, "VerificationGraph");
@@ -468,10 +473,7 @@ fn malformed_id_exits_with_invalid_argument() {
         "malformed id must exit 2, got {output:?}"
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(
-        stderr.contains("id"),
-        "stderr must name id: {stderr}"
-    );
+    assert!(stderr.contains("id"), "stderr must name id: {stderr}");
 }
 
 #[test]
@@ -537,4 +539,3 @@ fn binary_cli_json_format_outputs_object() {
     assert_eq!(v["id"], "VG-001");
     assert!(v["steps"].is_array());
 }
-

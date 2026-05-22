@@ -102,12 +102,11 @@ pub fn handle_pending(
     let groups = pending_groups(store).map_err(FeedbackResumeError::Lookup)?;
     let mut handled: Vec<HandledGroup> = Vec::with_capacity(groups.len());
     for group in groups {
-        let outcome = resume_check(writer, store, &group).map_err(|source| {
-            FeedbackResumeError::Resume {
+        let outcome =
+            resume_check(writer, store, &group).map_err(|source| FeedbackResumeError::Resume {
                 group: group.as_str().to_string(),
                 source,
-            }
-        })?;
+            })?;
         handled.push(HandledGroup { group, outcome });
     }
     Ok(handled)
@@ -121,15 +120,27 @@ pub fn seed_quads() -> Vec<Quad> {
     let subs_graph: GraphName =
         NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_GRAPH_SUBSCRIPTIONS).into();
     let sub = NamedNode::new_unchecked(FEEDBACK_RESUME_SUBSCRIPTION_IRI);
+    let mut quads = seed_type_quads(&sub, &subs_graph);
+    quads.extend(seed_query_quads(&sub, &subs_graph));
+    quads.extend(seed_metadata_quads(sub, &subs_graph));
+    quads
+}
+
+fn seed_type_quads(sub: &NamedNode, subs_graph: &GraphName) -> Vec<Quad> {
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
     let sub_cls = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
+    vec![Quad::new(
+        sub.clone(),
+        rdf_type,
+        sub_cls,
+        subs_graph.clone(),
+    )]
+}
+
+fn seed_query_quads(sub: &NamedNode, subs_graph: &GraphName) -> Vec<Quad> {
     let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
     let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
-    let handler_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_HANDLER);
-    let label_pred =
-        NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
     vec![
-        Quad::new(sub.clone(), rdf_type, sub_cls, subs_graph.clone()),
         Quad::new(
             sub.clone(),
             select_pred,
@@ -142,6 +153,13 @@ pub fn seed_quads() -> Vec<Quad> {
             Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_INLINE),
             subs_graph.clone(),
         ),
+    ]
+}
+
+fn seed_metadata_quads(sub: NamedNode, subs_graph: &GraphName) -> Vec<Quad> {
+    let handler_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_HANDLER);
+    let label_pred = NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
+    vec![
         Quad::new(
             sub.clone(),
             handler_pred,
@@ -154,7 +172,7 @@ pub fn seed_quads() -> Vec<Quad> {
             Literal::new_simple_literal(
                 "feedback resume check (terminal feedback unblocks paused dispatch)",
             ),
-            subs_graph,
+            subs_graph.clone(),
         ),
     ]
 }
@@ -190,9 +208,7 @@ mod tests {
     use super::*;
     use crate::core::dispatch::{pause_on_feedback, DispatchGroup};
     use crate::core::stream_writer::StreamWriter;
-    use crate::core::vocab::{
-        feedback_class, in_stream, lifecycle_state, orchestration_graph,
-    };
+    use crate::core::vocab::{feedback_class, in_stream, lifecycle_state, orchestration_graph};
 
     const STREAM_IRI: &str = "https://decision-cli.dev/stream/test-stream";
     const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -206,8 +222,7 @@ mod tests {
 
     fn seed_feedback(store: &Store, suffix: &str, state: &str) -> NamedNode {
         let g: GraphName = orchestration_graph().into_owned().into();
-        let iri = NamedNode::new(format!("urn:dec:feedback:{suffix}"))
-            .expect("feedback iri");
+        let iri = NamedNode::new(format!("urn:dec:feedback:{suffix}")).expect("feedback iri");
         store
             .transaction(|mut tx| {
                 tx.insert(
@@ -279,12 +294,10 @@ mod tests {
         suffix: &str,
         fb: &NamedNode,
     ) -> NamedNode {
-        let group_iri =
-            NamedNode::new(format!("urn:dec:group:{suffix}")).expect("group iri");
-        let action_iri = NamedNode::new(format!("urn:dec:session/action/{suffix}"))
-            .expect("action iri");
-        DispatchGroup::mint(writer, group_iri.clone(), action_iri, "FT-032")
-            .expect("mint");
+        let group_iri = NamedNode::new(format!("urn:dec:group:{suffix}")).expect("group iri");
+        let action_iri =
+            NamedNode::new(format!("urn:dec:session/action/{suffix}")).expect("action iri");
+        DispatchGroup::mint(writer, group_iri.clone(), action_iri, "FT-032").expect("mint");
         pause_on_feedback(writer, store, &group_iri, &[fb.clone()]).expect("pause");
         group_iri
     }

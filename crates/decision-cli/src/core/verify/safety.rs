@@ -315,4 +315,3 @@ fn missing_ops(required: &[&str], allowed: &[String]) -> Vec<String> {
 pub fn violation_step_iri(v: &SafetyViolation) -> StepIri {
     oxigraph::model::NamedNode::new_unchecked(v.step_id.clone())
 }
-

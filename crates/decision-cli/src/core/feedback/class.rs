@@ -160,8 +160,14 @@ mod tests {
 
     #[test]
     fn all_six_iri_values_are_present() {
-        let expected = ["gap", "contradiction", "unimplementable",
-                        "scope-issue", "defect", "capability-request"];
+        let expected = [
+            "gap",
+            "contradiction",
+            "unimplementable",
+            "scope-issue",
+            "defect",
+            "capability-request",
+        ];
         let actual: Vec<&'static str> = FeedbackClass::all()
             .iter()
             .map(|c| c.as_iri_value())
@@ -186,9 +192,18 @@ mod tests {
     #[test]
     fn default_target_role_matches_adr_026() {
         assert_eq!(FeedbackClass::Gap.default_target_role(), "spec-author");
-        assert_eq!(FeedbackClass::Contradiction.default_target_role(), "architect");
-        assert_eq!(FeedbackClass::Unimplementable.default_target_role(), "spec-author");
-        assert_eq!(FeedbackClass::ScopeIssue.default_target_role(), "slice-curator");
+        assert_eq!(
+            FeedbackClass::Contradiction.default_target_role(),
+            "architect"
+        );
+        assert_eq!(
+            FeedbackClass::Unimplementable.default_target_role(),
+            "spec-author"
+        );
+        assert_eq!(
+            FeedbackClass::ScopeIssue.default_target_role(),
+            "slice-curator"
+        );
         assert_eq!(FeedbackClass::Defect.default_target_role(), "verifier");
         assert_eq!(
             FeedbackClass::CapabilityRequest.default_target_role(),

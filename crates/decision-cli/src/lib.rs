@@ -36,8 +36,9 @@ pub use features::verify_graph_show;
 pub use features::verify_step_add;
 
 // Stable type re-exports for slice 1 callers.
-pub use crate::core::{ActiveScope, OntologyError, OntologyHandle, ScopeError, StreamWriter,
-                      ONTOLOGY_VERSION};
+pub use crate::core::{
+    ActiveScope, OntologyError, OntologyHandle, ScopeError, StreamWriter, ONTOLOGY_VERSION,
+};
 pub use features::finalize::{finalize_run, FinalizeError, FinalizeInput, FinalizeOutcome};
 pub use features::health::{check as health_check, HealthReport};
 pub use features::implement::{ImplementArgs, ImplementOutcome};

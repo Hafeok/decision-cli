@@ -145,9 +145,8 @@ fn load_authority_for_role(store: &Store, role_iri: &str) -> Result<Option<Autho
         role = role_iri,
         pred = AUTHORITY_PRED_IRI,
     );
-    let QueryResults::Solutions(mut sols) = store
-        .query(q.as_str())
-        .context("authority link lookup")?
+    let QueryResults::Solutions(mut sols) =
+        store.query(q.as_str()).context("authority link lookup")?
     else {
         return Ok(None);
     };
@@ -189,8 +188,7 @@ fn collect_input_types(store: &Store, role_iri: &str) -> Result<Vec<String>> {
         role = role_iri,
     );
     let mut out: Vec<String> = Vec::new();
-    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("input-type query")?
-    else {
+    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("input-type query")? else {
         return Ok(out);
     };
     for sol in sols {

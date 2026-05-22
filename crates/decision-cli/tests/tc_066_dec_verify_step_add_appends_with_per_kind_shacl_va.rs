@@ -163,7 +163,11 @@ fn append_shell_command_writes_step_at_position_1() {
     )
     .expect("step add must succeed");
     assert_eq!(out.position, 1, "first step at 1-based position 1");
-    assert!(out.step_id.contains("step/VG-001/0"), "step IRI: {}", out.step_id);
+    assert!(
+        out.step_id.contains("step/VG-001/0"),
+        "step IRI: {}",
+        out.step_id
+    );
     assert!(out.graph_path.exists());
     let ttl = std::fs::read_to_string(&out.graph_path).expect("read");
     assert!(
@@ -404,8 +408,12 @@ fn cli_and_mcp_produce_structurally_identical_graphs() {
         }),
     )
     .expect("mcp ok");
-    let cli_ttl = cli_tmp.path().join(format!(".dec/verify/graph/{vg_cli}.ttl"));
-    let mcp_ttl = mcp_tmp.path().join(format!(".dec/verify/graph/{vg_mcp}.ttl"));
+    let cli_ttl = cli_tmp
+        .path()
+        .join(format!(".dec/verify/graph/{vg_cli}.ttl"));
+    let mcp_ttl = mcp_tmp
+        .path()
+        .join(format!(".dec/verify/graph/{vg_mcp}.ttl"));
     let cli_graph = from_turtle(&cli_ttl).expect("cli parse");
     let mcp_graph = from_turtle(&mcp_ttl).expect("mcp parse");
     assert_eq!(

@@ -126,9 +126,7 @@ pub(super) fn mint_actor_iri(identity: &str, feedback_iri: &str) -> NamedNode {
     let safe = safe.trim_matches('-');
     let safe_label = if safe.is_empty() { "anonymous" } else { safe };
     let hash = actor_hash(feedback_iri);
-    let iri = format!(
-        "https://decision-cli.dev/ns/session/human-close-{ts}-{safe_label}-{hash}"
-    );
+    let iri = format!("https://decision-cli.dev/ns/session/human-close-{ts}-{safe_label}-{hash}");
     // Construction is deterministic ASCII alphanumerics + `-`, so the
     // IRI is always valid; `new_unchecked` is the right call here.
     NamedNode::new_unchecked(iri)

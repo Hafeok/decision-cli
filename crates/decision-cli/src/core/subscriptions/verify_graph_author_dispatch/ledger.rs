@@ -87,10 +87,7 @@ pub fn get_entry(
     env: &str,
 ) -> Result<Option<LedgerEntry>, LedgerError> {
     let iri = entry_iri(feature, env);
-    let mut feature_lit = String::new();
-    let mut env_lit = String::new();
-    let mut ts_lit = String::new();
-    let mut found = false;
+    let mut accumulator = LedgerAccumulator::default();
     for q in store
         .quads_for_pattern(
             Some(Subject::NamedNode(iri.clone()).as_ref()),
@@ -102,29 +99,47 @@ pub fn get_entry(
         )
         .filter_map(Result::ok)
     {
-        found = true;
+        accumulator.absorb(&q);
+    }
+    Ok(accumulator.into_entry(iri))
+}
+
+#[derive(Default)]
+struct LedgerAccumulator {
+    feature: String,
+    env: String,
+    last_dispatch_at: String,
+    found: bool,
+}
+
+impl LedgerAccumulator {
+    fn absorb(&mut self, q: &Quad) {
+        self.found = true;
         match q.predicate.as_str() {
             crate::core::vocab::IRI_DEC_LEDGER_FEATURE => {
-                feature_lit = term_literal(&q.object);
+                self.feature = term_literal(&q.object);
             }
             crate::core::vocab::IRI_DEC_LEDGER_ENVIRONMENT => {
-                env_lit = term_literal(&q.object);
+                self.env = term_literal(&q.object);
             }
             crate::core::vocab::IRI_DEC_LAST_DISPATCH_AT => {
-                ts_lit = term_literal(&q.object);
+                self.last_dispatch_at = term_literal(&q.object);
             }
             _ => {}
         }
     }
-    if !found {
-        return Ok(None);
+
+    fn into_entry(self, iri: NamedNode) -> Option<LedgerEntry> {
+        if !self.found {
+            return None;
+        }
+        Some(LedgerEntry {
+            iri,
+            feature: self.feature,
+            env: self.env,
+            last_dispatch_at: self.last_dispatch_at,
+        })
     }
-    Ok(Some(LedgerEntry {
-        iri,
-        feature: feature_lit,
-        env: env_lit,
-        last_dispatch_at: ts_lit,
-    }))
 }
 
 /// Record (or refresh) a dispatch in the ledger. Atomically removes any
@@ -137,11 +152,29 @@ pub fn record_dispatch(
     env: &str,
     now_rfc3339: &str,
 ) -> Result<LedgerEntry, LedgerError> {
-    // 1. Drop any existing row directly from the store. We bypass the
-    //    StreamWriter for removal because the writer is insert-only; the
-    //    ledger is a "current snapshot" structure rather than an
-    //    append-only log.
     let prior_iri = entry_iri(feature, env);
+    remove_prior_entry(store, &prior_iri)?;
+    let entry = LedgerEntry {
+        iri: prior_iri,
+        feature: feature.to_string(),
+        env: env.to_string(),
+        last_dispatch_at: now_rfc3339.to_string(),
+    };
+    let quads = entry_quads(&entry);
+    let mutation = Mutation::insert(quads.iter().cloned()).with_cause(format!(
+        "FT-050 record auto-dispatch ledger ({feature}/{env})"
+    ));
+    writer
+        .commit(mutation)
+        .map_err(|e| LedgerError::Commit(format!("{e:#}")))?;
+    Ok(entry)
+}
+
+// Drop any existing row directly from the store. We bypass the
+// StreamWriter for removal because the writer is insert-only; the
+// ledger is a "current snapshot" structure rather than an
+// append-only log.
+fn remove_prior_entry(store: &Store, prior_iri: &NamedNode) -> Result<(), LedgerError> {
     let to_remove: Vec<Quad> = store
         .quads_for_pattern(
             Some(Subject::NamedNode(prior_iri.clone()).as_ref()),
@@ -158,21 +191,7 @@ pub fn record_dispatch(
             .remove(q.as_ref())
             .map_err(|e| LedgerError::Commit(format!("removing prior ledger row: {e}")))?;
     }
-
-    // 2. Insert the fresh row through the StreamWriter chokepoint.
-    let entry = LedgerEntry {
-        iri: prior_iri.clone(),
-        feature: feature.to_string(),
-        env: env.to_string(),
-        last_dispatch_at: now_rfc3339.to_string(),
-    };
-    let quads = entry_quads(&entry);
-    let mutation = Mutation::insert(quads.iter().cloned())
-        .with_cause(format!("FT-050 record auto-dispatch ledger ({feature}/{env})"));
-    writer
-        .commit(mutation)
-        .map_err(|e| LedgerError::Commit(format!("{e:#}")))?;
-    Ok(entry)
+    Ok(())
 }
 
 /// Returns `true` iff `(feature, env)` was dispatched within the last
@@ -245,9 +264,7 @@ pub fn debug_set_timestamp(
 /// Deterministic IRI for a `(feature, env)` ledger row.
 #[must_use]
 pub fn entry_iri(feature: &str, env: &str) -> NamedNode {
-    NamedNode::new_unchecked(format!(
-        "urn:dec:auto-dispatch-ledger:{feature}:{env}"
-    ))
+    NamedNode::new_unchecked(format!("urn:dec:auto-dispatch-ledger:{feature}:{env}"))
 }
 
 fn entry_quads(entry: &LedgerEntry) -> Vec<Quad> {

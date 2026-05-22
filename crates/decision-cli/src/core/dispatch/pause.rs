@@ -143,10 +143,7 @@ pub fn pause_on_feedback(
     Ok(group.status)
 }
 
-fn load_pausable_group(
-    store: &Store,
-    group_iri: &NamedNode,
-) -> Result<DispatchGroup, PauseError> {
+fn load_pausable_group(store: &Store, group_iri: &NamedNode) -> Result<DispatchGroup, PauseError> {
     let group = DispatchGroup::read(store, group_iri)
         .map_err(|e| PauseError::Commit(format!("read group: {e:#}")))?
         .ok_or_else(|| PauseError::Commit(format!("no DispatchGroup at <{group_iri}>")))?;
@@ -223,13 +220,11 @@ pub fn resume_check(
     let mut group = DispatchGroup::read(store, group_iri)
         .map_err(|e| ResumeError::Commit(format!("read group: {e:#}")))?
         .ok_or_else(|| ResumeError::GroupMissing(group_iri.as_str().to_string()))?;
-
     if group.status != DispatchStatus::PausedForFeedback {
         return Ok(ResumeOutcome::NotPaused {
             current: group.status,
         });
     }
-
     let blocked_by = list_blocked_by(store, group_iri)
         .map_err(|e| ResumeError::Commit(format!("list dec:blockedBy: {e}")))?;
     if blocked_by.is_empty() {
@@ -238,22 +233,15 @@ pub fn resume_check(
         // time, so this branch is defensive only.
         return Ok(ResumeOutcome::StillBlocked { pending: 0 });
     }
+    apply_resume_decision(writer, &mut group, &blocked_by)
+}
 
-    let mut pending = 0usize;
-    let mut any_rejected = false;
-    for entry in &blocked_by {
-        match entry.state {
-            Some(LifecycleState::Rejected) => any_rejected = true,
-            Some(LifecycleState::Addressed) | Some(LifecycleState::Closed) => {}
-            // Superseded ⇒ the feedback was rolled forward into another
-            // emission. Treat as "no longer gating" so the dispatch can
-            // resume on the successor's terminal state. Same shape as
-            // addressed.
-            Some(LifecycleState::Superseded) => {}
-            Some(_) | None => pending += 1,
-        }
-    }
-
+fn apply_resume_decision(
+    writer: &StreamWriter,
+    group: &mut DispatchGroup,
+    blocked_by: &[BlockedByEntry],
+) -> Result<ResumeOutcome, ResumeError> {
+    let (pending, any_rejected) = summarise_blocked_by(blocked_by);
     if any_rejected {
         group
             .transition(writer, DispatchEvent::BlockingFeedbackRejected)
@@ -269,6 +257,23 @@ pub fn resume_check(
     Ok(ResumeOutcome::Resumed)
 }
 
+/// Returns `(pending_count, any_rejected)`. Superseded ⇒ rolled forward,
+/// treated as "no longer gating" (same shape as addressed).
+fn summarise_blocked_by(blocked_by: &[BlockedByEntry]) -> (usize, bool) {
+    let mut pending = 0usize;
+    let mut any_rejected = false;
+    for entry in blocked_by {
+        match entry.state {
+            Some(LifecycleState::Rejected) => any_rejected = true,
+            Some(LifecycleState::Addressed)
+            | Some(LifecycleState::Closed)
+            | Some(LifecycleState::Superseded) => {}
+            Some(_) | None => pending += 1,
+        }
+    }
+    (pending, any_rejected)
+}
+
 fn map_group_error(e: super::group::GroupError) -> ResumeError {
     match e {
         super::group::GroupError::Lifecycle(le) => ResumeError::Lifecycle(le),
@@ -282,6 +287,19 @@ pub fn list_blocked_by(
     store: &Store,
     group_iri: &NamedNode,
 ) -> Result<Vec<BlockedByEntry>, String> {
+    let feedback_iris = collect_blocked_by_iris(store, group_iri);
+    let mut out: Vec<BlockedByEntry> = Vec::with_capacity(feedback_iris.len());
+    for fb in feedback_iris {
+        let state = read_lifecycle_state(store, &fb);
+        out.push(BlockedByEntry {
+            feedback: fb,
+            state,
+        });
+    }
+    Ok(out)
+}
+
+fn collect_blocked_by_iris(store: &Store, group_iri: &NamedNode) -> Vec<NamedNode> {
     let mut feedback_iris: Vec<NamedNode> = Vec::new();
     let mut seen: BTreeSet<String> = BTreeSet::new();
     for q in store
@@ -303,15 +321,7 @@ pub fn list_blocked_by(
             }
         }
     }
-    let mut out: Vec<BlockedByEntry> = Vec::with_capacity(feedback_iris.len());
-    for fb in feedback_iris {
-        let state = read_lifecycle_state(store, &fb);
-        out.push(BlockedByEntry {
-            feedback: fb,
-            state,
-        });
-    }
-    Ok(out)
+    feedback_iris
 }
 
 fn read_lifecycle_state(store: &Store, feedback_iri: &NamedNode) -> Option<LifecycleState> {
@@ -342,19 +352,7 @@ pub fn list_paused_groups_for_feedback(
     store: &Store,
     feedback_iri: &NamedNode,
 ) -> Result<Vec<NamedNode>, String> {
-    let q = format!(
-        "PREFIX dec: <https://decision-cli.dev/ns#> \
-         SELECT DISTINCT ?group WHERE {{ \
-           {{ ?group a dec:DispatchGroup ; \
-                    dec:dispatchStatus \"paused-for-feedback\" ; \
-                    dec:blockedBy <{fb}> . }} \
-           UNION \
-           {{ GRAPH ?g {{ ?group a dec:DispatchGroup ; \
-                                 dec:dispatchStatus \"paused-for-feedback\" ; \
-                                 dec:blockedBy <{fb}> . }} }} \
-         }}",
-        fb = feedback_iri.as_str()
-    );
+    let q = build_paused_groups_query(feedback_iri);
     let solutions = match store
         .query(q.as_str())
         .map_err(|e| format!("running resume-check query: {e}"))?
@@ -373,6 +371,22 @@ pub fn list_paused_groups_for_feedback(
         }
     }
     Ok(out)
+}
+
+fn build_paused_groups_query(feedback_iri: &NamedNode) -> String {
+    format!(
+        "PREFIX dec: <https://decision-cli.dev/ns#> \
+         SELECT DISTINCT ?group WHERE {{ \
+           {{ ?group a dec:DispatchGroup ; \
+                    dec:dispatchStatus \"paused-for-feedback\" ; \
+                    dec:blockedBy <{fb}> . }} \
+           UNION \
+           {{ GRAPH ?g {{ ?group a dec:DispatchGroup ; \
+                                 dec:dispatchStatus \"paused-for-feedback\" ; \
+                                 dec:blockedBy <{fb}> . }} }} \
+         }}",
+        fb = feedback_iri.as_str()
+    )
 }
 
 // Tests live in `pause_tests.rs` so this file stays under ADR-013

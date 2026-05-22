@@ -100,7 +100,8 @@ const CLOSED_RULES: &[CompanionRule] = &[
     },
     CompanionRule {
         predicate: IRI_DEC_ADDRESSING_ARTIFACT,
-        detail: "closed state requires dec:addressingArtifact (PROV-O link to the addressing artifact)",
+        detail:
+            "closed state requires dec:addressingArtifact (PROV-O link to the addressing artifact)",
         is_iri: true,
     },
 ];

@@ -13,11 +13,10 @@ use thiserror::Error;
 
 use crate::core::vocab::{
     IRI_DEC_BIND_AS, IRI_DEC_COMMAND, IRI_DEC_CONDITION, IRI_DEC_ENVIRONMENT, IRI_DEC_METHOD,
-    IRI_DEC_PATH, IRI_DEC_QUERY, IRI_DEC_STEPS, IRI_DEC_STEP_TYPE, IRI_DEC_TARGET,
-    IRI_DEC_TIMEOUT, IRI_DEC_URL, IRI_DEC_VERIFICATION_GRAPH, IRI_DEC_VERIFICATION_STEP,
-    IRI_DEC_VERIFIES, SEED_STEP_KINDS, STEP_KIND_CAPTURE, STEP_KIND_FILE_ASSERTION,
-    STEP_KIND_HTTP_REQUEST, STEP_KIND_SHELL_COMMAND, STEP_KIND_SPARQL_ASSERTION,
-    STEP_KIND_WAIT_FOR,
+    IRI_DEC_PATH, IRI_DEC_QUERY, IRI_DEC_STEPS, IRI_DEC_STEP_TYPE, IRI_DEC_TARGET, IRI_DEC_TIMEOUT,
+    IRI_DEC_URL, IRI_DEC_VERIFICATION_GRAPH, IRI_DEC_VERIFICATION_STEP, IRI_DEC_VERIFIES,
+    SEED_STEP_KINDS, STEP_KIND_CAPTURE, STEP_KIND_FILE_ASSERTION, STEP_KIND_HTTP_REQUEST,
+    STEP_KIND_SHELL_COMMAND, STEP_KIND_SPARQL_ASSERTION, STEP_KIND_WAIT_FOR,
 };
 
 use super::types::RDF_TYPE;
@@ -139,13 +138,33 @@ fn check_steps_present(quads: &[Quad], subject: &NamedNode, violations: &mut Vec
 fn validate_step_subject(quads: &[Quad], subject: &NamedNode) -> Vec<GraphViolation> {
     let mut violations = Vec::new();
     let step_types = literal_values(quads, subject, IRI_DEC_STEP_TYPE);
+    let Some(kind) = check_step_type_cardinality(subject, &step_types, &mut violations) else {
+        return violations;
+    };
+    if !SEED_STEP_KINDS.contains(&kind.as_str()) {
+        violations.push(violation(
+            subject,
+            IRI_DEC_STEP_TYPE,
+            &format!("dec:stepType must be one of {SEED_STEP_KINDS:?}; got {kind:?}"),
+        ));
+        return violations;
+    }
+    violations.extend(validate_kind_specific(quads, subject, &kind));
+    violations
+}
+
+fn check_step_type_cardinality(
+    subject: &NamedNode,
+    step_types: &[String],
+    violations: &mut Vec<GraphViolation>,
+) -> Option<String> {
     if step_types.is_empty() {
         violations.push(violation(
             subject,
             IRI_DEC_STEP_TYPE,
             "missing required dec:stepType (sh:minCount 1)",
         ));
-        return violations;
+        return None;
     }
     if step_types.len() > 1 {
         violations.push(violation(
@@ -157,26 +176,10 @@ fn validate_step_subject(quads: &[Quad], subject: &NamedNode) -> Vec<GraphViolat
             ),
         ));
     }
-    let kind = &step_types[0];
-    if !SEED_STEP_KINDS.contains(&kind.as_str()) {
-        violations.push(violation(
-            subject,
-            IRI_DEC_STEP_TYPE,
-            &format!(
-                "dec:stepType must be one of {SEED_STEP_KINDS:?}; got {kind:?}",
-            ),
-        ));
-        return violations;
-    }
-    violations.extend(validate_kind_specific(quads, subject, kind));
-    violations
+    Some(step_types[0].clone())
 }
 
-fn validate_kind_specific(
-    quads: &[Quad],
-    subject: &NamedNode,
-    kind: &str,
-) -> Vec<GraphViolation> {
+fn validate_kind_specific(quads: &[Quad], subject: &NamedNode, kind: &str) -> Vec<GraphViolation> {
     let mut out = Vec::new();
     match kind {
         STEP_KIND_SHELL_COMMAND => {
@@ -227,22 +230,7 @@ fn check_single_iri(
     predicate: &str,
     violations: &mut Vec<GraphViolation>,
 ) {
-    let values: Vec<NamedNode> = quads
-        .iter()
-        .filter_map(|q| {
-            if q.predicate.as_str() != predicate {
-                return None;
-            }
-            if !subject_matches(q, subject) {
-                return None;
-            }
-            if let Term::NamedNode(n) = &q.object {
-                Some(n.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
+    let values = collect_iri_values(quads, subject, predicate);
     if values.is_empty() {
         violations.push(violation(
             subject,
@@ -257,6 +245,25 @@ fn check_single_iri(
             &format!("expected exactly one {predicate}, found {}", values.len()),
         ));
     }
+}
+
+fn collect_iri_values(quads: &[Quad], subject: &NamedNode, predicate: &str) -> Vec<NamedNode> {
+    quads
+        .iter()
+        .filter_map(|q| {
+            if q.predicate.as_str() != predicate {
+                return None;
+            }
+            if !subject_matches(q, subject) {
+                return None;
+            }
+            if let Term::NamedNode(n) = &q.object {
+                Some(n.clone())
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn has_predicate(quads: &[Quad], subject: &NamedNode, predicate: &str) -> bool {

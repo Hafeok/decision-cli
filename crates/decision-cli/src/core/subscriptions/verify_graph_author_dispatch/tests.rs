@@ -98,7 +98,10 @@ fn dispatch_event_carries_required_predicates() {
         )
         .filter_map(Result::ok)
         .count();
-    assert!(typed > 0, "event must be typed as dec:VerifyGraphAuthorDispatchEvent");
+    assert!(
+        typed > 0,
+        "event must be typed as dec:VerifyGraphAuthorDispatchEvent"
+    );
 
     // ADR-005: dec:inStream must be present (event is a scoped class).
     let stream_iri = NamedNode::new(STREAM_IRI).expect("stream iri");
@@ -128,9 +131,12 @@ fn dedup_ttl_suppresses_repeat_emissions_within_window() {
     assert_eq!(first.feature, "FT-K");
 
     // Within the TTL — second emission must be suppressed.
-    let second = emit_dispatch_event(&w, &store, &s, &cfg, "2026-05-21T10:15:00Z")
-        .expect("emit ok");
-    assert!(second.is_none(), "second emission within TTL must be suppressed");
+    let second =
+        emit_dispatch_event(&w, &store, &s, &cfg, "2026-05-21T10:15:00Z").expect("emit ok");
+    assert!(
+        second.is_none(),
+        "second emission within TTL must be suppressed"
+    );
 }
 
 #[test]
@@ -144,8 +150,8 @@ fn dedup_ttl_zero_disables_dedup() {
         .expect("first emission");
     assert_eq!(first.feature, "FT-Z");
 
-    let second = emit_dispatch_event(&w, &store, &s, &cfg, "2026-05-21T10:00:01Z")
-        .expect("emit ok");
+    let second =
+        emit_dispatch_event(&w, &store, &s, &cfg, "2026-05-21T10:00:01Z").expect("emit ok");
     assert!(second.is_some(), "ttl=0 must let repeat emissions through");
 }
 
@@ -181,10 +187,13 @@ fn aged_ledger_allows_fresh_dispatch() {
 
     let now = Utc.with_ymd_and_hms(2026, 5, 21, 10, 0, 0).unwrap();
     let within = within_dedup_window(&store, "FT-M", "ENV-1", &cfg, now).expect("ttl query");
-    assert!(!within, "aged ledger entry must fall outside the TTL window");
+    assert!(
+        !within,
+        "aged ledger entry must fall outside the TTL window"
+    );
 
-    let second = emit_dispatch_event(&w, &store, &s, &cfg, "2026-05-21T10:00:00Z")
-        .expect("emit ok");
+    let second =
+        emit_dispatch_event(&w, &store, &s, &cfg, "2026-05-21T10:00:00Z").expect("emit ok");
     assert!(second.is_some(), "aged ledger must allow a fresh dispatch");
 }
 
@@ -286,7 +295,10 @@ fn ledger_graph_iri_constant_stable() {
 fn unemitted_pair_has_no_ledger_row() {
     let (store, _w) = writer();
     let entry = ledger::get_entry(&store, "FT-NOT-EMITTED", "ENV-1").expect("query");
-    assert!(entry.is_none(), "ledger row should not exist before emission");
+    assert!(
+        entry.is_none(),
+        "ledger row should not exist before emission"
+    );
 }
 
 // Quick smoke that emit + dedup persistence is consistent under multiple
@@ -364,7 +376,10 @@ fn ledger_record_updates_existing_row() {
         )
         .filter_map(Result::ok)
         .count();
-    assert_eq!(count, 1, "ledger row must keep exactly one last_dispatch_at");
+    assert_eq!(
+        count, 1,
+        "ledger row must keep exactly one last_dispatch_at"
+    );
 }
 
 // Validate the proposal document survives a JSON round-trip.

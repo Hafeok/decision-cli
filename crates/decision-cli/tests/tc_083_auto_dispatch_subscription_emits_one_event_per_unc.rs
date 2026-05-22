@@ -150,7 +150,8 @@ fn tc_083_auto_dispatch_subscription_emits_one_event_per_unc() {
 
     // AC #4 + #5: events only fire for configured envs. We never emitted
     // for a third env, so no other env appears.
-    let envs: std::collections::BTreeSet<&str> = payloads.iter().map(|(_, e, _, _)| e.as_str()).collect();
+    let envs: std::collections::BTreeSet<&str> =
+        payloads.iter().map(|(_, e, _, _)| e.as_str()).collect();
     assert_eq!(envs, ["ENV-1", "ENV-2"].iter().copied().collect());
 
     // Confirm a third env in the "catalog" (not in cfg.envs) yields no

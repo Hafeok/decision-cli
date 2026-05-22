@@ -64,29 +64,54 @@ pub(super) fn run_coverage_query(
     }
     let considered_set: BTreeSet<&str> = considered.iter().map(String::as_str).collect();
     let tcs_set: BTreeSet<&str> = tcs.iter().map(String::as_str).collect();
+    let mut hits = collect_coverage_hits(store, &considered_set, &tcs_set)?;
+    sort_and_dedup_hits(&mut hits);
+    Ok(hits)
+}
 
+fn collect_coverage_hits(
+    store: &Store,
+    considered_set: &BTreeSet<&str>,
+    tcs_set: &BTreeSet<&str>,
+) -> Result<Vec<CoverageHit>, CoverageError> {
     let mut hits: Vec<CoverageHit> = Vec::new();
     if let QueryResults::Solutions(sols) = store.query(COVERAGE).map_err(map_query_err)? {
         for sol in sols {
             let sol = sol.map_err(map_query_err)?;
-            let Some(graph) = named_string(sol.get("graph")) else { continue };
-            if !considered_set.contains(graph.as_str()) {
-                continue;
+            if let Some(hit) = coverage_hit_from_solution(&sol, considered_set, tcs_set) {
+                hits.push(hit);
             }
-            let Some(tc) = named_string(sol.get("tc")) else { continue };
-            if !tcs_set.contains(tc.as_str()) {
-                continue;
-            }
-            let Some(step) = named_string(sol.get("step")) else { continue };
-            hits.push(CoverageHit { tc, graph, step });
         }
     }
+    Ok(hits)
+}
+
+fn coverage_hit_from_solution(
+    sol: &oxigraph::sparql::QuerySolution,
+    considered_set: &BTreeSet<&str>,
+    tcs_set: &BTreeSet<&str>,
+) -> Option<CoverageHit> {
+    let graph = named_string(sol.get("graph"))?;
+    if !considered_set.contains(graph.as_str()) {
+        return None;
+    }
+    let tc = named_string(sol.get("tc"))?;
+    if !tcs_set.contains(tc.as_str()) {
+        return None;
+    }
+    let step = named_string(sol.get("step"))?;
+    Some(CoverageHit { tc, graph, step })
+}
+
+fn sort_and_dedup_hits(hits: &mut Vec<CoverageHit>) {
     hits.sort_by(|a, b| {
-        (a.tc.as_str(), a.graph.as_str(), a.step.as_str())
-            .cmp(&(b.tc.as_str(), b.graph.as_str(), b.step.as_str()))
+        (a.tc.as_str(), a.graph.as_str(), a.step.as_str()).cmp(&(
+            b.tc.as_str(),
+            b.graph.as_str(),
+            b.step.as_str(),
+        ))
     });
     hits.dedup();
-    Ok(hits)
 }
 
 fn named_string(term: Option<&Term>) -> Option<String> {

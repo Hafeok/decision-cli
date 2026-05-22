@@ -24,7 +24,20 @@ pub(super) fn graphs_in_env(
     store: &Store,
     env_iri: &str,
 ) -> Result<Vec<(String, String)>, MatchError> {
-    let q = format!(
+    let q = build_graphs_query(env_iri);
+    let mut rows = collect_graph_rows(store, &q)?;
+    // Stable sort by numeric suffix so equal-cover singles + greedy
+    // tiebreaks resolve deterministically.
+    rows.sort_by(|a, b| {
+        greedy::numeric_suffix_key(short_id_of(&a.0))
+            .cmp(&greedy::numeric_suffix_key(short_id_of(&b.0)))
+    });
+    rows.dedup();
+    Ok(rows)
+}
+
+fn build_graphs_query(env_iri: &str) -> String {
+    format!(
         "PREFIX dec: <https://decision-cli.dev/ns#>\n\
          SELECT ?graph ?verifies WHERE {{\n  \
          GRAPH <{graph}> {{\n    \
@@ -34,27 +47,24 @@ pub(super) fn graphs_in_env(
          }}\n}}\n",
         graph = IRI_DEC_GRAPH_VERIFY_GRAPH,
         env = env_iri,
-    );
+    )
+}
+
+fn collect_graph_rows(store: &Store, query: &str) -> Result<Vec<(String, String)>, MatchError> {
     let mut rows: Vec<(String, String)> = Vec::new();
-    if let QueryResults::Solutions(sols) = store.query(q.as_str()).map_err(map_err)? {
-        for sol in sols {
-            let sol = sol.map_err(map_err)?;
-            let Some(graph) = named_string(sol.get("graph")) else {
-                continue;
-            };
-            let Some(verifies) = named_string(sol.get("verifies")) else {
-                continue;
-            };
-            rows.push((graph, verifies));
-        }
+    let QueryResults::Solutions(sols) = store.query(query).map_err(map_err)? else {
+        return Ok(rows);
+    };
+    for sol in sols {
+        let sol = sol.map_err(map_err)?;
+        let Some(graph) = named_string(sol.get("graph")) else {
+            continue;
+        };
+        let Some(verifies) = named_string(sol.get("verifies")) else {
+            continue;
+        };
+        rows.push((graph, verifies));
     }
-    // Stable sort by numeric suffix so equal-cover singles + greedy
-    // tiebreaks resolve deterministically.
-    rows.sort_by(|a, b| {
-        greedy::numeric_suffix_key(short_id_of(&a.0))
-            .cmp(&greedy::numeric_suffix_key(short_id_of(&b.0)))
-    });
-    rows.dedup();
     Ok(rows)
 }
 

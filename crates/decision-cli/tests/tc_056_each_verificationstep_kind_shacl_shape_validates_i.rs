@@ -10,11 +10,13 @@
 
 use std::sync::Arc;
 
+use decision_cli::core::ontology::verification_graph::io::{
+    from_turtle_bytes, to_canonical_turtle,
+};
+use decision_cli::core::ontology::verification_graph::shacl::validate_quads as validate_graph_shacl;
 use decision_cli::core::ontology::verification_graph::{
     step_iri_for, ArtifactRef, StepFields, StepKind, VerificationGraph, VerificationStep,
 };
-use decision_cli::core::ontology::verification_graph::shacl::validate_quads as validate_graph_shacl;
-use decision_cli::core::ontology::verification_graph::io::{from_turtle_bytes, to_canonical_turtle};
 use decision_cli::vocab::{verify_graph_named_graph, IRI_DEC_COMMAND};
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
@@ -285,10 +287,7 @@ fn unknown_step_type_is_rejected_at_parse_time() {
         },
     );
     let g = graph_with(good_step);
-    let ttl = to_canonical_turtle(&g).replace(
-        "\"shell-command\"",
-        "\"rocketship\"",
-    );
+    let ttl = to_canonical_turtle(&g).replace("\"shell-command\"", "\"rocketship\"");
     let err = from_turtle_bytes(std::path::Path::new("test.ttl"), ttl.as_bytes())
         .expect_err("unknown stepType must surface UnknownStepKind");
     match err {

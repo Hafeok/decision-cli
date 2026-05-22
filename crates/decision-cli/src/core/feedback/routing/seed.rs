@@ -18,38 +18,58 @@ pub fn seed_quads() -> Vec<Quad> {
     let subs_graph: GraphName =
         NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_GRAPH_SUBSCRIPTIONS).into();
     let sub = NamedNode::new_unchecked(FEEDBACK_ROUTING_SUBSCRIPTION_IRI);
+    vec![
+        type_quad(&sub, &subs_graph),
+        select_quad(&sub, &subs_graph),
+        mode_quad(&sub, &subs_graph),
+        handler_quad(&sub, &subs_graph),
+        label_quad(sub, subs_graph),
+    ]
+}
+
+fn type_quad(sub: &NamedNode, subs_graph: &GraphName) -> Quad {
     let rdf_type =
         NamedNodeRef::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").into_owned();
     let sub_cls = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUBSCRIPTION);
+    Quad::new(sub.clone(), rdf_type, sub_cls, subs_graph.clone())
+}
+
+fn select_quad(sub: &NamedNode, subs_graph: &GraphName) -> Quad {
     let select_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_SELECT_QUERY);
+    Quad::new(
+        sub.clone(),
+        select_pred,
+        Literal::new_simple_literal(PENDING_FEEDBACK_QUERY),
+        subs_graph.clone(),
+    )
+}
+
+fn mode_quad(sub: &NamedNode, subs_graph: &GraphName) -> Quad {
     let mode_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_MODE);
+    Quad::new(
+        sub.clone(),
+        mode_pred,
+        Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_INLINE),
+        subs_graph.clone(),
+    )
+}
+
+fn handler_quad(sub: &NamedNode, subs_graph: &GraphName) -> Quad {
     let handler_pred = NamedNode::new_unchecked(oxi_events::vocab::IRI_OXI_SUB_HANDLER);
+    Quad::new(
+        sub.clone(),
+        handler_pred,
+        Literal::new_simple_literal(FEEDBACK_ROUTING_HANDLER),
+        subs_graph.clone(),
+    )
+}
+
+fn label_quad(sub: NamedNode, subs_graph: GraphName) -> Quad {
     let label_pred = NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label");
-    vec![
-        Quad::new(sub.clone(), rdf_type, sub_cls, subs_graph.clone()),
-        Quad::new(
-            sub.clone(),
-            select_pred,
-            Literal::new_simple_literal(PENDING_FEEDBACK_QUERY),
-            subs_graph.clone(),
-        ),
-        Quad::new(
-            sub.clone(),
-            mode_pred,
-            Literal::new_simple_literal(oxi_events::vocab::SUB_MODE_INLINE),
-            subs_graph.clone(),
-        ),
-        Quad::new(
-            sub.clone(),
-            handler_pred,
-            Literal::new_simple_literal(FEEDBACK_ROUTING_HANDLER),
-            subs_graph.clone(),
-        ),
-        Quad::new(
-            sub,
-            label_pred,
-            Literal::new_simple_literal("feedback routing (produced → routed)"),
-            subs_graph,
-        ),
-    ]
+    Quad::new(
+        sub,
+        label_pred,
+        Literal::new_simple_literal("feedback routing (produced → routed)"),
+        subs_graph,
+    )
 }

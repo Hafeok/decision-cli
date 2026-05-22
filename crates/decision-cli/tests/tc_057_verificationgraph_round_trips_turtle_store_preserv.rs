@@ -30,8 +30,8 @@ fn env_ephemeral() -> NamedNode {
 fn empty_graph_round_trips() {
     let g = VerificationGraph::new("VG-001", ArtifactRef(ft_001()), env_ephemeral(), vec![]);
     let ttl = to_canonical_turtle(&g);
-    let parsed = from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes())
-        .expect("empty graph parses");
+    let parsed =
+        from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes()).expect("empty graph parses");
     assert_eq!(parsed, g, "empty graph round-trips");
 }
 
@@ -69,8 +69,8 @@ fn ordered_step_list_preserves_order() {
     ];
     let g = VerificationGraph::new(id, ArtifactRef(ft_001()), env_ephemeral(), steps);
     let ttl = to_canonical_turtle(&g);
-    let parsed = from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes())
-        .expect("ordered steps parse");
+    let parsed =
+        from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes()).expect("ordered steps parse");
     assert_eq!(parsed.steps.len(), 3);
     assert_eq!(parsed.steps[0].kind, StepKind::ShellCommand);
     assert_eq!(parsed.steps[1].kind, StepKind::SparqlAssertion);
@@ -96,7 +96,10 @@ fn step_iris_stable_across_reloads() {
     let a = from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes()).expect("first parse");
     let b = from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes()).expect("second parse");
     assert_eq!(a.steps[0].id, expected_iri);
-    assert_eq!(a.steps[0].id, b.steps[0].id, "step IRIs stable across reloads");
+    assert_eq!(
+        a.steps[0].id, b.steps[0].id,
+        "step IRIs stable across reloads"
+    );
 }
 
 #[test]
@@ -115,8 +118,8 @@ fn polymorphic_verifies_round_trips_for_tc() {
         )],
     );
     let ttl = to_canonical_turtle(&g);
-    let parsed = from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes())
-        .expect("TC-targeted graph parses");
+    let parsed =
+        from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes()).expect("TC-targeted graph parses");
     assert_eq!(parsed.verifies.0, tc_013());
 }
 
@@ -159,9 +162,12 @@ fn placeholder_strings_round_trip_verbatim() {
         )],
     );
     let ttl = to_canonical_turtle(&g);
-    assert!(ttl.contains("${earlier_capture}"), "ttl carries placeholder verbatim:\n{ttl}");
-    let parsed = from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes())
-        .expect("placeholder parses");
+    assert!(
+        ttl.contains("${earlier_capture}"),
+        "ttl carries placeholder verbatim:\n{ttl}"
+    );
+    let parsed =
+        from_turtle_bytes(Path::new("test.ttl"), ttl.as_bytes()).expect("placeholder parses");
     match &parsed.steps[0].fields {
         StepFields::ShellCommand { command, .. } => {
             assert_eq!(command, placeholder);
@@ -202,8 +208,7 @@ fn reload_yields_equal_projection() {
     let parsed = from_turtle_bytes(Path::new("test.ttl"), ttl_1.as_bytes()).expect("parse 1");
     let ttl_2 = to_canonical_turtle(&parsed);
     assert_eq!(ttl_1, ttl_2, "canonical Turtle is fixpoint across reparse");
-    let parsed_again = from_turtle_bytes(Path::new("test.ttl"), ttl_2.as_bytes())
-        .expect("parse 2");
+    let parsed_again = from_turtle_bytes(Path::new("test.ttl"), ttl_2.as_bytes()).expect("parse 2");
     assert_eq!(parsed, parsed_again);
 }
 
@@ -286,9 +291,7 @@ fn step_kind_round_trips_in_serialized_turtle() {
                 expect_status: None,
             },
             StepKind::WaitFor => StepFields::WaitFor {
-                condition: NamedNode::new_unchecked(
-                    "https://decision-cli.dev/ns/step/VG-x/0",
-                ),
+                condition: NamedNode::new_unchecked("https://decision-cli.dev/ns/step/VG-x/0"),
                 timeout: "PT1S".to_string(),
             },
             StepKind::Capture => StepFields::Capture {

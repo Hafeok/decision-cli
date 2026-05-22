@@ -82,14 +82,10 @@ pub fn receive(
 }
 
 fn ensure_feedback_loadable(ws: &WritableStore, fb_node: &NamedNode) -> Result<(), ReceiveError> {
-    get(&ws.store, fb_node)
-        .map(|_| ())
-        .map_err(|e| match e {
-            crate::core::feedback::FeedbackReadError::NotFound { iri } => {
-                ReceiveError::NotFound(iri)
-            }
-            other => ReceiveError::Other(format!("{other}")),
-        })
+    get(&ws.store, fb_node).map(|_| ()).map_err(|e| match e {
+        crate::core::feedback::FeedbackReadError::NotFound { iri } => ReceiveError::NotFound(iri),
+        other => ReceiveError::Other(format!("{other}")),
+    })
 }
 
 fn ensure_routed_state(
@@ -196,11 +192,7 @@ pub fn format_receive_json(outcome: &ReceiveOutcome) -> String {
 }
 
 /// `anyhow`-wrapped wrapper for the CLI adapter.
-pub fn receive_anyhow(
-    workdir: &Path,
-    feedback_iri: &str,
-    actor: &str,
-) -> Result<ReceiveOutcome> {
+pub fn receive_anyhow(workdir: &Path, feedback_iri: &str, actor: &str) -> Result<ReceiveOutcome> {
     receive(workdir, feedback_iri, actor).map_err(|e| anyhow!("{e}"))
 }
 

@@ -27,10 +27,9 @@ fn writer() -> (Arc<Store>, StreamWriter) {
 }
 
 fn mint_group(writer: &StreamWriter, suffix: &str) -> (NamedNode, NamedNode) {
-    let group_iri =
-        NamedNode::new(format!("urn:dec:group:{suffix}")).expect("group iri");
-    let action_iri = NamedNode::new(format!("urn:dec:session/action/{suffix}"))
-        .expect("action iri");
+    let group_iri = NamedNode::new(format!("urn:dec:group:{suffix}")).expect("group iri");
+    let action_iri =
+        NamedNode::new(format!("urn:dec:session/action/{suffix}")).expect("action iri");
     DispatchGroup::mint(writer, group_iri.clone(), action_iri.clone(), "FT-032")
         .expect("mint group");
     (group_iri, action_iri)
@@ -41,35 +40,41 @@ fn mint_group(writer: &StreamWriter, suffix: &str) -> (NamedNode, NamedNode) {
 /// state machinery.
 fn seed_feedback(store: &Store, suffix: &str, state: &str) -> NamedNode {
     let g: GraphName = orchestration_graph().into_owned().into();
-    let iri = NamedNode::new(format!("urn:dec:feedback:{suffix}"))
-        .expect("feedback iri");
+    let iri = NamedNode::new(format!("urn:dec:feedback:{suffix}")).expect("feedback iri");
     store
-        .transaction(|mut tx| {
-            let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
-            let cls = feedback_class().into_owned();
-            tx.insert(Quad::new(iri.clone(), rdf_type, cls, g.clone()).as_ref())?;
-            tx.insert(
-                Quad::new(
-                    iri.clone(),
-                    lifecycle_state().into_owned(),
-                    Literal::new_simple_literal(state),
-                    g.clone(),
-                )
-                .as_ref(),
-            )?;
-            tx.insert(
-                Quad::new(
-                    iri.clone(),
-                    in_stream().into_owned(),
-                    NamedNode::new(STREAM_IRI).expect("stream iri"),
-                    g.clone(),
-                )
-                .as_ref(),
-            )?;
-            Ok::<_, oxigraph::store::StorageError>(())
-        })
+        .transaction(|mut tx| insert_feedback_quads(&mut tx, &iri, state, &g))
         .expect("seed feedback");
     iri
+}
+
+fn insert_feedback_quads(
+    tx: &mut oxigraph::store::Transaction<'_>,
+    iri: &NamedNode,
+    state: &str,
+    g: &GraphName,
+) -> Result<(), oxigraph::store::StorageError> {
+    let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
+    let cls = feedback_class().into_owned();
+    tx.insert(Quad::new(iri.clone(), rdf_type, cls, g.clone()).as_ref())?;
+    tx.insert(
+        Quad::new(
+            iri.clone(),
+            lifecycle_state().into_owned(),
+            Literal::new_simple_literal(state),
+            g.clone(),
+        )
+        .as_ref(),
+    )?;
+    tx.insert(
+        Quad::new(
+            iri.clone(),
+            in_stream().into_owned(),
+            NamedNode::new(STREAM_IRI).expect("stream iri"),
+            g.clone(),
+        )
+        .as_ref(),
+    )?;
+    Ok(())
 }
 
 fn current_status(store: &Store, group_iri: &NamedNode) -> Option<String> {

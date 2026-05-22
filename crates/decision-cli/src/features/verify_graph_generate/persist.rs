@@ -125,11 +125,7 @@ pub fn persist_new_proposal(
     })
 }
 
-fn build_step_add_request(
-    workdir: &Path,
-    graph_id: &str,
-    step: &ProposedStep,
-) -> StepAddRequest {
+fn build_step_add_request(workdir: &Path, graph_id: &str, step: &ProposedStep) -> StepAddRequest {
     let mut fields = std::collections::BTreeMap::<String, String>::new();
     for (key, value) in &step.fields {
         let v_str = match value {
@@ -176,11 +172,10 @@ fn drop_graph_from_store(workdir: &Path, graph_id: &str) -> Result<(), HandlerEr
     let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| HandlerError::Internal {
         detail: format!("rollback: active stream iri: {e}"),
     })?;
-    let _writer = StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| {
-        HandlerError::Internal {
+    let _writer =
+        StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| HandlerError::Internal {
             detail: format!("rollback: opening stream writer: {e}"),
-        }
-    })?;
+        })?;
 
     // Walk every quad in the verify-graph named graph that mentions
     // the graph IRI as subject and remove them directly from the store
@@ -196,8 +191,20 @@ fn drop_graph_from_store(workdir: &Path, graph_id: &str) -> Result<(), HandlerEr
 }
 
 fn drop_graph_projection(store: &oxigraph::store::Store, graph_id: &str) {
-    use oxigraph::model::{GraphNameRef, Quad, Subject, Term};
+    use oxigraph::model::Quad;
 
+    let graph_iri = build_graph_iri(graph_id);
+    let step_prefix = build_step_prefix(graph_id);
+
+    let mut to_remove: Vec<Quad> = Vec::new();
+    collect_subject_quads(store, &graph_iri, &mut to_remove);
+    collect_step_and_object_quads(store, &graph_iri, &step_prefix, &mut to_remove);
+    for q in to_remove {
+        let _ = store.remove(q.as_ref());
+    }
+}
+
+fn build_graph_iri(graph_id: &str) -> NamedNode {
     let iri_str = if graph_id.starts_with("https://") {
         graph_id.to_string()
     } else {
@@ -206,11 +213,24 @@ fn drop_graph_projection(store: &oxigraph::store::Store, graph_id: &str) {
             prefix = crate::core::vocab::IRI_DEC_VERIFY_GRAPH_PREFIX
         )
     };
-    let graph_iri = NamedNode::new_unchecked(iri_str);
-    let verify_graph = verify_graph_named_graph();
+    NamedNode::new_unchecked(iri_str)
+}
 
-    let mut to_remove: Vec<Quad> = Vec::new();
-    // 1. All quads whose subject IS the graph IRI.
+fn build_step_prefix(graph_id: &str) -> String {
+    format!(
+        "{prefix}{graph_id}/",
+        prefix = crate::core::vocab::IRI_DEC_STEP_PREFIX
+    )
+}
+
+/// Collect all quads whose subject IS the graph IRI itself.
+fn collect_subject_quads(
+    store: &oxigraph::store::Store,
+    graph_iri: &NamedNode,
+    out: &mut Vec<oxigraph::model::Quad>,
+) {
+    use oxigraph::model::{GraphNameRef, Subject};
+    let verify_graph = verify_graph_named_graph();
     for q in store
         .quads_for_pattern(
             Some(Subject::NamedNode(graph_iri.clone()).as_ref()),
@@ -220,33 +240,39 @@ fn drop_graph_projection(store: &oxigraph::store::Store, graph_id: &str) {
         )
         .filter_map(Result::ok)
     {
-        to_remove.push(q);
+        out.push(q);
     }
-    // 2. All quads whose subject is a step belonging to this graph
-    //    (step IRIs start with the graph's step prefix).
-    let step_prefix = format!(
-        "{prefix}{graph_id}/",
-        prefix = crate::core::vocab::IRI_DEC_STEP_PREFIX
-    );
+}
+
+/// Collect quads whose subject is a step belonging to this graph, or
+/// whose object references the graph or its steps (defensive cleanup
+/// for rdf:List heads that may have survived chokepoint commit).
+fn collect_step_and_object_quads(
+    store: &oxigraph::store::Store,
+    graph_iri: &NamedNode,
+    step_prefix: &str,
+    out: &mut Vec<oxigraph::model::Quad>,
+) {
+    use oxigraph::model::{GraphNameRef, Subject, Term};
+    let verify_graph = verify_graph_named_graph();
     for q in store
-        .quads_for_pattern(None, None, None, Some(GraphNameRef::NamedNode(verify_graph)))
+        .quads_for_pattern(
+            None,
+            None,
+            None,
+            Some(GraphNameRef::NamedNode(verify_graph)),
+        )
         .filter_map(Result::ok)
     {
         if let Subject::NamedNode(s) = &q.subject {
-            if s.as_str().starts_with(&step_prefix) {
-                to_remove.push(q.clone());
+            if s.as_str().starts_with(step_prefix) {
+                out.push(q.clone());
             }
         }
-        // Also drop quads whose object refers to the graph or its steps,
-        // in case the rdf:List head references survived from the
-        // chokepoint commit (defensive cleanup).
         if let Term::NamedNode(o) = &q.object {
-            if o.as_str() == graph_iri.as_str() || o.as_str().starts_with(&step_prefix) {
-                to_remove.push(q.clone());
+            if o.as_str() == graph_iri.as_str() || o.as_str().starts_with(step_prefix) {
+                out.push(q.clone());
             }
         }
-    }
-    for q in to_remove {
-        let _ = store.remove(q.as_ref());
     }
 }

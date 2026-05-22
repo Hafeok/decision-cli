@@ -77,13 +77,15 @@ fn stream_writer_refuses_malformed_verdict_pre_commit() {
     let g: GraphName = orchestration_graph().into_owned().into();
     let v = NamedNode::new(VERDICT_IRI).expect("verdict iri");
     let cls = NamedNodeRef::new(DEC_VERIFICATION_VERDICT).expect("class iri");
-    let type_pred = NamedNodeRef::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-        .expect("rdf:type");
+    let type_pred =
+        NamedNodeRef::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("rdf:type");
 
     // Build a deliberately incomplete verdict: type only — no rationale,
     // no prov:wasGeneratedBy, no prov:used.
     let mut mutation = Mutation::default();
-    mutation.inserts.push(Quad::new(v.clone(), type_pred, cls.into_owned(), g));
+    mutation
+        .inserts
+        .push(Quad::new(v.clone(), type_pred, cls.into_owned(), g));
 
     let err = writer
         .commit(mutation)
@@ -124,7 +126,10 @@ fn stream_writer_accepts_well_formed_verdict() {
         .quads_for_pattern(Some(Subject::NamedNode(v).as_ref()), None, None, None)
         .next()
         .is_some();
-    assert!(exists, "verdict must be persisted after a successful commit");
+    assert!(
+        exists,
+        "verdict must be persisted after a successful commit"
+    );
 }
 
 #[test]
@@ -135,8 +140,8 @@ fn embedded_shapes_declare_verification_verdict_shape() {
     // The embedded shapes graph must declare a shape targeting
     // dec:VerificationVerdict (ADR-018 §SHACL shape).
     let shape_quads: Vec<_> = h.shapes_graph().collect();
-    let target = NamedNode::new("https://decision-cli.dev/ns#VerificationVerdict")
-        .expect("class iri");
+    let target =
+        NamedNode::new("https://decision-cli.dev/ns#VerificationVerdict").expect("class iri");
     let mut has_shape = false;
     for q in &shape_quads {
         if q.predicate.as_str() == "http://www.w3.org/ns/shacl#targetClass" {

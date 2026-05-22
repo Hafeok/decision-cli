@@ -2,7 +2,8 @@
 
 use std::path::PathBuf;
 
-use super::io::{from_turtle_bytes, to_canonical_turtle};
+use super::io::from_turtle_bytes;
+use super::write::to_canonical_turtle;
 use super::shacl::validate_quads;
 use super::types::{SafetyClass, VerificationEnvironment};
 use crate::core::vocab::verify_env_graph;
@@ -46,9 +47,7 @@ fn ephemeral_env_passes_shacl() {
 fn missing_env_type_fails_shacl() {
     let env = ephemeral_cli_env();
     let mut quads = env.to_quads(verify_env_graph());
-    quads.retain(|q| {
-        q.predicate.as_str() != "https://decision-cli.dev/ns#envType"
-    });
+    quads.retain(|q| q.predicate.as_str() != "https://decision-cli.dev/ns#envType");
     let err = validate_quads(&quads).expect_err("missing envType must fail");
     assert!(err.report.contains("envType"), "{}", err.report);
 }
@@ -123,8 +122,8 @@ fn local_env_with_endpoint_fails_shacl() {
 fn canonical_turtle_round_trips() {
     let env = ephemeral_cli_env();
     let ttl = to_canonical_turtle(&env);
-    let parsed = from_turtle_bytes(&PathBuf::from("test.ttl"), ttl.as_bytes())
-        .expect("round-trip parse");
+    let parsed =
+        from_turtle_bytes(&PathBuf::from("test.ttl"), ttl.as_bytes()).expect("round-trip parse");
     assert_eq!(parsed, env);
 }
 

@@ -73,7 +73,11 @@ fn rationale_minimum_length_enforced() {
 
 #[test]
 fn verdict_parse_round_trips() {
-    for v in [Verdict::Approved, Verdict::Rejected, Verdict::AmendmentRequired] {
+    for v in [
+        Verdict::Approved,
+        Verdict::Rejected,
+        Verdict::AmendmentRequired,
+    ] {
         assert_eq!(Verdict::parse(v.as_str()), Some(v));
     }
     assert!(Verdict::parse("approved-with-caveats").is_none());

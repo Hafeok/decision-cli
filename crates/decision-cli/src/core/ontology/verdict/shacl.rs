@@ -80,9 +80,21 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<VerdictViolation
     let verdict_values = literal_values(quads, subject, IRI_DEC_VERDICT);
     check_verdict_cardinality(subject, &verdict_values, &mut violations);
     check_rationale(quads, subject, &mut violations);
-    check_single_iri(quads, subject, PROV_WAS_GENERATED_BY, "prov:wasGeneratedBy", &mut violations);
+    check_single_iri(
+        quads,
+        subject,
+        PROV_WAS_GENERATED_BY,
+        "prov:wasGeneratedBy",
+        &mut violations,
+    );
     check_at_least_one_iri(quads, subject, PROV_USED, "prov:used", &mut violations);
-    check_single_iri(quads, subject, IRI_DEC_IN_STREAM, "dec:inStream", &mut violations);
+    check_single_iri(
+        quads,
+        subject,
+        IRI_DEC_IN_STREAM,
+        "dec:inStream",
+        &mut violations,
+    );
     check_amendment_guidance(quads, subject, &verdict_values, &mut violations);
     check_violates_conditional(quads, subject, &verdict_values, &mut violations);
     violations
@@ -108,6 +120,14 @@ fn check_verdict_cardinality(
             &format!("expected exactly one dec:verdict, found {}", values.len()),
         ));
     }
+    check_verdict_allowed_values(subject, values, violations);
+}
+
+fn check_verdict_allowed_values(
+    subject: &NamedNode,
+    values: &[String],
+    violations: &mut Vec<VerdictViolation>,
+) {
     let allowed: BTreeSet<&str> = [
         VERDICT_APPROVED,
         VERDICT_REJECTED,

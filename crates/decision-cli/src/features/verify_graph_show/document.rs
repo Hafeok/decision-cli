@@ -162,59 +162,133 @@ impl StepDocument {
     /// Project an in-memory step's discriminated fields plus its evidence
     /// list into the on-the-wire document.
     pub(super) fn from_fields(fields: &StepFields, evidence: &[NamedNode]) -> Self {
-        let provides: Vec<String> = evidence.iter().map(|n| n.as_str().to_string()).collect();
-        match fields {
-            StepFields::ShellCommand {
-                command,
-                expect_exit_code,
-                capture_output,
-            } => Self::ShellCommand {
-                command: command.clone(),
-                expect_exit_code: *expect_exit_code,
-                capture_output: *capture_output,
-                provides_evidence_for: provides,
-            },
-            StepFields::SparqlAssertion {
-                target,
-                query,
-                expect_rows,
-            } => Self::SparqlAssertion {
-                target: target.clone(),
-                query: query.clone(),
-                expect_rows: *expect_rows,
-                provides_evidence_for: provides,
-            },
-            StepFields::FileAssertion {
-                path,
-                expect_hash,
-                expect_content,
-            } => Self::FileAssertion {
-                path: path.clone(),
-                expect_hash: expect_hash.clone(),
-                expect_content: expect_content.clone(),
-                provides_evidence_for: provides,
-            },
-            StepFields::HttpRequest {
-                method,
-                url,
-                expect_status,
-            } => Self::HttpRequest {
-                method: method.clone(),
-                url: url.clone(),
-                expect_status: *expect_status,
-                provides_evidence_for: provides,
-            },
-            StepFields::WaitFor { condition, timeout } => Self::WaitFor {
-                condition: condition.as_str().to_string(),
-                timeout: timeout.clone(),
-                provides_evidence_for: provides,
-            },
-            StepFields::Capture { from_step, bind_as } => Self::Capture {
-                bind_as: bind_as.clone(),
-                from_step: from_step.as_ref().map(|n| n.as_str().to_string()),
-                provides_evidence_for: provides,
-            },
+        let provides = evidence_to_strings(evidence);
+        dispatch_from_fields(fields, provides)
+    }
+}
+
+fn evidence_to_strings(evidence: &[NamedNode]) -> Vec<String> {
+    evidence.iter().map(|n| n.as_str().to_string()).collect()
+}
+
+fn dispatch_from_fields(fields: &StepFields, provides: Vec<String>) -> StepDocument {
+    match fields {
+        StepFields::WaitFor { condition, timeout } => {
+            wait_for_doc(condition.as_str(), timeout, provides)
         }
+        StepFields::Capture { from_step, bind_as } => {
+            capture_doc(bind_as, from_step.as_ref().map(NamedNode::as_str), provides)
+        }
+        other => dispatch_assertion_fields(other, provides),
+    }
+}
+
+fn dispatch_assertion_fields(fields: &StepFields, provides: Vec<String>) -> StepDocument {
+    match fields {
+        StepFields::ShellCommand {
+            command,
+            expect_exit_code,
+            capture_output,
+        } => shell_command_doc(command, *expect_exit_code, *capture_output, provides),
+        StepFields::SparqlAssertion {
+            target,
+            query,
+            expect_rows,
+        } => sparql_assertion_doc(target, query, *expect_rows, provides),
+        other => dispatch_remote_assertion_fields(other, provides),
+    }
+}
+
+fn dispatch_remote_assertion_fields(fields: &StepFields, provides: Vec<String>) -> StepDocument {
+    match fields {
+        StepFields::FileAssertion {
+            path,
+            expect_hash,
+            expect_content,
+        } => file_assertion_doc(
+            path,
+            expect_hash.as_deref(),
+            expect_content.as_deref(),
+            provides,
+        ),
+        StepFields::HttpRequest {
+            method,
+            url,
+            expect_status,
+        } => http_request_doc(method, url, *expect_status, provides),
+        _ => unreachable!("handled by dispatch_from_fields and dispatch_assertion_fields"),
+    }
+}
+
+fn shell_command_doc(
+    command: &str,
+    expect_exit_code: Option<i64>,
+    capture_output: Option<bool>,
+    provides: Vec<String>,
+) -> StepDocument {
+    StepDocument::ShellCommand {
+        command: command.to_string(),
+        expect_exit_code,
+        capture_output,
+        provides_evidence_for: provides,
+    }
+}
+
+fn sparql_assertion_doc(
+    target: &str,
+    query: &str,
+    expect_rows: Option<i64>,
+    provides: Vec<String>,
+) -> StepDocument {
+    StepDocument::SparqlAssertion {
+        target: target.to_string(),
+        query: query.to_string(),
+        expect_rows,
+        provides_evidence_for: provides,
+    }
+}
+
+fn file_assertion_doc(
+    path: &str,
+    expect_hash: Option<&str>,
+    expect_content: Option<&str>,
+    provides: Vec<String>,
+) -> StepDocument {
+    StepDocument::FileAssertion {
+        path: path.to_string(),
+        expect_hash: expect_hash.map(str::to_string),
+        expect_content: expect_content.map(str::to_string),
+        provides_evidence_for: provides,
+    }
+}
+
+fn http_request_doc(
+    method: &str,
+    url: &str,
+    expect_status: Option<i64>,
+    provides: Vec<String>,
+) -> StepDocument {
+    StepDocument::HttpRequest {
+        method: method.to_string(),
+        url: url.to_string(),
+        expect_status,
+        provides_evidence_for: provides,
+    }
+}
+
+fn wait_for_doc(condition: &str, timeout: &str, provides: Vec<String>) -> StepDocument {
+    StepDocument::WaitFor {
+        condition: condition.to_string(),
+        timeout: timeout.to_string(),
+        provides_evidence_for: provides,
+    }
+}
+
+fn capture_doc(bind_as: &str, from_step: Option<&str>, provides: Vec<String>) -> StepDocument {
+    StepDocument::Capture {
+        bind_as: bind_as.to_string(),
+        from_step: from_step.map(str::to_string),
+        provides_evidence_for: provides,
     }
 }
 

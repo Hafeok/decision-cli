@@ -37,20 +37,17 @@ pub use close::{
     CloseOutcome, ResumedGroup,
 };
 pub use format::OutputFormat;
-pub use list::{
-    format_list, format_list_json, list, list_filtered, FeedbackRow, ListFilters,
-};
+pub use list::{format_list, format_list_json, list, list_filtered, FeedbackRow, ListFilters};
 pub use receive::{
-    format_receive, format_receive_json, receive as receive_feedback, receive_anyhow,
-    ReceiveError, ReceiveOutcome,
+    format_receive, format_receive_json, receive as receive_feedback, receive_anyhow, ReceiveError,
+    ReceiveOutcome,
 };
 pub use route::{
     format_route, format_route_json, resolve_actor, route as route_feedback, route_anyhow,
     RouteError, RouteOutcome,
 };
 pub use show::{
-    format_error_json, format_show, format_show_json, show as show_feedback, show_anyhow,
-    ShowError,
+    format_error_json, format_show, format_show_json, show as show_feedback, show_anyhow, ShowError,
 };
 
 // TC-039 anchor: the test runner script greps for these symbol names

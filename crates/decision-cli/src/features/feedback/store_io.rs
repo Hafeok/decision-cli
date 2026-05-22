@@ -46,8 +46,7 @@ impl WritableStore {
     /// Returns `Err` if the working dir isn't initialised or the store
     /// is unreadable.
     pub(super) fn open(workdir: &Path) -> Result<Self> {
-        let scope = ActiveScope::load(workdir)
-            .map_err(|e| anyhow!("loading active scope: {e}"))?;
+        let scope = ActiveScope::load(workdir).map_err(|e| anyhow!("loading active scope: {e}"))?;
         let dump_path = orchestration_dump_path(workdir);
         if !dump_path.exists() {
             return Err(anyhow!(
@@ -77,8 +76,12 @@ impl WritableStore {
     /// Atomically write the in-memory store back to disk. Call once,
     /// after the lifecycle transition succeeds.
     pub(super) fn persist(&self) -> Result<()> {
-        core_persist_store(&self.store, &self.dump_path)
-            .with_context(|| format!("persisting orchestration store at {}", self.dump_path.display()))
+        core_persist_store(&self.store, &self.dump_path).with_context(|| {
+            format!(
+                "persisting orchestration store at {}",
+                self.dump_path.display()
+            )
+        })
     }
 }
 

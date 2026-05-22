@@ -109,26 +109,8 @@ pub fn parse_from_str(body: &str) -> Option<AutoDispatchConfig> {
         };
         let key = key.trim();
         let value = value.trim().trim_end_matches('#').trim();
-        match key {
-            "auto_dispatch" => {
-                if let Some(b) = parse_bool(value) {
-                    cfg.auto_dispatch = b;
-                    saw_any = true;
-                }
-            }
-            "envs" => {
-                if let Some(list) = parse_string_array(value) {
-                    cfg.envs = list;
-                    saw_any = true;
-                }
-            }
-            "dedup_ttl_seconds" => {
-                if let Ok(n) = value.parse::<u64>() {
-                    cfg.dedup_ttl_seconds = n;
-                    saw_any = true;
-                }
-            }
-            _ => {}
+        if apply_kv(&mut cfg, key, value) {
+            saw_any = true;
         }
     }
     if saw_any {
@@ -136,6 +118,31 @@ pub fn parse_from_str(body: &str) -> Option<AutoDispatchConfig> {
     } else {
         None
     }
+}
+
+fn apply_kv(cfg: &mut AutoDispatchConfig, key: &str, value: &str) -> bool {
+    match key {
+        "auto_dispatch" => {
+            if let Some(b) = parse_bool(value) {
+                cfg.auto_dispatch = b;
+                return true;
+            }
+        }
+        "envs" => {
+            if let Some(list) = parse_string_array(value) {
+                cfg.envs = list;
+                return true;
+            }
+        }
+        "dedup_ttl_seconds" => {
+            if let Ok(n) = value.parse::<u64>() {
+                cfg.dedup_ttl_seconds = n;
+                return true;
+            }
+        }
+        _ => {}
+    }
+    false
 }
 
 fn parse_bool(value: &str) -> Option<bool> {

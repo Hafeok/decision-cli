@@ -106,7 +106,17 @@ pub fn parse_request(req: &Request) -> Result<GraphShowRequest, HandlerError> {
 /// MCP tool descriptor — registered by the binary in `cli::mcp`.
 #[must_use]
 pub fn tool_descriptor() -> ToolDescriptor {
-    let handler: ToolHandler = Arc::new(|req: Request| {
+    ToolDescriptor::new(
+        TOOL_NAME,
+        "Show a single dec:VerificationGraph artifact (FT-043 / ADR-028).",
+        input_schema(),
+        build_tool_handler(),
+    )
+    .with_output_schema(output_schema())
+}
+
+fn build_tool_handler() -> ToolHandler {
+    Arc::new(|req: Request| {
         let parsed = parse_request(&req)?;
         let outcome = run(&parsed)?;
         let summary = format!(
@@ -121,33 +131,34 @@ pub fn tool_descriptor() -> ToolDescriptor {
             }),
             summary,
         ))
-    });
-    ToolDescriptor::new(
-        TOOL_NAME,
-        "Show a single dec:VerificationGraph artifact (FT-043 / ADR-028).",
-        input_schema(),
-        handler,
-    )
-    .with_output_schema(json!({
+    })
+}
+
+fn output_schema() -> Value {
+    json!({
         "type": "object",
         "required": ["graph", "path"],
         "properties": {
-            "graph": {
-                "type": "object",
-                "required": ["id", "verifies", "environment", "steps"],
-                "properties": {
-                    "id": { "type": "string" },
-                    "verifies": { "type": "string" },
-                    "environment": { "type": "string" },
-                    "steps": {
-                        "type": "array",
-                        "items": { "type": "object" },
-                    },
-                },
-            },
+            "graph": graph_output_schema(),
             "path": { "type": "string" },
         },
-    }))
+    })
+}
+
+fn graph_output_schema() -> Value {
+    json!({
+        "type": "object",
+        "required": ["id", "verifies", "environment", "steps"],
+        "properties": {
+            "id": { "type": "string" },
+            "verifies": { "type": "string" },
+            "environment": { "type": "string" },
+            "steps": {
+                "type": "array",
+                "items": { "type": "object" },
+            },
+        },
+    })
 }
 
 /// JSON Schema describing the MCP tool's input arguments.

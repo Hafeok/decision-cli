@@ -18,30 +18,52 @@ use super::EnvNewRequest;
 
 /// Validate the request before any I/O.
 pub(super) fn pre_validate(req: &EnvNewRequest) -> Result<(), HandlerError> {
-    if req.env_type.trim().is_empty() {
+    validate_env_type(&req.env_type)?;
+    validate_safety_class(&req.safety_class)?;
+    validate_allowed_ops(&req.allowed_ops)?;
+    validate_endpoint(&req.env_type, req.endpoint.as_deref())?;
+    if let Some(id) = &req.id {
+        validate_id_format(id)?;
+    }
+    Ok(())
+}
+
+/// `env-type` must be a non-empty string (whitespace doesn't count).
+fn validate_env_type(env_type: &str) -> Result<(), HandlerError> {
+    if env_type.trim().is_empty() {
         return Err(HandlerError::InvalidArgument {
             field: "env_type".to_string(),
             detail: "env-type must be a non-empty string".to_string(),
         });
     }
-    if SafetyClass::parse(&req.safety_class).is_none() {
-        return Err(HandlerError::InvalidArgument {
-            field: "safety_class".to_string(),
-            detail: format!(
-                "safety-class must be one of {{{SAFETY_ISOLATED}, \
-                 {SAFETY_SHARED_NON_DESTRUCTIVE}, {SAFETY_PRODUCTION_READONLY}}}; \
-                 got {got:?}",
-                got = req.safety_class,
-            ),
-        });
+    Ok(())
+}
+
+/// `safety-class` must be one of the three controlled values.
+fn validate_safety_class(safety_class: &str) -> Result<(), HandlerError> {
+    if SafetyClass::parse(safety_class).is_some() {
+        return Ok(());
     }
-    if req.allowed_ops.is_empty() {
+    Err(HandlerError::InvalidArgument {
+        field: "safety_class".to_string(),
+        detail: format!(
+            "safety-class must be one of {{{SAFETY_ISOLATED}, \
+             {SAFETY_SHARED_NON_DESTRUCTIVE}, {SAFETY_PRODUCTION_READONLY}}}; \
+             got {got:?}",
+            got = safety_class,
+        ),
+    })
+}
+
+/// `allowed-ops` must be a non-empty list of non-empty tokens.
+fn validate_allowed_ops(ops: &[String]) -> Result<(), HandlerError> {
+    if ops.is_empty() {
         return Err(HandlerError::InvalidArgument {
             field: "allowed_ops".to_string(),
             detail: "allowed-ops must contain at least one operation token".to_string(),
         });
     }
-    for op in &req.allowed_ops {
+    for op in ops {
         if op.trim().is_empty() {
             return Err(HandlerError::InvalidArgument {
                 field: "allowed_ops".to_string(),
@@ -49,8 +71,13 @@ pub(super) fn pre_validate(req: &EnvNewRequest) -> Result<(), HandlerError> {
             });
         }
     }
-    let is_remote = req.env_type.starts_with(REMOTE_ENV_TYPE_PREFIX);
-    let endpoint_present = req.endpoint.as_deref().is_some_and(|s| !s.is_empty());
+    Ok(())
+}
+
+/// `--endpoint` is required for `remote-*` env types, forbidden otherwise.
+fn validate_endpoint(env_type: &str, endpoint: Option<&str>) -> Result<(), HandlerError> {
+    let is_remote = env_type.starts_with(REMOTE_ENV_TYPE_PREFIX);
+    let endpoint_present = endpoint.is_some_and(|s| !s.is_empty());
     if is_remote && !endpoint_present {
         return Err(HandlerError::InvalidArgument {
             field: "endpoint".to_string(),
@@ -59,16 +86,13 @@ pub(super) fn pre_validate(req: &EnvNewRequest) -> Result<(), HandlerError> {
             ),
         });
     }
-    if !is_remote && req.endpoint.is_some() {
+    if !is_remote && endpoint.is_some() {
         return Err(HandlerError::InvalidArgument {
             field: "endpoint".to_string(),
             detail: format!(
                 "local env types (env-type does not start with {REMOTE_ENV_TYPE_PREFIX:?}) must NOT carry --endpoint"
             ),
         });
-    }
-    if let Some(id) = &req.id {
-        validate_id_format(id)?;
     }
     Ok(())
 }

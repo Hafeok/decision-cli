@@ -358,10 +358,7 @@ fn safety_violation_surfaces_before_schema_violation() {
         StepAddRequest {
             graph_id: vg,
             step_type: "http-request".to_string(),
-            fields: fields(&[
-                ("method", "POST"),
-                ("url", "https://prod.example.com/api"),
-            ]),
+            fields: fields(&[("method", "POST"), ("url", "https://prod.example.com/api")]),
             provides_evidence_for: Vec::new(),
             workdir: None,
         },

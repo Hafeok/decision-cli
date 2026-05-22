@@ -34,8 +34,8 @@ fn base_artifact(verdict: Verdict) -> VerdictArtifact {
 fn rejected_without_violates_is_refused() {
     let a = base_artifact(Verdict::Rejected);
     let quads = a.to_quads(orchestration_graph());
-    let err = validate_quads(&quads)
-        .expect_err("rejected verdict without dec:violates must be refused");
+    let err =
+        validate_quads(&quads).expect_err("rejected verdict without dec:violates must be refused");
     assert!(
         err.report.contains("dec:violates"),
         "report should mention dec:violates; got:\n{}",
@@ -94,12 +94,7 @@ fn stream_writer_refuses_rejected_without_citation() {
 
     // Refused verdict must not be persisted.
     let exists = store
-        .quads_for_pattern(
-            Some(Subject::NamedNode(a.iri).as_ref()),
-            None,
-            None,
-            None,
-        )
+        .quads_for_pattern(Some(Subject::NamedNode(a.iri).as_ref()), None, None, None)
         .next()
         .is_some();
     assert!(

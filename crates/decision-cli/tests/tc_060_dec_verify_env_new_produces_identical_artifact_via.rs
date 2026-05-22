@@ -15,10 +15,10 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use decision_cli::core::handler::{Error as HandlerError, Request};
+use decision_cli::core::ontology::verification_env::from_turtle;
 use decision_cli::verify_env_new::{
     self, canonical_turtle, parse_request, EnvNewRequest, EnvNewResponse,
 };
-use decision_cli::core::ontology::verification_env::from_turtle;
 use serde_json::{json, Value};
 
 // --- tempdir helper (avoids adding a new test-only dependency) -----------

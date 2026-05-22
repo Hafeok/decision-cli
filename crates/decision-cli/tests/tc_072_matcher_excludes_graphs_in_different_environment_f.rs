@@ -134,8 +134,7 @@ fn tc_072_matcher_excludes_graphs_in_different_environment_from_match_set() {
         &build_graph("VG-B", &env2_iri, &["T1", "T2"]).to_quads(verify_graph_named_graph()),
     );
 
-    let report =
-        best_matching_graphs("FT-V", "ENV-1", &store, wd.path()).expect("matcher ok");
+    let report = best_matching_graphs("FT-V", "ENV-1", &store, wd.path()).expect("matcher ok");
 
     // Acceptance: Partial; only VG-A returned for the ENV-1 query;
     // T2 stays uncovered.

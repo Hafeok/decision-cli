@@ -56,9 +56,7 @@ impl DispatchStatus {
             Self::InterpretationFailed => DISPATCH_STATUS_INTERPRETATION_FAILED,
             Self::Complete => DISPATCH_STATUS_COMPLETE,
             Self::PausedForFeedback => DISPATCH_STATUS_PAUSED_FOR_FEEDBACK,
-            Self::FeedbackRejectedActionBlocked => {
-                DISPATCH_STATUS_FEEDBACK_REJECTED_ACTION_BLOCKED
-            }
+            Self::FeedbackRejectedActionBlocked => DISPATCH_STATUS_FEEDBACK_REJECTED_ACTION_BLOCKED,
         }
     }
 
@@ -178,9 +176,7 @@ pub fn next(
         // the action (back to `awaiting-action` per FT-032 §Outputs).
         (S::PausedForFeedback, E::BlockingFeedbackAddressed) => S::AwaitingAction,
         // Rejection path: terminal failure mode.
-        (S::PausedForFeedback, E::BlockingFeedbackRejected) => {
-            S::FeedbackRejectedActionBlocked
-        }
+        (S::PausedForFeedback, E::BlockingFeedbackRejected) => S::FeedbackRejectedActionBlocked,
         // Anything else is invalid; terminal states never transition.
         _ => {
             return Err(LifecycleError::InvalidTransition { current, event });
@@ -195,8 +191,11 @@ mod tests {
 
     #[test]
     fn happy_path_action_then_approved() {
-        let s = next(DispatchStatus::AwaitingAction, DispatchEvent::ActionCompleted)
-            .expect("action ok");
+        let s = next(
+            DispatchStatus::AwaitingAction,
+            DispatchEvent::ActionCompleted,
+        )
+        .expect("action ok");
         assert_eq!(s, DispatchStatus::AwaitingInterpretation);
         let s = next(s, DispatchEvent::VerdictApproved).expect("approved");
         assert_eq!(s, DispatchStatus::Complete);
@@ -319,18 +318,15 @@ mod tests {
             DispatchEvent::BlockingFeedbackEmitted,
         )
         .expect("first pause");
-        let s2 = next(s, DispatchEvent::BlockingFeedbackEmitted)
-            .expect("second emission stays paused");
+        let s2 =
+            next(s, DispatchEvent::BlockingFeedbackEmitted).expect("second emission stays paused");
         assert_eq!(s2, DispatchStatus::PausedForFeedback);
     }
 
     #[test]
     fn complete_requires_an_approved_path_event() {
         // Only VerdictApproved leads to Complete from awaiting-interpretation.
-        for &e in &[
-            DispatchEvent::ActionCompleted,
-            DispatchEvent::ActionFailed,
-        ] {
+        for &e in &[DispatchEvent::ActionCompleted, DispatchEvent::ActionFailed] {
             assert!(next(DispatchStatus::AwaitingInterpretation, e).is_err());
         }
         let s = next(

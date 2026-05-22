@@ -71,12 +71,10 @@ fn parse_field_pair(raw: &str) -> Result<(String, String), HandlerError> {
             detail: format!("--field must be KEY=VALUE; got {raw:?}"),
         })?
         .trim();
-    let value = iter
-        .next()
-        .ok_or_else(|| HandlerError::InvalidArgument {
-            field: "field".to_string(),
-            detail: format!("--field must be KEY=VALUE; got {raw:?}"),
-        })?;
+    let value = iter.next().ok_or_else(|| HandlerError::InvalidArgument {
+        field: "field".to_string(),
+        detail: format!("--field must be KEY=VALUE; got {raw:?}"),
+    })?;
     if key.is_empty() {
         return Err(HandlerError::InvalidArgument {
             field: "field".to_string(),

@@ -37,8 +37,7 @@ fn seed_group(
     let group = NamedNode::new(format!("urn:dec:test:group:{idx}")).expect("group iri");
     let action = NamedNode::new(format!("urn:dec:test:action:{idx}")).expect("action iri");
     let interp = NamedNode::new(format!("urn:dec:test:interp:{idx}")).expect("interp iri");
-    let verdict_iri =
-        NamedNode::new(format!("urn:dec:test:verdict:{idx}")).expect("verdict iri");
+    let verdict_iri = NamedNode::new(format!("urn:dec:test:verdict:{idx}")).expect("verdict iri");
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE);
     let in_stream = NamedNodeRef::new_unchecked(IRI_DEC_IN_STREAM);
     let role_pred = NamedNodeRef::new_unchecked(DEC_ROLE);
@@ -51,12 +50,7 @@ fn seed_group(
     let mut quads = vec![
         // DispatchGroup
         Quad::new(group.clone(), rdf_type, dispatch_group_class(), g.clone()),
-        Quad::new(
-            group.clone(),
-            in_stream,
-            stream_node.clone(),
-            g.clone(),
-        ),
+        Quad::new(group.clone(), in_stream, stream_node.clone(), g.clone()),
         Quad::new(
             group.clone(),
             dispatch_status(),
@@ -69,7 +63,12 @@ fn seed_group(
             Literal::new_simple_literal(format!("FT-test-{idx}")),
             g.clone(),
         ),
-        Quad::new(group.clone(), has_action_session(), action.clone(), g.clone()),
+        Quad::new(
+            group.clone(),
+            has_action_session(),
+            action.clone(),
+            g.clone(),
+        ),
         // ActionSession
         Quad::new(
             action.clone(),
@@ -248,7 +247,10 @@ fn mixed_population_produces_expected_rates() {
         (DispatchStatus::Complete, Some("approved")),
         (DispatchStatus::Complete, Some("approved")),
         (DispatchStatus::InterpretationRejected, Some("rejected")),
-        (DispatchStatus::AwaitingAmendment, Some("amendment-required")),
+        (
+            DispatchStatus::AwaitingAmendment,
+            Some("amendment-required"),
+        ),
     ]
     .iter()
     .enumerate()
@@ -336,8 +338,8 @@ fn role_filter_restricts_population() {
 #[test]
 fn unknown_role_is_an_error() {
     let store = fresh_store();
-    let err = agreement(&store, None, Some("no-such-role"))
-        .expect_err("unknown role must be rejected");
+    let err =
+        agreement(&store, None, Some("no-such-role")).expect_err("unknown role must be rejected");
     assert!(matches!(err, MetricsError::UnknownRole { .. }));
 }
 
@@ -375,7 +377,10 @@ fn window_filters_groups_by_action_start_time() {
     let since = Utc.with_ymd_and_hms(2026, 5, 1, 0, 0, 0).unwrap();
     let until = Utc.with_ymd_and_hms(2026, 6, 1, 0, 0, 0).unwrap();
     let r = agreement(&store, Some((since, until)), None).expect("agreement ok");
-    assert_eq!(r.total_terminal_groups, 1, "only the May group is in window");
+    assert_eq!(
+        r.total_terminal_groups, 1,
+        "only the May group is in window"
+    );
     assert_eq!(r.window, Some((since, until)));
 }
 

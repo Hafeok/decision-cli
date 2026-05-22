@@ -26,9 +26,7 @@ mod tests;
 
 pub use artifact::{Feedback, Severity};
 pub use class::{Disposition, FeedbackClass};
-pub use lifecycle::{
-    next_states, validate_transition, LifecycleState, TransitionError,
-};
+pub use lifecycle::{next_states, validate_transition, LifecycleState, TransitionError};
 pub use read::{get, list_by_class, list_by_target, list_open, FeedbackReadError};
 pub use shacl::{validate_quads, FeedbackShaclError, FeedbackViolation};
 pub use transition::{apply, read_prior_state, ApplyError, Evidence};

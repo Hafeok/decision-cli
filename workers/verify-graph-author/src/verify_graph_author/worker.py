@@ -146,9 +146,7 @@ def run_author(
         attempts = 2
         proposal, validation_error = _try_parse_proposal(raw_retry, bundle)
         if proposal is None:
-            raise WorkerError(
-                f"GraphProposal failed validation after retry: {validation_error}"
-            )
+            raise WorkerError(f"GraphProposal failed validation after retry: {validation_error}")
 
     # Bundle-hash echo check — TC-078 / FT-048 §Error 5.
     if proposal.bundle_hash != bundle.bundle_hash:
@@ -242,27 +240,36 @@ def _check_fields_against_schema(fields: dict, schema: dict) -> str | None:
 
 def _extract_json_object(text: str) -> dict | None:
     """Best-effort: find a top-level JSON object in the model output."""
-    try:
-        obj = json.loads(text)
-    except json.JSONDecodeError:
-        obj = None
-    if isinstance(obj, dict):
-        return obj
+    direct = _try_parse_json_dict(text)
+    if direct is not None:
+        return direct
     start = text.find("{")
     if start < 0:
         return None
+    end = _find_balanced_brace_end(text, start)
+    if end < 0:
+        return None
+    return _try_parse_json_dict(text[start : end + 1])
+
+
+def _try_parse_json_dict(text: str) -> dict | None:
+    """Parse `text` as JSON, returning the value only when it is a dict."""
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _find_balanced_brace_end(text: str, start: int) -> int:
+    """Return index of the `}` closing the `{` at `start`, or -1 if unbalanced."""
     depth = 0
     in_str = False
     escape = False
     for i in range(start, len(text)):
         ch = text[i]
         if in_str:
-            if escape:
-                escape = False
-            elif ch == "\\":
-                escape = True
-            elif ch == '"':
-                in_str = False
+            in_str, escape = _advance_string_state(ch, escape)
             continue
         if ch == '"':
             in_str = True
@@ -272,13 +279,19 @@ def _extract_json_object(text: str) -> dict | None:
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                snippet = text[start : i + 1]
-                try:
-                    parsed = json.loads(snippet)
-                except json.JSONDecodeError:
-                    return None
-                return parsed if isinstance(parsed, dict) else None
-    return None
+                return i
+    return -1
+
+
+def _advance_string_state(ch: str, escape: bool) -> tuple[bool, bool]:
+    """Update (in_string, escape) flags for one character inside a JSON string."""
+    if escape:
+        return True, False
+    if ch == "\\":
+        return True, True
+    if ch == '"':
+        return False, False
+    return True, False
 
 
 def _stub_caller(system: str, user: str, model_id: str, max_tokens: int) -> tuple[str, int, int]:

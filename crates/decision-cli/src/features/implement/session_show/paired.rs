@@ -49,7 +49,11 @@ pub(super) fn lookup_paired_block(store: &Store, session_iri: &str) -> Result<Op
         return Ok(None);
     };
     let verdict = lookup_verdict_for_group(store, &row)?;
-    Ok(Some(render_paired_block(&row, session_iri, verdict.as_ref())))
+    Ok(Some(render_paired_block(
+        &row,
+        session_iri,
+        verdict.as_ref(),
+    )))
 }
 
 fn lookup_paired_group(store: &Store, session_iri: &str) -> Result<Option<PairedRow>> {
@@ -106,6 +110,13 @@ fn lookup_verdict_for_group(store: &Store, row: &PairedRow) -> Result<Option<Ver
         return Ok(None);
     };
     let sol = sol_res.context("session-show verdict solution")?;
+    decode_verdict_row(store, &sol)
+}
+
+fn decode_verdict_row(
+    store: &Store,
+    sol: &oxigraph::sparql::QuerySolution,
+) -> Result<Option<VerdictRow>> {
     let iri = sol.get("v").map(term_iri).unwrap_or_default();
     if iri.is_empty() {
         return Ok(None);
@@ -168,11 +179,7 @@ SELECT ?ref WHERE {{
     Ok(out)
 }
 
-fn render_paired_block(
-    row: &PairedRow,
-    session_iri: &str,
-    verdict: Option<&VerdictRow>,
-) -> String {
+fn render_paired_block(row: &PairedRow, session_iri: &str, verdict: Option<&VerdictRow>) -> String {
     let mut out = String::new();
     out.push_str("Paired:\n");
     let _ = writeln!(out, "  Dispatch group: {}", row.group_iri);
@@ -247,28 +254,32 @@ fn wrap_rationale(text: &str, width: usize) -> Vec<String> {
             lines.push(String::new());
             continue;
         }
-        let mut current = String::new();
-        for word in paragraph.split_whitespace() {
-            if current.is_empty() {
-                current.push_str(word);
-                continue;
-            }
-            if current.len() + 1 + word.len() > width {
-                lines.push(std::mem::take(&mut current));
-                current.push_str(word);
-            } else {
-                current.push(' ');
-                current.push_str(word);
-            }
-        }
-        if !current.is_empty() {
-            lines.push(current);
-        }
+        wrap_paragraph(paragraph, width, &mut lines);
     }
     if lines.is_empty() {
         lines.push("(empty)".to_string());
     }
     lines
+}
+
+fn wrap_paragraph(paragraph: &str, width: usize, lines: &mut Vec<String>) {
+    let mut current = String::new();
+    for word in paragraph.split_whitespace() {
+        if current.is_empty() {
+            current.push_str(word);
+            continue;
+        }
+        if current.len() + 1 + word.len() > width {
+            lines.push(std::mem::take(&mut current));
+            current.push_str(word);
+        } else {
+            current.push(' ');
+            current.push_str(word);
+        }
+    }
+    if !current.is_empty() {
+        lines.push(current);
+    }
 }
 
 /// Extract a stringly literal value from an oxigraph Term. Falls back

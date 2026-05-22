@@ -79,7 +79,8 @@ fn write_product_fixtures(dir: &Path) {
     std::fs::create_dir_all(&tests).expect("tests");
     let ft_body = "---\nid: FT-001\ntitle: test fixture feature\nphase: 1\nstatus: planned\n---\n\nFixture.\n";
     std::fs::write(features.join("FT-001-test-fixture.md"), ft_body).expect("FT-001 fixture");
-    let tc_body = "---\nid: TC-013\ntitle: test fixture tc\nphase: 1\nstatus: passing\n---\n\nFixture.\n";
+    let tc_body =
+        "---\nid: TC-013\ntitle: test fixture tc\nphase: 1\nstatus: passing\n---\n\nFixture.\n";
     std::fs::write(tests.join("TC-013-test-fixture.md"), tc_body).expect("TC-013 fixture");
 }
 
@@ -234,7 +235,10 @@ fn dangling_verifies_returns_dangling_ref_and_writes_no_file() {
     } else {
         Vec::new()
     };
-    assert_eq!(before, after, "no file should be created on dangling verifies");
+    assert_eq!(
+        before, after,
+        "no file should be created on dangling verifies"
+    );
 }
 
 // --- AC #4: dangling environment -----------------------------------------
@@ -276,7 +280,10 @@ fn dangling_environment_returns_dangling_ref_and_writes_no_file() {
     } else {
         Vec::new()
     };
-    assert_eq!(before, after, "no file should be created on dangling environment");
+    assert_eq!(
+        before, after,
+        "no file should be created on dangling environment"
+    );
 }
 
 // --- AC #5: verifies polymorphism — TC id resolves -----------------------

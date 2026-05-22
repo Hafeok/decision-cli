@@ -262,15 +262,13 @@ fn delivery_handler_is_idempotent() {
         }
         _ => panic!("expected solutions"),
     };
-    let writer =
-        StreamWriter::open(Arc::clone(&inmem), stream_iri).expect("writer");
+    let writer = StreamWriter::open(Arc::clone(&inmem), stream_iri).expect("writer");
     let seed = VerifierDispatchSeed {
         group: NamedNode::new(group.as_str()).unwrap(),
         action_session: NamedNode::new(action.as_str()).unwrap(),
     };
-    let result =
-        emit_verifier_dispatch_event(&writer, &inmem, &seed, "2026-05-20T09:16:30Z")
-            .expect("idempotent emit");
+    let result = emit_verifier_dispatch_event(&writer, &inmem, &seed, "2026-05-20T09:16:30Z")
+        .expect("idempotent emit");
     assert!(
         result.is_none(),
         "second emit for the same group must be suppressed"
@@ -286,7 +284,10 @@ fn delivery_handler_is_idempotent() {
            { GRAPH ?g { ?e a dec:VerifierDispatchEvent } } \
          }",
     );
-    assert_eq!(count, 1, "after idempotent retry there must still be 1 event");
+    assert_eq!(
+        count, 1,
+        "after idempotent retry there must still be 1 event"
+    );
 }
 
 fn load_store_from_dump(workdir: &PathBuf) -> Store {

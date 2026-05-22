@@ -38,10 +38,7 @@ pub fn touches_verification_artifacts(inserts: &[Quad]) -> bool {
 ///
 /// # Errors
 /// Returns the first [`SafetyError`] encountered.
-pub fn check_inserts_against_store(
-    inserts: &[Quad],
-    store: &Store,
-) -> Result<(), SafetyError> {
+pub fn check_inserts_against_store(inserts: &[Quad], store: &Store) -> Result<(), SafetyError> {
     for subject in step_subjects_in(inserts) {
         // If the step's env can't be resolved (dangling reference), the
         // safety check is vacuously Ok — FT-036's `DanglingRef` SHACL

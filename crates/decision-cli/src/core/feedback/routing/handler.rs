@@ -15,7 +15,7 @@
 use std::collections::BTreeSet;
 
 use anyhow::{Context, Result};
-use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad, Term};
+use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 // `seed_quads` lives in `super::seed` (ADR-013 Rule 1 split).
 use oxigraph::sparql::QueryResults;
 use oxigraph::store::Store;
@@ -26,10 +26,7 @@ use crate::core::feedback::lifecycle::LifecycleState;
 use crate::core::feedback::transition::{apply, ApplyError};
 use crate::core::role_catalog::role::lookup as lookup_role;
 use crate::core::stream_writer::StreamWriter;
-use crate::core::vocab::{
-    orchestration_graph, rejection_reason as rejection_reason_pred, routed_at as routed_at_pred,
-    target_role as target_role_pred,
-};
+use crate::core::vocab::{orchestration_graph, rejection_reason as rejection_reason_pred};
 
 use super::table::{default_target_role, OverrideActor, ROUTING_TABLE};
 
@@ -150,29 +147,9 @@ pub fn pending_feedback(store: &Store) -> Result<Vec<PendingFeedback>, FeedbackR
     let mut seen: BTreeSet<String> = BTreeSet::new();
     for sol in solutions {
         let sol = sol.map_err(|e| FeedbackRoutingError::Lookup(format!("{e:#}")))?;
-        let Some(Term::NamedNode(feedback)) = sol.get("feedback").cloned() else {
-            continue;
-        };
-        let Some(Term::Literal(class_lit)) = sol.get("class").cloned() else {
-            continue;
-        };
-        let Some(Term::NamedNode(source_session)) = sol.get("sourceSession").cloned() else {
-            continue;
-        };
-        if !seen.insert(feedback.as_str().to_string()) {
-            continue;
+        if let Some(row) = super::handler_parts::row_from_solution(&sol, &mut seen) {
+            out.push(row);
         }
-        let target_override = match sol.get("targetOverride").cloned() {
-            Some(Term::Literal(lit)) => Some(lit.value().to_string()),
-            Some(Term::NamedNode(n)) => Some(n.as_str().to_string()),
-            _ => None,
-        };
-        out.push(PendingFeedback {
-            feedback,
-            class: class_lit.value().to_string(),
-            target_override,
-            source_session,
-        });
     }
     Ok(out)
 }
@@ -251,7 +228,13 @@ pub fn route_pending_feedback(
 ) -> Result<Vec<RoutingOutcome>, FeedbackRoutingError> {
     let mut outcomes: Vec<RoutingOutcome> = Vec::new();
     for pending in pending_feedback(store)? {
-        outcomes.push(route_one(store, writer, &pending, now_rfc3339, override_actor)?);
+        outcomes.push(route_one(
+            store,
+            writer,
+            &pending,
+            now_rfc3339,
+            override_actor,
+        )?);
     }
     Ok(outcomes)
 }
@@ -292,27 +275,8 @@ fn apply_routed(
     now_rfc3339: &str,
     g: &GraphName,
 ) -> Result<RoutingOutcome, FeedbackRoutingError> {
-    let evidence: Vec<Quad> = vec![
-        Quad::new(
-            feedback.clone(),
-            routed_at_pred().into_owned(),
-            Literal::new_simple_literal(now_rfc3339),
-            g.clone(),
-        ),
-        Quad::new(
-            feedback.clone(),
-            target_role_pred().into_owned(),
-            Literal::new_simple_literal(role),
-            g.clone(),
-        ),
-    ];
-    // Use the orchestration named graph as the canonical target for the
-    // transition; the prior `dec:targetRole` literal (if any) is removed
-    // by `apply` together with the lifecycle literal swap.
-    let graph_ref: NamedNodeRef<'_> = match g {
-        GraphName::NamedNode(n) => n.as_ref(),
-        _ => orchestration_graph(),
-    };
+    let evidence = super::handler_parts::build_routed_evidence(feedback, role, now_rfc3339, g);
+    let graph_ref = super::handler_parts::canonical_graph_ref(g);
     // `apply` reads the prior state and validates the transition before
     // committing. Idempotency: if `prior` already advanced past
     // `produced`, the transition validator refuses; we treat that as the

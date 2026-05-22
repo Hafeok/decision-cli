@@ -99,7 +99,21 @@ impl Authority {
 }
 
 fn load_escalation_hints(store: &Store, iri: &str) -> Result<Vec<EscalationHint>> {
-    let q = format!(
+    let q = build_escalation_hints_query(iri);
+    let mut out: Vec<EscalationHint> = Vec::new();
+    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("escalateVia query")?
+    else {
+        return Ok(out);
+    };
+    for sol in sols {
+        let sol = sol.context("escalateVia row")?;
+        out.push(decode_escalation_hint(&sol)?);
+    }
+    Ok(out)
+}
+
+fn build_escalation_hints_query(iri: &str) -> String {
+    format!(
         "PREFIX dec: <https://decision-cli.dev/ns#> \
          SELECT ?category ?class ?target WHERE {{ \
            {{ <{iri}> dec:escalateVia ?hint . \
@@ -112,30 +126,24 @@ fn load_escalation_hints(store: &Store, iri: &str) -> Result<Vec<EscalationHint>
                     dec:escalateClass    ?class ; \
                     dec:escalateTargetRole ?target . }} }} \
          }} ORDER BY ?category",
-    );
-    let mut out: Vec<EscalationHint> = Vec::new();
-    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("escalateVia query")?
-    else {
-        return Ok(out);
-    };
-    for sol in sols {
-        let sol = sol.context("escalateVia row")?;
-        let category = bind_literal(&sol, "category")?;
-        let class_str = bind_literal(&sol, "class")?;
-        let target_role = bind_literal(&sol, "target")?;
-        let class = FeedbackClass::from_iri_value(&class_str).ok_or_else(|| {
-            anyhow!(
-                "escalateVia hint for category {category:?} has unknown class {class_str:?}; \
-                 must be one of the six ADR-023 values"
-            )
-        })?;
-        out.push(EscalationHint {
-            category,
-            class,
-            target_role,
-        });
-    }
-    Ok(out)
+    )
+}
+
+fn decode_escalation_hint(sol: &oxigraph::sparql::QuerySolution) -> Result<EscalationHint> {
+    let category = bind_literal(sol, "category")?;
+    let class_str = bind_literal(sol, "class")?;
+    let target_role = bind_literal(sol, "target")?;
+    let class = FeedbackClass::from_iri_value(&class_str).ok_or_else(|| {
+        anyhow!(
+            "escalateVia hint for category {category:?} has unknown class {class_str:?}; \
+             must be one of the six ADR-023 values"
+        )
+    })?;
+    Ok(EscalationHint {
+        category,
+        class,
+        target_role,
+    })
 }
 
 fn collect_literal_property(store: &Store, iri: &str, predicate: &str) -> Result<Vec<String>> {
@@ -162,11 +170,7 @@ fn collect_literal_property(store: &Store, iri: &str, predicate: &str) -> Result
     Ok(out)
 }
 
-fn single_literal_property(
-    store: &Store,
-    iri: &str,
-    predicate: &str,
-) -> Result<Option<String>> {
+fn single_literal_property(store: &Store, iri: &str, predicate: &str) -> Result<Option<String>> {
     let values = collect_literal_property(store, iri, predicate)?;
     Ok(values.into_iter().next())
 }

@@ -60,10 +60,7 @@ pub fn from_turtle(path: &Path) -> Result<VerificationEnvironment, EnvIoError> {
 
 /// Variant of [`from_turtle`] that consumes bytes directly. The `path`
 /// argument is only used for error reporting.
-pub fn from_turtle_bytes(
-    path: &Path,
-    bytes: &[u8],
-) -> Result<VerificationEnvironment, EnvIoError> {
+pub fn from_turtle_bytes(path: &Path, bytes: &[u8]) -> Result<VerificationEnvironment, EnvIoError> {
     let store = Store::new().map_err(|e| EnvIoError::ParseFailed {
         path: path.to_path_buf(),
         detail: e.to_string(),
@@ -88,16 +85,26 @@ fn find_env_subject(store: &Store, path: &Path) -> Result<NamedNode, EnvIoError>
         "SELECT ?s WHERE {{ GRAPH ?g {{ ?s a <{cls}> }} }}",
         cls = IRI_DEC_VERIFICATION_ENVIRONMENT,
     );
-    let res = store.query(q.as_str()).map_err(|e| EnvIoError::ParseFailed {
-        path: path.to_path_buf(),
-        detail: e.to_string(),
-    })?;
+    let res = store
+        .query(q.as_str())
+        .map_err(|e| EnvIoError::ParseFailed {
+            path: path.to_path_buf(),
+            detail: e.to_string(),
+        })?;
     let oxigraph::sparql::QueryResults::Solutions(sols) = res else {
         return Err(EnvIoError::MalformedShape {
             path: path.to_path_buf(),
             detail: "SPARQL query for VerificationEnvironment returned non-solutions".to_string(),
         });
     };
+    let subjects = collect_env_subjects(sols, path)?;
+    pick_single_env_subject(subjects, path)
+}
+
+fn collect_env_subjects(
+    sols: oxigraph::sparql::QuerySolutionIter,
+    path: &Path,
+) -> Result<Vec<NamedNode>, EnvIoError> {
     let mut subjects: Vec<NamedNode> = Vec::new();
     for sol in sols {
         let sol = sol.map_err(|e| EnvIoError::ParseFailed {
@@ -108,6 +115,13 @@ fn find_env_subject(store: &Store, path: &Path) -> Result<NamedNode, EnvIoError>
             subjects.push(n.clone());
         }
     }
+    Ok(subjects)
+}
+
+fn pick_single_env_subject(
+    mut subjects: Vec<NamedNode>,
+    path: &Path,
+) -> Result<NamedNode, EnvIoError> {
     match subjects.len() {
         0 => Err(EnvIoError::MalformedShape {
             path: path.to_path_buf(),
@@ -126,30 +140,15 @@ fn extract_env(
     subject: &NamedNode,
     path: &Path,
 ) -> Result<VerificationEnvironment, EnvIoError> {
-    let id = id_from_iri(subject.as_str()).ok_or_else(|| EnvIoError::MalformedShape {
-        path: path.to_path_buf(),
-        detail: format!(
-            "subject IRI {iri:?} does not start with {prefix}",
-            iri = subject.as_str(),
-            prefix = IRI_DEC_ENV_PREFIX
-        ),
-    })?;
-    let env_type = single_literal(store, subject, IRI_DEC_ENV_TYPE, path)?.ok_or_else(|| {
-        EnvIoError::MalformedShape {
-            path: path.to_path_buf(),
-            detail: "missing dec:envType".to_string(),
-        }
-    })?;
-    let safety_raw = single_literal(store, subject, IRI_DEC_SAFETY_CLASS, path)?.ok_or_else(
-        || EnvIoError::MalformedShape {
-            path: path.to_path_buf(),
-            detail: "missing dec:safetyClass".to_string(),
-        },
+    let id = extract_id(subject, path)?;
+    let env_type = require_literal(
+        store,
+        subject,
+        IRI_DEC_ENV_TYPE,
+        "missing dec:envType",
+        path,
     )?;
-    let safety_class = SafetyClass::parse(&safety_raw).ok_or_else(|| EnvIoError::MalformedShape {
-        path: path.to_path_buf(),
-        detail: format!("unknown dec:safetyClass value {safety_raw:?}"),
-    })?;
+    let safety_class = extract_safety_class(store, subject, path)?;
     let setup = single_literal(store, subject, IRI_DEC_SETUP, path)?;
     let teardown = single_literal(store, subject, IRI_DEC_TEARDOWN, path)?;
     let endpoint = single_literal(store, subject, IRI_DEC_ENDPOINT, path)?;
@@ -162,6 +161,48 @@ fn extract_env(
         allowed_ops,
         safety_class,
         endpoint,
+    })
+}
+
+fn extract_id(subject: &NamedNode, path: &Path) -> Result<String, EnvIoError> {
+    id_from_iri(subject.as_str()).ok_or_else(|| EnvIoError::MalformedShape {
+        path: path.to_path_buf(),
+        detail: format!(
+            "subject IRI {iri:?} does not start with {prefix}",
+            iri = subject.as_str(),
+            prefix = IRI_DEC_ENV_PREFIX
+        ),
+    })
+}
+
+fn require_literal(
+    store: &Store,
+    subject: &NamedNode,
+    predicate: &str,
+    missing_detail: &str,
+    path: &Path,
+) -> Result<String, EnvIoError> {
+    single_literal(store, subject, predicate, path)?.ok_or_else(|| EnvIoError::MalformedShape {
+        path: path.to_path_buf(),
+        detail: missing_detail.to_string(),
+    })
+}
+
+fn extract_safety_class(
+    store: &Store,
+    subject: &NamedNode,
+    path: &Path,
+) -> Result<SafetyClass, EnvIoError> {
+    let safety_raw = require_literal(
+        store,
+        subject,
+        IRI_DEC_SAFETY_CLASS,
+        "missing dec:safetyClass",
+        path,
+    )?;
+    SafetyClass::parse(&safety_raw).ok_or_else(|| EnvIoError::MalformedShape {
+        path: path.to_path_buf(),
+        detail: format!("unknown dec:safetyClass value {safety_raw:?}"),
     })
 }
 
@@ -204,6 +245,15 @@ fn read_allowed_ops_list(
     subject: &NamedNode,
     path: &Path,
 ) -> Result<Vec<String>, EnvIoError> {
+    let head = pick_allowed_ops_head(store, subject, path)?;
+    walk_allowed_ops_list(store, head, path)
+}
+
+fn pick_allowed_ops_head(
+    store: &Store,
+    subject: &NamedNode,
+    path: &Path,
+) -> Result<Term, EnvIoError> {
     let mut heads: Vec<Term> = Vec::new();
     for quad in store
         .quads_for_pattern(
@@ -225,10 +275,20 @@ fn read_allowed_ops_list(
     if heads.len() > 1 {
         return Err(EnvIoError::MalformedShape {
             path: path.to_path_buf(),
-            detail: format!("expected exactly one dec:allowedOps list, found {}", heads.len()),
+            detail: format!(
+                "expected exactly one dec:allowedOps list, found {}",
+                heads.len()
+            ),
         });
     }
-    let head = heads.remove(0);
+    Ok(heads.remove(0))
+}
+
+fn walk_allowed_ops_list(
+    store: &Store,
+    head: Term,
+    path: &Path,
+) -> Result<Vec<String>, EnvIoError> {
     let mut out: Vec<String> = Vec::new();
     let mut current = head;
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
@@ -236,27 +296,28 @@ fn read_allowed_ops_list(
         if matches!(&current, Term::NamedNode(n) if n.as_str() == RDF_NIL) {
             break;
         }
-        let key = match &current {
-            Term::BlankNode(b) => format!("bn:{}", b.as_str()),
-            Term::NamedNode(n) => format!("iri:{}", n.as_str()),
-            _ => {
-                return Err(EnvIoError::MalformedShape {
-                    path: path.to_path_buf(),
-                    detail: "dec:allowedOps list node has unsupported term shape".to_string(),
-                })
-            }
-        };
+        let key = allowed_ops_term_key(&current, path)?;
         if !seen.insert(key) {
             return Err(EnvIoError::MalformedShape {
                 path: path.to_path_buf(),
                 detail: "dec:allowedOps list is cyclic".to_string(),
             });
         }
-        let first_value = first_value_for(store, &current)?;
-        out.push(first_value);
+        out.push(first_value_for(store, &current)?);
         current = rest_for(store, &current)?;
     }
     Ok(out)
+}
+
+fn allowed_ops_term_key(current: &Term, path: &Path) -> Result<String, EnvIoError> {
+    match current {
+        Term::BlankNode(b) => Ok(format!("bn:{}", b.as_str())),
+        Term::NamedNode(n) => Ok(format!("iri:{}", n.as_str())),
+        _ => Err(EnvIoError::MalformedShape {
+            path: path.to_path_buf(),
+            detail: "dec:allowedOps list node has unsupported term shape".to_string(),
+        }),
+    }
 }
 
 fn first_value_for(store: &Store, head: &Term) -> Result<String, EnvIoError> {
@@ -306,90 +367,4 @@ fn term_to_subject_ref(t: &Term) -> Result<oxigraph::model::Subject, EnvIoError>
             detail: "rdf:List node must be IRI or blank node".to_string(),
         }),
     }
-}
-
-/// Serialise an environment to its canonical Turtle form.
-///
-/// The byte layout is fixed so seed reproducibility (TC-055) does not
-/// depend on an external serialiser's whims. Order of properties is
-/// fixed: `a`, `dec:envType`, `dec:safetyClass`, `dec:allowedOps`,
-/// `dec:setup`, `dec:teardown`, `dec:endpoint`.
-#[must_use]
-pub fn to_canonical_turtle(env: &VerificationEnvironment) -> String {
-    use std::fmt::Write;
-    let mut out = String::new();
-    out.push_str("# decision-cli VerificationEnvironment artifact.\n");
-    out.push_str("# Authored by FT-035 / ADR-028. On-disk Turtle is authoritative.\n\n");
-    out.push_str("@prefix dec: <https://decision-cli.dev/ns#> .\n\n");
-    let _ = writeln!(out, "<{prefix}{id}>", prefix = IRI_DEC_ENV_PREFIX, id = env.id);
-    out.push_str("    a dec:VerificationEnvironment ;\n");
-    let _ = writeln!(
-        out,
-        "    dec:envType {value} ;",
-        value = turtle_string(&env.env_type)
-    );
-    let _ = writeln!(
-        out,
-        "    dec:safetyClass {value} ;",
-        value = turtle_string(env.safety_class.as_str())
-    );
-    let ops_list = format_allowed_ops_list(&env.allowed_ops);
-    let _ = writeln!(out, "    dec:allowedOps {ops_list} ;");
-    if let Some(s) = &env.setup {
-        let _ = writeln!(out, "    dec:setup {value} ;", value = turtle_string(s));
-    }
-    if let Some(s) = &env.teardown {
-        let _ = writeln!(
-            out,
-            "    dec:teardown {value} ;",
-            value = turtle_string(s)
-        );
-    }
-    if let Some(s) = &env.endpoint {
-        let _ = writeln!(
-            out,
-            "    dec:endpoint {value} ;",
-            value = turtle_string(s)
-        );
-    }
-    // Replace the final ";" with "." for valid Turtle.
-    if out.ends_with(" ;\n") {
-        out.truncate(out.len() - 3);
-        out.push_str(" .\n");
-    }
-    out
-}
-
-fn format_allowed_ops_list(ops: &[String]) -> String {
-    if ops.is_empty() {
-        return "()".to_string();
-    }
-    let mut parts: Vec<String> = ops.iter().map(|op| turtle_string(op)).collect();
-    let mut out = String::from("( ");
-    out.push_str(&parts.join(" "));
-    out.push_str(" )");
-    // discard `parts` reference to satisfy clippy if needed.
-    let _ = &mut parts;
-    out
-}
-
-fn turtle_string(value: &str) -> String {
-    let mut out = String::with_capacity(value.len() + 2);
-    out.push('"');
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if (c as u32) < 0x20 => {
-                use std::fmt::Write;
-                let _ = write!(out, "\\u{:04X}", c as u32);
-            }
-            c => out.push(c),
-        }
-    }
-    out.push('"');
-    out
 }

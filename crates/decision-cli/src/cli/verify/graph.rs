@@ -7,13 +7,9 @@ use clap::Subcommand;
 
 use decision_cli::core::handler::Error as HandlerError;
 use decision_cli::verify_graph_generate::{self, GenerateMode, GenerateRequest};
-use decision_cli::verify_graph_list::{
-    self, GraphListRequest, OutputFormat as GraphListFormat,
-};
+use decision_cli::verify_graph_list::{self, GraphListRequest, OutputFormat as GraphListFormat};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
-use decision_cli::verify_graph_show::{
-    self, GraphShowRequest, OutputFormat as GraphShowFormat,
-};
+use decision_cli::verify_graph_show::{self, GraphShowRequest, OutputFormat as GraphShowFormat};
 
 use super::exit_code_for;
 
@@ -177,47 +173,57 @@ fn run_graph_generate(workdir: &Path, args: GraphGenerateArgs) -> ExitCode {
 fn print_generate_outcome(outcome: &verify_graph_generate::GenerateResponse) {
     use decision_cli::verify_graph_generate::proposal::ProposalKind;
     match outcome.proposal.kind {
-        ProposalKind::Match => {
-            if let Some(m) = &outcome.proposal.match_payload {
-                println!(
-                    "{graph} already covers this feature in this environment; \
-                     no new graph needed",
-                    graph = m.graph_id
-                );
-            }
-        }
-        ProposalKind::New => match &outcome.persisted {
-            Some(p) => {
-                println!("Persisted VerificationGraph {id}", id = p.graph_id);
-                println!("  Path: {}", p.graph_path.display());
-                if p.coverage_report.uncovered.is_empty() {
-                    println!("  Coverage: complete");
-                } else {
-                    println!(
-                        "  Coverage gaps: {gaps:?}",
-                        gaps = p.coverage_report.uncovered
-                    );
-                }
-            }
-            None => {
-                println!(
-                    "Proposed New graph (env={env}); re-run with --accept to persist.",
-                    env = outcome
-                        .proposal
-                        .new
-                        .as_ref()
-                        .map(|n| n.environment.clone())
-                        .unwrap_or_default()
-                );
-            }
-        },
-        ProposalKind::Gap => {
-            if let Some(g) = &outcome.proposal.gap {
-                println!("Gap — worker cannot produce a covering graph in this env.");
-                println!("  Uncovered: {tcs:?}", tcs = g.uncovered_tcs);
-                println!("  Reason: {r}", r = g.reason);
-            }
-        }
+        ProposalKind::Match => print_match_outcome(outcome),
+        ProposalKind::New => print_new_outcome(outcome),
+        ProposalKind::Gap => print_gap_outcome(outcome),
+    }
+}
+
+fn print_match_outcome(outcome: &verify_graph_generate::GenerateResponse) {
+    if let Some(m) = &outcome.proposal.match_payload {
+        println!(
+            "{graph} already covers this feature in this environment; \
+             no new graph needed",
+            graph = m.graph_id
+        );
+    }
+}
+
+fn print_new_outcome(outcome: &verify_graph_generate::GenerateResponse) {
+    match &outcome.persisted {
+        Some(p) => print_persisted_new(p),
+        None => print_unpersisted_new(outcome),
+    }
+}
+
+fn print_persisted_new(p: &verify_graph_generate::PersistedSummary) {
+    println!("Persisted VerificationGraph {id}", id = p.graph_id);
+    println!("  Path: {}", p.graph_path.display());
+    if p.coverage_report.uncovered.is_empty() {
+        println!("  Coverage: complete");
+    } else {
+        println!(
+            "  Coverage gaps: {gaps:?}",
+            gaps = p.coverage_report.uncovered
+        );
+    }
+}
+
+fn print_unpersisted_new(outcome: &verify_graph_generate::GenerateResponse) {
+    let env = outcome
+        .proposal
+        .new
+        .as_ref()
+        .map(|n| n.environment.clone())
+        .unwrap_or_default();
+    println!("Proposed New graph (env={env}); re-run with --accept to persist.");
+}
+
+fn print_gap_outcome(outcome: &verify_graph_generate::GenerateResponse) {
+    if let Some(g) = &outcome.proposal.gap {
+        println!("Gap — worker cannot produce a covering graph in this env.");
+        println!("  Uncovered: {tcs:?}", tcs = g.uncovered_tcs);
+        println!("  Reason: {r}", r = g.reason);
     }
 }
 

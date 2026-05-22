@@ -115,14 +115,13 @@ impl EnvDocument {
     /// as `HandlerError::Internal` (they would have failed SHACL on the
     /// write path, so seeing them here is a graph-corruption signal).
     pub fn to_env(&self) -> Result<VerificationEnvironment, HandlerError> {
-        let safety = SafetyClass::parse(&self.safety_class).ok_or_else(|| {
-            HandlerError::Internal {
+        let safety =
+            SafetyClass::parse(&self.safety_class).ok_or_else(|| HandlerError::Internal {
                 detail: format!(
                     "unknown safety class {got:?} in env document",
                     got = self.safety_class,
                 ),
-            }
-        })?;
+            })?;
         Ok(VerificationEnvironment {
             id: self.id.clone(),
             env_type: self.env_type.clone(),
@@ -147,12 +146,13 @@ pub struct EnvShowResponse {
 
 /// Parse the structured `Request` envelope into [`EnvShowRequest`].
 pub fn parse_request(req: &Request) -> Result<EnvShowRequest, HandlerError> {
-    let mut parsed: EnvShowRequest = serde_json::from_value(req.arguments.clone()).map_err(
-        |e| HandlerError::InvalidArgument {
-            field: "arguments".to_string(),
-            detail: format!("malformed dec_verify_env_show arguments: {e}"),
-        },
-    )?;
+    let mut parsed: EnvShowRequest =
+        serde_json::from_value(req.arguments.clone()).map_err(|e| {
+            HandlerError::InvalidArgument {
+                field: "arguments".to_string(),
+                detail: format!("malformed dec_verify_env_show arguments: {e}"),
+            }
+        })?;
     if parsed.workdir.is_none() {
         parsed.workdir = std::env::current_dir().ok();
     }
@@ -162,7 +162,18 @@ pub fn parse_request(req: &Request) -> Result<EnvShowRequest, HandlerError> {
 /// MCP tool descriptor — registered by the binary in `cli::mcp`.
 #[must_use]
 pub fn tool_descriptor() -> ToolDescriptor {
-    let handler: ToolHandler = Arc::new(|req: Request| {
+    ToolDescriptor::new(
+        TOOL_NAME,
+        "Show a single dec:VerificationEnvironment artifact (FT-040 / ADR-028).",
+        input_schema(),
+        tool_handler(),
+    )
+    .with_output_schema(output_schema())
+}
+
+/// MCP handler closure — runs the single handler and renders the response.
+fn tool_handler() -> ToolHandler {
+    Arc::new(|req: Request| {
         let parsed = parse_request(&req)?;
         let outcome = run(&parsed)?;
         let summary = format!(
@@ -177,36 +188,39 @@ pub fn tool_descriptor() -> ToolDescriptor {
             }),
             summary,
         ))
-    });
-    ToolDescriptor::new(
-        TOOL_NAME,
-        "Show a single dec:VerificationEnvironment artifact (FT-040 / ADR-028).",
-        input_schema(),
-        handler,
-    )
-    .with_output_schema(json!({
+    })
+}
+
+/// JSON Schema for the MCP tool's structured output.
+fn output_schema() -> Value {
+    json!({
         "type": "object",
         "required": ["env", "path"],
         "properties": {
-            "env": {
-                "type": "object",
-                "required": ["id", "env_type", "safety_class", "allowed_ops"],
-                "properties": {
-                    "id": { "type": "string" },
-                    "env_type": { "type": "string" },
-                    "safety_class": { "type": "string" },
-                    "endpoint": { "type": "string" },
-                    "allowed_ops": {
-                        "type": "array",
-                        "items": { "type": "string" },
-                    },
-                    "setup": { "type": "string" },
-                    "teardown": { "type": "string" },
-                },
-            },
+            "env": env_document_schema(),
             "path": { "type": "string" },
         },
-    }))
+    })
+}
+
+/// JSON Schema fragment describing the [`EnvDocument`] shape.
+fn env_document_schema() -> Value {
+    json!({
+        "type": "object",
+        "required": ["id", "env_type", "safety_class", "allowed_ops"],
+        "properties": {
+            "id": { "type": "string" },
+            "env_type": { "type": "string" },
+            "safety_class": { "type": "string" },
+            "endpoint": { "type": "string" },
+            "allowed_ops": {
+                "type": "array",
+                "items": { "type": "string" },
+            },
+            "setup": { "type": "string" },
+            "teardown": { "type": "string" },
+        },
+    })
 }
 
 /// JSON Schema describing the MCP tool's input arguments.

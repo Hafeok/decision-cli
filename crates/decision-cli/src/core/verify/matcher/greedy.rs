@@ -22,10 +22,7 @@ use crate::core::verify::coverage::TcId;
 #[must_use]
 pub(super) fn numeric_suffix_key(id: &str) -> (u64, String) {
     let tail = id.strip_prefix("VG-").unwrap_or(id);
-    let digits: String = tail
-        .chars()
-        .take_while(char::is_ascii_digit)
-        .collect();
+    let digits: String = tail.chars().take_while(char::is_ascii_digit).collect();
     let n = digits.parse::<u64>().unwrap_or(u64::MAX);
     (n, id.to_string())
 }
@@ -43,29 +40,7 @@ pub(super) fn minimum_cover<'a>(
     let mut chosen: Vec<&Candidate> = Vec::new();
 
     loop {
-        // Score every still-unused candidate by how many *new* TCs it
-        // would add. Best score wins; ties broken by the candidate's
-        // position in the input list (suffix-sorted upstream).
-        let mut best: Option<(usize, usize)> = None; // (score, index)
-        for (i, cand) in non_empty.iter().enumerate() {
-            if used.contains(cand.1.as_str()) {
-                continue;
-            }
-            let score = cand
-                .2
-                .iter()
-                .filter(|tc| residual.contains(tc.as_str()))
-                .count();
-            if score == 0 {
-                continue;
-            }
-            match best {
-                None => best = Some((score, i)),
-                Some((s, _)) if score > s => best = Some((score, i)),
-                _ => {} // lower or equal score with earlier index: keep earlier
-            }
-        }
-        let Some((_, idx)) = best else {
+        let Some(idx) = pick_best_candidate(non_empty, &used, &residual) else {
             // No candidate can extend the cover.
             break;
         };
@@ -80,6 +55,37 @@ pub(super) fn minimum_cover<'a>(
         }
     }
     chosen
+}
+
+/// Score every still-unused candidate by how many *new* TCs it would
+/// add. Best score wins; ties broken by the candidate's position in the
+/// input list (suffix-sorted upstream). Returns the chosen index, or
+/// `None` when no candidate can extend the cover.
+fn pick_best_candidate(
+    non_empty: &[Candidate],
+    used: &BTreeSet<&str>,
+    residual: &BTreeSet<&str>,
+) -> Option<usize> {
+    let mut best: Option<(usize, usize)> = None; // (score, index)
+    for (i, cand) in non_empty.iter().enumerate() {
+        if used.contains(cand.1.as_str()) {
+            continue;
+        }
+        let score = cand
+            .2
+            .iter()
+            .filter(|tc| residual.contains(tc.as_str()))
+            .count();
+        if score == 0 {
+            continue;
+        }
+        match best {
+            None => best = Some((score, i)),
+            Some((s, _)) if score > s => best = Some((score, i)),
+            _ => {} // lower or equal score with earlier index: keep earlier
+        }
+    }
+    best.map(|(_, idx)| idx)
 }
 
 #[cfg(test)]
@@ -133,10 +139,7 @@ mod tests {
 
     #[test]
     fn minimum_cover_returns_partial_when_no_candidate_extends() {
-        let tcs: Vec<String> = vec!["T1", "T2"]
-            .into_iter()
-            .map(str::to_string)
-            .collect();
+        let tcs: Vec<String> = vec!["T1", "T2"].into_iter().map(str::to_string).collect();
         let cands = vec![(
             "feat".to_string(),
             "https://decision-cli.dev/ns/graph/VG-1".to_string(),

@@ -14,8 +14,8 @@ use super::vocab::{
     DEC_ONTOLOGY_VERSION, DEC_SESSION_CLASS, PROV_ACTIVITY, PROV_AT_TIME, PROV_DERIVED_FROM,
     RDF_TYPE,
 };
-use crate::core::worker::manifest_sha256_hex;
 use super::InitError;
+use crate::core::worker::manifest_sha256_hex;
 
 pub(super) fn copy_triples_default(
     src: &Store,
@@ -299,7 +299,6 @@ fn seed_verify_env_files(tmp_dec: &Path) -> Result<(), InitError> {
     fs::create_dir_all(&env_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
     let ttl = to_canonical_turtle(&ephemeral_cli_env());
     let target = env_dir.join(EPHEMERAL_CLI_ENV_FILENAME);
-    fs::write(&target, ttl.as_bytes())
-        .map_err(|e| InitError::PersistFailed(e.to_string()))?;
+    fs::write(&target, ttl.as_bytes()).map_err(|e| InitError::PersistFailed(e.to_string()))?;
     Ok(())
 }

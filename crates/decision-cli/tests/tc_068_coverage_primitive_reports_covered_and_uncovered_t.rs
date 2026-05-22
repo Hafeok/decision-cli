@@ -14,7 +14,7 @@ use decision_cli::core::ontology::verification_graph::{
 use decision_cli::core::verify::coverage::feature_resolver::{
     feature_iri_for, graph_iri_for, tc_iri_for,
 };
-use decision_cli::core::verify::coverage::{feature_covered_by, feature_coverage};
+use decision_cli::core::verify::coverage::{feature_coverage, feature_covered_by};
 use decision_cli::vocab::verify_graph_named_graph;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
@@ -116,8 +116,8 @@ fn tc_068_feature_covered_by_reports_per_graph_partition() {
     let vg = build_vg_x();
     insert_quads(&store, &vg.to_quads(verify_graph_named_graph()));
 
-    let report = feature_covered_by("FT-X", "VG-X", &store, wd.path())
-        .expect("feature_covered_by ok");
+    let report =
+        feature_covered_by("FT-X", "VG-X", &store, wd.path()).expect("feature_covered_by ok");
 
     // 1. all_tcs reflects the feature's declared TC list, in order.
     assert_eq!(
@@ -164,8 +164,7 @@ fn tc_068_feature_coverage_none_candidates_discovers_graphs_in_store() {
     let store = Store::new().expect("in-memory store");
     insert_quads(&store, &build_vg_x().to_quads(verify_graph_named_graph()));
 
-    let report = feature_coverage("FT-X", None, &store, wd.path())
-        .expect("feature_coverage ok");
+    let report = feature_coverage("FT-X", None, &store, wd.path()).expect("feature_coverage ok");
 
     assert_eq!(report.uncovered, vec![tc_iri_for("TC-T3")]);
     assert_eq!(report.considered, vec![graph_iri_for("VG-X")]);
@@ -246,8 +245,7 @@ fn tc_068_unknown_feature_surfaces_artifact_not_found() {
     fs::create_dir_all(wd.path().join(".product/features")).expect("mk");
 
     let store = Store::new().expect("in-memory store");
-    let err = feature_coverage("FT-MISSING", None, &store, wd.path())
-        .expect_err("must fail");
+    let err = feature_coverage("FT-MISSING", None, &store, wd.path()).expect_err("must fail");
     use decision_cli::core::verify::coverage::CoverageError;
     match err {
         CoverageError::ArtifactNotFound { kind, id } => {

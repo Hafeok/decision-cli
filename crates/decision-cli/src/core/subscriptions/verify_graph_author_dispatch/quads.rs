@@ -10,8 +10,8 @@ use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 use crate::core::vocab::{
     bundle_hash_pred, emitted_at, event_class, feature_ref, orchestration_graph, target_role,
     triggered_by_event_id, verify_graph_author_dispatch_event_class,
-    EVENT_CLASS_VERIFY_GRAPH_AUTHOR_DISPATCH, IRI_DEC_EVENT,
-    IRI_DEC_ENVIRONMENT, VERIFY_GRAPH_AUTHOR_TARGET_ROLE,
+    EVENT_CLASS_VERIFY_GRAPH_AUTHOR_DISPATCH, IRI_DEC_ENVIRONMENT, IRI_DEC_EVENT,
+    VERIFY_GRAPH_AUTHOR_TARGET_ROLE,
 };
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -62,10 +62,13 @@ fn build_event_type_quads(event_iri: &NamedNode, g: &GraphName) -> Vec<Quad> {
     ]
 }
 
-fn build_event_payload_quads(
-    input: &DispatchEventQuadInput<'_>,
-    g: &GraphName,
-) -> Vec<Quad> {
+fn build_event_payload_quads(input: &DispatchEventQuadInput<'_>, g: &GraphName) -> Vec<Quad> {
+    let mut quads = build_event_role_quads(input, g);
+    quads.extend(build_event_provenance_quads(input, g));
+    quads
+}
+
+fn build_event_role_quads(input: &DispatchEventQuadInput<'_>, g: &GraphName) -> Vec<Quad> {
     let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT).into_owned();
     vec![
         Quad::new(
@@ -92,6 +95,11 @@ fn build_event_payload_quads(
             Literal::new_simple_literal(input.env_short),
             g.clone(),
         ),
+    ]
+}
+
+fn build_event_provenance_quads(input: &DispatchEventQuadInput<'_>, g: &GraphName) -> Vec<Quad> {
+    vec![
         Quad::new(
             input.event_iri.clone(),
             bundle_hash_pred().into_owned(),

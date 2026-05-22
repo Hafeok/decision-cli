@@ -119,7 +119,14 @@ fn check_required_fields(
         (IRI_DEC_EVIDENCE, "dec:evidence", true),
     ];
     for (predicate, label, require_nonempty) in required_literals {
-        check_required_literal(quads, subject, predicate, label, require_nonempty, violations);
+        check_required_literal(
+            quads,
+            subject,
+            predicate,
+            label,
+            require_nonempty,
+            violations,
+        );
     }
     let required_iris = [
         (IRI_DEC_SOURCE_SESSION, "dec:sourceSession"),

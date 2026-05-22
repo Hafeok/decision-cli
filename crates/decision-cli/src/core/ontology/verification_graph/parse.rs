@@ -227,11 +227,7 @@ fn single_boolean(
     }
 }
 
-pub(super) fn read_iri_list(
-    store: &Store,
-    subject: &NamedNode,
-    predicate: &str,
-) -> Vec<NamedNode> {
+pub(super) fn read_iri_list(store: &Store, subject: &NamedNode, predicate: &str) -> Vec<NamedNode> {
     let mut out: Vec<NamedNode> = Vec::new();
     for quad in store
         .quads_for_pattern(

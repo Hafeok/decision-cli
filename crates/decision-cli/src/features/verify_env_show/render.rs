@@ -23,29 +23,37 @@ pub fn render_text(resp: &EnvShowResponse) -> String {
     if let Some(ep) = &env.endpoint {
         out.push_str(&format!("  endpoint:     {ep}\n"));
     }
-    out.push_str("  allowed-ops:\n");
-    if env.allowed_ops.is_empty() {
-        out.push_str("    (none)\n");
-    } else {
-        for op in &env.allowed_ops {
-            out.push_str(&format!("    - {op}\n"));
-        }
-    }
-    if let Some(s) = &env.setup {
-        out.push_str("  setup:\n");
-        for line in s.lines() {
-            out.push_str(&format!("    {line}\n"));
-        }
-    }
-    if let Some(s) = &env.teardown {
-        out.push_str("  teardown:\n");
-        for line in s.lines() {
-            out.push_str(&format!("    {line}\n"));
-        }
-    }
+    push_allowed_ops(&mut out, &env.allowed_ops);
+    push_optional_block(&mut out, "setup", env.setup.as_deref());
+    push_optional_block(&mut out, "teardown", env.teardown.as_deref());
     out.push('\n');
     out.push_str(&format!("Path: {}\n", resp.path.display()));
     out
+}
+
+/// Append the `allowed-ops:` section. Empty lists render as `(none)`
+/// to keep the block visible in the human render.
+fn push_allowed_ops(out: &mut String, ops: &[String]) {
+    out.push_str("  allowed-ops:\n");
+    if ops.is_empty() {
+        out.push_str("    (none)\n");
+        return;
+    }
+    for op in ops {
+        out.push_str(&format!("    - {op}\n"));
+    }
+}
+
+/// Append a `<label>:` section with each body line indented four
+/// spaces. Absent bodies render nothing (the section is dropped).
+fn push_optional_block(out: &mut String, label: &str, body: Option<&str>) {
+    let Some(body) = body else {
+        return;
+    };
+    out.push_str(&format!("  {label}:\n"));
+    for line in body.lines() {
+        out.push_str(&format!("    {line}\n"));
+    }
 }
 
 /// Render the env document as a single JSON object. Optional fields

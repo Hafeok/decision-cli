@@ -81,7 +81,17 @@ pub fn parse_request(req: &Request) -> Result<GraphNewRequest, HandlerError> {
 /// MCP tool descriptor — registered by `cli::mcp::build_production_registry`.
 #[must_use]
 pub fn tool_descriptor() -> ToolDescriptor {
-    let handler: ToolHandler = Arc::new(|req: Request| {
+    ToolDescriptor::new(
+        TOOL_NAME,
+        "Create a new dec:VerificationGraph artifact (FT-041 / ADR-028).",
+        input_schema(),
+        build_tool_handler(),
+    )
+    .with_output_schema(output_schema())
+}
+
+fn build_tool_handler() -> ToolHandler {
+    Arc::new(|req: Request| {
         let parsed = parse_request(&req)?;
         let outcome = run(&parsed)?;
         let summary = format!(
@@ -96,21 +106,18 @@ pub fn tool_descriptor() -> ToolDescriptor {
             }),
             summary,
         ))
-    });
-    ToolDescriptor::new(
-        TOOL_NAME,
-        "Create a new dec:VerificationGraph artifact (FT-041 / ADR-028).",
-        input_schema(),
-        handler,
-    )
-    .with_output_schema(json!({
+    })
+}
+
+fn output_schema() -> Value {
+    json!({
         "type": "object",
         "required": ["id", "path"],
         "properties": {
             "id": { "type": "string" },
             "path": { "type": "string" },
         },
-    }))
+    })
 }
 
 /// JSON Schema describing the MCP tool's input arguments.
@@ -149,12 +156,7 @@ pub fn run(req: &GraphNewRequest) -> Result<GraphNewResponse, HandlerError> {
 
     let graph_dir = workdir.join(".dec").join("verify").join("graph");
     let id = resolve_id(req, &graph_dir)?;
-    let graph = VerificationGraph::new(
-        &id,
-        ArtifactRef(verifies_iri),
-        environment_iri,
-        Vec::new(),
-    );
+    let graph = VerificationGraph::new(&id, ArtifactRef(verifies_iri), environment_iri, Vec::new());
     write_through_writer(workdir, &graph)?;
     let path = persist::write_graph_file(&graph_dir, &id, &graph)?;
     Ok(GraphNewResponse {
@@ -206,33 +208,44 @@ fn write_through_writer(workdir: &Path, graph: &VerificationGraph) -> Result<(),
         detail: format!("loading active scope: {e}"),
     })?;
     let dump_path = orchestration_dump_path(workdir);
-    let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
-        detail: format!("loading orchestration store: {e}"),
-    })?;
-    let store = Arc::new(store);
-    let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| HandlerError::Internal {
-        detail: format!("active stream iri {iri}: {e}", iri = scope.stream_iri),
-    })?;
-    let writer = StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| {
-        HandlerError::Internal {
-            detail: format!("opening stream writer: {e}"),
-        }
-    })?;
+    let store = open_store(&dump_path)?;
+    let writer = open_writer(Arc::clone(&store), &scope.stream_iri)?;
     let quads = graph.to_quads(verify_graph_named_graph());
-    writer.commit(Mutation::insert(quads)).map_err(|e| {
-        let msg = format!("{e:#}");
-        if msg.contains("SHACL violation") {
-            HandlerError::SchemaViolation { detail: msg }
-        } else if msg.contains("safety violation") {
-            HandlerError::Internal { detail: msg }
-        } else {
-            HandlerError::Internal { detail: msg }
-        }
-    })?;
+    writer
+        .commit(Mutation::insert(quads))
+        .map_err(commit_to_handler_error)?;
     persist_store(&store, &dump_path).map_err(|e| HandlerError::Internal {
         detail: format!("persisting store: {e}"),
     })?;
     Ok(())
+}
+
+fn open_store(dump_path: &Path) -> Result<Arc<oxigraph::store::Store>, HandlerError> {
+    let store = load_store_from_dump(dump_path).map_err(|e| HandlerError::Internal {
+        detail: format!("loading orchestration store: {e}"),
+    })?;
+    Ok(Arc::new(store))
+}
+
+fn open_writer(
+    store: Arc<oxigraph::store::Store>,
+    stream_iri: &str,
+) -> Result<StreamWriter, HandlerError> {
+    let iri = NamedNode::new(stream_iri).map_err(|e| HandlerError::Internal {
+        detail: format!("active stream iri {stream_iri}: {e}"),
+    })?;
+    StreamWriter::open(store, iri).map_err(|e| HandlerError::Internal {
+        detail: format!("opening stream writer: {e}"),
+    })
+}
+
+fn commit_to_handler_error<E: std::fmt::Display>(e: E) -> HandlerError {
+    let msg = format!("{e:#}");
+    if msg.contains("SHACL violation") {
+        HandlerError::SchemaViolation { detail: msg }
+    } else {
+        HandlerError::Internal { detail: msg }
+    }
 }
 
 fn io_err(e: std::io::Error) -> HandlerError {

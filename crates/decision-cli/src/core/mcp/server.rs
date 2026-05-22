@@ -74,18 +74,26 @@ pub fn serve_stdio_with_io<R: BufRead, W: Write>(
         if trimmed.is_empty() {
             continue;
         }
-        match serde_json::from_str::<RpcRequest>(trimmed) {
-            Ok(req) => handle_request(req, registry, &mut output)?,
-            Err(err) => {
-                warn!(target: "dec_mcp", error = %err, "parse error on incoming frame");
-                let frame = RpcErrorFrame::new(
-                    Id::Null,
-                    ERR_PARSE,
-                    "parse error",
-                    Some(json!({"detail": err.to_string()})),
-                );
-                write_frame(&mut output, &frame)?;
-            }
+        dispatch_frame(trimmed, registry, &mut output)?;
+    }
+}
+
+fn dispatch_frame<W: Write>(
+    trimmed: &str,
+    registry: &ToolRegistry,
+    output: &mut W,
+) -> std::io::Result<()> {
+    match serde_json::from_str::<RpcRequest>(trimmed) {
+        Ok(req) => handle_request(req, registry, output),
+        Err(err) => {
+            warn!(target: "dec_mcp", error = %err, "parse error on incoming frame");
+            let frame = RpcErrorFrame::new(
+                Id::Null,
+                ERR_PARSE,
+                "parse error",
+                Some(json!({"detail": err.to_string()})),
+            );
+            write_frame(output, &frame)
         }
     }
 }
@@ -152,7 +160,10 @@ fn tools_list_result(registry: &ToolRegistry) -> Value {
     json!({ "tools": tools })
 }
 
-fn tools_call_result(params: Option<&Value>, registry: &ToolRegistry) -> Result<Value, MethodError> {
+fn tools_call_result(
+    params: Option<&Value>,
+    registry: &ToolRegistry,
+) -> Result<Value, MethodError> {
     let params = params.ok_or_else(|| {
         MethodError::InvalidParams("tools/call requires params with 'name'".to_string())
     })?;
@@ -210,8 +221,10 @@ fn render_tool_error(err: &HandlerError) -> Value {
 }
 
 fn write_frame<W: Write, T: serde::Serialize>(output: &mut W, frame: &T) -> std::io::Result<()> {
-    let line = serde_json::to_string(frame)
-        .unwrap_or_else(|_| "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"serialise failed\"}}".to_string());
+    let line = serde_json::to_string(frame).unwrap_or_else(|_| {
+        "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"serialise failed\"}}"
+            .to_string()
+    });
     output.write_all(line.as_bytes())?;
     output.write_all(b"\n")?;
     output.flush()
@@ -233,9 +246,12 @@ impl MethodError {
                 format!("method not found: {m}"),
                 None,
             ),
-            Self::InvalidParams(detail) => {
-                RpcErrorFrame::new(id, ERR_INVALID_PARAMS, "invalid params", Some(json!({"detail": detail})))
-            }
+            Self::InvalidParams(detail) => RpcErrorFrame::new(
+                id,
+                ERR_INVALID_PARAMS,
+                "invalid params",
+                Some(json!({"detail": detail})),
+            ),
             Self::ToolNotFound(name) => RpcErrorFrame::new(
                 id,
                 ERR_INTERNAL,
@@ -280,8 +296,7 @@ mod tests {
             .join("\n");
         let cursor = Cursor::new(input);
         let mut out: Vec<u8> = Vec::new();
-        serve_stdio_with_io(reg, std::io::BufReader::new(cursor), &mut out)
-            .expect("serve loop");
+        serve_stdio_with_io(reg, std::io::BufReader::new(cursor), &mut out).expect("serve loop");
         String::from_utf8(out)
             .expect("utf8")
             .lines()
@@ -306,10 +321,7 @@ mod tests {
     #[test]
     fn tools_list_returns_registered_tools() {
         let reg = registry_with_ping();
-        let resps = run_lines(
-            &reg,
-            &[r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#],
-        );
+        let resps = run_lines(&reg, &[r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#]);
         let tools = resps[0]["result"]["tools"].as_array().expect("array");
         assert_eq!(tools.len(), 1);
         assert_eq!(tools[0]["name"], "dec_mcp_ping");
@@ -323,7 +335,9 @@ mod tests {
         let reg = registry_with_ping();
         let resps = run_lines(
             &reg,
-            &[r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"dec_mcp_ping","arguments":{"hi":"there"}}}"#],
+            &[
+                r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"dec_mcp_ping","arguments":{"hi":"there"}}}"#,
+            ],
         );
         let result = &resps[0]["result"];
         assert_eq!(result["isError"], false);

@@ -19,12 +19,10 @@ fn writer() -> (Arc<Store>, StreamWriter) {
 }
 
 fn mint_pending_group(writer: &StreamWriter, idx: usize) -> DispatchGroup {
-    let group_iri =
-        NamedNode::new(format!("urn:dec:test:vd:group:{idx}")).expect("group iri");
+    let group_iri = NamedNode::new(format!("urn:dec:test:vd:group:{idx}")).expect("group iri");
     let action_iri =
         NamedNode::new(format!("urn:dec:test:vd:session/action/{idx}")).expect("action iri");
-    let mut group =
-        DispatchGroup::mint(writer, group_iri, action_iri, "FT-022").expect("mint");
+    let mut group = DispatchGroup::mint(writer, group_iri, action_iri, "FT-022").expect("mint");
     group
         .transition(writer, DispatchEvent::ActionCompleted)
         .expect("action completed");
@@ -107,10 +105,8 @@ fn pending_groups_excludes_already_paired_groups() {
 fn pending_groups_excludes_action_failed_groups() {
     let (store, w) = writer();
     let group_iri = NamedNode::new("urn:dec:test:vd:group:failed").expect("group iri");
-    let action_iri =
-        NamedNode::new("urn:dec:test:vd:session/action/failed").expect("action iri");
-    let mut group =
-        DispatchGroup::mint(&w, group_iri, action_iri, "FT-022").expect("mint");
+    let action_iri = NamedNode::new("urn:dec:test:vd:session/action/failed").expect("action iri");
+    let mut group = DispatchGroup::mint(&w, group_iri, action_iri, "FT-022").expect("mint");
     group
         .transition(&w, DispatchEvent::ActionFailed)
         .expect("action failed");
@@ -134,8 +130,8 @@ fn emit_event_is_idempotent_for_same_group() {
         .expect("first emission");
     assert_eq!(first.group, seed.group);
     // Second emission for the same group is a no-op.
-    let second = emit_verifier_dispatch_event(&w, &store, &seed, "2026-05-20T09:16:20Z")
-        .expect("emit ok");
+    let second =
+        emit_verifier_dispatch_event(&w, &store, &seed, "2026-05-20T09:16:20Z").expect("emit ok");
     assert!(second.is_none(), "second emission must be suppressed");
     assert!(
         already_dispatched(&store, &seed.group).expect("ask"),
@@ -194,7 +190,10 @@ fn emit_event_writes_required_predicates() {
     // dec:dispatchGroup and dec:bundleSeed must reference the seed.
     for (pred, expected) in [
         (crate::core::vocab::IRI_DEC_DISPATCH_GROUP_REF, &seed.group),
-        (crate::core::vocab::IRI_DEC_BUNDLE_SEED, &seed.action_session),
+        (
+            crate::core::vocab::IRI_DEC_BUNDLE_SEED,
+            &seed.action_session,
+        ),
     ] {
         let found = store
             .quads_for_pattern(

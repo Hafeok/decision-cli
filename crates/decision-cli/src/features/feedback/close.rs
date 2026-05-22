@@ -292,6 +292,13 @@ pub fn format_close(outcome: &CloseOutcome) -> String {
 #[must_use]
 pub fn format_close_json(outcome: &CloseOutcome) -> String {
     let mut out = String::from("{\n");
+    append_scalar_fields(&mut out, outcome);
+    append_resumed_dispatches(&mut out, &outcome.resumed_groups);
+    out.push_str("}\n");
+    out
+}
+
+fn append_scalar_fields(out: &mut String, outcome: &CloseOutcome) {
     out.push_str(&format!(
         "  \"feedback\": \"{}\",\n",
         json_escape(&outcome.feedback_iri)
@@ -308,25 +315,26 @@ pub fn format_close_json(outcome: &CloseOutcome) -> String {
         "  \"closed_by_iri\": {},\n",
         json_opt(Some(&outcome.closed_by_iri))
     ));
+}
+
+fn append_resumed_dispatches(out: &mut String, groups: &[ResumedGroup]) {
     out.push_str("  \"resumed_dispatches\": [");
-    if outcome.resumed_groups.is_empty() {
+    if groups.is_empty() {
         out.push_str("]\n");
-    } else {
-        out.push('\n');
-        for (i, r) in outcome.resumed_groups.iter().enumerate() {
-            out.push_str("    {");
-            out.push_str(&format!("\"group\": \"{}\", ", json_escape(&r.group_iri)));
-            out.push_str(&format!("\"outcome\": \"{}\"", json_escape(&r.outcome)));
-            out.push('}');
-            if i + 1 < outcome.resumed_groups.len() {
-                out.push(',');
-            }
-            out.push('\n');
-        }
-        out.push_str("  ]\n");
+        return;
     }
-    out.push_str("}\n");
-    out
+    out.push('\n');
+    for (i, r) in groups.iter().enumerate() {
+        out.push_str("    {");
+        out.push_str(&format!("\"group\": \"{}\", ", json_escape(&r.group_iri)));
+        out.push_str(&format!("\"outcome\": \"{}\"", json_escape(&r.outcome)));
+        out.push('}');
+        if i + 1 < groups.len() {
+            out.push(',');
+        }
+        out.push('\n');
+    }
+    out.push_str("  ]\n");
 }
 
 /// Convenience: convert a [`CloseError`] into an `anyhow` so the
@@ -337,8 +345,7 @@ pub fn close_anyhow(
     addressing_iri: &str,
     closed_by_identity: &str,
 ) -> Result<CloseOutcome> {
-    close(workdir, feedback_iri, addressing_iri, closed_by_identity)
-        .map_err(|e| anyhow!("{e}"))
+    close(workdir, feedback_iri, addressing_iri, closed_by_identity).map_err(|e| anyhow!("{e}"))
 }
 
 #[cfg(test)]

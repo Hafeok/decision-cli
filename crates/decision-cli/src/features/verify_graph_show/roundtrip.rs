@@ -40,42 +40,51 @@ impl std::error::Error for ReconstructError {}
 /// Reconstruct an in-memory [`VerificationGraph`] from its on-the-wire
 /// document. IRI prefixes are reapplied verbatim per ADR-028.
 pub fn document_to_graph(doc: &GraphDocument) -> Result<VerificationGraph, ReconstructError> {
-    let graph_iri = NamedNode::new(format!(
-        "{prefix}{id}",
-        prefix = IRI_DEC_VERIFY_GRAPH_PREFIX,
-        id = doc.id
-    ))
-    .map_err(|e| ReconstructError::Malformed(format!("graph IRI: {e}")))?;
+    let graph_iri = build_prefixed_iri(IRI_DEC_VERIFY_GRAPH_PREFIX, &doc.id, "graph IRI")?;
     let verifies_iri = restore_verifies_iri(&doc.verifies)?;
-    let environment_iri = NamedNode::new(format!(
-        "{prefix}{id}",
-        prefix = IRI_DEC_ENV_PREFIX,
-        id = doc.environment
-    ))
-    .map_err(|e| ReconstructError::Malformed(format!("environment IRI: {e}")))?;
-    let mut steps: Vec<VerificationStep> = Vec::with_capacity(doc.steps.len());
-    for (index, step_doc) in doc.steps.iter().enumerate() {
-        let id = step_iri_for(&doc.id, index);
-        let fields = step_fields_from_doc(step_doc)?;
-        let provides_evidence_for = step_doc
-            .provides_evidence_for()
-            .iter()
-            .map(|s| NamedNode::new(s.clone()))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| ReconstructError::Malformed(format!("evidence IRI: {e}")))?;
-        let kind = step_doc.kind_from_doc();
-        steps.push(VerificationStep {
-            id,
-            kind,
-            fields,
-            provides_evidence_for,
-        });
-    }
+    let environment_iri =
+        build_prefixed_iri(IRI_DEC_ENV_PREFIX, &doc.environment, "environment IRI")?;
+    let steps = reconstruct_steps(doc)?;
     Ok(VerificationGraph {
         id: graph_iri,
         verifies: ArtifactRef(verifies_iri),
         environment: environment_iri,
         steps,
+    })
+}
+
+fn build_prefixed_iri(prefix: &str, id: &str, label: &str) -> Result<NamedNode, ReconstructError> {
+    NamedNode::new(format!("{prefix}{id}"))
+        .map_err(|e| ReconstructError::Malformed(format!("{label}: {e}")))
+}
+
+fn reconstruct_steps(doc: &GraphDocument) -> Result<Vec<VerificationStep>, ReconstructError> {
+    let mut steps: Vec<VerificationStep> = Vec::with_capacity(doc.steps.len());
+    for (index, step_doc) in doc.steps.iter().enumerate() {
+        steps.push(reconstruct_one_step(&doc.id, index, step_doc)?);
+    }
+    Ok(steps)
+}
+
+fn reconstruct_one_step(
+    graph_id: &str,
+    index: usize,
+    step_doc: &StepDocument,
+) -> Result<VerificationStep, ReconstructError> {
+    let id = step_iri_for(graph_id, index);
+    let fields = step_fields_from_doc(step_doc)?;
+    let provides_evidence_for = step_doc
+        .provides_evidence_for()
+        .iter()
+        .map(|s| NamedNode::new(s.clone()))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| ReconstructError::Malformed(format!("evidence IRI: {e}")))?;
+    let kind = step_doc.kind_from_doc();
+    Ok(VerificationStep {
+        id,
+        kind,
+        fields,
+        provides_evidence_for,
     })
 }
 
@@ -92,72 +101,105 @@ fn restore_verifies_iri(verifies: &str) -> Result<NamedNode, ReconstructError> {
 }
 
 fn step_fields_from_doc(doc: &StepDocument) -> Result<StepFields, ReconstructError> {
-    Ok(match doc {
+    match doc {
+        StepDocument::WaitFor {
+            condition, timeout, ..
+        } => wait_for_fields(condition, timeout),
+        StepDocument::Capture {
+            bind_as, from_step, ..
+        } => capture_fields(bind_as, from_step.as_deref()),
+        other => Ok(infallible_fields_from_doc(other)),
+    }
+}
+
+fn infallible_fields_from_doc(doc: &StepDocument) -> StepFields {
+    match doc {
         StepDocument::ShellCommand {
             command,
             expect_exit_code,
             capture_output,
             ..
-        } => StepFields::ShellCommand {
-            command: command.clone(),
-            expect_exit_code: *expect_exit_code,
-            capture_output: *capture_output,
-        },
+        } => shell_fields(command, *expect_exit_code, *capture_output),
         StepDocument::SparqlAssertion {
             target,
             query,
             expect_rows,
             ..
-        } => StepFields::SparqlAssertion {
-            target: target.clone(),
-            query: query.clone(),
-            expect_rows: *expect_rows,
-        },
+        } => sparql_fields(target, query, *expect_rows),
         StepDocument::FileAssertion {
             path,
             expect_hash,
             expect_content,
             ..
-        } => StepFields::FileAssertion {
-            path: path.clone(),
-            expect_hash: expect_hash.clone(),
-            expect_content: expect_content.clone(),
-        },
+        } => file_fields(path, expect_hash.as_deref(), expect_content.as_deref()),
         StepDocument::HttpRequest {
             method,
             url,
             expect_status,
             ..
-        } => StepFields::HttpRequest {
-            method: method.clone(),
-            url: url.clone(),
-            expect_status: *expect_status,
-        },
-        StepDocument::WaitFor {
-            condition, timeout, ..
-        } => {
-            let cond = NamedNode::new(condition.clone()).map_err(|e| {
-                ReconstructError::Malformed(format!("wait-for condition IRI: {e}"))
-            })?;
-            StepFields::WaitFor {
-                condition: cond,
-                timeout: timeout.clone(),
-            }
+        } => http_fields(method, url, *expect_status),
+        StepDocument::WaitFor { .. } | StepDocument::Capture { .. } => {
+            unreachable!("fallible variants are handled by step_fields_from_doc")
         }
-        StepDocument::Capture {
-            bind_as, from_step, ..
-        } => {
-            let from = match from_step.as_ref() {
-                Some(s) => Some(NamedNode::new(s.clone()).map_err(|e| {
-                    ReconstructError::Malformed(format!("capture from_step IRI: {e}"))
-                })?),
-                None => None,
-            };
-            StepFields::Capture {
-                from_step: from,
-                bind_as: bind_as.clone(),
-            }
-        }
+    }
+}
+
+fn shell_fields(
+    command: &str,
+    expect_exit_code: Option<i64>,
+    capture_output: Option<bool>,
+) -> StepFields {
+    StepFields::ShellCommand {
+        command: command.to_string(),
+        expect_exit_code,
+        capture_output,
+    }
+}
+
+fn sparql_fields(target: &str, query: &str, expect_rows: Option<i64>) -> StepFields {
+    StepFields::SparqlAssertion {
+        target: target.to_string(),
+        query: query.to_string(),
+        expect_rows,
+    }
+}
+
+fn file_fields(path: &str, expect_hash: Option<&str>, expect_content: Option<&str>) -> StepFields {
+    StepFields::FileAssertion {
+        path: path.to_string(),
+        expect_hash: expect_hash.map(str::to_string),
+        expect_content: expect_content.map(str::to_string),
+    }
+}
+
+fn http_fields(method: &str, url: &str, expect_status: Option<i64>) -> StepFields {
+    StepFields::HttpRequest {
+        method: method.to_string(),
+        url: url.to_string(),
+        expect_status,
+    }
+}
+
+fn wait_for_fields(condition: &str, timeout: &str) -> Result<StepFields, ReconstructError> {
+    let cond = NamedNode::new(condition.to_string())
+        .map_err(|e| ReconstructError::Malformed(format!("wait-for condition IRI: {e}")))?;
+    Ok(StepFields::WaitFor {
+        condition: cond,
+        timeout: timeout.to_string(),
+    })
+}
+
+fn capture_fields(bind_as: &str, from_step: Option<&str>) -> Result<StepFields, ReconstructError> {
+    let from = match from_step {
+        Some(s) => Some(
+            NamedNode::new(s.to_string())
+                .map_err(|e| ReconstructError::Malformed(format!("capture from_step IRI: {e}")))?,
+        ),
+        None => None,
+    };
+    Ok(StepFields::Capture {
+        from_step: from,
+        bind_as: bind_as.to_string(),
     })
 }
 

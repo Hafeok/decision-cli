@@ -60,7 +60,11 @@ fn lookup_implementer_returns_role_with_authority() {
     assert_eq!(role.output_type, "https://decision-cli.dev/ns#CodeChange");
     let authority = role.authority.expect("implementer authority present");
     assert!(authority.may_decide.iter().any(|c| c == "code-style"));
-    for required in ["feature-spec-changes", "adr-changes", "cross-cutting-policy"] {
+    for required in [
+        "feature-spec-changes",
+        "adr-changes",
+        "cross-cutting-policy",
+    ] {
         assert!(
             authority.must_escalate.iter().any(|c| c == required),
             "implementer authority must escalate {required}"

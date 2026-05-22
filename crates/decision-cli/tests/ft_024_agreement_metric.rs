@@ -45,8 +45,20 @@ fn empty_store_yields_zero_data_marker() {
 fn populated_store_produces_adr_021_rates() {
     let store = Store::new().expect("in-memory store");
     // Population: 2 approved, 1 rejected, 1 amendment, 1 action-failed.
-    seed(&store, 1, DispatchStatus::Complete, "complete", Some("approved"));
-    seed(&store, 2, DispatchStatus::Complete, "complete", Some("approved"));
+    seed(
+        &store,
+        1,
+        DispatchStatus::Complete,
+        "complete",
+        Some("approved"),
+    );
+    seed(
+        &store,
+        2,
+        DispatchStatus::Complete,
+        "complete",
+        Some("approved"),
+    );
     seed(
         &store,
         3,
@@ -93,7 +105,13 @@ fn populated_store_produces_adr_021_rates() {
 #[test]
 fn implementer_role_filter_passes_through() {
     let store = Store::new().expect("in-memory store");
-    seed(&store, 1, DispatchStatus::Complete, "complete", Some("approved"));
+    seed(
+        &store,
+        1,
+        DispatchStatus::Complete,
+        "complete",
+        Some("approved"),
+    );
     // The implementer role is the slice-1 hardcoded surface; the
     // metric must accept it without requiring a graph-resident catalog
     // entry (FT-030 lands that in slice 3).
@@ -105,7 +123,13 @@ fn implementer_role_filter_passes_through() {
 #[test]
 fn window_argument_is_threaded_through_to_the_report() {
     let store = Store::new().expect("in-memory store");
-    seed(&store, 1, DispatchStatus::Complete, "complete", Some("approved"));
+    seed(
+        &store,
+        1,
+        DispatchStatus::Complete,
+        "complete",
+        Some("approved"),
+    );
     let since = Utc::now() - chrono::Duration::days(1);
     let until = Utc::now() + chrono::Duration::days(1);
     let report = agreement(&store, Some((since, until)), None).expect("windowed ok");
@@ -152,7 +176,12 @@ fn seed(
             Literal::new_simple_literal(format!("FT-test-{idx}")),
             g.clone(),
         ),
-        Quad::new(group.clone(), has_action_session(), action.clone(), g.clone()),
+        Quad::new(
+            group.clone(),
+            has_action_session(),
+            action.clone(),
+            g.clone(),
+        ),
         Quad::new(
             action.clone(),
             role_pred,
@@ -188,12 +217,7 @@ fn seed(
             verification_verdict_class(),
             g.clone(),
         ));
-        quads.push(Quad::new(
-            verdict_iri.clone(),
-            was_gen,
-            interp,
-            g.clone(),
-        ));
+        quads.push(Quad::new(verdict_iri.clone(), was_gen, interp, g.clone()));
         quads.push(Quad::new(verdict_iri.clone(), used, action, g.clone()));
         quads.push(Quad::new(
             verdict_iri,

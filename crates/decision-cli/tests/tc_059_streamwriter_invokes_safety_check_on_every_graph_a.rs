@@ -229,7 +229,10 @@ fn safety_runs_before_shacl_distinct_error() {
         "expected SHACL prefix; got {shacl_err}"
     );
     // The two errors are distinct (separate prefixes).
-    assert!(!shacl_err.contains("safety violation"), "shacl_err: {shacl_err}");
+    assert!(
+        !shacl_err.contains("safety violation"),
+        "shacl_err: {shacl_err}"
+    );
 }
 
 /// TC-059 §Acceptance 4 — structural / grep-based assertion that
@@ -256,10 +259,15 @@ fn no_safety_bypass_in_features() {
         }
     }
 
-    let features_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src").join("features");
+    let features_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("features");
     let mut files = Vec::new();
     walk(&features_root, &mut files);
-    assert!(!files.is_empty(), "expected feature .rs files under {features_root:?}");
+    assert!(
+        !files.is_empty(),
+        "expected feature .rs files under {features_root:?}"
+    );
 
     let mut offenders: Vec<String> = Vec::new();
     for f in files {

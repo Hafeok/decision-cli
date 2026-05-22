@@ -164,7 +164,10 @@ mod tests {
     #[test]
     fn defaults_match_adr_026() {
         assert_eq!(default_target_role(FeedbackClass::Gap), "spec-author");
-        assert_eq!(default_target_role(FeedbackClass::Contradiction), "architect");
+        assert_eq!(
+            default_target_role(FeedbackClass::Contradiction),
+            "architect"
+        );
         assert_eq!(
             default_target_role(FeedbackClass::Unimplementable),
             "spec-author"

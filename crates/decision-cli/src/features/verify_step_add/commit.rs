@@ -52,6 +52,23 @@ fn resolve_path(graph_dir: &Path, id: &str) -> Result<PathBuf, HandlerError> {
     if !graph_dir.exists() {
         return Err(not_found(id));
     }
+    let mut matches = scan_matching_ttls(graph_dir, id)?;
+    match matches.len() {
+        0 => Err(not_found(id)),
+        1 => Ok(matches.remove(0)),
+        n => Err(HandlerError::Internal {
+            detail: format!(
+                "ambiguous graph id {id:?}: {n} files match (under {d})",
+                d = graph_dir.display()
+            ),
+        }),
+    }
+}
+
+/// Read `graph_dir` and return every `.ttl` whose stem is exactly `id`
+/// or starts with `{id}-`. Surfaces `Internal` on any IO error so the
+/// caller can present a uniform diagnostic.
+fn scan_matching_ttls(graph_dir: &Path, id: &str) -> Result<Vec<PathBuf>, HandlerError> {
     let prefix = format!("{id}-");
     let mut matches: Vec<PathBuf> = Vec::new();
     for entry in std::fs::read_dir(graph_dir).map_err(|e| HandlerError::Internal {
@@ -69,16 +86,7 @@ fn resolve_path(graph_dir: &Path, id: &str) -> Result<PathBuf, HandlerError> {
             matches.push(entry.path());
         }
     }
-    match matches.len() {
-        0 => Err(not_found(id)),
-        1 => Ok(matches.remove(0)),
-        n => Err(HandlerError::Internal {
-            detail: format!(
-                "ambiguous graph id {id:?}: {n} files match (under {d})",
-                d = graph_dir.display()
-            ),
-        }),
-    }
+    Ok(matches)
 }
 
 fn not_found(id: &str) -> HandlerError {
@@ -96,11 +104,12 @@ pub(super) fn load_env_for_graph(
     graph: &VerificationGraph,
 ) -> Result<VerificationEnvironment, HandlerError> {
     let env_iri = graph.environment.as_str();
-    let env_id = env_iri
-        .strip_prefix(IRI_DEC_ENV_PREFIX)
-        .ok_or_else(|| HandlerError::Internal {
-            detail: format!("graph references non-canonical env IRI {env_iri:?}"),
-        })?;
+    let env_id =
+        env_iri
+            .strip_prefix(IRI_DEC_ENV_PREFIX)
+            .ok_or_else(|| HandlerError::Internal {
+                detail: format!("graph references non-canonical env IRI {env_iri:?}"),
+            })?;
     let env_dir = workdir.join(".dec").join("verify").join("env");
     let env_path = env_dir.join(format!("{env_id}.ttl"));
     if !env_path.is_file() {
@@ -122,42 +131,59 @@ pub(super) fn commit_graph_update(
     workdir: &Path,
     new_graph: &VerificationGraph,
 ) -> Result<(), HandlerError> {
+    let dump_path = orchestration_dump_path(workdir);
+    let (store, writer) = open_writer(workdir, &dump_path)?;
+    let mutation = build_step_mutation(&store, new_graph);
+    writer.commit(mutation).map_err(map_writer_error)?;
+    persist_store(&store, &dump_path).map_err(|e| HandlerError::Internal {
+        detail: format!("persisting store: {e}"),
+    })?;
+    Ok(())
+}
+
+/// Load the orchestration dump and open a `StreamWriter` bound to the
+/// active scope's stream. Returns both the `Arc<Store>` (so we can
+/// project the rdf:List diff against it) and the writer.
+fn open_writer(
+    workdir: &Path,
+    dump_path: &Path,
+) -> Result<(Arc<oxigraph::store::Store>, StreamWriter), HandlerError> {
     let scope = ActiveScope::load(workdir).map_err(|e| HandlerError::Internal {
         detail: format!("loading active scope: {e}"),
     })?;
-    let dump_path = orchestration_dump_path(workdir);
-    let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
+    let store = load_store_from_dump(dump_path).map_err(|e| HandlerError::Internal {
         detail: format!("loading orchestration store: {e}"),
     })?;
     let store = Arc::new(store);
     let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| HandlerError::Internal {
         detail: format!("active stream iri {iri}: {e}", iri = scope.stream_iri),
     })?;
-    let writer = StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| {
-        HandlerError::Internal {
+    let writer =
+        StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| HandlerError::Internal {
             detail: format!("opening stream writer: {e}"),
-        }
-    })?;
+        })?;
+    Ok((store, writer))
+}
 
-    let removes = store_diff::list_quads_to_remove(&store, &new_graph.id);
+/// Compose the `Mutation { removes, inserts }` for an appended step.
+fn build_step_mutation(store: &oxigraph::store::Store, new_graph: &VerificationGraph) -> Mutation {
+    let removes = store_diff::list_quads_to_remove(store, &new_graph.id);
     let inserts = new_graph.to_quads(verify_graph_named_graph());
     let mut mutation = Mutation::insert(inserts);
     mutation.removes = removes;
+    mutation
+}
 
-    writer.commit(mutation).map_err(|e| {
-        let msg = format!("{e:#}");
-        if msg.contains("SHACL violation") {
-            HandlerError::SchemaViolation { detail: msg }
-        } else {
-            // Pre-flight safety check in `run` should have raised typed
-            // `HandlerError::SafetyViolation` already; falling back to
-            // Internal preserves the diagnostic but signals "the writer
-            // caught what the pre-flight missed".
-            HandlerError::Internal { detail: msg }
-        }
-    })?;
-    persist_store(&store, &dump_path).map_err(|e| HandlerError::Internal {
-        detail: format!("persisting store: {e}"),
-    })?;
-    Ok(())
+/// Map a `StreamWriter::commit` error to a typed handler error.
+/// Pre-flight safety check in `run` should have raised typed
+/// `HandlerError::SafetyViolation` already; falling back to
+/// Internal preserves the diagnostic but signals "the writer
+/// caught what the pre-flight missed".
+fn map_writer_error(e: anyhow::Error) -> HandlerError {
+    let msg = format!("{e:#}");
+    if msg.contains("SHACL violation") {
+        HandlerError::SchemaViolation { detail: msg }
+    } else {
+        HandlerError::Internal { detail: msg }
+    }
 }

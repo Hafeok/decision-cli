@@ -46,12 +46,8 @@ pub(super) fn collect_non_empty(
     let candidates = query::graphs_in_env(store, env_iri)?;
     let mut out: Vec<Candidate> = Vec::with_capacity(candidates.len());
     for (graph_iri, verifies_iri) in &candidates {
-        let report = feature_covered_by(
-            feature,
-            graph_iri_to_short(graph_iri),
-            store,
-            product_root,
-        )?;
+        let report =
+            feature_covered_by(feature, graph_iri_to_short(graph_iri), store, product_root)?;
         let covers: Vec<TcId> = report
             .covered
             .iter()
@@ -62,7 +58,12 @@ pub(super) fn collect_non_empty(
         if covers.is_empty() {
             continue;
         }
-        out.push((verifies_iri.clone(), graph_iri.clone(), covers, report.covered));
+        out.push((
+            verifies_iri.clone(),
+            graph_iri.clone(),
+            covers,
+            report.covered,
+        ));
     }
     Ok(out)
 }

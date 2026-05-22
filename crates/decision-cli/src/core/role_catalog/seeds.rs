@@ -150,14 +150,25 @@ fn verifier_authority_quads(authority: &NamedNode, g: &GraphName) -> Vec<Quad> {
         "rationale-content",
         "cited-references",
     ];
-    let must_escalate = &["feature-spec-changes", "adr-changes", "cross-cutting-policy"];
+    let must_escalate = &[
+        "feature-spec-changes",
+        "adr-changes",
+        "cross-cutting-policy",
+    ];
     let escalate_via: &[(&str, &str, &str)] = &[
         ("feature-spec-changes", "gap", "spec-author"),
         ("adr-changes", "contradiction", "architect"),
         ("cross-cutting-policy", "contradiction", "architect"),
     ];
     let rationale = "Verifier issues a verdict on whether the produced artifact satisfies the feature_spec and TCs. Verdict classification, rationale wording, and cited references are within authority. Changes to the feature_spec, ADRs, or cross-cutting policy must be escalated via feedback rather than encoded in the verdict.";
-    build_authority_quads(authority, may_decide, must_escalate, escalate_via, rationale, g)
+    build_authority_quads(
+        authority,
+        may_decide,
+        must_escalate,
+        escalate_via,
+        rationale,
+        g,
+    )
 }
 
 fn implementer_authority_quads(authority: &NamedNode, g: &GraphName) -> Vec<Quad> {
@@ -180,7 +191,14 @@ fn implementer_authority_quads(authority: &NamedNode, g: &GraphName) -> Vec<Quad
         ("cross-cutting-policy", "contradiction", "architect"),
     ];
     let rationale = "Implementer writes code from a feature_spec; structural changes to the spec or to ADRs go through their authoring roles. Implementer self-decides anything that does not survive the file boundary of the feature.";
-    build_authority_quads(authority, may_decide, must_escalate, escalate_via, rationale, g)
+    build_authority_quads(
+        authority,
+        may_decide,
+        must_escalate,
+        escalate_via,
+        rationale,
+        g,
+    )
 }
 
 fn build_authority_quads(
@@ -205,7 +223,13 @@ fn build_authority_quads(
         g,
     ));
     for (category, class, target_role) in escalate_via {
-        quads.extend(escalation_hint_quads(authority, category, class, target_role, g));
+        quads.extend(escalation_hint_quads(
+            authority,
+            category,
+            class,
+            target_role,
+            g,
+        ));
     }
     quads
 }
@@ -252,34 +276,37 @@ fn escalation_hint_quads(
     target_role: &str,
     g: &GraphName,
 ) -> Vec<Quad> {
-    let escalate_via = NamedNodeRef::new_unchecked(ESCALATE_VIA_IRI).into_owned();
-    let escalate_category = NamedNodeRef::new_unchecked(ESCALATE_CATEGORY_IRI).into_owned();
-    let escalate_class = NamedNodeRef::new_unchecked(ESCALATE_CLASS_IRI).into_owned();
-    let escalate_target = NamedNodeRef::new_unchecked(ESCALATE_TARGET_ROLE_IRI).into_owned();
-    // Deterministic blank-node id so re-seeding the catalog is idempotent.
-    let hint =
-        BlankNode::new_unchecked(format!("authority-{}-{}", short_iri_tail(authority), category));
+    let hint = escalation_hint_blank_node(authority, category);
+    let via_quad = Quad::new(
+        authority.clone(),
+        NamedNodeRef::new_unchecked(ESCALATE_VIA_IRI).into_owned(),
+        hint.clone(),
+        g.clone(),
+    );
     vec![
-        Quad::new(authority.clone(), escalate_via, hint.clone(), g.clone()),
-        Quad::new(
-            hint.clone(),
-            escalate_category,
-            Literal::new_simple_literal(category),
-            g.clone(),
-        ),
-        Quad::new(
-            hint.clone(),
-            escalate_class,
-            Literal::new_simple_literal(class),
-            g.clone(),
-        ),
-        Quad::new(
-            hint,
-            escalate_target,
-            Literal::new_simple_literal(target_role),
-            g.clone(),
-        ),
+        via_quad,
+        hint_literal_quad(&hint, ESCALATE_CATEGORY_IRI, category, g),
+        hint_literal_quad(&hint, ESCALATE_CLASS_IRI, class, g),
+        hint_literal_quad(&hint, ESCALATE_TARGET_ROLE_IRI, target_role, g),
     ]
+}
+
+fn escalation_hint_blank_node(authority: &NamedNode, category: &str) -> BlankNode {
+    // Deterministic blank-node id so re-seeding the catalog is idempotent.
+    BlankNode::new_unchecked(format!(
+        "authority-{}-{}",
+        short_iri_tail(authority),
+        category
+    ))
+}
+
+fn hint_literal_quad(hint: &BlankNode, pred_iri: &str, value: &str, g: &GraphName) -> Quad {
+    Quad::new(
+        hint.clone(),
+        NamedNodeRef::new_unchecked(pred_iri).into_owned(),
+        Literal::new_simple_literal(value),
+        g.clone(),
+    )
 }
 
 fn short_iri_tail(iri: &NamedNode) -> String {

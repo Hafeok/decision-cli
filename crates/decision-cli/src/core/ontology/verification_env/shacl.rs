@@ -92,11 +92,7 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<EnvViolation> {
     violations
 }
 
-fn check_env_type(
-    subject: &NamedNode,
-    values: &[String],
-    violations: &mut Vec<EnvViolation>,
-) {
+fn check_env_type(subject: &NamedNode, values: &[String], violations: &mut Vec<EnvViolation>) {
     if values.is_empty() {
         violations.push(violation(
             subject,
@@ -123,11 +119,7 @@ fn check_env_type(
     }
 }
 
-fn check_safety_class(
-    quads: &[Quad],
-    subject: &NamedNode,
-    violations: &mut Vec<EnvViolation>,
-) {
+fn check_safety_class(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<EnvViolation>) {
     let values = literal_values(quads, subject, IRI_DEC_SAFETY_CLASS);
     if values.is_empty() {
         violations.push(violation(
@@ -147,6 +139,14 @@ fn check_safety_class(
             ),
         ));
     }
+    check_safety_class_values(subject, &values, violations);
+}
+
+fn check_safety_class_values(
+    subject: &NamedNode,
+    values: &[String],
+    violations: &mut Vec<EnvViolation>,
+) {
     let allowed: BTreeSet<&str> = [
         SAFETY_ISOLATED,
         SAFETY_SHARED_NON_DESTRUCTIVE,
@@ -154,7 +154,7 @@ fn check_safety_class(
     ]
     .into_iter()
     .collect();
-    for v in &values {
+    for v in values {
         if !allowed.contains(v.as_str()) {
             violations.push(violation(
                 subject,
@@ -172,23 +172,8 @@ fn check_safety_class(
 
 fn check_allowed_ops(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<EnvViolation>) {
     let heads = allowed_ops_heads(quads, subject);
-    if heads.is_empty() {
-        violations.push(violation(
-            subject,
-            IRI_DEC_ALLOWED_OPS,
-            "missing required dec:allowedOps rdf:List (sh:minCount 1)",
-        ));
+    if !check_allowed_ops_head_cardinality(subject, &heads, violations) {
         return;
-    }
-    if heads.len() > 1 {
-        violations.push(violation(
-            subject,
-            IRI_DEC_ALLOWED_OPS,
-            &format!(
-                "expected exactly one dec:allowedOps rdf:List, found {}",
-                heads.len()
-            ),
-        ));
     }
     let head = &heads[0];
     if list_is_nil(head) {
@@ -209,6 +194,33 @@ fn check_allowed_ops(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<E
     }
 }
 
+/// Returns `false` if no head exists (caller must early-return), `true` otherwise.
+fn check_allowed_ops_head_cardinality(
+    subject: &NamedNode,
+    heads: &[Term],
+    violations: &mut Vec<EnvViolation>,
+) -> bool {
+    if heads.is_empty() {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ALLOWED_OPS,
+            "missing required dec:allowedOps rdf:List (sh:minCount 1)",
+        ));
+        return false;
+    }
+    if heads.len() > 1 {
+        violations.push(violation(
+            subject,
+            IRI_DEC_ALLOWED_OPS,
+            &format!(
+                "expected exactly one dec:allowedOps rdf:List, found {}",
+                heads.len()
+            ),
+        ));
+    }
+    true
+}
+
 fn check_endpoint_conditional(
     quads: &[Quad],
     subject: &NamedNode,
@@ -216,12 +228,6 @@ fn check_endpoint_conditional(
     violations: &mut Vec<EnvViolation>,
 ) {
     let endpoint_values = literal_values(quads, subject, IRI_DEC_ENDPOINT);
-    let is_remote = env_type_values
-        .iter()
-        .any(|t| t.starts_with(REMOTE_ENV_TYPE_PREFIX));
-    let is_local = env_type_values
-        .iter()
-        .any(|t| !t.starts_with(REMOTE_ENV_TYPE_PREFIX));
     if endpoint_values.len() > 1 {
         violations.push(violation(
             subject,
@@ -232,6 +238,21 @@ fn check_endpoint_conditional(
             ),
         ));
     }
+    check_endpoint_locality(subject, env_type_values, &endpoint_values, violations);
+}
+
+fn check_endpoint_locality(
+    subject: &NamedNode,
+    env_type_values: &[String],
+    endpoint_values: &[String],
+    violations: &mut Vec<EnvViolation>,
+) {
+    let is_remote = env_type_values
+        .iter()
+        .any(|t| t.starts_with(REMOTE_ENV_TYPE_PREFIX));
+    let is_local = env_type_values
+        .iter()
+        .any(|t| !t.starts_with(REMOTE_ENV_TYPE_PREFIX));
     if is_remote && endpoint_values.is_empty() {
         violations.push(violation(
             subject,
@@ -322,11 +343,7 @@ fn term_key(t: &Term) -> String {
     }
 }
 
-pub(super) fn literal_values(
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-) -> Vec<String> {
+pub(super) fn literal_values(quads: &[Quad], subject: &NamedNode, predicate: &str) -> Vec<String> {
     quads
         .iter()
         .filter_map(|q| {

@@ -53,9 +53,7 @@ pub fn run(workdir: &Path, args: ImplementCmdArgs) -> ExitCode {
             // The gate's error type renders the `Error::InvalidArgument`
             // prefix; we detect it on the rendered chain so the mapping
             // does not depend on downcasting through `anyhow`.
-            if rendered.contains("Error::InvalidArgument")
-                && rendered.contains("waiver.reason")
-            {
+            if rendered.contains("Error::InvalidArgument") && rendered.contains("waiver.reason") {
                 eprintln!("dec implement failed: {rendered}");
                 return ExitCode::from(2);
             }

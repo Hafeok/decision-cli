@@ -27,7 +27,11 @@ fn write_graph_header(out: &mut String, graph: &VerificationGraph) {
     let _ = writeln!(out, "<{}>", graph.id.as_str());
     out.push_str("    a dec:VerificationGraph ;\n");
     let _ = writeln!(out, "    dec:verifies <{}> ;", graph.verifies.0.as_str());
-    let _ = writeln!(out, "    dec:environment <{}> ;", graph.environment.as_str());
+    let _ = writeln!(
+        out,
+        "    dec:environment <{}> ;",
+        graph.environment.as_str()
+    );
     if graph.steps.is_empty() {
         out.push_str("    dec:steps () .\n");
         return;
@@ -75,6 +79,12 @@ fn write_step_fields(out: &mut String, fields: &StepFields) {
             expect_hash,
             expect_content,
         } => write_file_fields(out, path, expect_hash.as_deref(), expect_content.as_deref()),
+        other => write_remaining_step_fields(out, other),
+    }
+}
+
+fn write_remaining_step_fields(out: &mut String, fields: &StepFields) {
+    match fields {
         StepFields::HttpRequest {
             method,
             url,
@@ -88,6 +98,8 @@ fn write_step_fields(out: &mut String, fields: &StepFields) {
             bind_as,
             from_step.as_ref().map(oxigraph::model::NamedNode::as_str),
         ),
+        // Already handled in `write_step_fields`; unreachable in practice.
+        _ => {}
     }
 }
 

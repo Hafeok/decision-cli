@@ -84,11 +84,9 @@ impl VerificationGraph {
 }
 
 fn steps_list_quads(graph: &VerificationGraph, g: &GraphName) -> Vec<Quad> {
-    let rdf_first = NamedNodeRef::new_unchecked(RDF_FIRST);
-    let rdf_rest = NamedNodeRef::new_unchecked(RDF_REST);
-    let rdf_nil = NamedNodeRef::new_unchecked(RDF_NIL);
     let steps_p = steps_pred();
     if graph.steps.is_empty() {
+        let rdf_nil = NamedNodeRef::new_unchecked(RDF_NIL);
         return vec![Quad::new(
             graph.id.clone(),
             steps_p.into_owned(),
@@ -106,9 +104,22 @@ fn steps_list_quads(graph: &VerificationGraph, g: &GraphName) -> Vec<Quad> {
         nodes[0].clone(),
         g.clone(),
     )];
-    for (i, step) in graph.steps.iter().enumerate() {
+    quads.extend(steps_list_body_quads(&graph.steps, &nodes, g));
+    quads
+}
+
+fn steps_list_body_quads(
+    steps: &[VerificationStep],
+    nodes: &[BlankNode],
+    g: &GraphName,
+) -> Vec<Quad> {
+    let rdf_first = NamedNodeRef::new_unchecked(RDF_FIRST);
+    let rdf_rest = NamedNodeRef::new_unchecked(RDF_REST);
+    let rdf_nil = NamedNodeRef::new_unchecked(RDF_NIL);
+    let mut out = Vec::with_capacity(steps.len() * 2);
+    for (i, step) in steps.iter().enumerate() {
         let head = Subject::BlankNode(nodes[i].clone());
-        quads.push(Quad::new(
+        out.push(Quad::new(
             head.clone(),
             rdf_first.into_owned(),
             step.id.clone(),
@@ -119,9 +130,9 @@ fn steps_list_quads(graph: &VerificationGraph, g: &GraphName) -> Vec<Quad> {
         } else {
             rdf_nil.into_owned().into()
         };
-        quads.push(Quad::new(head, rdf_rest.into_owned(), rest_term, g.clone()));
+        out.push(Quad::new(head, rdf_rest.into_owned(), rest_term, g.clone()));
     }
-    quads
+    out
 }
 
 fn field_quads(s: &NamedNode, fields: &StepFields, g: &GraphName) -> Vec<Quad> {
@@ -140,7 +151,19 @@ fn field_quads(s: &NamedNode, fields: &StepFields, g: &GraphName) -> Vec<Quad> {
             path,
             expect_hash,
             expect_content,
-        } => file_assertion_quads(s, path, expect_hash.as_deref(), expect_content.as_deref(), g),
+        } => file_assertion_quads(
+            s,
+            path,
+            expect_hash.as_deref(),
+            expect_content.as_deref(),
+            g,
+        ),
+        other => trailing_field_quads(s, other, g),
+    }
+}
+
+fn trailing_field_quads(s: &NamedNode, fields: &StepFields, g: &GraphName) -> Vec<Quad> {
+    match fields {
         StepFields::HttpRequest {
             method,
             url,
@@ -150,6 +173,9 @@ fn field_quads(s: &NamedNode, fields: &StepFields, g: &GraphName) -> Vec<Quad> {
         StepFields::Capture { from_step, bind_as } => {
             capture_quads(s, from_step.as_ref(), bind_as, g)
         }
+        // The first match in `field_quads` already handles these arms;
+        // unreachable in practice.
+        _ => Vec::new(),
     }
 }
 
@@ -241,12 +267,7 @@ fn http_request_quads(
     out
 }
 
-fn wait_for_quads(
-    s: &NamedNode,
-    condition: &NamedNode,
-    timeout: &str,
-    g: &GraphName,
-) -> Vec<Quad> {
+fn wait_for_quads(s: &NamedNode, condition: &NamedNode, timeout: &str, g: &GraphName) -> Vec<Quad> {
     vec![
         Quad::new(
             s.clone(),
@@ -281,12 +302,7 @@ fn capture_quads(
     out
 }
 
-pub(super) fn literal_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    value: &str,
-    g: &GraphName,
-) -> Quad {
+pub(super) fn literal_quad(s: &NamedNode, p: NamedNodeRef<'_>, value: &str, g: &GraphName) -> Quad {
     Quad::new(
         s.clone(),
         p.into_owned(),

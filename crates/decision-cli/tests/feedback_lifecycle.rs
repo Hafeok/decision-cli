@@ -292,10 +292,7 @@ fn embedded_shapes_declare_lifecycle_state_in_enumeration() {
          }} }}",
         g = SHAPES_GRAPH_IRI,
     );
-    let ok = matches!(
-        store.query(q.as_str()),
-        Ok(QueryResults::Boolean(true))
-    );
+    let ok = matches!(store.query(q.as_str()), Ok(QueryResults::Boolean(true)));
     assert!(
         ok,
         "shapes.ttl must declare sh:in on dec:lifecycleState in dec:FeedbackShape"

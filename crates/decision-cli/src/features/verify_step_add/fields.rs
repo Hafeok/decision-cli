@@ -129,12 +129,14 @@ fn build_wait_for(fields: &BTreeMap<String, String>) -> Result<StepFields, Handl
 fn build_capture(fields: &BTreeMap<String, String>) -> Result<StepFields, HandlerError> {
     let bind_as = required(fields, "bind-as", "capture", "dec:bindAs")?;
     let from_step = match fields.get("from-step") {
-        Some(raw) => Some(NamedNode::new(raw.as_str()).map_err(|e| {
-            HandlerError::InvalidArgument {
-                field: "fields.from-step".to_string(),
-                detail: format!("from-step must be an IRI: {e}"),
-            }
-        })?),
+        Some(raw) => {
+            Some(
+                NamedNode::new(raw.as_str()).map_err(|e| HandlerError::InvalidArgument {
+                    field: "fields.from-step".to_string(),
+                    detail: format!("from-step must be an IRI: {e}"),
+                })?,
+            )
+        }
         None => None,
     };
     Ok(StepFields::Capture { from_step, bind_as })
@@ -149,17 +151,12 @@ fn required(
     match fields.get(key) {
         Some(v) if !v.is_empty() => Ok(v.clone()),
         _ => Err(HandlerError::SchemaViolation {
-            detail: format!(
-                "{kind_label} step requires {predicate} (--field {key}=...)"
-            ),
+            detail: format!("{kind_label} step requires {predicate} (--field {key}=...)"),
         }),
     }
 }
 
-fn optional_i64(
-    fields: &BTreeMap<String, String>,
-    key: &str,
-) -> Result<Option<i64>, HandlerError> {
+fn optional_i64(fields: &BTreeMap<String, String>, key: &str) -> Result<Option<i64>, HandlerError> {
     let Some(raw) = fields.get(key) else {
         return Ok(None);
     };
@@ -237,7 +234,8 @@ mod tests {
     #[test]
     fn sparql_assertion_requires_both_target_and_query() {
         let only_target = map(&[("target", ".dec/store")]);
-        let err = build_step_fields(StepKind::SparqlAssertion, &only_target).expect_err("must fail");
+        let err =
+            build_step_fields(StepKind::SparqlAssertion, &only_target).expect_err("must fail");
         match err {
             HandlerError::SchemaViolation { detail } => {
                 assert!(detail.contains("dec:query"), "detail: {detail}");
