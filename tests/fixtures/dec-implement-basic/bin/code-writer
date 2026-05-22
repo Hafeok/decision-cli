@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Fixture shim for dec-implement-basic (FT-053 / ADR-032).
+#
+# Forces the real `code-writer` worker into stub mode (CODE_WRITER_STUB=1)
+# so `dec implement` end-to-end verification can run without a Claude
+# Code subscription or network egress.
+#
+# When the runner contract (ADR-032 §Runner contract step 4) prepends
+# the fixture's bin/ to $PATH, this shim shadows the host's
+# `code-writer`. We strip our own directory from $PATH before exec'ing
+# so the lookup resolves to the host binary instead of looping back
+# into this shim.
+set -euo pipefail
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+NEW_PATH="$(printf '%s' "${PATH:-}" \
+  | awk -v RS=: -v ORS=: -v skip="$SELF_DIR" '$0 != skip' \
+  | sed 's/:$//')"
+
+exec env "PATH=$NEW_PATH" CODE_WRITER_STUB=1 code-writer "$@"
