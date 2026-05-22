@@ -2,7 +2,8 @@
 id: ADR-002
 title: Graph-as-state over event-sourced
 status: accepted
-features: []
+features:
+- FT-058
 supersedes: []
 superseded-by: []
 domains: []

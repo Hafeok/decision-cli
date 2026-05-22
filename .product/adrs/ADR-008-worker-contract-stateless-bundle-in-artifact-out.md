@@ -2,12 +2,19 @@
 id: ADR-008
 title: 'Worker contract: stateless bundle-in, artifact-out'
 status: accepted
-features: []
+features:
+- FT-059
+- FT-060
+- FT-064
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
-content-hash: sha256:ad73cf6f1d820f25ff99a40fe0e514ba852bd2ff77b40a4ed8550b98ccfb6bea
+content-hash: sha256:f4a8e87cbf0d8a7e6089ebec78f38854b4ebbe2bbcdc7ecaf9cef4d9a620eb76
+amendments:
+- date: 2026-05-22T18:27:36Z
+  reason: Capability layer ([ADR-033](ADR-033)) injects (endpoint, model_identifier, parameters) into the dispatch payload alongside the bundle; record the payload extension so the worker contract documentation matches the reality the dispatcher produces after [FT-061](FT-061) and [FT-062](FT-062). Worker statelessness and bundle-completeness are preserved — this is a payload-shape clarification, not a contract change.
+  previous-hash: sha256:ad73cf6f1d820f25ff99a40fe0e514ba852bd2ff77b40a4ed8550b98ccfb6bea
 ---
 
 ## Context
@@ -36,6 +43,17 @@ Workers are **stateless functions** with shape `bundle → artifact`. The contra
 
 The Python code-writer worker for slice 1 receives a bundle for an implementer session, calls Claude with structured output, and returns a `CodeChange` artifact describing files written and a diff summary. The worker writes files directly to the configured workspace directory; the harness records the session and writes the `CodeChange` to product-cli's graph via MCP.
 
+### Amendment — capability injection (Phase 2, post [ADR-033](ADR-033))
+
+The dispatch payload is extended by [FT-061](FT-061) to include the dispatcher-resolved capability triple alongside the bundle:
+
+- `endpoint` — `"scaleway" | "anthropic"`.
+- `model_identifier` — the exact provider model string.
+- `parameters` — temperature, max_tokens, optional `reasoning_effort`, optional tool definitions, optional response schema.
+- `capability_ref` and `binding_ref` — version pins recorded on the session for reproducibility.
+
+Workers consume the triple verbatim via the `ModelRouter` from [FT-060](FT-060); they remain ignorant of capabilities, role bindings, escalation, and cost. The statelessness, no-graph-access, and bundle-completeness invariants are unchanged — the payload simply grew. See [ADR-033](ADR-033) for the rationale and the cleanly orthogonal roles of `dec:WorkerBinding` (which executable) and `dec:Capability`/`dec:RoleBinding` (which model).
+
 ## Consequences
 
 **Positive:**
@@ -57,4 +75,4 @@ The Python code-writer worker for slice 1 receives a bundle for an implementer s
 
 ## Status
 
-Accepted. Governs FT-013 (code-writer worker) and FT-011 (harness assembles bundle, writes artifacts on worker's behalf). Future workers in later slices inherit this contract.
+Accepted. Governs FT-013 (code-writer worker) and FT-011 (harness assembles bundle, writes artifacts on worker's behalf). Future workers in later slices inherit this contract. Phase-2 capability injection extension recorded by amendment, governed by [ADR-033](ADR-033).
