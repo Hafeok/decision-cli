@@ -28,6 +28,9 @@ def _bundle_blob(**overrides) -> dict:
         "in_stream": "https://decision-cli.dev/stream/test",
         "relevant_tcs": [{"id": "TC-013"}],
         "relevant_adrs": [{"id": "ADR-008"}],
+        # Dispatcher-pinned per FT-061.
+        "endpoint": "anthropic",
+        "model_id": "test-model-pinned-by-dispatcher",
     }
     base.update(overrides)
     return base

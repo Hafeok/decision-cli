@@ -2,7 +2,7 @@
 id: FT-064
 title: 'decision-cli: Migration cleanup — remove hardcoded model bindings from worker layer'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-060
 - FT-061
@@ -35,7 +35,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-113
 domains:
 - api

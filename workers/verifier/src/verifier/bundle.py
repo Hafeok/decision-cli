@@ -86,10 +86,22 @@ class VerifierInput(BaseModel):
         default_factory=list,
         description="Cross-cutting ADRs bounding the action.",
     )
+    endpoint: str = Field(
+        default="anthropic",
+        description="Endpoint discriminator resolved by the dispatcher "
+        "(FT-061): 'anthropic' or 'scaleway'.",
+    )
     model_id: str = Field(
-        default="claude-sonnet-4-5",
-        description="Model the verifier should invoke (single hardcoded "
-        "binding per ADR-020).",
+        ...,
+        description="Provider-specific model identifier pinned by the "
+        "dispatcher per FT-061. Workers do not hardcode this; it arrives "
+        "in the dispatch payload alongside the endpoint discriminator.",
+    )
+    parameters: dict = Field(
+        default_factory=dict,
+        description="Additional capability-resolved parameters "
+        "(reasoning_effort, exposes_reasoning_trace, …) forwarded to "
+        "the router untouched.",
     )
     max_tokens: int = Field(default=4096, ge=256, le=64_000)
 

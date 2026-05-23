@@ -99,9 +99,10 @@ def _extract_message_content(response: Any) -> str:
 def _extract_message_reasoning(response: Any) -> str | None:
     """Pull the optional reasoning trace from a response.
 
-    Some Scaleway capabilities (e.g. ``qwen3.5-397b-a17b``) expose a
-    separate reasoning chain as ``message.reasoning``. Capabilities that
-    don't surface it simply produce ``None`` (PRD §14).
+    Frontier-reasoning Scaleway capabilities expose a separate reasoning
+    chain as ``message.reasoning``; capabilities that don't surface it
+    simply produce ``None``. The capability's ``exposes_reasoning_trace``
+    flag tells the router whether to read this field (PRD §14).
     """
     choices = getattr(response, "choices", None) or []
     if not choices:
@@ -134,7 +135,7 @@ def _build_chat_kwargs(
     """Assemble kwargs for ``chat.completions.create``.
 
     ``reasoning_effort`` is a top-level kwarg on the Scaleway API per
-    PRD §14 (verified against the live endpoint for ``gpt-oss-120b``);
+    PRD §14 (verified against a reasoning-capable Scaleway endpoint);
     do not wrap it inside ``extra_body``.
     """
     kwargs: dict[str, Any] = {

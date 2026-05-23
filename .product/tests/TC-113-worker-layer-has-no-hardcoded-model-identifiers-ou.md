@@ -2,7 +2,7 @@
 id: TC-113
 title: Worker layer has no hardcoded model identifiers outside model_router and test fixtures
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-064
@@ -11,6 +11,8 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-113-no-hardcoded-models.sh
 runner-timeout: 60
+last-run: 2026-05-23T11:02:38.896234076+00:00
+last-run-duration: 1.2s
 ---
 
 ## Description

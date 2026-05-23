@@ -86,10 +86,19 @@ SEED_VOCABULARY: list[dict[str, Any]] = [
 ]
 
 
+#: Dispatcher-pinned identifiers used across the synthetic FT-048 bundles.
+#: After the FT-064 migration the worker does not carry a default; the
+#: bundle must always supply ``endpoint`` + ``model_id``.
+_FIXTURE_ENDPOINT = "anthropic"
+_FIXTURE_MODEL_ID = "test-model-pinned-by-dispatcher"
+
+
 def build_bundle_for_match() -> VerifyGraphAuthorInput:
     """TC-076 — synthetic bundle with a candidate covering all TCs."""
     return VerifyGraphAuthorInput.model_validate(
         {
+            "endpoint": _FIXTURE_ENDPOINT,
+            "model_id": _FIXTURE_MODEL_ID,
             "feature_id": "FT-Q",
             "feature_spec": (
                 "# FT-Q — example feature\n\n"
@@ -136,6 +145,8 @@ def build_bundle_for_gap_ops_mismatch() -> VerifyGraphAuthorInput:
     """TC-077 — env's allowed_ops cannot satisfy the TCs."""
     return VerifyGraphAuthorInput.model_validate(
         {
+            "endpoint": _FIXTURE_ENDPOINT,
+            "model_id": _FIXTURE_MODEL_ID,
             "feature_id": "FT-R",
             "feature_spec": (
                 "# FT-R — feature requiring mutating HTTP\n\n"
@@ -167,6 +178,8 @@ def build_bundle_for_protocol_check() -> VerifyGraphAuthorInput:
     """TC-078 — any valid bundle works; the test mocks a wrong-hash response."""
     return VerifyGraphAuthorInput.model_validate(
         {
+            "endpoint": _FIXTURE_ENDPOINT,
+            "model_id": _FIXTURE_MODEL_ID,
             "feature_id": "FT-S",
             "feature_spec": (
                 "# FT-S — bundle-hash echo check\n\n"
@@ -206,12 +219,19 @@ def make_caller(*responses: dict | str):
 
 
 def assert_no_anthropic_attempt(monkeypatch):
-    """Replace the live anthropic caller with a sentinel that fails the test if invoked."""
+    """Replace the live router builder with a sentinel that fails if invoked.
+
+    After the FT-064 migration there is no module-level ``call_claude``
+    seam; the worker dispatches via :func:`ModelRouter.call`. This helper
+    patches the router-building entry point so any test that forgets to
+    inject a caller surfaces a clear AssertionError instead of attempting
+    a live SDK call.
+    """
     from verify_graph_author import worker as worker_mod
 
     def boom(*args, **kwargs):  # noqa: ARG001
         raise AssertionError(
-            "live Anthropic call escaped the mock — test must inject a caller"
+            "live model call escaped the mock — test must inject a caller"
         )
 
-    monkeypatch.setattr(worker_mod, "call_claude", boom)
+    monkeypatch.setattr(worker_mod, "_build_router_for_bundle", boom)

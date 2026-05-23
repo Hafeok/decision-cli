@@ -7,7 +7,7 @@ ADR-008 / ADR-020 worker contract:
 * Exit 1 on bundle parse error, Claude error, or validation failure
   (with a diagnostic on stderr).
 * No files written, no graph access, no subprocess plumbing beyond the
-  single anthropic SDK call.
+  single router call (FT-060).
 """
 
 from __future__ import annotations

@@ -1,4 +1,12 @@
-"""Worker-level tests: injected ModelCaller + retry behaviour."""
+"""Worker-level tests: injected ModelCaller + retry behaviour.
+
+After the FT-064 migration, the worker no longer carries a hardcoded
+default model id or env-var override; the model identifier is pinned by
+the dispatcher on the bundle (per FT-061) and consumed verbatim. Tests
+therefore always pin a concrete ``model_id`` on the synthetic bundles
+below — that is what the live dispatcher does, and it is what TC-113
+enforces structurally.
+"""
 
 from __future__ import annotations
 
@@ -8,13 +16,17 @@ import pytest
 
 from verifier.bundle import VerifierInput
 from verifier.worker import (
-    DEFAULT_MODEL_ID,
-    MODEL_ENV_VAR,
+    STUB_ENV_VAR,
     VerifierError,
     _extract_json_object,
-    resolve_model_id,
     run_verifier,
 )
+
+
+# A test-only model identifier — never inspected by the worker, only echoed
+# into telemetry. Pinned here to exercise the FT-061 contract: the worker
+# uses whatever the dispatcher sent, no hardcoded default in the worker.
+TEST_MODEL_ID = "test-model-pinned-by-dispatcher"
 
 
 def _bundle(**overrides) -> VerifierInput:
@@ -30,6 +42,8 @@ def _bundle(**overrides) -> VerifierInput:
         "in_stream": "https://decision-cli.dev/stream/test",
         "relevant_tcs": [{"id": "TC-013", "type": "invariant", "body": "tc body"}],
         "relevant_adrs": [{"id": "ADR-008", "scope": "cross-cutting", "body": "adr body"}],
+        "endpoint": "anthropic",
+        "model_id": TEST_MODEL_ID,
     }
     base.update(overrides)
     return VerifierInput.model_validate(base)
@@ -70,7 +84,10 @@ def test_run_verifier_returns_approved_on_clean_response() -> None:
     assert result.telemetry.attempts == 1
     assert result.telemetry.input_tokens == 100
     assert result.telemetry.output_tokens == 50
+    assert result.telemetry.model_id == TEST_MODEL_ID
     assert len(caller.calls) == 1
+    # The caller saw the bundle-pinned model id — never a worker constant.
+    assert caller.calls[0][2] == TEST_MODEL_ID
 
 
 def test_run_verifier_handles_rejected_response() -> None:
@@ -192,23 +209,58 @@ def test_run_verifier_extracts_json_from_prose_wrapper() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Model id resolution
+# Bundle pins the model id (FT-061 contract)
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_model_id_uses_bundle_pin() -> None:
-    b = _bundle(model_id="claude-opus-4-1-fictitious")
-    assert resolve_model_id(b) == "claude-opus-4-1-fictitious"
+def test_bundle_requires_model_id() -> None:
+    """The dispatcher MUST pin model_id; the worker has no default."""
+    from pydantic import ValidationError as _PydanticValidationError
+
+    with pytest.raises(_PydanticValidationError):
+        VerifierInput.model_validate(
+            {
+                "dispatch_id": "urn:dec:dispatch:1",
+                "dispatch_group": "urn:dec:group:1",
+                "interpretation_session": "urn:dec:session:interp-1",
+                "action_session": "urn:dec:session:action-1",
+                "feature_id": "FT-013",
+                "feature_spec": "spec",
+                "produced_artifact": "diff",
+                "bundle_hash": "deadbeef" * 8,
+                "in_stream": "https://decision-cli.dev/stream/test",
+                # model_id intentionally omitted
+            }
+        )
 
 
-def test_resolve_model_id_falls_back_to_default(monkeypatch) -> None:
-    monkeypatch.delenv(MODEL_ENV_VAR, raising=False)
-    assert resolve_model_id(_bundle()) == DEFAULT_MODEL_ID
+def test_caller_receives_bundle_pinned_model_id() -> None:
+    """The caller seam echoes the dispatcher-pinned model_id verbatim."""
+    pinned = "qwen3-coder-30b-a3b-instruct"
+    caller = _make_caller(
+        {
+            "verdict": "approved",
+            "rationale": "Produced artifact satisfies TC-013 and ADR-008.",
+            "violates": [],
+        }
+    )
+    bundle = _bundle(endpoint="scaleway", model_id=pinned)
+    result = run_verifier(bundle, caller=caller)
+    assert result.telemetry.model_id == pinned
+    assert caller.calls[0][2] == pinned
 
 
-def test_resolve_model_id_uses_env_when_bundle_is_default(monkeypatch) -> None:
-    monkeypatch.setenv(MODEL_ENV_VAR, "claude-haiku-stand-in")
-    assert resolve_model_id(_bundle()) == "claude-haiku-stand-in"
+# ---------------------------------------------------------------------------
+# Stub mode
+# ---------------------------------------------------------------------------
+
+
+def test_stub_mode_short_circuits_router(monkeypatch) -> None:
+    """``VERIFIER_STUB=1`` returns a synthetic approved verdict regardless of router."""
+    monkeypatch.setenv(STUB_ENV_VAR, "1")
+    result = run_verifier(_bundle())
+    assert result.verdict.verdict == "approved"
+    assert "stub mode" in result.verdict.rationale.lower()
 
 
 # ---------------------------------------------------------------------------

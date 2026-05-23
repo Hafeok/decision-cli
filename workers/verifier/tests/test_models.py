@@ -33,6 +33,10 @@ def _minimal_input(**overrides) -> dict:
         "in_stream": "https://decision-cli.dev/stream/test",
         "relevant_tcs": [{"id": "TC-013", "type": "invariant", "body": "tc body"}],
         "relevant_adrs": [{"id": "ADR-008", "scope": "cross-cutting", "body": "adr body"}],
+        # Dispatcher-pinned model identifier (FT-061). Workers do NOT
+        # carry a default; the bundle must supply one.
+        "endpoint": "anthropic",
+        "model_id": "test-model-pinned-by-dispatcher",
     }
     base.update(overrides)
     return base
@@ -48,7 +52,10 @@ def test_verifier_input_round_trip() -> None:
     assert b.feature_id == "FT-013"
     assert b.relevant_tcs[0].id == "TC-013"
     assert b.relevant_adrs[0].id == "ADR-008"
-    assert b.model_id == "claude-sonnet-4-5"
+    # The bundle echoes the dispatcher-pinned model id verbatim; the
+    # worker has no default after the FT-064 migration.
+    assert b.model_id == "test-model-pinned-by-dispatcher"
+    assert b.endpoint == "anthropic"
     assert "TC-013" in b.references and "ADR-008" in b.references
 
 

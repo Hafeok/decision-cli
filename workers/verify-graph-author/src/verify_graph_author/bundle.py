@@ -116,9 +116,21 @@ class VerifyGraphAuthorInput(BaseModel):
         min_length=8,
         description="SHA-256 hex of the canonical bundle (echoed in the proposal).",
     )
+    endpoint: str = Field(
+        default="anthropic",
+        description="Endpoint discriminator resolved by the dispatcher "
+        "(FT-061): 'anthropic' or 'scaleway'.",
+    )
     model_id: str = Field(
-        default="claude-sonnet-4-5",
-        description="Model the worker should invoke (single hardcoded binding per ADR-020).",
+        ...,
+        description="Provider-specific model identifier pinned by the "
+        "dispatcher per FT-061. Workers do not hardcode this; it arrives "
+        "in the dispatch payload.",
+    )
+    parameters: dict = Field(
+        default_factory=dict,
+        description="Additional capability-resolved parameters forwarded "
+        "to the router untouched.",
     )
     max_tokens: int = Field(default=4096, ge=256, le=64_000)
 
