@@ -16,6 +16,7 @@ use oxi_events::{CommitResult, GraphWriter, Mutation};
 use oxigraph::model::{GraphName, NamedNode, NamedNodeRef, Quad, Subject, Term};
 use oxigraph::store::Store;
 
+use crate::core::bundle::validate_quads as validate_bundle_quads;
 use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::capability::validate_quads as validate_capability_quads;
@@ -103,6 +104,7 @@ impl StreamWriter {
         validate_waivers(&mutation.inserts)?;
         validate_capabilities(&mutation.inserts)?;
         validate_role_bindings(&mutation.inserts)?;
+        validate_bundles(&mutation.inserts)?;
         self.validate_feedback_transitions(&mutation)?;
         self.inner
             .commit(mutation)
@@ -297,6 +299,14 @@ fn validate_role_bindings(quads: &[Quad]) -> Result<()> {
             err.report
         )
     })
+}
+
+/// SHACL-validate every `dec:Bundle` subject present in `quads`
+/// (FT-056 / ADR-035). Same `SHACL violation` prefix as siblings so
+/// callers match uniformly on the prefix.
+fn validate_bundles(quads: &[Quad]) -> Result<()> {
+    validate_bundle_quads(quads)
+        .map_err(|err| anyhow!("SHACL violation: bundle mutation refused\n{}", err.report))
 }
 
 /// Walk a mutation's inserts and yield every `(subject, new_state)`

@@ -2,7 +2,7 @@
 id: TC-102
 title: Bundle.stakes enum constraint and default ladder
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-056
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test bundle_stakes
 runner-timeout: 120
+last-run: 2026-05-23T08:56:28.242755230+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

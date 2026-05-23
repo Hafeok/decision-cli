@@ -2,7 +2,7 @@
 id: FT-056
 title: 'decision-cli: Bundle.stakes field and enum SHACL constraint'
 phase: 2
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-001
@@ -30,7 +30,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-102
 domains:
 - data-model

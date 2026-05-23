@@ -19,7 +19,7 @@
 
 <https://decision-cli.dev/ns> a owl:Ontology ;
     rdfs:label       "decision-cli base ontology" ;
-    owl:versionInfo  "0.5.0" .
+    owl:versionInfo  "0.6.0" .
 
 # --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
 
@@ -588,3 +588,18 @@ dec:trigger_signal a rdf:Property ;
     rdfs:domain dec:EscalationTrigger ;
     rdfs:range  xsd:string ;
     rdfs:comment "Trigger signal literal drawn from the ADR-034 closed vocabulary." .
+
+# --- FT-056 / ADR-035: Bundle artifact with stakes -------------------------
+
+dec:Bundle a rdfs:Class ;
+    rdfs:label "Bundle" ;
+    rdfs:comment "An immutable dispatched bundle — focal artifact plus its surrounding context — composed for a role at dispatch time (FT-056 / ADR-035)." .
+
+dec:focal a rdf:Property ;
+    rdfs:domain dec:Bundle ;
+    rdfs:comment "The focal artifact this bundle was composed around (an IRI; class informs the default stakes ladder per ADR-035)." .
+
+dec:stakes a rdf:Property ;
+    rdfs:domain dec:Bundle ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Closed enum of {routine, elevated, foundational} (ADR-035). Drives the dispatcher's escalation triggers (ADR-034) and reasoning_effort mapping (FT-063)." .

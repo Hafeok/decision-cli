@@ -84,6 +84,7 @@ const REQUIRED_ONTOLOGY_CLASSES: &[&str] = &[
     "RoleBinding",
     "EscalationStep",
     "EscalationTrigger",
+    "Bundle",
 ];
 
 pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), OntologyError> {
@@ -208,6 +209,8 @@ const ESCALATION_STEP_PROPS: &[&str] = &[
 
 const ESCALATION_TRIGGER_PROPS: &[&str] = &["https://decision-cli.dev/ns#trigger_signal"];
 
+const BUNDLE_PROPS: &[&str] = &["https://decision-cli.dev/ns#stakes"];
+
 type ShapeRequirement = (&'static str, &'static [&'static str]);
 
 const VALUE_STREAM_CLASS: &str = "https://decision-cli.dev/ns#ValueStream";
@@ -223,6 +226,7 @@ const CAPABILITY_CLASS: &str = "https://decision-cli.dev/ns#Capability";
 const ROLE_BINDING_CLASS: &str = "https://decision-cli.dev/ns#RoleBinding";
 const ESCALATION_STEP_CLASS: &str = "https://decision-cli.dev/ns#EscalationStep";
 const ESCALATION_TRIGGER_CLASS: &str = "https://decision-cli.dev/ns#EscalationTrigger";
+const BUNDLE_CLASS: &str = "https://decision-cli.dev/ns#Bundle";
 
 const REQUIRED_SHAPES: &[ShapeRequirement] = &[
     (VALUE_STREAM_CLASS, VALUE_STREAM_PROPS),
@@ -238,6 +242,7 @@ const REQUIRED_SHAPES: &[ShapeRequirement] = &[
     (ROLE_BINDING_CLASS, ROLE_BINDING_PROPS),
     (ESCALATION_STEP_CLASS, ESCALATION_STEP_PROPS),
     (ESCALATION_TRIGGER_CLASS, ESCALATION_TRIGGER_PROPS),
+    (BUNDLE_CLASS, BUNDLE_PROPS),
 ];
 
 fn required_shape_properties() -> &'static [ShapeRequirement] {

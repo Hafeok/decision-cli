@@ -8,6 +8,7 @@
 //! scope object, the stream-aware writer, the bundled definition
 //! library, and the worker resolution chain.
 
+pub mod bundle;
 pub mod bundled;
 pub mod dispatch;
 pub mod feedback;

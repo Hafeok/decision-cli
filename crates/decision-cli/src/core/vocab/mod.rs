@@ -257,3 +257,45 @@ pub fn value_stream_class() -> NamedNodeRef<'static> {
 pub fn orchestration_graph() -> NamedNodeRef<'static> {
     NamedNodeRef::new_unchecked(IRI_DEC_GRAPH_ORCHESTRATION)
 }
+
+// --- FT-056 / ADR-035: Bundle stakes vocabulary -----------------------------
+
+/// Class IRI for `dec:Bundle` (FT-056 / ADR-035).
+pub const IRI_DEC_BUNDLE: &str = "https://decision-cli.dev/ns#Bundle";
+
+/// Named graph the bundle catalog lives in.
+pub const IRI_DEC_GRAPH_BUNDLE: &str = "https://decision-cli.dev/ns/bundles";
+
+/// Canonical IRI prefix for `dec:Bundle` artifacts: `…/ns/bundle/<hash>`.
+pub const IRI_DEC_BUNDLE_PREFIX: &str = "https://decision-cli.dev/ns/bundle/";
+
+/// `dec:stakes` predicate — Bundle → enum literal (ADR-035).
+pub const IRI_DEC_STAKES: &str = "https://decision-cli.dev/ns#stakes";
+
+/// `dec:focal` predicate — Bundle → focal artifact IRI.
+pub const IRI_DEC_FOCAL: &str = "https://decision-cli.dev/ns#focal";
+
+/// Stakes literal values per ADR-035 §"Who sets it".
+pub const STAKES_ROUTINE: &str = "routine";
+pub const STAKES_ELEVATED: &str = "elevated";
+pub const STAKES_FOUNDATIONAL: &str = "foundational";
+
+#[must_use]
+pub fn bundle_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_BUNDLE)
+}
+
+#[must_use]
+pub fn bundle_graph() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_GRAPH_BUNDLE)
+}
+
+#[must_use]
+pub fn stakes_pred() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_STAKES)
+}
+
+#[must_use]
+pub fn focal_pred() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_FOCAL)
+}

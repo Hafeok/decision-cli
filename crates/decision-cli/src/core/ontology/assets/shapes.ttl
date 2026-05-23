@@ -1059,6 +1059,22 @@ dec:EscalationStepShape a sh:NodeShape ;
         sh:message  "dec:EscalationStep requires at least one dec:triggers entry (IRI of a dec:EscalationTrigger)."
     ] .
 
+# --- Bundle shape (FT-056 / ADR-035) ----------------------------------------
+# Enforces ADR-035 §"Who sets it" invariant: every dec:Bundle carries
+# exactly one dec:stakes literal drawn from {routine, elevated, foundational}.
+
+dec:BundleShape a sh:NodeShape ;
+    sh:targetClass dec:Bundle ;
+
+    sh:property [
+        sh:path     dec:stakes ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "routine" "elevated" "foundational" ) ;
+        sh:message  "dec:Bundle requires exactly one dec:stakes literal in {routine, elevated, foundational} (ADR-035)."
+    ] .
+
 # --- EscalationTrigger shape (FT-055 / ADR-034) -----------------------------
 
 dec:EscalationTriggerShape a sh:NodeShape ;

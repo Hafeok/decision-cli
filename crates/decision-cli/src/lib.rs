@@ -14,6 +14,7 @@ pub mod features;
 // Backwards-compatible top-level surface — external integration tests
 // import from `decision_cli::{init, implement, …}`, so we re-export the
 // feature modules at the crate root.
+pub use crate::core::bundle;
 pub use crate::core::bundled;
 pub use crate::core::scope;
 pub use crate::core::vocab;

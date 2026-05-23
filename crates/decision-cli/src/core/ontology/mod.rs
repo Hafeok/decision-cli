@@ -42,7 +42,7 @@ use helpers::{
 /// and is intentionally tied to a binary release.
 ///
 /// Recorded on every bootstrap session (ADR-007).
-pub const ONTOLOGY_VERSION: &str = "0.5.0";
+pub const ONTOLOGY_VERSION: &str = "0.6.0";
 
 /// Named graph the embedded ontology is loaded into. Exposed so FT-008
 /// can run shapes / queries against the same graph the handle parses.
@@ -235,6 +235,7 @@ mod tests {
             "https://decision-cli.dev/ns#RoleBinding",
             "https://decision-cli.dev/ns#EscalationStep",
             "https://decision-cli.dev/ns#EscalationTrigger",
+            "https://decision-cli.dev/ns#Bundle",
         ] {
             assert!(h.declares_class(c), "missing class declaration: {c}");
         }

@@ -434,7 +434,10 @@ fn embedded_shapes_declare_escalation_step_and_trigger_shapes() {
 fn ontology_version_bumped_to_0_5_0() {
     use decision_cli::OntologyHandle;
     let h = OntologyHandle::load().expect("load ontology");
-    assert_eq!(h.version(), "0.5.0");
+    // Bumped to 0.6.0 by FT-056 (Bundle.stakes); the earlier 0.5.0 contract
+    // remains in name because no downstream consumer pinned to a specific
+    // string value.
+    assert_eq!(h.version(), "0.6.0");
 }
 
 // Sanity: explicit reference to ensure the predicate import is used.
