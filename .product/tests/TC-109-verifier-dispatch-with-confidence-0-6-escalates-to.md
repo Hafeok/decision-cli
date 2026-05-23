@@ -2,7 +2,7 @@
 id: TC-109
 title: Verifier dispatch with confidence 0.6 escalates to standard-reasoning-frontier with bidirectional linkage
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-062
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test escalate_confidence_07
 runner-timeout: 180
+last-run: 2026-05-23T10:32:54.955923968+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

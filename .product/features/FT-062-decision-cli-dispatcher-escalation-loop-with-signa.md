@@ -2,7 +2,7 @@
 id: FT-062
 title: 'decision-cli: Dispatcher escalation loop with signal collection and bundle enrichment'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-057
 - FT-061
@@ -32,7 +32,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-109
 - TC-110
 - TC-111

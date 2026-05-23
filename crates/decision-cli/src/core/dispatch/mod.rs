@@ -7,12 +7,20 @@
 //! primitives that gate `dec implement` completion.
 
 pub mod capability_resolver;
+pub mod escalation;
 pub mod group;
 pub mod lifecycle;
 pub mod pause;
 pub mod quads;
 
 pub use capability_resolver::{resolve_default_capability, ResolvedCapability, ResolverError};
+pub use escalation::{
+    build_enriched_bundle_quads, build_session_linkage_quads, collect_signals, dispatch_role,
+    enrich_bundle_with_prior_attempt, evaluate_trigger, find_next_escalation_step,
+    mint_session_iri, pick_reason, render_enriched_bundle_markdown, render_prior_attempt_block,
+    AttemptTokens, AuditOutcome, ChainResult, DispatchAttempt, EscalationError, FeedbackArtifact,
+    SessionId, SignalSet, WorkerResult, WorkerRunner,
+};
 pub use group::{DispatchGroup, GroupError};
 pub use lifecycle::{DispatchEvent, DispatchStatus, LifecycleError};
 pub use pause::{

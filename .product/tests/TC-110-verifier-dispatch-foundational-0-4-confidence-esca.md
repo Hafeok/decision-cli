@@ -2,7 +2,7 @@
 id: TC-110
 title: Verifier dispatch foundational+0.4 confidence escalates twice into deep-reasoning
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-062
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test escalate_foundational_chain
 runner-timeout: 240
+last-run: 2026-05-23T10:32:54.955923968+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description
