@@ -9,6 +9,7 @@
 mod auto_dispatch;
 mod capability;
 mod feedback;
+mod role_binding;
 mod verify_env;
 mod verify_graph;
 mod waiver;
@@ -16,6 +17,7 @@ mod waiver;
 pub use auto_dispatch::*;
 pub use capability::*;
 pub use feedback::*;
+pub use role_binding::*;
 pub use verify_env::*;
 pub use verify_graph::*;
 pub use waiver::*;

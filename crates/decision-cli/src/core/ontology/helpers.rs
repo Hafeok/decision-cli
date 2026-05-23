@@ -81,6 +81,9 @@ const REQUIRED_ONTOLOGY_CLASSES: &[&str] = &[
     "VerificationGraph",
     "VerificationStep",
     "Capability",
+    "RoleBinding",
+    "EscalationStep",
+    "EscalationTrigger",
 ];
 
 pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), OntologyError> {
@@ -191,6 +194,20 @@ const CAPABILITY_PROPS: &[&str] = &[
     "https://decision-cli.dev/ns#version",
 ];
 
+const ROLE_BINDING_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#role_id",
+    "https://decision-cli.dev/ns#default_capability",
+    "https://decision-cli.dev/ns#active",
+    "https://decision-cli.dev/ns#version",
+];
+
+const ESCALATION_STEP_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#step_capability",
+    "https://decision-cli.dev/ns#triggers",
+];
+
+const ESCALATION_TRIGGER_PROPS: &[&str] = &["https://decision-cli.dev/ns#trigger_signal"];
+
 type ShapeRequirement = (&'static str, &'static [&'static str]);
 
 const VALUE_STREAM_CLASS: &str = "https://decision-cli.dev/ns#ValueStream";
@@ -203,6 +220,9 @@ const VERIFICATION_ENV_CLASS: &str = "https://decision-cli.dev/ns#VerificationEn
 const VERIFICATION_GRAPH_CLASS: &str = "https://decision-cli.dev/ns#VerificationGraph";
 const VERIFICATION_STEP_CLASS: &str = "https://decision-cli.dev/ns#VerificationStep";
 const CAPABILITY_CLASS: &str = "https://decision-cli.dev/ns#Capability";
+const ROLE_BINDING_CLASS: &str = "https://decision-cli.dev/ns#RoleBinding";
+const ESCALATION_STEP_CLASS: &str = "https://decision-cli.dev/ns#EscalationStep";
+const ESCALATION_TRIGGER_CLASS: &str = "https://decision-cli.dev/ns#EscalationTrigger";
 
 const REQUIRED_SHAPES: &[ShapeRequirement] = &[
     (VALUE_STREAM_CLASS, VALUE_STREAM_PROPS),
@@ -215,6 +235,9 @@ const REQUIRED_SHAPES: &[ShapeRequirement] = &[
     (VERIFICATION_GRAPH_CLASS, VERIFICATION_GRAPH_PROPS),
     (VERIFICATION_STEP_CLASS, VERIFICATION_STEP_PROPS),
     (CAPABILITY_CLASS, CAPABILITY_PROPS),
+    (ROLE_BINDING_CLASS, ROLE_BINDING_PROPS),
+    (ESCALATION_STEP_CLASS, ESCALATION_STEP_PROPS),
+    (ESCALATION_TRIGGER_CLASS, ESCALATION_TRIGGER_PROPS),
 ];
 
 fn required_shape_properties() -> &'static [ShapeRequirement] {

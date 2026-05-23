@@ -20,6 +20,7 @@ use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::capability::validate_quads as validate_capability_quads;
 use crate::core::ontology::coverage_waiver::validate_quads as validate_waiver_quads;
+use crate::core::ontology::role_binding::validate_quads as validate_role_binding_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
 use crate::core::ontology::verification_graph::validate_quads as validate_graph_quads;
@@ -101,6 +102,7 @@ impl StreamWriter {
         validate_graphs(&mutation.inserts)?;
         validate_waivers(&mutation.inserts)?;
         validate_capabilities(&mutation.inserts)?;
+        validate_role_bindings(&mutation.inserts)?;
         self.validate_feedback_transitions(&mutation)?;
         self.inner
             .commit(mutation)
@@ -279,6 +281,19 @@ fn validate_capabilities(quads: &[Quad]) -> Result<()> {
     validate_capability_quads(quads).map_err(|err| {
         anyhow!(
             "SHACL violation: capability mutation refused\n{}",
+            err.report
+        )
+    })
+}
+
+/// SHACL-validate every `dec:RoleBinding` / `dec:EscalationStep` /
+/// `dec:EscalationTrigger` subject present in `quads` (FT-055 /
+/// ADR-033 / ADR-034). Same `SHACL violation` prefix as siblings so
+/// callers match uniformly on the prefix.
+fn validate_role_bindings(quads: &[Quad]) -> Result<()> {
+    validate_role_binding_quads(quads).map_err(|err| {
+        anyhow!(
+            "SHACL violation: role binding mutation refused\n{}",
             err.report
         )
     })

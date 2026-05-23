@@ -2,7 +2,7 @@
 id: FT-055
 title: 'decision-cli: RoleBinding, EscalationStep, and EscalationTrigger artifact types'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-054
 adrs:

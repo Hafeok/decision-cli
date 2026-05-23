@@ -2,7 +2,7 @@
 id: TC-101
 title: RoleBinding artifact conforms to dec:RoleBindingShape with ordered escalation steps
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-055
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test role_binding_shape
 runner-timeout: 120
+last-run: 2026-05-23T08:44:26.192577590+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

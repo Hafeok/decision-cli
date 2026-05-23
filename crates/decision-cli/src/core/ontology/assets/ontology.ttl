@@ -19,7 +19,7 @@
 
 <https://decision-cli.dev/ns> a owl:Ontology ;
     rdfs:label       "decision-cli base ontology" ;
-    owl:versionInfo  "0.4.0" .
+    owl:versionInfo  "0.5.0" .
 
 # --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
 
@@ -540,3 +540,51 @@ dec:notes a rdf:Property ;
     rdfs:domain dec:Capability ;
     rdfs:range  xsd:string ;
     rdfs:comment "Optional free-text catalog-maintainer notes." .
+
+# --- FT-055 / ADR-033 / ADR-034: RoleBinding + escalation policy ------------
+
+dec:RoleBinding a rdfs:Class ;
+    rdfs:label "RoleBinding" ;
+    rdfs:comment "A versioned binding from a role (FT-030 role catalog id) to its default capability plus an ordered list of escalation steps (FT-055 / ADR-033 / ADR-034)." .
+
+dec:EscalationStep a rdfs:Class ;
+    rdfs:label "EscalationStep" ;
+    rdfs:comment "A candidate capability plus the set of triggers that selects it. Membership inside a RoleBinding is order-preserving via the parent's rdf:List of escalation_steps (ADR-034)." .
+
+dec:EscalationTrigger a rdfs:Class ;
+    rdfs:label "EscalationTrigger" ;
+    rdfs:comment "A single trigger drawn from the closed ADR-034 vocabulary. OR-evaluated by the dispatcher per ADR-034 §dispatcher loop." .
+
+dec:role_id a rdf:Property ;
+    rdfs:domain dec:RoleBinding ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Lookup key into the FT-030 role catalog (a plain string, NOT a class IRI — keeps RoleBinding independent of Role IRI minting)." .
+
+dec:default_capability a rdf:Property ;
+    rdfs:domain dec:RoleBinding ;
+    rdfs:range  dec:Capability ;
+    rdfs:comment "The capability dispatched when no escalation step's triggers fire." .
+
+dec:escalation_steps a rdf:Property ;
+    rdfs:domain dec:RoleBinding ;
+    rdfs:comment "rdf:List of EscalationStep IRIs in order of escalation. Empty list (rdf:nil) is permitted for bounded-classification roles per ADR-037." .
+
+dec:active a rdf:Property ;
+    rdfs:domain dec:RoleBinding ;
+    rdfs:range  xsd:boolean ;
+    rdfs:comment "True iff this binding is the dispatcher's authoritative choice for its role_id. SHACL invariant: at most one active binding per role_id (FT-055)." .
+
+dec:step_capability a rdf:Property ;
+    rdfs:domain dec:EscalationStep ;
+    rdfs:range  dec:Capability ;
+    rdfs:comment "The capability promoted to when this step's triggers fire." .
+
+dec:triggers a rdf:Property ;
+    rdfs:domain dec:EscalationStep ;
+    rdfs:range  dec:EscalationTrigger ;
+    rdfs:comment "Set of EscalationTrigger IRIs whose OR selects this step. Multi-valued; sh:minCount 1." .
+
+dec:trigger_signal a rdf:Property ;
+    rdfs:domain dec:EscalationTrigger ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Trigger signal literal drawn from the ADR-034 closed vocabulary." .

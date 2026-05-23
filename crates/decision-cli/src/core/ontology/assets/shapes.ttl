@@ -948,3 +948,143 @@ dec:CapabilityShape a sh:NodeShape ;
             }
         """
     ] .
+
+# --- RoleBinding shape (FT-055 / ADR-033 / ADR-034) -------------------------
+# Cardinality and datatype invariants for dec:RoleBinding. Cross-subject
+# invariants (at-most-one-active per role_id, default_capability not EOL)
+# are sh:sparql.
+
+dec:RoleBindingShape a sh:NodeShape ;
+    sh:targetClass dec:RoleBinding ;
+
+    sh:property [
+        sh:path      dec:role_id ;
+        sh:datatype  xsd:string ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:minLength 1 ;
+        sh:message   "dec:RoleBinding requires exactly one non-empty dec:role_id (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:default_capability ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:RoleBinding requires exactly one dec:default_capability (IRI of a dec:Capability)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:active ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:RoleBinding requires exactly one dec:active (boolean)."
+    ] ;
+
+    sh:property [
+        sh:path         dec:version ;
+        sh:datatype     xsd:integer ;
+        sh:minCount     1 ;
+        sh:maxCount     1 ;
+        sh:minInclusive 1 ;
+        sh:message      "dec:RoleBinding requires exactly one dec:version (integer ≥ 1)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:escalation_steps ;
+        sh:maxCount 1 ;
+        sh:message  "dec:RoleBinding carries at most one dec:escalation_steps rdf:List head."
+    ] ;
+
+    sh:property [
+        sh:path     dec:supersedes ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+        sh:message  "dec:supersedes (if present) must be a single IRI."
+    ] ;
+
+    sh:property [
+        sh:path     dec:bootstrap_source ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:bootstrap_source (if present) must be a single string."
+    ] ;
+
+    # At most one active binding per role_id (FT-055 invariant).
+    sh:sparql [
+        sh:message "at most one dec:RoleBinding may carry dec:active=true per dec:role_id (FT-055)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:role_id ?r ;
+                    dec:active true .
+              ?other a dec:RoleBinding ;
+                     dec:role_id ?r ;
+                     dec:active true .
+              FILTER ($this != ?other)
+            }
+        """
+    ] ;
+
+    # default_capability MUST reference a capability whose status ≠ eol.
+    sh:sparql [
+        sh:message "dec:default_capability MUST reference a dec:Capability whose dec:status is not \"eol\" (FT-055 / ADR-033)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:default_capability ?cap .
+              ?cap dec:status "eol" .
+            }
+        """
+    ] .
+
+# --- EscalationStep shape (FT-055 / ADR-034) --------------------------------
+
+dec:EscalationStepShape a sh:NodeShape ;
+    sh:targetClass dec:EscalationStep ;
+
+    sh:property [
+        sh:path     dec:step_capability ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:EscalationStep requires exactly one dec:step_capability (IRI of a dec:Capability)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:triggers ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:EscalationStep requires at least one dec:triggers entry (IRI of a dec:EscalationTrigger)."
+    ] .
+
+# --- EscalationTrigger shape (FT-055 / ADR-034) -----------------------------
+
+dec:EscalationTriggerShape a sh:NodeShape ;
+    sh:targetClass dec:EscalationTrigger ;
+
+    sh:property [
+        sh:path     dec:trigger_signal ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "stakes_routine"
+                      "stakes_elevated"
+                      "stakes_foundational"
+                      "confidence_below_0.5"
+                      "confidence_below_0.7"
+                      "confidence_below_0.9"
+                      "audit_pass"
+                      "audit_fail"
+                      "prior_attempts_ge_1"
+                      "prior_attempts_ge_2"
+                      "prior_attempts_ge_3"
+                      "prior_attempts_ge_4"
+                      "prior_attempts_ge_5"
+                      "feedback_contradiction"
+                      "feedback_unimplementable_critical"
+                      "feedback_gap"
+                      "feedback_scope_issue" ) ;
+        sh:message  "dec:EscalationTrigger requires exactly one dec:trigger_signal drawn from the ADR-034 closed vocabulary."
+    ] .
