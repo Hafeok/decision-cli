@@ -2,7 +2,7 @@
 id: TC-107
 title: Dispatcher resolves default_capability and refuses when no active binding
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-061
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test capability_resolver
 runner-timeout: 180
+last-run: 2026-05-23T10:17:14.752248259+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

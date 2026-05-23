@@ -2,7 +2,7 @@
 id: TC-108
 title: Verifier dispatch with confidence 0.9 produces single session, no escalation
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-061
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test dispatch_no_escalation
 runner-timeout: 180
+last-run: 2026-05-23T10:17:14.752248259+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description

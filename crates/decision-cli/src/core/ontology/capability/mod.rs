@@ -15,6 +15,7 @@
 //! dispatcher resolution, and worker-side consumption are out of scope
 //! and land in [FT-055..FT-065].
 
+pub mod lookup;
 pub mod read;
 pub mod shacl;
 pub mod types;
@@ -22,6 +23,7 @@ pub mod types;
 #[cfg(test)]
 mod tests;
 
+pub use lookup::query_by_iri;
 pub use read::{query_active_by_id, CapabilityReadError};
 pub use shacl::{validate_quads, CapabilityShaclError, CapabilityViolation};
 pub use types::{Capability, CapabilityStatus, CostCurrency, Endpoint};

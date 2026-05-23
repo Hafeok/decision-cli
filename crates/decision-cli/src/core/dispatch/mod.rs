@@ -6,11 +6,13 @@
 //! sibling features never reach into each other for the lifecycle
 //! primitives that gate `dec implement` completion.
 
+pub mod capability_resolver;
 pub mod group;
 pub mod lifecycle;
 pub mod pause;
 pub mod quads;
 
+pub use capability_resolver::{resolve_default_capability, ResolvedCapability, ResolverError};
 pub use group::{DispatchGroup, GroupError};
 pub use lifecycle::{DispatchEvent, DispatchStatus, LifecycleError};
 pub use pause::{

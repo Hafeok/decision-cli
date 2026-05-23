@@ -2,7 +2,7 @@
 id: FT-061
 title: 'decision-cli: Dispatcher capability resolution (default_capability path, no escalation)'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-054
 - FT-055
@@ -34,7 +34,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-107
 - TC-108
 domains:

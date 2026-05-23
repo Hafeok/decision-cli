@@ -101,7 +101,10 @@ fn load_capability(store: &Store, iri: &NamedNode) -> Result<Capability, Capabil
     parse_capability(iri.as_str(), &quads)
 }
 
-fn collect_quads(store: &Store, iri: &NamedNode) -> Result<Vec<Quad>, CapabilityReadError> {
+pub(super) fn collect_quads(
+    store: &Store,
+    iri: &NamedNode,
+) -> Result<Vec<Quad>, CapabilityReadError> {
     let mut out: Vec<Quad> = Vec::new();
     let subj = oxigraph::model::Subject::NamedNode(iri.clone());
     for quad in store.quads_for_pattern(Some(subj.as_ref()), None, None, None) {
@@ -111,7 +114,10 @@ fn collect_quads(store: &Store, iri: &NamedNode) -> Result<Vec<Quad>, Capability
     Ok(out)
 }
 
-fn parse_capability(iri: &str, quads: &[Quad]) -> Result<Capability, CapabilityReadError> {
+pub(super) fn parse_capability(
+    iri: &str,
+    quads: &[Quad],
+) -> Result<Capability, CapabilityReadError> {
     let subject = NamedNode::new(iri).map_err(|e| CapabilityReadError::Store(e.to_string()))?;
     require_type(&subject, quads)?;
     let id = take_one_str(iri, quads, &subject, IRI_DEC_CAPABILITY_ID, "dec:capability_id")?;
