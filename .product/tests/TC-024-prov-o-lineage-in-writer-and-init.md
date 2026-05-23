@@ -1,7 +1,7 @@
 ---
 id: TC-024
 title: prov_o_lineage_in_writer_and_init
-type: invariant
+type: scenario
 status: passing
 validates:
   features: []

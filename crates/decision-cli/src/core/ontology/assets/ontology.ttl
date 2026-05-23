@@ -19,7 +19,7 @@
 
 <https://decision-cli.dev/ns> a owl:Ontology ;
     rdfs:label       "decision-cli base ontology" ;
-    owl:versionInfo  "0.3.0" .
+    owl:versionInfo  "0.4.0" .
 
 # --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
 
@@ -439,3 +439,104 @@ dec:fromStep a rdf:Property ;
 dec:bindAs a rdf:Property ;
     rdfs:range xsd:string ;
     rdfs:comment "Capture step binding name (ADR-028)." .
+
+# --- FT-054 / ADR-033: Capability artifact -----------------------------------
+
+dec:Capability a rdfs:Class ;
+    rdfs:label "Capability" ;
+    rdfs:comment "A versioned binding from a stable capability tag to a concrete (endpoint, model_identifier, parameters) triple plus declared model properties (FT-054 / ADR-033)." .
+
+dec:capability_id a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Stable tag used by roles to reference this capability (e.g. \"code-writer\", \"deep-reasoning\")." .
+
+dec:model_identifier a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Exact API model string (e.g. \"qwen3-coder-30b-a3b-instruct\", \"claude-opus-4-7\")." .
+
+dec:tier a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Optional escalation-ladder tier (0–3); omitted for specialty / candidate capabilities (FT-054 / ADR-034)." .
+
+dec:context_window a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Context window size in tokens (non-negative)." .
+
+dec:max_output a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Maximum output tokens the capability emits (non-negative)." .
+
+dec:supports_vision a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:boolean ;
+    rdfs:comment "True iff the capability accepts image inputs." .
+
+dec:supports_tool_calling a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:boolean ;
+    rdfs:comment "True iff the capability supports function/tool calling." .
+
+dec:cost_input_per_m a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:decimal ;
+    rdfs:comment "Cost per 1M input tokens in units of dec:cost_currency (non-negative)." .
+
+dec:cost_output_per_m a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:decimal ;
+    rdfs:comment "Cost per 1M output tokens in units of dec:cost_currency (non-negative)." .
+
+dec:cost_cache_hit_per_m a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:decimal ;
+    rdfs:comment "Optional cost per 1M cache-hit input tokens (non-negative). Set only on endpoints with prompt caching (currently Anthropic). Paired with dec:cost_cache_write_5m." .
+
+dec:cost_cache_write_5m a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:decimal ;
+    rdfs:comment "Optional cost per 1M tokens written to the 5-minute TTL cache (non-negative). Paired with dec:cost_cache_hit_per_m." .
+
+dec:cost_currency a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Currency unit for the four cost fields (one of {EUR, USD})." .
+
+dec:configurable_effort a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:boolean ;
+    rdfs:comment "Optional (default false). True iff the capability accepts a reasoning_effort parameter (FT-063)." .
+
+dec:exposes_reasoning_trace a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:boolean ;
+    rdfs:comment "Optional (default false). True iff the capability emits a separate reasoning trace alongside content (FT-060 §10.6)." .
+
+dec:status a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Capability lifecycle status (one of {active, preview, eol, candidate})." .
+
+dec:version a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Monotonically increasing version (≥ 1). Combined with dec:capability_id forms unique key among active capabilities." .
+
+dec:supersedes a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  dec:Capability ;
+    rdfs:comment "Optional link from a newer Capability version to the prior version it supersedes." .
+
+dec:bootstrap_source a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Optional content hash of the seed YAML the artifact was bootstrapped from (ADR-036 audit)." .
+
+dec:notes a rdf:Property ;
+    rdfs:domain dec:Capability ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Optional free-text catalog-maintainer notes." .

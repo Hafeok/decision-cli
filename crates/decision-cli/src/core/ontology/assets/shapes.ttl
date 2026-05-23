@@ -740,3 +740,211 @@ dec:CaptureStepShape a sh:NodeShape ;
             }
         """
     ] .
+
+# --- Capability shape (FT-054 / ADR-033) ------------------------------------
+# Enforces ADR-033 §schema invariants on dec:Capability artifacts.
+# Cardinality, datatype, and enum constraints are property shapes.
+# Cross-field invariants (uniqueness, cache-cost pair) are sh:sparql.
+
+dec:CapabilityShape a sh:NodeShape ;
+    sh:targetClass dec:Capability ;
+
+    sh:property [
+        sh:path      dec:capability_id ;
+        sh:datatype  xsd:string ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:minLength 1 ;
+        sh:message   "dec:Capability requires exactly one non-empty dec:capability_id (string)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:endpoint ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "scaleway" "anthropic" ) ;
+        sh:message  "dec:Capability requires exactly one dec:endpoint in {scaleway, anthropic}."
+    ] ;
+
+    sh:property [
+        sh:path      dec:model_identifier ;
+        sh:datatype  xsd:string ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:minLength 1 ;
+        sh:message   "dec:Capability requires exactly one non-empty dec:model_identifier (string)."
+    ] ;
+
+    sh:property [
+        sh:path         dec:tier ;
+        sh:datatype     xsd:integer ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:maxInclusive 3 ;
+        sh:message      "dec:tier (if present) must be an integer in 0..=3."
+    ] ;
+
+    sh:property [
+        sh:path         dec:context_window ;
+        sh:datatype     xsd:integer ;
+        sh:minCount     1 ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:message      "dec:Capability requires exactly one non-negative dec:context_window (integer)."
+    ] ;
+
+    sh:property [
+        sh:path         dec:max_output ;
+        sh:datatype     xsd:integer ;
+        sh:minCount     1 ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:message      "dec:Capability requires exactly one non-negative dec:max_output (integer)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:supports_vision ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Capability requires exactly one dec:supports_vision (boolean)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:supports_tool_calling ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:Capability requires exactly one dec:supports_tool_calling (boolean)."
+    ] ;
+
+    sh:property [
+        sh:path         dec:cost_input_per_m ;
+        sh:datatype     xsd:decimal ;
+        sh:minCount     1 ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:message      "dec:Capability requires exactly one non-negative dec:cost_input_per_m (decimal)."
+    ] ;
+
+    sh:property [
+        sh:path         dec:cost_output_per_m ;
+        sh:datatype     xsd:decimal ;
+        sh:minCount     1 ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:message      "dec:Capability requires exactly one non-negative dec:cost_output_per_m (decimal)."
+    ] ;
+
+    sh:property [
+        sh:path         dec:cost_cache_hit_per_m ;
+        sh:datatype     xsd:decimal ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:message      "dec:cost_cache_hit_per_m (if present) must be a non-negative decimal."
+    ] ;
+
+    sh:property [
+        sh:path         dec:cost_cache_write_5m ;
+        sh:datatype     xsd:decimal ;
+        sh:maxCount     1 ;
+        sh:minInclusive 0 ;
+        sh:message      "dec:cost_cache_write_5m (if present) must be a non-negative decimal."
+    ] ;
+
+    sh:property [
+        sh:path     dec:cost_currency ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "EUR" "USD" ) ;
+        sh:message  "dec:Capability requires exactly one dec:cost_currency in {EUR, USD}."
+    ] ;
+
+    sh:property [
+        sh:path     dec:configurable_effort ;
+        sh:datatype xsd:boolean ;
+        sh:maxCount 1 ;
+        sh:message  "dec:configurable_effort (if present) must be a single boolean."
+    ] ;
+
+    sh:property [
+        sh:path     dec:exposes_reasoning_trace ;
+        sh:datatype xsd:boolean ;
+        sh:maxCount 1 ;
+        sh:message  "dec:exposes_reasoning_trace (if present) must be a single boolean."
+    ] ;
+
+    sh:property [
+        sh:path     dec:status ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "active" "preview" "eol" "candidate" ) ;
+        sh:message  "dec:Capability requires exactly one dec:status in {active, preview, eol, candidate}."
+    ] ;
+
+    sh:property [
+        sh:path         dec:version ;
+        sh:datatype     xsd:integer ;
+        sh:minCount     1 ;
+        sh:maxCount     1 ;
+        sh:minInclusive 1 ;
+        sh:message      "dec:Capability requires exactly one dec:version (integer ≥ 1)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:supersedes ;
+        sh:nodeKind sh:IRI ;
+        sh:maxCount 1 ;
+        sh:message  "dec:supersedes (if present) must be a single IRI."
+    ] ;
+
+    sh:property [
+        sh:path     dec:bootstrap_source ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:bootstrap_source (if present) must be a single string."
+    ] ;
+
+    sh:property [
+        sh:path     dec:notes ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message  "dec:notes (if present) must be a single string."
+    ] ;
+
+    # FT-054 — (capability_id, version) must be unique within status=active.
+    sh:sparql [
+        sh:message "(capability_id, version) must be unique within status=active (FT-054 / ADR-033)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              $this dec:capability_id ?id ;
+                    dec:version ?v ;
+                    dec:status "active" .
+              ?other dec:capability_id ?id ;
+                     dec:version ?v ;
+                     dec:status "active" .
+              FILTER ($this != ?other)
+            }
+        """
+    ] ;
+
+    # FT-054 — cache-cost pair invariant: both present or both absent.
+    sh:sparql [
+        sh:message "dec:cost_cache_hit_per_m and dec:cost_cache_write_5m must be paired (both present or both absent, FT-054 / ADR-033)." ;
+        sh:select """
+            PREFIX dec: <https://decision-cli.dev/ns#>
+            SELECT $this WHERE {
+              {
+                $this dec:cost_cache_hit_per_m ?h .
+                FILTER NOT EXISTS { $this dec:cost_cache_write_5m ?w }
+              } UNION {
+                $this dec:cost_cache_write_5m ?w .
+                FILTER NOT EXISTS { $this dec:cost_cache_hit_per_m ?h }
+              }
+            }
+        """
+    ] .

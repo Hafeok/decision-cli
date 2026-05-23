@@ -7,12 +7,14 @@
 #![allow(missing_docs)]
 
 mod auto_dispatch;
+mod capability;
 mod feedback;
 mod verify_env;
 mod verify_graph;
 mod waiver;
 
 pub use auto_dispatch::*;
+pub use capability::*;
 pub use feedback::*;
 pub use verify_env::*;
 pub use verify_graph::*;

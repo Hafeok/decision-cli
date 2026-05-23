@@ -2,7 +2,7 @@
 id: TC-100
 title: Capability artifact conforms to dec:CapabilityShape SHACL
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test capability_shape
 runner-timeout: 120
+last-run: 2026-05-23T08:30:04.204678330+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -18,6 +18,7 @@ use oxigraph::store::Store;
 
 use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::feedback::validate_quads as validate_feedback_quads;
+use crate::core::ontology::capability::validate_quads as validate_capability_quads;
 use crate::core::ontology::coverage_waiver::validate_quads as validate_waiver_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
@@ -99,6 +100,7 @@ impl StreamWriter {
         validate_envs(&mutation.inserts)?;
         validate_graphs(&mutation.inserts)?;
         validate_waivers(&mutation.inserts)?;
+        validate_capabilities(&mutation.inserts)?;
         self.validate_feedback_transitions(&mutation)?;
         self.inner
             .commit(mutation)
@@ -265,6 +267,18 @@ fn validate_waivers(quads: &[Quad]) -> Result<()> {
     validate_waiver_quads(quads).map_err(|err| {
         anyhow!(
             "SHACL violation: coverage waiver mutation refused\n{}",
+            err.report
+        )
+    })
+}
+
+/// SHACL-validate every `dec:Capability` subject present in `quads`
+/// (FT-054 / ADR-033). Same `SHACL violation` prefix as siblings so
+/// callers match uniformly on the prefix.
+fn validate_capabilities(quads: &[Quad]) -> Result<()> {
+    validate_capability_quads(quads).map_err(|err| {
+        anyhow!(
+            "SHACL violation: capability mutation refused\n{}",
             err.report
         )
     })

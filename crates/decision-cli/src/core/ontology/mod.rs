@@ -17,6 +17,7 @@
 //!   user-supplied definition documents (FT-008) and it does **not**
 //!   persist any triples into the orchestration store (FT-009).
 
+pub mod capability;
 pub mod coverage_waiver;
 mod helpers;
 pub mod verdict;
@@ -40,7 +41,7 @@ use helpers::{
 /// and is intentionally tied to a binary release.
 ///
 /// Recorded on every bootstrap session (ADR-007).
-pub const ONTOLOGY_VERSION: &str = "0.3.0";
+pub const ONTOLOGY_VERSION: &str = "0.4.0";
 
 /// Named graph the embedded ontology is loaded into. Exposed so FT-008
 /// can run shapes / queries against the same graph the handle parses.

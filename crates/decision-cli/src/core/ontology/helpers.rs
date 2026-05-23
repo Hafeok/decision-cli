@@ -80,6 +80,7 @@ const REQUIRED_ONTOLOGY_CLASSES: &[&str] = &[
     "VerificationEnvironment",
     "VerificationGraph",
     "VerificationStep",
+    "Capability",
 ];
 
 pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), OntologyError> {
@@ -175,6 +176,21 @@ const VERIFICATION_GRAPH_PROPS: &[&str] = &[
 
 const VERIFICATION_STEP_PROPS: &[&str] = &["https://decision-cli.dev/ns#stepType"];
 
+const CAPABILITY_PROPS: &[&str] = &[
+    "https://decision-cli.dev/ns#capability_id",
+    "https://decision-cli.dev/ns#endpoint",
+    "https://decision-cli.dev/ns#model_identifier",
+    "https://decision-cli.dev/ns#context_window",
+    "https://decision-cli.dev/ns#max_output",
+    "https://decision-cli.dev/ns#supports_vision",
+    "https://decision-cli.dev/ns#supports_tool_calling",
+    "https://decision-cli.dev/ns#cost_input_per_m",
+    "https://decision-cli.dev/ns#cost_output_per_m",
+    "https://decision-cli.dev/ns#cost_currency",
+    "https://decision-cli.dev/ns#status",
+    "https://decision-cli.dev/ns#version",
+];
+
 type ShapeRequirement = (&'static str, &'static [&'static str]);
 
 const VALUE_STREAM_CLASS: &str = "https://decision-cli.dev/ns#ValueStream";
@@ -186,6 +202,7 @@ const FEEDBACK_CLASS: &str = "https://decision-cli.dev/ns#Feedback";
 const VERIFICATION_ENV_CLASS: &str = "https://decision-cli.dev/ns#VerificationEnvironment";
 const VERIFICATION_GRAPH_CLASS: &str = "https://decision-cli.dev/ns#VerificationGraph";
 const VERIFICATION_STEP_CLASS: &str = "https://decision-cli.dev/ns#VerificationStep";
+const CAPABILITY_CLASS: &str = "https://decision-cli.dev/ns#Capability";
 
 const REQUIRED_SHAPES: &[ShapeRequirement] = &[
     (VALUE_STREAM_CLASS, VALUE_STREAM_PROPS),
@@ -197,6 +214,7 @@ const REQUIRED_SHAPES: &[ShapeRequirement] = &[
     (VERIFICATION_ENV_CLASS, VERIFICATION_ENV_PROPS),
     (VERIFICATION_GRAPH_CLASS, VERIFICATION_GRAPH_PROPS),
     (VERIFICATION_STEP_CLASS, VERIFICATION_STEP_PROPS),
+    (CAPABILITY_CLASS, CAPABILITY_PROPS),
 ];
 
 fn required_shape_properties() -> &'static [ShapeRequirement] {

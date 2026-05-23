@@ -2,7 +2,7 @@
 id: FT-054
 title: 'decision-cli: Capability artifact type and SHACL shape'
 phase: 2
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-001
@@ -30,7 +30,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-100
 domains:
 - data-model

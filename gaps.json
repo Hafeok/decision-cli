@@ -1,0 +1,11 @@
+{
+  "schema-version": "",
+  "suppressions": [],
+  "resolved": [
+    {
+      "id": "GAP-ADR-004-G002-ed62ee73",
+      "resolved_at": "2026-05-23T05:48:30.625469490+00:00",
+      "resolving_commit": "git:2f11b4e"
+    }
+  ]
+}
