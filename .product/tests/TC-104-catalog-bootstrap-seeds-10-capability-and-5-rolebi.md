@@ -2,7 +2,7 @@
 id: TC-104
 title: Catalog bootstrap seeds 10 Capability and 5 RoleBinding artifacts idempotently
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-058
@@ -11,6 +11,8 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-104-catalog-bootstrap.sh
 runner-timeout: 180
+last-run: 2026-05-23T09:54:36.868576076+00:00
+last-run-duration: 1.2s
 ---
 
 ## Description

@@ -1,6 +1,7 @@
 //! CLI subcommand implementations for the `dec` binary.
 
 pub mod args;
+pub mod bootstrap_catalog;
 pub mod check_goal;
 pub mod doctor;
 pub mod events;

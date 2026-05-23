@@ -2,7 +2,7 @@
 id: FT-058
 title: 'decision-cli: Capability and RoleBinding catalog bootstrap from seed YAML'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-054
 - FT-055
@@ -34,7 +34,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-104
 domains:
 - data-model

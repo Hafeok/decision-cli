@@ -1,0 +1,216 @@
+# config/capabilities.yaml — Seed `dec:Capability` catalog (FT-058 / ADR-036).
+#
+# Authoritative source for the initial catalog content. After bootstrap the
+# graph is the source of truth; this file is documentation. Edit and re-run
+# `scripts/bootstrap_catalog.py` to add new versions (bump `version` field);
+# in-place edits without a version bump are rejected by the strict divergence
+# handler.
+#
+# Schema mirrors FT-054's `dec:Capability` (see ADR-033 §schema):
+#   capability_id, endpoint, model_identifier, tier, context_window, max_output,
+#   supports_vision, supports_tool_calling, cost_input_per_m, cost_output_per_m,
+#   cost_cache_hit_per_m (Anthropic only), cost_cache_write_5m (Anthropic only),
+#   cost_currency, configurable_effort, exposes_reasoning_trace, status, version.
+#
+# Decimal fields are quoted so the YAML loader preserves exact lexical form
+# (an unquoted `0.20` would collapse to `0.2`, which would fail divergence
+# comparison on re-bootstrap).
+
+capabilities:
+  # --- Scaleway tier 1: cheap, fast classifier ------------------------------
+  - capability_id: classifier
+    endpoint: scaleway
+    model_identifier: mistral-small-3.2-24b-instruct-2506
+    context_window: 128000
+    max_output: 8000
+    supports_vision: false
+    supports_tool_calling: true
+    cost_input_per_m: "0.10"
+    cost_output_per_m: "0.30"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  # --- Scaleway tier 1: default implementer / verifier ---------------------
+  - capability_id: code-writer
+    endpoint: scaleway
+    model_identifier: qwen3-coder-30b-a3b-instruct
+    tier: 1
+    context_window: 128000
+    max_output: 32000
+    supports_vision: false
+    supports_tool_calling: true
+    cost_input_per_m: "0.20"
+    cost_output_per_m: "0.80"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  # --- Scaleway tier 2: heavy code (devstral) ------------------------------
+  - capability_id: code-writer-heavy
+    endpoint: scaleway
+    model_identifier: devstral-2-123b-instruct
+    tier: 2
+    context_window: 128000
+    max_output: 32000
+    supports_vision: false
+    supports_tool_calling: true
+    cost_input_per_m: "0.40"
+    cost_output_per_m: "2.00"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  # --- Scaleway: architect default; configurable reasoning_effort ----------
+  - capability_id: standard-reasoning
+    endpoint: scaleway
+    model_identifier: gpt-oss-120b
+    context_window: 128000
+    max_output: 16000
+    supports_vision: false
+    supports_tool_calling: true
+    cost_input_per_m: "0.30"
+    cost_output_per_m: "1.50"
+    cost_currency: EUR
+    configurable_effort: true
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  # --- Scaleway tier 2: frontier reasoning; emits reasoning trace ---------
+  - capability_id: standard-reasoning-frontier
+    endpoint: scaleway
+    model_identifier: qwen3.5-397b-a17b
+    tier: 2
+    context_window: 250000
+    max_output: 16000
+    supports_vision: true
+    supports_tool_calling: true
+    cost_input_per_m: "0.60"
+    cost_output_per_m: "3.60"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: true
+    status: active
+    version: 1
+
+  # --- Anthropic tier 3: deep-reasoning escalation -------------------------
+  - capability_id: deep-reasoning
+    endpoint: anthropic
+    model_identifier: claude-opus-4-7
+    tier: 3
+    context_window: 200000
+    max_output: 32000
+    supports_vision: true
+    supports_tool_calling: true
+    cost_input_per_m: "5.00"
+    cost_output_per_m: "25.00"
+    cost_cache_hit_per_m: "0.50"
+    cost_cache_write_5m: "6.25"
+    cost_currency: USD
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  # --- Anthropic candidate (A/B target; not yet role-bound) ---------------
+  - capability_id: mid-reasoning
+    endpoint: anthropic
+    model_identifier: claude-sonnet-4-6
+    context_window: 200000
+    max_output: 32000
+    supports_vision: true
+    supports_tool_calling: true
+    cost_input_per_m: "3.00"
+    cost_output_per_m: "15.00"
+    cost_cache_hit_per_m: "0.30"
+    cost_cache_write_5m: "3.75"
+    cost_currency: USD
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: candidate
+    version: 1
+
+  - capability_id: fast-reasoning
+    endpoint: anthropic
+    model_identifier: claude-haiku-4-5
+    context_window: 200000
+    max_output: 32000
+    supports_vision: true
+    supports_tool_calling: true
+    cost_input_per_m: "1.00"
+    cost_output_per_m: "5.00"
+    cost_cache_hit_per_m: "0.10"
+    cost_cache_write_5m: "1.25"
+    cost_currency: USD
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: candidate
+    version: 1
+
+  # --- Specialty capabilities (not yet role-bound) ------------------------
+  - capability_id: vision-gui
+    endpoint: scaleway
+    model_identifier: pixtral-12b-2409
+    context_window: 128000
+    max_output: 8000
+    supports_vision: true
+    supports_tool_calling: false
+    cost_input_per_m: "0.15"
+    cost_output_per_m: "0.45"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  - capability_id: vision-general
+    endpoint: scaleway
+    model_identifier: pixtral-large-2411
+    context_window: 128000
+    max_output: 8000
+    supports_vision: true
+    supports_tool_calling: false
+    cost_input_per_m: "0.20"
+    cost_output_per_m: "0.60"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  - capability_id: embedding
+    endpoint: scaleway
+    model_identifier: bge-multilingual-gemma2
+    context_window: 8000
+    max_output: 0
+    supports_vision: false
+    supports_tool_calling: false
+    cost_input_per_m: "0.05"
+    cost_output_per_m: "0.00"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
+  - capability_id: audio-transcribe
+    endpoint: scaleway
+    model_identifier: whisper-large-v3
+    context_window: 0
+    max_output: 0
+    supports_vision: false
+    supports_tool_calling: false
+    cost_input_per_m: "0.10"
+    cost_output_per_m: "0.00"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1

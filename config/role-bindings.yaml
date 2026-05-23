@@ -1,0 +1,68 @@
+# config/role-bindings.yaml — Seed `dec:RoleBinding` catalog (FT-058 / ADR-036).
+#
+# Active role → capability bindings per ADR-037 §"Decision":
+#   role                    | default                       | escalation chain
+#   ------------------------|-------------------------------|---------------------------------------
+#   implementer             | code-writer                   | code-writer-heavy → deep-reasoning
+#   verifier                | code-writer                   | standard-reasoning-frontier → deep-reasoning
+#   architect               | standard-reasoning            | standard-reasoning-frontier → deep-reasoning
+#   test_interpreter        | classifier                    | (none — bounded classification)
+#   feedback_class_triager  | classifier                    | (none — bounded classification)
+#
+# Trigger vocabulary is fixed (ADR-034); SHACL `sh:in` enforces it on write.
+
+role_bindings:
+  - role_id: implementer
+    default_capability: code-writer
+    escalation_steps:
+      - capability: code-writer-heavy
+        triggers:
+          - prior_attempts_ge_3
+          - audit_fail
+          - feedback_unimplementable_critical
+      - capability: deep-reasoning
+        triggers:
+          - stakes_foundational
+          - prior_attempts_ge_5
+    version: 1
+    active: true
+
+  - role_id: verifier
+    default_capability: code-writer
+    escalation_steps:
+      - capability: standard-reasoning-frontier
+        triggers:
+          - confidence_below_0.7
+          - audit_fail
+      - capability: deep-reasoning
+        triggers:
+          - stakes_foundational
+          - confidence_below_0.5
+    version: 1
+    active: true
+
+  - role_id: architect
+    default_capability: standard-reasoning
+    escalation_steps:
+      - capability: standard-reasoning-frontier
+        triggers:
+          - stakes_elevated
+          - audit_fail
+      - capability: deep-reasoning
+        triggers:
+          - stakes_foundational
+          - prior_attempts_ge_3
+    version: 1
+    active: true
+
+  - role_id: test_interpreter
+    default_capability: classifier
+    escalation_steps: []
+    version: 1
+    active: true
+
+  - role_id: feedback_class_triager
+    default_capability: classifier
+    escalation_steps: []
+    version: 1
+    active: true

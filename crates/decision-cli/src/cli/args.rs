@@ -11,10 +11,11 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 use super::{
-    check_goal, check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd,
-    feedback, feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init,
-    init::InitArgs, mcp, mcp::McpCmd, preflight, preflight::PreflightArgs, session,
-    session::SessionCmd, sparql, sparql::SparqlArgs, status, verify, verify::VerifyCmd,
+    bootstrap_catalog, bootstrap_catalog::BootstrapCatalogArgs, check_goal,
+    check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd, feedback,
+    feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
+    mcp, mcp::McpCmd, preflight, preflight::PreflightArgs, session, session::SessionCmd, sparql,
+    sparql::SparqlArgs, status, verify, verify::VerifyCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -44,6 +45,12 @@ pub enum Command {
     /// Hidden helper (FT-010 / TC-007): exercise the goal-validation gate.
     #[command(name = "_check-goal", hide = true)]
     CheckGoal(CheckGoalArgs),
+    /// Hidden helper (FT-058 / TC-104): bootstrap the capability + role
+    /// binding catalog from `config/*.yaml` files. The Python wrapper
+    /// at `scripts/bootstrap_catalog.py` is the operator-facing entry
+    /// point; this command is the Rust-side chokepoint it shells out to.
+    #[command(name = "_bootstrap-catalog", hide = true)]
+    BootstrapCatalog(BootstrapCatalogArgs),
     /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
     /// Feature-coverage report sourced from the internal product-cli
@@ -79,6 +86,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Status => status::run(workdir),
         Command::Sparql(args) => sparql::run(workdir, args),
         Command::CheckGoal(args) => check_goal::run(workdir, args),
+        Command::BootstrapCatalog(args) => bootstrap_catalog::run(workdir, args),
         Command::Implement(args) => implement::run(workdir, args),
         Command::Preflight(args) => preflight::run(workdir, args),
         Command::Health => health::run(workdir),
