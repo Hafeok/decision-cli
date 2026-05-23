@@ -2,7 +2,7 @@
 id: FT-063
 title: 'decision-cli: reasoning_effort stakes mapping for configurable_effort capabilities'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-056
 - FT-061
@@ -32,7 +32,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-112
 domains:
 - api

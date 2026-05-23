@@ -10,10 +10,12 @@ pub mod capability_resolver;
 pub mod escalation;
 pub mod group;
 pub mod lifecycle;
+pub mod params;
 pub mod pause;
 pub mod quads;
 
 pub use capability_resolver::{resolve_default_capability, ResolvedCapability, ResolverError};
+pub use params::{compute_reasoning_effort, ReasoningEffort};
 pub use escalation::{
     build_enriched_bundle_quads, build_session_linkage_quads, collect_signals, dispatch_role,
     enrich_bundle_with_prior_attempt, evaluate_trigger, find_next_escalation_step,

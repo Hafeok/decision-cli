@@ -2,7 +2,7 @@
 id: TC-112
 title: Reasoning_effort maps stakes to low/medium/high only when configurable_effort is true
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-063
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test reasoning_effort_mapping
 runner-timeout: 120
+last-run: 2026-05-23T10:41:48.608349864+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description
