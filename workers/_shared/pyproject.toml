@@ -1,7 +1,7 @@
 [project]
 name = "decision-cli-shared"
 version = "0.1.0"
-description = "Shared Python SDK consumed by decision-cli workers (FT-030 bundle authority, FT-031 emit_feedback)."
+description = "Shared Python SDK consumed by decision-cli workers (FT-030 bundle authority, FT-031 emit_feedback, FT-059 Scaleway client)."
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.7",
@@ -11,6 +11,7 @@ dependencies = [
 dev = [
     "pytest>=8.0",
 ]
+scaleway = ["openai>=1.40"]
 
 [build-system]
 requires = ["hatchling"]

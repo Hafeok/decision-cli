@@ -2,7 +2,7 @@
 id: FT-059
 title: 'workers: Scaleway OpenAI-compatible client wrapper in _shared'
 phase: 2
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-001
@@ -30,7 +30,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-105
 domains:
 - error-handling

@@ -2,7 +2,7 @@
 id: TC-105
 title: Scaleway client wrapper builds with SCW_SECRET_KEY and surfaces missing-key error
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-059
@@ -11,6 +11,8 @@ phase: 2
 runner: pytest
 runner-args: workers/_shared/tests/test_scaleway_client.py
 runner-timeout: 120
+last-run: 2026-05-23T09:59:58.405848602+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
