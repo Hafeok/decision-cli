@@ -2,7 +2,7 @@
 id: TC-106
 title: ModelRouter routes Scaleway and Anthropic uniformly with tool-call translation
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-060
@@ -10,7 +10,9 @@ validates:
 phase: 2
 runner: pytest
 runner-args: workers/_shared/tests/test_model_router.py
-runner-timeout: 120
+runner-timeout: 60
+last-run: 2026-05-23T10:07:25.675649128+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

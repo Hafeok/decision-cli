@@ -2,7 +2,7 @@
 id: FT-060
 title: 'workers: Endpoint-agnostic worker abstraction (tool schemas and structured output across Scaleway and Anthropic)'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-059
 adrs:
@@ -31,7 +31,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-106
 domains:
 - api
