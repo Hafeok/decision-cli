@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_060_dec_verify_env_new_produces_identical_artifact_via
 runner-timeout: 120
-last-run: 2026-05-23T16:09:53.323541630+00:00
+last-run: 2026-05-23T17:59:45.707009194+00:00
 last-run-duration: 0.4s
 ---
 

@@ -11,7 +11,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_087_internal_product_graph_source_of_truth
 runner-timeout: 120
-last-run: 2026-05-23T16:10:12.441872925+00:00
+last-run: 2026-05-23T18:00:07.801902734+00:00
 last-run-duration: 0.2s
 ---
 

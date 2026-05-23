@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_057_verificationgraph_round_trips_turtle_store_preserv
 runner-timeout: 180
-last-run: 2026-05-23T16:09:52.591468164+00:00
+last-run: 2026-05-23T17:59:44.958686025+00:00
 last-run-duration: 0.2s
 ---
 

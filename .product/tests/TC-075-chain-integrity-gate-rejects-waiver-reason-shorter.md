@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: tc_075_chain_integrity_gate_rejects_waiver_reason_shorter
 runner-timeout: 120
-last-run: 2026-05-23T16:10:06.049905700+00:00
+last-run: 2026-05-23T17:59:59.214514476+00:00
 last-run-duration: 0.5s
 ---
 

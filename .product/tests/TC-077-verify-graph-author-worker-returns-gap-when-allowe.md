@@ -10,8 +10,8 @@ phase: 2
 runner: pytest
 runner-args: workers/verify-graph-author/tests/test_tc_077_gap.py
 runner-timeout: 120
-last-run: 2026-05-23T16:10:08.067362560+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-23T18:00:02.328020242+00:00
+last-run-duration: 0.4s
 ---
 
 ## Premise

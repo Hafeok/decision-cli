@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: tc_081_dec_verify_graph_generate_rolls_back_graph_when_an
 runner-timeout: 120
-last-run: 2026-05-23T16:10:09.152145505+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-23T18:00:03.708451528+00:00
+last-run-duration: 0.5s
 ---
 
 ## Premise

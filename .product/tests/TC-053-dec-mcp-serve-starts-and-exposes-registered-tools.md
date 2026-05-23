@@ -10,8 +10,8 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-053-dec-mcp-serve.sh
 runner-timeout: 180
-last-run: 2026-05-23T16:09:51.336351126+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-23T17:59:43.335772008+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

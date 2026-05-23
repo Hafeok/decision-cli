@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-098-env-new-fixture-source-rejects.sh
 runner-timeout: 120
-last-run: 2026-05-23T16:10:12.606973763+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-23T18:00:08.010786381+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose

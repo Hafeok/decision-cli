@@ -11,7 +11,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test reasoning_effort_mapping
 runner-timeout: 120
-last-run: 2026-05-23T16:10:17.336907216+00:00
+last-run: 2026-05-23T18:00:13.261752153+00:00
 last-run-duration: 0.2s
 ---
 

@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_054_verificationenvironment_shacl_shape_rejects_malfor
 runner-timeout: 120
-last-run: 2026-05-23T16:09:52.177938217+00:00
+last-run: 2026-05-23T17:59:44.463472463+00:00
 last-run-duration: 0.2s
 ---
 

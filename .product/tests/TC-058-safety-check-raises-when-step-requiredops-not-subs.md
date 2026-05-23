@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_058_safety_check_raises_when_step_requiredops_not_subs
 runner-timeout: 120
-last-run: 2026-05-23T16:09:52.958226792+00:00
+last-run: 2026-05-23T17:59:45.336521077+00:00
 last-run-duration: 0.2s
 ---
 
