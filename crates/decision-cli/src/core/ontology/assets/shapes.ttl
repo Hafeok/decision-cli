@@ -1104,3 +1104,85 @@ dec:EscalationTriggerShape a sh:NodeShape ;
                       "feedback_scope_issue" ) ;
         sh:message  "dec:EscalationTrigger requires exactly one dec:trigger_signal drawn from the ADR-034 closed vocabulary."
     ] .
+
+# --- SessionRecord shape (FT-057 / ADR-034 / ADR-037) -----------------------
+# Six new properties carry escalation chain membership + cache-aware token
+# breakdown. Three sh:sparql-style consistency constraints enforce:
+#   1. bidirectional escalation linkage (S1->S2 implies S2->S1)
+#   2. escalation_reason present iff escalated_from present
+#   3. Scaleway sessions carry zero cache-write/cache-hit token counts.
+# The Rust validator implements the sh:sparql checks; this TTL declares the
+# property cardinalities so the embedded shapes graph stays introspectable.
+
+dec:SessionRecordShape a sh:NodeShape ;
+    sh:targetClass dec:Session ;
+
+    sh:property [
+        sh:path     dec:escalated_from ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:Session may carry at most one dec:escalated_from (FT-057)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:escalated_to ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message  "dec:Session may carry at most one dec:escalated_to (FT-057)."
+    ] ;
+
+    sh:property [
+        sh:path     dec:escalation_reason ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in       ( "stakes_routine"
+                      "stakes_elevated"
+                      "stakes_foundational"
+                      "confidence_below_0.5"
+                      "confidence_below_0.7"
+                      "confidence_below_0.9"
+                      "audit_pass"
+                      "audit_fail"
+                      "prior_attempts_ge_1"
+                      "prior_attempts_ge_2"
+                      "prior_attempts_ge_3"
+                      "prior_attempts_ge_4"
+                      "prior_attempts_ge_5"
+                      "feedback_contradiction"
+                      "feedback_unimplementable_critical"
+                      "feedback_gap"
+                      "feedback_scope_issue" ) ;
+        sh:message  "dec:Session dec:escalation_reason must be drawn from the ADR-034 trigger vocabulary."
+    ] ;
+
+    sh:property [
+        sh:path         dec:input_tokens_base ;
+        sh:datatype     xsd:integer ;
+        sh:minInclusive 0 ;
+        sh:maxCount     1 ;
+        sh:message      "dec:Session dec:input_tokens_base must be a non-negative integer."
+    ] ;
+
+    sh:property [
+        sh:path         dec:input_tokens_cache_write ;
+        sh:datatype     xsd:integer ;
+        sh:minInclusive 0 ;
+        sh:maxCount     1 ;
+        sh:message      "dec:Session dec:input_tokens_cache_write must be a non-negative integer."
+    ] ;
+
+    sh:property [
+        sh:path         dec:input_tokens_cache_hit ;
+        sh:datatype     xsd:integer ;
+        sh:minInclusive 0 ;
+        sh:maxCount     1 ;
+        sh:message      "dec:Session dec:input_tokens_cache_hit must be a non-negative integer."
+    ] ;
+
+    sh:property [
+        sh:path         dec:output_tokens ;
+        sh:datatype     xsd:integer ;
+        sh:minInclusive 0 ;
+        sh:maxCount     1 ;
+        sh:message      "dec:Session dec:output_tokens must be a non-negative integer."
+    ] .

@@ -603,3 +603,45 @@ dec:stakes a rdf:Property ;
     rdfs:domain dec:Bundle ;
     rdfs:range  xsd:string ;
     rdfs:comment "Closed enum of {routine, elevated, foundational} (ADR-035). Drives the dispatcher's escalation triggers (ADR-034) and reasoning_effort mapping (FT-063)." .
+
+# --- FT-057 / ADR-034: SessionRecord escalation edges + token breakdown ------
+
+dec:escalated_from a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  dec:Session ;
+    rdfs:comment "Prior session in an escalation chain (ADR-034). Set by the dispatcher when escalating to a stronger capability (FT-062)." .
+
+dec:escalated_to a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  dec:Session ;
+    rdfs:comment "Next session in an escalation chain (ADR-034). Bidirectional inverse of dec:escalated_from." .
+
+dec:escalation_reason a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Trigger signal literal (ADR-034) that fired to cause this escalation. Present iff dec:escalated_from is present." .
+
+dec:input_tokens_base a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Input tokens billed at the capability's cost_input_per_m rate (FT-057 / FT-065)." .
+
+dec:input_tokens_cache_write a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Tokens written to the 5-minute TTL cache, billed at cost_cache_write_5m. Always 0 on Scaleway dispatches (FT-057)." .
+
+dec:input_tokens_cache_hit a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Tokens served from cache, billed at cost_cache_hit_per_m. Always 0 on Scaleway dispatches (FT-057)." .
+
+dec:output_tokens a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  xsd:integer ;
+    rdfs:comment "Output tokens emitted by the session, billed at cost_output_per_m (FT-057)." .
+
+dec:capability a rdf:Property ;
+    rdfs:domain dec:Session ;
+    rdfs:range  dec:Capability ;
+    rdfs:comment "Capability that resolved for this session (FT-057). Records full reproducibility tuple alongside the bundle hash." .

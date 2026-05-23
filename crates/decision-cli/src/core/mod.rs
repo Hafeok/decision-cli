@@ -12,6 +12,7 @@ pub mod bundle;
 pub mod bundled;
 pub mod dispatch;
 pub mod feedback;
+pub mod graph;
 pub mod handler;
 pub mod mcp;
 pub mod metrics;

@@ -2,15 +2,17 @@
 id: TC-103
 title: SessionRecord escalation edges round-trip and chain integrity
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-057
   adrs: []
 phase: 2
 runner: cargo-test
-runner-args: -p decision-cli --test session_escalation_edges
+runner-args: tc_103_session_escalation_edges_round_trip_and_chain_integrity
 runner-timeout: 120
+last-run: 2026-05-23T09:31:01.135691607+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

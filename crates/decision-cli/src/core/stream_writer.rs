@@ -22,6 +22,7 @@ use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::capability::validate_quads as validate_capability_quads;
 use crate::core::ontology::coverage_waiver::validate_quads as validate_waiver_quads;
 use crate::core::ontology::role_binding::validate_quads as validate_role_binding_quads;
+use crate::core::ontology::session_record::validate_quads_with_store as validate_session_record_quads_with_store;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
 use crate::core::ontology::verification_graph::validate_quads as validate_graph_quads;
@@ -105,6 +106,7 @@ impl StreamWriter {
         validate_capabilities(&mutation.inserts)?;
         validate_role_bindings(&mutation.inserts)?;
         validate_bundles(&mutation.inserts)?;
+        self.validate_session_records(&mutation.inserts)?;
         self.validate_feedback_transitions(&mutation)?;
         self.inner
             .commit(mutation)
@@ -126,6 +128,21 @@ impl StreamWriter {
             Ok(()) => Ok(()),
             Err(err) => Err(anyhow!("safety violation: {err}")),
         }
+    }
+
+    /// FT-057 / ADR-034 / ADR-037: SHACL-validate every `dec:Session`
+    /// subject in `inserts`. The store is consulted so Scaleway-no-cache
+    /// can resolve the session's capability endpoint even when the
+    /// capability was seeded by a prior mutation (e.g. by the catalog
+    /// bootstrap in FT-058).
+    fn validate_session_records(&self, inserts: &[Quad]) -> Result<()> {
+        let store = self.inner.store();
+        validate_session_record_quads_with_store(inserts, Some(store)).map_err(|err| {
+            anyhow!(
+                "SHACL violation: session record mutation refused\n{}",
+                err.report
+            )
+        })
     }
 
     /// FT-027 / ADR-024: when a mutation updates `dec:lifecycleState` on a
@@ -308,6 +325,7 @@ fn validate_bundles(quads: &[Quad]) -> Result<()> {
     validate_bundle_quads(quads)
         .map_err(|err| anyhow!("SHACL violation: bundle mutation refused\n{}", err.report))
 }
+
 
 /// Walk a mutation's inserts and yield every `(subject, new_state)`
 /// pair declared by a `dec:lifecycleState` literal triple. Only `Feedback`

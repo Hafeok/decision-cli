@@ -21,6 +21,7 @@ pub mod capability;
 pub mod coverage_waiver;
 mod helpers;
 pub mod role_binding;
+pub mod session_record;
 pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;
