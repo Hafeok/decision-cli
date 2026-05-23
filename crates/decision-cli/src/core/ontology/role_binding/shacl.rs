@@ -96,7 +96,18 @@ fn subjects_of_type(quads: &[Quad], class_iri: &str) -> Vec<NamedNode> {
 
 fn check_binding_subject(quads: &[Quad], subject: &NamedNode) -> Vec<RoleBindingViolation> {
     let mut v = Vec::new();
-    // dec:role_id — exactly one non-empty string.
+    check_binding_role_id(quads, subject, &mut v);
+    check_binding_default_capability(quads, subject, &mut v);
+    check_binding_active(quads, subject, &mut v);
+    check_binding_version(quads, subject, &mut v);
+    v
+}
+
+fn check_binding_role_id(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<RoleBindingViolation>,
+) {
     let ids = literal_values(quads, subject, IRI_DEC_ROLE_BINDING_ROLE_ID);
     match ids.len() {
         0 => v.push(violation(
@@ -104,22 +115,25 @@ fn check_binding_subject(quads: &[Quad], subject: &NamedNode) -> Vec<RoleBinding
             IRI_DEC_ROLE_BINDING_ROLE_ID,
             "missing required dec:role_id (sh:minCount 1)",
         )),
-        1 => {
-            if ids[0].is_empty() {
-                v.push(violation(
-                    subject,
-                    IRI_DEC_ROLE_BINDING_ROLE_ID,
-                    "dec:role_id must be a non-empty string",
-                ));
-            }
-        }
+        1 if ids[0].is_empty() => v.push(violation(
+            subject,
+            IRI_DEC_ROLE_BINDING_ROLE_ID,
+            "dec:role_id must be a non-empty string",
+        )),
+        1 => {}
         n => v.push(violation(
             subject,
             IRI_DEC_ROLE_BINDING_ROLE_ID,
             &format!("expected exactly one dec:role_id, found {n}"),
         )),
     }
-    // dec:default_capability — exactly one IRI.
+}
+
+fn check_binding_default_capability(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<RoleBindingViolation>,
+) {
     let caps = iri_values(quads, subject, IRI_DEC_DEFAULT_CAPABILITY);
     match caps.len() {
         0 => v.push(violation(
@@ -134,7 +148,13 @@ fn check_binding_subject(quads: &[Quad], subject: &NamedNode) -> Vec<RoleBinding
             &format!("expected exactly one dec:default_capability, found {n}"),
         )),
     }
-    // dec:active — exactly one boolean.
+}
+
+fn check_binding_active(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<RoleBindingViolation>,
+) {
     let actives = literal_values(quads, subject, IRI_DEC_ROLE_BINDING_ACTIVE);
     match actives.len() {
         0 => v.push(violation(
@@ -142,22 +162,25 @@ fn check_binding_subject(quads: &[Quad], subject: &NamedNode) -> Vec<RoleBinding
             IRI_DEC_ROLE_BINDING_ACTIVE,
             "missing required dec:active (sh:minCount 1)",
         )),
-        1 => {
-            if !matches!(actives[0].as_str(), "true" | "false" | "0" | "1") {
-                v.push(violation(
-                    subject,
-                    IRI_DEC_ROLE_BINDING_ACTIVE,
-                    &format!("dec:active must be xsd:boolean, got {:?}", actives[0]),
-                ));
-            }
-        }
+        1 if !matches!(actives[0].as_str(), "true" | "false" | "0" | "1") => v.push(violation(
+            subject,
+            IRI_DEC_ROLE_BINDING_ACTIVE,
+            &format!("dec:active must be xsd:boolean, got {:?}", actives[0]),
+        )),
+        1 => {}
         n => v.push(violation(
             subject,
             IRI_DEC_ROLE_BINDING_ACTIVE,
             &format!("expected exactly one dec:active, found {n}"),
         )),
     }
-    // dec:version — exactly one integer ≥ 1.
+}
+
+fn check_binding_version(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<RoleBindingViolation>,
+) {
     let versions = literal_values(quads, subject, IRI_DEC_CAPABILITY_VERSION);
     match versions.len() {
         0 => v.push(violation(
@@ -184,7 +207,6 @@ fn check_binding_subject(quads: &[Quad], subject: &NamedNode) -> Vec<RoleBinding
             &format!("expected exactly one dec:version, found {n}"),
         )),
     }
-    v
 }
 
 fn check_step_subject(quads: &[Quad], subject: &NamedNode) -> Vec<RoleBindingViolation> {

@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: tc_073_chain_integrity_gate_refuses_dispatch_when_uncover
 runner-timeout: 120
-last-run: 2026-05-21T18:43:26.367911919+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-23T16:10:06.049905700+00:00
+last-run-duration: 0.4s
 ---
 
 ## Premise

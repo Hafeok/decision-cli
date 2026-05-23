@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: tc_072_matcher_excludes_graphs_in_different_environment_f
 runner-timeout: 120
-last-run: 2026-05-21T18:22:05.062499810+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-23T16:10:04.600337924+00:00
+last-run-duration: 0.3s
 ---
 
 ## Premise

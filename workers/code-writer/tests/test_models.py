@@ -22,11 +22,13 @@ def test_dispatch_payload_round_trip() -> None:
         "bundle_hash": "deadbeef" * 8,
         "workspace_path": "/tmp/ws",
         "model_id": "claude-sonnet-4-5",
+        "endpoint": "anthropic",
     }
     payload = DispatchPayload.model_validate(blob)
     assert payload.feature_id == "FT-013"
     assert payload.max_turns == 8
     assert "Edit" in payload.allowed_tools
+    assert payload.endpoint == "anthropic"
 
 
 def test_code_change_links_session_for_provo() -> None:

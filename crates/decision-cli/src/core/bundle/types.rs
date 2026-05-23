@@ -1,5 +1,7 @@
-//! In-memory `dec:Bundle` shape, `Stakes` enum, and `BundleBuilder` per
-//! FT-056 / ADR-035.
+//! In-memory `dec:Bundle` representation per FT-056 / ADR-035.
+//!
+//! Defines the `Bundle` shape, the `Stakes` enum, the `BundleBuilder`
+//! constructor.
 
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 use thiserror::Error;

@@ -1,4 +1,4 @@
-//! Capability endpoint resolution — from inline quads and the store.
+//! Capability endpoint resolution against inline quads + the store.
 
 use std::collections::HashMap;
 

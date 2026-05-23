@@ -11,8 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test anthropic_cache_breakpoint
 runner-timeout: 180
-last-run: 2026-05-23T10:52:34.522527194+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-23T16:10:19.599685124+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

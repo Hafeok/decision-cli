@@ -41,6 +41,10 @@ pub(super) fn build_dispatch_payload(
         bundle_hash: ctx.bundle_hash.clone(),
         workspace_path,
         model_id: SLICE1_MODEL_ID.to_string(),
+        // FT-066: until the implementer dispatch path is migrated to the
+        // capability resolver (covered by a follow-on feature), pin to
+        // the Anthropic endpoint so `claude -p` keeps its native API path.
+        endpoint: "anthropic".to_string(),
         timeout_seconds: 1800,
         authority,
     }

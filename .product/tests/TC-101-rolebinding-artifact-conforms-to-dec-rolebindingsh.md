@@ -6,13 +6,14 @@ status: passing
 validates:
   features:
   - FT-055
-  adrs: []
+  adrs:
+  - ADR-034
 phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test role_binding_shape
 runner-timeout: 120
-last-run: 2026-05-23T08:44:26.192577590+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-23T16:10:19.845721788+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

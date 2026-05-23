@@ -207,28 +207,11 @@ fn read_allowed_ops_resilient(store: &Store, env_iri: &str) -> (Vec<String>, Opt
     let env_node = match NamedNode::new(env_iri) {
         Ok(n) => n,
         Err(e) => {
-            return (
-                Vec::new(),
-                Some(EnvRowError::corrupt(format!(
-                    "malformed env iri {env_iri:?}: {e}"
-                ))),
-            );
+            let detail = format!("malformed env iri {env_iri:?}: {e}");
+            return (Vec::new(), Some(EnvRowError::corrupt(detail)));
         }
     };
-    let env_subject = Subject::NamedNode(env_node);
-    let ops_pred = NamedNode::new_unchecked(IRI_DEC_ALLOWED_OPS);
-    let mut heads: Vec<Term> = Vec::new();
-    for quad in store
-        .quads_for_pattern(
-            Some(env_subject.as_ref()),
-            Some(ops_pred.as_ref()),
-            None,
-            None,
-        )
-        .filter_map(Result::ok)
-    {
-        heads.push(quad.object);
-    }
+    let mut heads = collect_allowed_ops_heads(store, env_node);
     if heads.is_empty() {
         return (Vec::new(), None);
     }
@@ -237,8 +220,7 @@ fn read_allowed_ops_resilient(store: &Store, env_iri: &str) -> (Vec<String>, Opt
         // operator still sees *something* alongside the error marker.
         let count = heads.len();
         heads.sort_by_key(key_for);
-        let first = heads.remove(0);
-        let best_effort = walk_list(store, first).unwrap_or_default();
+        let best_effort = walk_list(store, heads.remove(0)).unwrap_or_default();
         return (
             best_effort,
             Some(EnvRowError::multiple_allowed_ops_heads(count)),
@@ -248,6 +230,21 @@ fn read_allowed_ops_resilient(store: &Store, env_iri: &str) -> (Vec<String>, Opt
         Ok(ops) => (ops, None),
         Err(detail) => (Vec::new(), Some(EnvRowError::corrupt(detail))),
     }
+}
+
+fn collect_allowed_ops_heads(store: &Store, env_node: NamedNode) -> Vec<Term> {
+    let env_subject = Subject::NamedNode(env_node);
+    let ops_pred = NamedNode::new_unchecked(IRI_DEC_ALLOWED_OPS);
+    store
+        .quads_for_pattern(
+            Some(env_subject.as_ref()),
+            Some(ops_pred.as_ref()),
+            None,
+            None,
+        )
+        .filter_map(Result::ok)
+        .map(|q| q.object)
+        .collect()
 }
 
 /// Walk an rdf:List starting at `head_term`. Each iteration pulls

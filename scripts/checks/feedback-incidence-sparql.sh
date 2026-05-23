@@ -38,7 +38,10 @@ SHACL_RS="$MOD_DIR/shacl.rs"
 MOD_RS="$MOD_DIR/mod.rs"
 ONTOLOGY_TTL="crates/decision-cli/src/core/ontology/assets/ontology.ttl"
 SHAPES_TTL="crates/decision-cli/src/core/ontology/assets/shapes.ttl"
-VOCAB_RS="crates/decision-cli/src/core/vocab.rs"
+# vocab.rs was split into a module directory (core/vocab/<topic>.rs)
+# to stay under the ADR-013 400-line cap; the feedback-related IRIs
+# now live in core/vocab/feedback.rs and are re-exported via mod.rs.
+VOCAB_RS="crates/decision-cli/src/core/vocab/feedback.rs"
 
 FAILED=0
 

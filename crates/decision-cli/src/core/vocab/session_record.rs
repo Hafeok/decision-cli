@@ -1,5 +1,4 @@
-//! FT-057 / ADR-034 / ADR-037 — `dec:SessionRecord` escalation edges and
-//! cache-aware token breakdown vocabulary.
+//! FT-057 / ADR-034 / ADR-037 — `dec:SessionRecord` escalation-telemetry vocabulary.
 //!
 //! Split out of `core::vocab` (mod.rs) per the ADR-013 file-length policy.
 //! Re-exported from the parent module so external callers continue to

@@ -2,7 +2,7 @@
 id: TC-088
 title: verifier role-catalog entry resolves to a known role at dispatch
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-019
@@ -10,11 +10,10 @@ validates:
   - ADR-027
 phase: 2
 runner: cargo-test
-runner-args: tc_088_verifier_role_catalog_resolves
+runner-args: -p decision-cli --test ft_019_verifier_role_catalog
 runner-timeout: 120
-last-run: 2026-05-21T15:21:18.505743289+00:00
+last-run: 2026-05-23T16:10:19.845721788+00:00
 last-run-duration: 0.2s
-failure-message: "No #[test] fn matching 'tc_088_verifier_role_catalog_resolves' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Purpose

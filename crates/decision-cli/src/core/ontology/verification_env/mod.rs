@@ -14,6 +14,7 @@
 pub mod io;
 pub mod seed;
 pub mod shacl;
+mod shacl_list;
 pub mod types;
 pub mod write;
 

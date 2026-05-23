@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: tc_079_dec_verify_graph_generate_persists_proposed_graph
 runner-timeout: 120
-last-run: 2026-05-21T19:20:28.691484988+00:00
+last-run: 2026-05-23T16:10:09.152145505+00:00
 last-run-duration: 0.4s
 ---
 

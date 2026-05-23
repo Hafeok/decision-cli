@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_065_dec_verify_graph_show_renders_header_and_ordered_s
 runner-timeout: 120
-last-run: 2026-05-21T16:09:52.237060921+00:00
+last-run: 2026-05-23T16:10:01.144762228+00:00
 last-run-duration: 0.4s
 ---
 

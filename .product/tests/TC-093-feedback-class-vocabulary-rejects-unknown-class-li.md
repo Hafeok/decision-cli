@@ -2,7 +2,7 @@
 id: TC-093
 title: feedback class vocabulary rejects unknown class literals at write time
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-028
@@ -10,11 +10,10 @@ validates:
   - ADR-023
 phase: 2
 runner: cargo-test
-runner-args: tc_093_feedback_class_vocabulary_rejection
+runner-args: -p decision-cli --test feedback_class_vocab
 runner-timeout: 120
-last-run: 2026-05-21T15:21:18.505743289+00:00
+last-run: 2026-05-23T16:10:19.845721788+00:00
 last-run-duration: 0.2s
-failure-message: "No #[test] fn matching 'tc_093_feedback_class_vocabulary_rejection' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Purpose

@@ -12,6 +12,7 @@ from typing import Any
 
 from . import claude_runner as _entry  # late import for test-mock hook
 from ._runner_common import STUB_ENV_VAR, _make_code_change_iri, _safe_join
+from .env_routing import EndpointConfigError, claude_env_for
 from .models import (
     CodeChange, DispatchPayload, FileWrite, ToolCall, WorkerError,
     WorkerResponse, WorkerTelemetry,
@@ -80,6 +81,23 @@ def _scrape_terminal_error(stdout: str) -> str:
                 pieces.append(f"result={str(event['result'])[:500]}")
             return "; ".join(pieces)
     return stdout[-2000:]
+
+
+def _endpoint_config_response(
+    payload: DispatchPayload, err: EndpointConfigError
+) -> WorkerResponse:
+    """Response returned when endpoint env-overlay construction fails (FT-066)."""
+    return WorkerResponse(
+        dispatch_id=payload.dispatch_id,
+        session_id=payload.session_id,
+        status="error",
+        error=WorkerError(
+            category="endpoint_config",
+            message=err.message,
+            detail=f"endpoint={payload.endpoint!r} sub_category={err.category!r}",
+            retryable=False,
+        ),
+    )
 
 
 def _missing_binary_response(payload: DispatchPayload) -> WorkerResponse:
@@ -258,6 +276,15 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
     if binary is None:
         return _missing_binary_response(payload)
 
+    # FT-066 / ADR-033 — translate the resolved capability's endpoint
+    # into the right ANTHROPIC_* env vars BEFORE spawning. A missing
+    # SCW_SECRET_KEY surfaces as a structured WorkerError pre-spawn so
+    # the operator sees a clear failure instead of an upstream 401.
+    try:
+        spawn_env = claude_env_for(payload)
+    except EndpointConfigError as exc:
+        return _endpoint_config_response(payload, exc)
+
     workspace = Path(payload.workspace_path)
     workspace.mkdir(parents=True, exist_ok=True)
     prompt_path = _write_bundle_prompt(payload)
@@ -273,6 +300,7 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
                 timeout=payload.timeout_seconds,
                 cwd=str(workspace),
                 check=False,
+                env=spawn_env,
             )
         except subprocess.TimeoutExpired as exc:
             return _timeout_response(payload, exc)

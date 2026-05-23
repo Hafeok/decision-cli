@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/cross-cutting-rules-have-checks.sh
 runner-timeout: 60
-last-run: 2026-05-21T15:21:18.505743289+00:00
-last-run-duration: 2.8s
+last-run: 2026-05-23T16:10:19.845721788+00:00
+last-run-duration: 5.2s
 ---
 
 ## Purpose

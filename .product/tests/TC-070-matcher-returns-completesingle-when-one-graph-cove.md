@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: tc_070_matcher_returns_completesingle_when_one_graph_cove
 runner-timeout: 120
-last-run: 2026-05-21T18:22:05.062499810+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-23T16:10:04.600337924+00:00
+last-run-duration: 0.8s
 ---
 
 ## Premise

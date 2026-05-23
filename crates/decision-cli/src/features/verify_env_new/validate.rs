@@ -40,43 +40,39 @@ fn validate_fixture_source(
     };
     let trimmed = raw.trim();
     if trimmed.is_empty() {
-        return Err(HandlerError::InvalidArgument {
-            field: "fixture_source".to_string(),
-            detail: "fixture_source must be a non-empty string".to_string(),
-        });
+        return Err(invalid_fixture_source("fixture_source must be a non-empty string"));
     }
     if trimmed.starts_with('/') {
-        return Err(HandlerError::InvalidArgument {
-            field: "fixture_source".to_string(),
-            detail: "fixture_source must be repo-relative".to_string(),
-        });
+        return Err(invalid_fixture_source("fixture_source must be repo-relative"));
     }
     let p = std::path::Path::new(trimmed);
     if p.components()
         .any(|c| matches!(c, std::path::Component::ParentDir))
     {
-        return Err(HandlerError::InvalidArgument {
-            field: "fixture_source".to_string(),
-            detail: "fixture_source must not contain `..`".to_string(),
-        });
+        return Err(invalid_fixture_source("fixture_source must not contain `..`"));
     }
     let Some(workdir) = workdir else {
         return Ok(());
     };
     let resolved = workdir.join(trimmed);
     if !resolved.exists() {
-        return Err(HandlerError::InvalidArgument {
-            field: "fixture_source".to_string(),
-            detail: format!("fixture_source {trimmed:?} does not exist"),
-        });
+        return Err(invalid_fixture_source(format!(
+            "fixture_source {trimmed:?} does not exist"
+        )));
     }
     if !resolved.is_dir() {
-        return Err(HandlerError::InvalidArgument {
-            field: "fixture_source".to_string(),
-            detail: format!("fixture_source {trimmed:?} is not a directory"),
-        });
+        return Err(invalid_fixture_source(format!(
+            "fixture_source {trimmed:?} is not a directory"
+        )));
     }
     Ok(())
+}
+
+fn invalid_fixture_source(detail: impl Into<String>) -> HandlerError {
+    HandlerError::InvalidArgument {
+        field: "fixture_source".to_string(),
+        detail: detail.into(),
+    }
 }
 
 /// `env-type` must be a non-empty string (whitespace doesn't count).

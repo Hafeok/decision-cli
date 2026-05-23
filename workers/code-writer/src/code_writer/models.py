@@ -41,6 +41,13 @@ class DispatchPayload(BaseModel):
     model_id: str = Field(
         ..., description="Identifier of the model the worker should invoke."
     )
+    endpoint: Literal["scaleway", "anthropic"] = Field(
+        ...,
+        description=(
+            "External API endpoint the worker dispatches to (FT-066 / "
+            "ADR-033). The dispatcher pins this from the resolved capability."
+        ),
+    )
     max_turns: int = Field(default=8, ge=1, le=64)
     timeout_seconds: int = Field(default=300, ge=10, le=3600)
     allowed_tools: list[str] = Field(
@@ -105,6 +112,11 @@ class WorkerError(BaseModel):
         "timeout",
         "invalid_dispatch",
         "internal",
+        # FT-066 / ADR-033: endpoint resolution failed before subprocess
+        # spawn (missing SCW_SECRET_KEY, unknown endpoint, …).
+        "endpoint_config",
+        # FT-066: y-router proxy reachability probe failed.
+        "proxy_unreachable",
     ]
     message: str
     detail: str = ""

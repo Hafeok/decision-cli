@@ -23,6 +23,7 @@ pub mod scope;
 pub mod sparql;
 pub mod store;
 pub mod stream_writer;
+mod stream_writer_validations;
 pub mod subscriptions;
 pub mod verify;
 pub mod vocab;

@@ -10,7 +10,7 @@ phase: 2
 runner: pytest
 runner-args: workers/verify-graph-author/tests/test_tc_078_bundle_hash.py
 runner-timeout: 120
-last-run: 2026-05-21T18:54:47.155789539+00:00
+last-run: 2026-05-23T16:10:08.067362560+00:00
 last-run-duration: 0.4s
 ---
 

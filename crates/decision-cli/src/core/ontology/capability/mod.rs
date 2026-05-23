@@ -18,6 +18,7 @@
 pub mod lookup;
 pub mod read;
 pub mod shacl;
+mod take;
 pub mod types;
 
 #[cfg(test)]

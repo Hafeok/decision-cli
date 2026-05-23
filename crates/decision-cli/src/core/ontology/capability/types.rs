@@ -209,71 +209,31 @@ impl Capability {
     }
 
     fn numeric_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
-        let mut quads = vec![
-            typed_literal_quad(
-                subject,
-                context_window_pred(),
-                &self.context_window.to_string(),
-                XSD_INTEGER,
-                g,
-            ),
-            typed_literal_quad(
-                subject,
-                max_output_pred(),
-                &self.max_output.to_string(),
-                XSD_INTEGER,
-                g,
-            ),
-            typed_literal_quad(
-                subject,
-                cost_input_per_m_pred(),
-                &self.cost_input_per_m,
-                XSD_DECIMAL,
-                g,
-            ),
-            typed_literal_quad(
-                subject,
-                cost_output_per_m_pred(),
-                &self.cost_output_per_m,
-                XSD_DECIMAL,
-                g,
-            ),
-            typed_literal_quad(
-                subject,
-                capability_version_pred(),
-                &self.version.to_string(),
-                XSD_INTEGER,
-                g,
-            ),
-        ];
+        let mut quads = self.required_numeric_quads(subject, g);
+        self.optional_numeric_quads(subject, g, &mut quads);
+        quads
+    }
+
+    fn required_numeric_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
+        vec![
+            int_q(subject, context_window_pred(), self.context_window, g),
+            int_q(subject, max_output_pred(), self.max_output, g),
+            decimal_q(subject, cost_input_per_m_pred(), &self.cost_input_per_m, g),
+            decimal_q(subject, cost_output_per_m_pred(), &self.cost_output_per_m, g),
+            int_q(subject, capability_version_pred(), self.version, g),
+        ]
+    }
+
+    fn optional_numeric_quads(&self, subject: &NamedNode, g: &GraphName, out: &mut Vec<Quad>) {
         if let Some(t) = self.tier {
-            quads.push(typed_literal_quad(
-                subject,
-                tier_pred(),
-                &t.to_string(),
-                XSD_INTEGER,
-                g,
-            ));
+            out.push(int_q(subject, tier_pred(), t, g));
         }
         if let Some(c) = &self.cost_cache_hit_per_m {
-            quads.push(typed_literal_quad(
-                subject,
-                cost_cache_hit_per_m_pred(),
-                c,
-                XSD_DECIMAL,
-                g,
-            ));
+            out.push(decimal_q(subject, cost_cache_hit_per_m_pred(), c, g));
         }
         if let Some(c) = &self.cost_cache_write_5m {
-            quads.push(typed_literal_quad(
-                subject,
-                cost_cache_write_5m_pred(),
-                c,
-                XSD_DECIMAL,
-                g,
-            ));
+            out.push(decimal_q(subject, cost_cache_write_5m_pred(), c, g));
         }
-        quads
     }
 
     fn boolean_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
@@ -355,4 +315,12 @@ pub(super) fn typed_literal_quad(
 
 pub(super) fn named_quad(s: &NamedNode, p: NamedNodeRef<'_>, o: &NamedNode, g: &GraphName) -> Quad {
     Quad::new(s.clone(), p.into_owned(), o.clone(), g.clone())
+}
+
+fn int_q(s: &NamedNode, p: NamedNodeRef<'_>, v: impl ToString, g: &GraphName) -> Quad {
+    typed_literal_quad(s, p, &v.to_string(), XSD_INTEGER, g)
+}
+
+fn decimal_q(s: &NamedNode, p: NamedNodeRef<'_>, v: &str, g: &GraphName) -> Quad {
+    typed_literal_quad(s, p, v, XSD_DECIMAL, g)
 }

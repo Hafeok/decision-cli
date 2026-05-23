@@ -6,13 +6,14 @@ status: passing
 validates:
   features:
   - FT-057
-  adrs: []
+  adrs:
+  - ADR-034
 phase: 2
 runner: cargo-test
 runner-args: tc_103_session_escalation_edges_round_trip_and_chain_integrity
 runner-timeout: 120
-last-run: 2026-05-23T09:31:01.135691607+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-23T16:10:19.845721788+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description

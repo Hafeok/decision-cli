@@ -2,19 +2,18 @@
 id: TC-091
 title: Python verifier worker returns a structured VerificationVerdict over a bundled run
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-023
   adrs:
   - ADR-018
 phase: 2
-runner: bash
-runner-args: workers/verifier/tests/run-verifier-tc.sh
+runner: pytest
+runner-args: workers/verifier/tests
 runner-timeout: 180
-last-run: 2026-05-21T15:21:18.505743289+00:00
-last-run-duration: 0.0s
-failure-message: "bash: line 1: workers/verifier/tests/run-verifier-tc.sh: No such file or directory\n"
+last-run: 2026-05-23T16:10:19.845721788+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose

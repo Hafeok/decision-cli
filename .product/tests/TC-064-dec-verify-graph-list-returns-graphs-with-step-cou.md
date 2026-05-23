@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_064_dec_verify_graph_list_returns_graphs_with_step_cou
 runner-timeout: 120
-last-run: 2026-05-21T15:49:23.583024150+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-23T16:09:59.780654765+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

@@ -22,13 +22,28 @@ use super::CapabilityViolation;
 
 pub(super) fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<CapabilityViolation> {
     let mut violations = Vec::new();
+    check_string_fields(quads, subject, &mut violations);
+    check_enum_fields(quads, subject, &mut violations);
+    check_integer_fields(quads, subject, &mut violations);
+    check_decimal_fields(quads, subject, &mut violations);
+    check_boolean_fields(quads, subject, &mut violations);
+    check_optional_fields(quads, subject, &mut violations);
+    check_cache_cost_pair(quads, subject, &mut violations);
+    violations
+}
+
+fn check_string_fields(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<CapabilityViolation>,
+) {
     check_string_one(
         quads,
         subject,
         IRI_DEC_CAPABILITY_ID,
         "dec:capability_id",
         true,
-        &mut violations,
+        violations,
     );
     check_string_one(
         quads,
@@ -36,15 +51,22 @@ pub(super) fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<Capab
         IRI_DEC_MODEL_IDENTIFIER,
         "dec:model_identifier",
         true,
-        &mut violations,
+        violations,
     );
+}
+
+fn check_enum_fields(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<CapabilityViolation>,
+) {
     check_enum_one(
         quads,
         subject,
         IRI_DEC_CAPABILITY_ENDPOINT,
         "dec:endpoint",
         &[ENDPOINT_SCALEWAY, ENDPOINT_ANTHROPIC],
-        &mut violations,
+        violations,
     );
     check_enum_one(
         quads,
@@ -52,7 +74,7 @@ pub(super) fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<Capab
         IRI_DEC_COST_CURRENCY,
         "dec:cost_currency",
         &[CURRENCY_EUR, CURRENCY_USD],
-        &mut violations,
+        violations,
     );
     check_enum_one(
         quads,
@@ -65,34 +87,36 @@ pub(super) fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<Capab
             CAPABILITY_STATUS_EOL,
             CAPABILITY_STATUS_CANDIDATE,
         ],
-        &mut violations,
+        violations,
     );
-    check_integer_fields(quads, subject, &mut violations);
-    check_decimal_fields(quads, subject, &mut violations);
-    check_boolean_fields(quads, subject, &mut violations);
+}
+
+fn check_optional_fields(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<CapabilityViolation>,
+) {
     check_optional_iri(
         quads,
         subject,
         IRI_DEC_CAPABILITY_SUPERSEDES,
         "dec:supersedes",
-        &mut violations,
+        violations,
     );
     check_optional_string(
         quads,
         subject,
         IRI_DEC_BOOTSTRAP_SOURCE,
         "dec:bootstrap_source",
-        &mut violations,
+        violations,
     );
     check_optional_string(
         quads,
         subject,
         IRI_DEC_CAPABILITY_NOTES,
         "dec:notes",
-        &mut violations,
+        violations,
     );
-    check_cache_cost_pair(quads, subject, &mut violations);
-    violations
 }
 
 fn check_integer_fields(

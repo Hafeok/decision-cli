@@ -276,20 +276,25 @@ fn no_safety_bypass_in_features() {
         let Ok(content) = fs::read_to_string(&f) else {
             continue;
         };
+        // Strip `#[cfg(test)] mod tests { ... }` so test fixtures that
+        // legitimately seed quads to exercise read-side helpers don't
+        // register as production-code bypasses. Unit-test code is not
+        // a feature-code execution path.
+        let prod_content = strip_cfg_test_blocks(&content);
         // Feature code must not call `Store::insert` / bulk_loader on
         // anything that came from `verification_graph::*` types. We
         // detect the smell by flagging files that *both* import any
         // verification_graph symbol AND call store.insert / bulk_loader.
-        let imports_vg = content.contains("verification_graph::")
-            || content.contains("VerificationGraph")
-            || content.contains("VerificationStep");
+        let imports_vg = prod_content.contains("verification_graph::")
+            || prod_content.contains("VerificationGraph")
+            || prod_content.contains("VerificationStep");
         if !imports_vg {
             continue;
         }
         // Look for a raw store mutation method.
         let mutating_paths = [".insert(", ".bulk_loader(", ".bulk_extend("];
         for needle in mutating_paths {
-            if content.contains(needle) {
+            if prod_content.contains(needle) {
                 offenders.push(format!("{}: '{needle}'", f.display()));
             }
         }
@@ -299,6 +304,43 @@ fn no_safety_bypass_in_features() {
         "feature code must not bypass StreamWriter when handling \
          verification-graph quads; offenders: {offenders:?}"
     );
+}
+
+/// Remove every `#[cfg(test)] mod NAME { ... }` block from a Rust
+/// source string by walking brace depth from each occurrence of the
+/// attribute. Returns the surviving (production-code) text. Operates
+/// on byte indices (safe because `{`, `}`, and the needle are ASCII)
+/// and slices the original `&str` to preserve UTF-8 boundaries.
+fn strip_cfg_test_blocks(src: &str) -> String {
+    const NEEDLE: &str = "#[cfg(test)]";
+    let bytes = src.as_bytes();
+    let mut out = String::with_capacity(src.len());
+    let mut cursor = 0;
+    while let Some(rel) = src[cursor..].find(NEEDLE) {
+        let start = cursor + rel;
+        out.push_str(&src[cursor..start]);
+        let mut j = start + NEEDLE.len();
+        while j < bytes.len() && bytes[j] != b'{' {
+            j += 1;
+        }
+        if j == bytes.len() {
+            cursor = bytes.len();
+            break;
+        }
+        let mut depth = 1i32;
+        j += 1;
+        while j < bytes.len() && depth > 0 {
+            match bytes[j] {
+                b'{' => depth += 1,
+                b'}' => depth -= 1,
+                _ => {}
+            }
+            j += 1;
+        }
+        cursor = j;
+    }
+    out.push_str(&src[cursor..]);
+    out
 }
 
 #[test]

@@ -34,8 +34,13 @@ HANDLER_RS="$ROUTING_DIR/handler.rs"
 SEED_TTL="crates/decision-cli/src/core/feedback/seeds/feedback_routing.ttl"
 FEATURE_MOD="crates/decision-cli/src/features/feedback/mod.rs"
 CLI_MOD="crates/decision-cli/src/cli/feedback.rs"
-MAIN_RS="crates/decision-cli/src/main.rs"
+# main.rs was reduced to a dispatch-only entry point per ADR-013; the
+# top-level subcommand enum lives in cli/args.rs after the split.
+ARGS_RS="crates/decision-cli/src/cli/args.rs"
 INIT_PERSIST="crates/decision-cli/src/features/init/persist.rs"
+# `seed_quads` was extracted from handler.rs into routing/seed.rs to
+# stay under the ADR-013 400-line cap; routing/mod.rs re-exports it.
+ROUTING_MOD="$ROUTING_DIR/mod.rs"
 
 FAILED=0
 
@@ -65,7 +70,6 @@ done
 for sym in \
   "pub fn pending_feedback" \
   "pub fn route_pending_feedback" \
-  "pub fn seed_quads" \
   "FEEDBACK_ROUTING_SUBSCRIPTION_IRI"
 do
   if ! grep -q "$sym" "$HANDLER_RS"; then
@@ -73,6 +77,13 @@ do
     FAILED=1
   fi
 done
+
+# seed_quads moved to its own file under the same module; routing/mod.rs
+# re-exports it. Accept either location.
+if ! grep -Eq "pub (use seed::seed_quads|fn seed_quads)" "$ROUTING_MOD" "$ROUTING_DIR"/seed.rs 2>/dev/null; then
+  echo "ERROR: routing module no longer exposes seed_quads via $ROUTING_MOD or seed.rs (FT-029)"
+  FAILED=1
+fi
 
 if ! grep -q "feedback-routing" "$SEED_TTL"; then
   echo "ERROR: $SEED_TTL no longer declares the feedback-routing handler tag (FT-029)"
@@ -92,8 +103,8 @@ if ! grep -q "pub fn format_list" "$FEATURE_MOD"; then
   FAILED=1
 fi
 
-if ! grep -q "Feedback(FeedbackCmd)" "$MAIN_RS"; then
-  echo "ERROR: $MAIN_RS no longer dispatches the Feedback subcommand (FT-029)"
+if ! grep -q "Feedback(FeedbackCmd)" "$ARGS_RS"; then
+  echo "ERROR: $ARGS_RS no longer dispatches the Feedback subcommand (FT-029)"
   FAILED=1
 fi
 if ! grep -q "feedback::list" "$CLI_MOD"; then

@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: tc_083_auto_dispatch_subscription_emits_one_event_per_unc
 runner-timeout: 120
-last-run: 2026-05-21T19:37:16.286568034+00:00
+last-run: 2026-05-23T16:10:10.847533521+00:00
 last-run-duration: 0.3s
 ---
 

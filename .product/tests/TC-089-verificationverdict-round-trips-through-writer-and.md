@@ -2,7 +2,7 @@
 id: TC-089
 title: VerificationVerdict round-trips through writer and reader
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-020
@@ -10,11 +10,10 @@ validates:
   - ADR-018
 phase: 2
 runner: cargo-test
-runner-args: tc_089_verdict_round_trip
+runner-args: -p decision-cli --test verdict_shacl
 runner-timeout: 120
-last-run: 2026-05-21T15:21:18.505743289+00:00
+last-run: 2026-05-23T16:10:19.845721788+00:00
 last-run-duration: 0.2s
-failure-message: "No #[test] fn matching 'tc_089_verdict_round_trip' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Purpose

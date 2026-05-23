@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/single-responsibility.sh
 runner-timeout: 60
-last-run: 2026-05-22T10:27:09.181909747+00:00
-last-run-duration: 2.0s
+last-run: 2026-05-23T16:10:19.845721788+00:00
+last-run-duration: 1.8s
 ---
 
 ## Purpose

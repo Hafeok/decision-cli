@@ -2,7 +2,7 @@
 id: TC-092
 title: feedback artifact transitions through open then closed via the writer
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-027
@@ -10,11 +10,10 @@ validates:
   - ADR-024
 phase: 2
 runner: cargo-test
-runner-args: tc_092_feedback_transition_open_to_closed
+runner-args: -p decision-cli --test feedback_lifecycle
 runner-timeout: 120
-last-run: 2026-05-21T15:21:18.505743289+00:00
-last-run-duration: 0.3s
-failure-message: "No #[test] fn matching 'tc_092_feedback_transition_open_to_closed' found in tests/*.rs — did you forget to add the integration test?"
+last-run: 2026-05-23T16:10:19.845721788+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

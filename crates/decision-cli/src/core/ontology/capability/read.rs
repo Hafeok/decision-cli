@@ -21,6 +21,10 @@ use crate::core::vocab::{
     IRI_DEC_TIER,
 };
 
+use super::take::{
+    format_sparql_string, take_one_bool, take_one_str, take_one_u32, take_optional_bool,
+    take_optional_iri, take_optional_str, take_optional_u8,
+};
 use super::types::{Capability, CapabilityStatus, CostCurrency, Endpoint};
 
 /// Errors produced by [`query_active_by_id`].
@@ -120,9 +124,74 @@ pub(super) fn parse_capability(
 ) -> Result<Capability, CapabilityReadError> {
     let subject = NamedNode::new(iri).map_err(|e| CapabilityReadError::Store(e.to_string()))?;
     require_type(&subject, quads)?;
-    let id = take_one_str(iri, quads, &subject, IRI_DEC_CAPABILITY_ID, "dec:capability_id")?;
+    let identity = parse_identity(iri, quads, &subject)?;
+    let capacity = parse_capacity(iri, quads, &subject)?;
+    let pricing = parse_pricing(iri, quads, &subject)?;
+    let lifecycle = parse_lifecycle(iri, quads, &subject)?;
+    Ok(Capability {
+        id: identity.id,
+        endpoint: identity.endpoint,
+        model_identifier: identity.model_identifier,
+        tier: identity.tier,
+        context_window: capacity.context_window,
+        max_output: capacity.max_output,
+        supports_vision: capacity.supports_vision,
+        supports_tool_calling: capacity.supports_tool_calling,
+        cost_input_per_m: pricing.cost_input_per_m,
+        cost_output_per_m: pricing.cost_output_per_m,
+        cost_cache_hit_per_m: pricing.cost_cache_hit_per_m,
+        cost_cache_write_5m: pricing.cost_cache_write_5m,
+        cost_currency: pricing.cost_currency,
+        configurable_effort: lifecycle.configurable_effort,
+        exposes_reasoning_trace: lifecycle.exposes_reasoning_trace,
+        status: lifecycle.status,
+        version: lifecycle.version,
+        supersedes: lifecycle.supersedes,
+        bootstrap_source: lifecycle.bootstrap_source,
+        notes: lifecycle.notes,
+    })
+}
+
+struct Identity {
+    id: String,
+    endpoint: Endpoint,
+    model_identifier: String,
+    tier: Option<u8>,
+}
+
+struct Capacity {
+    context_window: u32,
+    max_output: u32,
+    supports_vision: bool,
+    supports_tool_calling: bool,
+}
+
+struct Pricing {
+    cost_input_per_m: String,
+    cost_output_per_m: String,
+    cost_cache_hit_per_m: Option<String>,
+    cost_cache_write_5m: Option<String>,
+    cost_currency: CostCurrency,
+}
+
+struct Lifecycle {
+    configurable_effort: Option<bool>,
+    exposes_reasoning_trace: Option<bool>,
+    status: CapabilityStatus,
+    version: u32,
+    supersedes: Option<NamedNode>,
+    bootstrap_source: Option<String>,
+    notes: Option<String>,
+}
+
+fn parse_identity(
+    iri: &str,
+    quads: &[Quad],
+    subject: &NamedNode,
+) -> Result<Identity, CapabilityReadError> {
+    let id = take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_ID, "dec:capability_id")?;
     let endpoint_raw =
-        take_one_str(iri, quads, &subject, IRI_DEC_CAPABILITY_ENDPOINT, "dec:endpoint")?;
+        take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_ENDPOINT, "dec:endpoint")?;
     let endpoint = Endpoint::try_from_str(&endpoint_raw).ok_or_else(|| {
         CapabilityReadError::Malformed {
             iri: iri.to_string(),
@@ -132,83 +201,110 @@ pub(super) fn parse_capability(
     let model_identifier = take_one_str(
         iri,
         quads,
-        &subject,
+        subject,
         IRI_DEC_MODEL_IDENTIFIER,
         "dec:model_identifier",
     )?;
-    let tier = take_optional_u8(iri, quads, &subject, IRI_DEC_TIER, "dec:tier")?;
+    let tier = take_optional_u8(iri, quads, subject, IRI_DEC_TIER, "dec:tier")?;
+    Ok(Identity {
+        id,
+        endpoint,
+        model_identifier,
+        tier,
+    })
+}
+
+fn parse_capacity(
+    iri: &str,
+    quads: &[Quad],
+    subject: &NamedNode,
+) -> Result<Capacity, CapabilityReadError> {
     let context_window =
-        take_one_u32(iri, quads, &subject, IRI_DEC_CONTEXT_WINDOW, "dec:context_window")?;
-    let max_output = take_one_u32(iri, quads, &subject, IRI_DEC_MAX_OUTPUT, "dec:max_output")?;
+        take_one_u32(iri, quads, subject, IRI_DEC_CONTEXT_WINDOW, "dec:context_window")?;
+    let max_output = take_one_u32(iri, quads, subject, IRI_DEC_MAX_OUTPUT, "dec:max_output")?;
     let supports_vision = take_one_bool(
         iri,
         quads,
-        &subject,
+        subject,
         IRI_DEC_SUPPORTS_VISION,
         "dec:supports_vision",
     )?;
     let supports_tool_calling = take_one_bool(
         iri,
         quads,
-        &subject,
+        subject,
         IRI_DEC_SUPPORTS_TOOL_CALLING,
         "dec:supports_tool_calling",
     )?;
+    Ok(Capacity {
+        context_window,
+        max_output,
+        supports_vision,
+        supports_tool_calling,
+    })
+}
+
+fn parse_pricing(
+    iri: &str,
+    quads: &[Quad],
+    subject: &NamedNode,
+) -> Result<Pricing, CapabilityReadError> {
     let cost_input_per_m = take_one_str(
         iri,
         quads,
-        &subject,
+        subject,
         IRI_DEC_COST_INPUT_PER_M,
         "dec:cost_input_per_m",
     )?;
     let cost_output_per_m = take_one_str(
         iri,
         quads,
-        &subject,
+        subject,
         IRI_DEC_COST_OUTPUT_PER_M,
         "dec:cost_output_per_m",
     )?;
     let cost_cache_hit_per_m =
-        take_optional_str(iri, quads, &subject, IRI_DEC_COST_CACHE_HIT_PER_M)?;
+        take_optional_str(iri, quads, subject, IRI_DEC_COST_CACHE_HIT_PER_M)?;
     let cost_cache_write_5m =
-        take_optional_str(iri, quads, &subject, IRI_DEC_COST_CACHE_WRITE_5M)?;
+        take_optional_str(iri, quads, subject, IRI_DEC_COST_CACHE_WRITE_5M)?;
     let cost_currency_raw =
-        take_one_str(iri, quads, &subject, IRI_DEC_COST_CURRENCY, "dec:cost_currency")?;
+        take_one_str(iri, quads, subject, IRI_DEC_COST_CURRENCY, "dec:cost_currency")?;
     let cost_currency = CostCurrency::try_from_str(&cost_currency_raw).ok_or_else(|| {
         CapabilityReadError::Malformed {
             iri: iri.to_string(),
             detail: format!("unknown dec:cost_currency value {cost_currency_raw:?}"),
         }
     })?;
-    let configurable_effort = take_optional_bool(iri, quads, &subject, IRI_DEC_CONFIGURABLE_EFFORT)?;
+    Ok(Pricing {
+        cost_input_per_m,
+        cost_output_per_m,
+        cost_cache_hit_per_m,
+        cost_cache_write_5m,
+        cost_currency,
+    })
+}
+
+fn parse_lifecycle(
+    iri: &str,
+    quads: &[Quad],
+    subject: &NamedNode,
+) -> Result<Lifecycle, CapabilityReadError> {
+    let configurable_effort = take_optional_bool(iri, quads, subject, IRI_DEC_CONFIGURABLE_EFFORT)?;
     let exposes_reasoning_trace =
-        take_optional_bool(iri, quads, &subject, IRI_DEC_EXPOSES_REASONING_TRACE)?;
+        take_optional_bool(iri, quads, subject, IRI_DEC_EXPOSES_REASONING_TRACE)?;
     let status_raw =
-        take_one_str(iri, quads, &subject, IRI_DEC_CAPABILITY_STATUS, "dec:status")?;
+        take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_STATUS, "dec:status")?;
     let status = CapabilityStatus::try_from_str(&status_raw).ok_or_else(|| {
         CapabilityReadError::Malformed {
             iri: iri.to_string(),
             detail: format!("unknown dec:status value {status_raw:?}"),
         }
     })?;
-    let version = take_one_u32(iri, quads, &subject, IRI_DEC_CAPABILITY_VERSION, "dec:version")?;
-    let supersedes = take_optional_iri(iri, quads, &subject, IRI_DEC_CAPABILITY_SUPERSEDES)?;
-    let bootstrap_source = take_optional_str(iri, quads, &subject, IRI_DEC_BOOTSTRAP_SOURCE)?;
-    let notes = take_optional_str(iri, quads, &subject, IRI_DEC_CAPABILITY_NOTES)?;
-    Ok(Capability {
-        id,
-        endpoint,
-        model_identifier,
-        tier,
-        context_window,
-        max_output,
-        supports_vision,
-        supports_tool_calling,
-        cost_input_per_m,
-        cost_output_per_m,
-        cost_cache_hit_per_m,
-        cost_cache_write_5m,
-        cost_currency,
+    let version = take_one_u32(iri, quads, subject, IRI_DEC_CAPABILITY_VERSION, "dec:version")?;
+    let supersedes = take_optional_iri(iri, quads, subject, IRI_DEC_CAPABILITY_SUPERSEDES)?;
+    let bootstrap_source = take_optional_str(iri, quads, subject, IRI_DEC_BOOTSTRAP_SOURCE)?;
+    let notes = take_optional_str(iri, quads, subject, IRI_DEC_CAPABILITY_NOTES)?;
+    Ok(Lifecycle {
         configurable_effort,
         exposes_reasoning_trace,
         status,
@@ -235,164 +331,3 @@ fn require_type(subject: &NamedNode, quads: &[Quad]) -> Result<(), CapabilityRea
     }
 }
 
-fn take_one_str(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-    label: &str,
-) -> Result<String, CapabilityReadError> {
-    let values = literal_strings(quads, subject, predicate);
-    match values.len() {
-        0 => Err(CapabilityReadError::Malformed {
-            iri: iri.to_string(),
-            detail: format!("missing required {label}"),
-        }),
-        1 => Ok(values.into_iter().next().expect("len() == 1")),
-        n => Err(CapabilityReadError::Malformed {
-            iri: iri.to_string(),
-            detail: format!("expected exactly one {label}, found {n}"),
-        }),
-    }
-}
-
-fn take_optional_str(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-) -> Result<Option<String>, CapabilityReadError> {
-    let values = literal_strings(quads, subject, predicate);
-    match values.len() {
-        0 => Ok(None),
-        1 => Ok(Some(values.into_iter().next().expect("len() == 1"))),
-        n => Err(CapabilityReadError::Malformed {
-            iri: iri.to_string(),
-            detail: format!("expected at most one {predicate}, found {n}"),
-        }),
-    }
-}
-
-fn take_one_u32(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-    label: &str,
-) -> Result<u32, CapabilityReadError> {
-    let raw = take_one_str(iri, quads, subject, predicate, label)?;
-    raw.parse::<u32>().map_err(|_| CapabilityReadError::Malformed {
-        iri: iri.to_string(),
-        detail: format!("{label} must be a non-negative integer, got {raw:?}"),
-    })
-}
-
-fn take_optional_u8(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-    label: &str,
-) -> Result<Option<u8>, CapabilityReadError> {
-    let raw = take_optional_str(iri, quads, subject, predicate)?;
-    match raw {
-        None => Ok(None),
-        Some(s) => Ok(Some(s.parse::<u8>().map_err(|_| {
-            CapabilityReadError::Malformed {
-                iri: iri.to_string(),
-                detail: format!("{label} must be a small integer, got {s:?}"),
-            }
-        })?)),
-    }
-}
-
-fn take_one_bool(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-    label: &str,
-) -> Result<bool, CapabilityReadError> {
-    let raw = take_one_str(iri, quads, subject, predicate, label)?;
-    parse_bool(&raw).ok_or_else(|| CapabilityReadError::Malformed {
-        iri: iri.to_string(),
-        detail: format!("{label} must be xsd:boolean, got {raw:?}"),
-    })
-}
-
-fn take_optional_bool(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-) -> Result<Option<bool>, CapabilityReadError> {
-    let raw = take_optional_str(iri, quads, subject, predicate)?;
-    match raw {
-        None => Ok(None),
-        Some(s) => Ok(Some(parse_bool(&s).ok_or_else(|| {
-            CapabilityReadError::Malformed {
-                iri: iri.to_string(),
-                detail: format!("{predicate} must be xsd:boolean, got {s:?}"),
-            }
-        })?)),
-    }
-}
-
-fn parse_bool(s: &str) -> Option<bool> {
-    match s {
-        "true" | "1" => Some(true),
-        "false" | "0" => Some(false),
-        _ => None,
-    }
-}
-
-fn take_optional_iri(
-    iri: &str,
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-) -> Result<Option<NamedNode>, CapabilityReadError> {
-    let mut iris: Vec<NamedNode> = quads
-        .iter()
-        .filter(|q| {
-            q.predicate.as_str() == predicate
-                && matches!(&q.subject, oxigraph::model::Subject::NamedNode(s) if s == subject)
-        })
-        .filter_map(|q| match &q.object {
-            Term::NamedNode(n) => Some(n.clone()),
-            _ => None,
-        })
-        .collect();
-    match iris.len() {
-        0 => Ok(None),
-        1 => Ok(Some(iris.remove(0))),
-        n => Err(CapabilityReadError::Malformed {
-            iri: iri.to_string(),
-            detail: format!("expected at most one {predicate}, found {n}"),
-        }),
-    }
-}
-
-fn literal_strings(quads: &[Quad], subject: &NamedNode, predicate: &str) -> Vec<String> {
-    quads
-        .iter()
-        .filter_map(|q| {
-            if q.predicate.as_str() != predicate {
-                return None;
-            }
-            if !matches!(&q.subject, oxigraph::model::Subject::NamedNode(s) if s == subject) {
-                return None;
-            }
-            match &q.object {
-                Term::Literal(lit) => Some(lit.value().to_string()),
-                _ => None,
-            }
-        })
-        .collect()
-}
-
-fn format_sparql_string(value: &str) -> String {
-    // Quote and escape the value for use in a SPARQL literal expression.
-    let escaped = value.replace('\\', "\\\\").replace('"', "\\\"");
-    format!("\"{escaped}\"")
-}

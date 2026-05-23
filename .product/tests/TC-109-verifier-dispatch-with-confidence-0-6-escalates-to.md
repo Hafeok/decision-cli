@@ -11,7 +11,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test escalate_confidence_07
 runner-timeout: 180
-last-run: 2026-05-23T10:32:54.955923968+00:00
+last-run: 2026-05-23T16:10:16.715715484+00:00
 last-run-duration: 0.2s
 ---
 

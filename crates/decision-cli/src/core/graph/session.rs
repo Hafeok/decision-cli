@@ -248,7 +248,31 @@ fn load_session_optional(
     store: &Store,
     iri: &NamedNode,
 ) -> Result<Option<SessionView>, SessionError> {
-    let q = format!(
+    let q = session_view_query(iri);
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| SessionError::QueryFailed(e.to_string()))?;
+    let QueryResults::Solutions(sols) = results else {
+        return Err(SessionError::QueryFailed(
+            "session lookup returned non-solution result".to_string(),
+        ));
+    };
+    let mut view = empty_session_view(iri);
+    let mut any_row = false;
+    for sol in sols {
+        let sol = sol.map_err(|e| SessionError::QueryFailed(e.to_string()))?;
+        any_row = true;
+        apply_solution(&mut view, &sol);
+    }
+    // Existence: if no triples whatsoever attach to the IRI, treat as absent.
+    if !any_row || !session_exists(store, iri)? {
+        return Ok(None);
+    }
+    Ok(Some(view))
+}
+
+fn session_view_query(iri: &NamedNode) -> String {
+    format!(
         "PREFIX dec: <https://decision-cli.dev/ns#>
 SELECT ?from ?to ?reason ?base ?write ?hit ?out ?cap WHERE {{
   {{
@@ -276,17 +300,11 @@ SELECT ?from ?to ?reason ?base ?write ?hit ?out ?cap WHERE {{
   }}
 }}",
         iri = iri.as_str(),
-    );
-    let results = store
-        .query(q.as_str())
-        .map_err(|e| SessionError::QueryFailed(e.to_string()))?;
-    let QueryResults::Solutions(sols) = results else {
-        return Err(SessionError::QueryFailed(
-            "session lookup returned non-solution result".to_string(),
-        ));
-    };
-    // Aggregate across UNION rows — at most one non-null value per field.
-    let mut view = SessionView {
+    )
+}
+
+fn empty_session_view(iri: &NamedNode) -> SessionView {
+    SessionView {
         iri: iri.clone(),
         escalated_from: None,
         escalated_to: None,
@@ -296,49 +314,42 @@ SELECT ?from ?to ?reason ?base ?write ?hit ?out ?cap WHERE {{
         input_tokens_cache_hit: 0,
         output_tokens: 0,
         capability: None,
-    };
-    let mut any_row = false;
-    for sol in sols {
-        let sol = sol.map_err(|e| SessionError::QueryFailed(e.to_string()))?;
-        any_row = true;
-        if let Some(Term::NamedNode(n)) = sol.get("from") {
-            view.escalated_from = Some(n.clone());
-        }
-        if let Some(Term::NamedNode(n)) = sol.get("to") {
-            view.escalated_to = Some(n.clone());
-        }
-        if let Some(Term::Literal(lit)) = sol.get("reason") {
-            view.escalation_reason = TriggerSignal::try_from_str(lit.value());
-        }
-        if let Some(Term::Literal(lit)) = sol.get("base") {
-            if let Ok(n) = lit.value().parse() {
-                view.input_tokens_base = view.input_tokens_base.max(n);
-            }
-        }
-        if let Some(Term::Literal(lit)) = sol.get("write") {
-            if let Ok(n) = lit.value().parse() {
-                view.input_tokens_cache_write = view.input_tokens_cache_write.max(n);
-            }
-        }
-        if let Some(Term::Literal(lit)) = sol.get("hit") {
-            if let Ok(n) = lit.value().parse() {
-                view.input_tokens_cache_hit = view.input_tokens_cache_hit.max(n);
-            }
-        }
-        if let Some(Term::Literal(lit)) = sol.get("out") {
-            if let Ok(n) = lit.value().parse() {
-                view.output_tokens = view.output_tokens.max(n);
-            }
-        }
-        if let Some(Term::NamedNode(n)) = sol.get("cap") {
-            view.capability = Some(n.clone());
+    }
+}
+
+fn apply_solution(view: &mut SessionView, sol: &oxigraph::sparql::QuerySolution) {
+    if let Some(Term::NamedNode(n)) = sol.get("from") {
+        view.escalated_from = Some(n.clone());
+    }
+    if let Some(Term::NamedNode(n)) = sol.get("to") {
+        view.escalated_to = Some(n.clone());
+    }
+    if let Some(Term::Literal(lit)) = sol.get("reason") {
+        view.escalation_reason = TriggerSignal::try_from_str(lit.value());
+    }
+    if let Some(Term::Literal(lit)) = sol.get("base") {
+        if let Ok(n) = lit.value().parse() {
+            view.input_tokens_base = view.input_tokens_base.max(n);
         }
     }
-    // Existence: if no triples whatsoever attach to the IRI, treat as absent.
-    if !any_row || !session_exists(store, iri)? {
-        return Ok(None);
+    if let Some(Term::Literal(lit)) = sol.get("write") {
+        if let Ok(n) = lit.value().parse() {
+            view.input_tokens_cache_write = view.input_tokens_cache_write.max(n);
+        }
     }
-    Ok(Some(view))
+    if let Some(Term::Literal(lit)) = sol.get("hit") {
+        if let Ok(n) = lit.value().parse() {
+            view.input_tokens_cache_hit = view.input_tokens_cache_hit.max(n);
+        }
+    }
+    if let Some(Term::Literal(lit)) = sol.get("out") {
+        if let Ok(n) = lit.value().parse() {
+            view.output_tokens = view.output_tokens.max(n);
+        }
+    }
+    if let Some(Term::NamedNode(n)) = sol.get("cap") {
+        view.capability = Some(n.clone());
+    }
 }
 
 fn session_exists(store: &Store, iri: &NamedNode) -> Result<bool, SessionError> {

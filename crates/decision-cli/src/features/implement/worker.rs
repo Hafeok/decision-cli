@@ -25,6 +25,10 @@ pub(super) struct DispatchPayloadJson {
     pub bundle_hash: String,
     pub workspace_path: String,
     pub model_id: String,
+    /// FT-066 / ADR-033: the resolved capability's endpoint, pinned by
+    /// the dispatcher. The worker translates this plus `model_id` into
+    /// the right `ANTHROPIC_*` env vars before spawning `claude -p`.
+    pub endpoint: String,
     pub timeout_seconds: u32,
     /// FT-030 / ADR-027: role authority declaration. `None` when the
     /// orchestration store predates FT-030 (legacy slice-1 stores).

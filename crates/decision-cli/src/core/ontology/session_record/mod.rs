@@ -1,4 +1,4 @@
-//! Session escalation edges and cache-aware token breakdown (FT-057).
+//! Session escalation telemetry — edges plus cache-aware token breakdown (FT-057).
 //!
 //! Extends `dec:Session` (a.k.a. `dec:SessionRecord`) with bidirectional
 //! escalation chain membership plus the four token-count fields needed

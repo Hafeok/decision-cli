@@ -6,12 +6,13 @@ status: passing
 validates:
   features:
   - FT-058
-  adrs: []
+  adrs:
+  - ADR-036
 phase: 2
 runner: bash
 runner-args: tests/scripts/tc-104-catalog-bootstrap.sh
 runner-timeout: 180
-last-run: 2026-05-23T09:54:36.868576076+00:00
+last-run: 2026-05-23T16:10:19.845721788+00:00
 last-run-duration: 1.2s
 ---
 

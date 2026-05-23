@@ -15,18 +15,17 @@
 
 mod render;
 mod resolve;
+mod schema;
 
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
-use crate::core::handler::{Error as HandlerError, Request, Response};
-use crate::core::mcp::{ToolDescriptor, ToolHandler};
+use crate::core::handler::{Error as HandlerError, Request};
 use crate::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
 
 pub use render::{render_json, render_text};
+pub use schema::{input_schema, tool_descriptor};
 
 /// MCP tool name — referenced by `cli::verify` for the parity TC.
 pub const TOOL_NAME: &str = "dec_verify_env_show";
@@ -166,83 +165,6 @@ pub fn parse_request(req: &Request) -> Result<EnvShowRequest, HandlerError> {
 
 /// MCP tool descriptor — registered by the binary in `cli::mcp`.
 #[must_use]
-pub fn tool_descriptor() -> ToolDescriptor {
-    ToolDescriptor::new(
-        TOOL_NAME,
-        "Show a single dec:VerificationEnvironment artifact (FT-040 / ADR-028).",
-        input_schema(),
-        tool_handler(),
-    )
-    .with_output_schema(output_schema())
-}
-
-/// MCP handler closure — runs the single handler and renders the response.
-fn tool_handler() -> ToolHandler {
-    Arc::new(|req: Request| {
-        let parsed = parse_request(&req)?;
-        let outcome = run(&parsed)?;
-        let summary = format!(
-            "showed env {id} from {path}",
-            id = outcome.env.id,
-            path = outcome.path.display()
-        );
-        Ok(Response::with_summary(
-            json!({
-                "env": outcome.env,
-                "path": outcome.path,
-            }),
-            summary,
-        ))
-    })
-}
-
-/// JSON Schema for the MCP tool's structured output.
-fn output_schema() -> Value {
-    json!({
-        "type": "object",
-        "required": ["env", "path"],
-        "properties": {
-            "env": env_document_schema(),
-            "path": { "type": "string" },
-        },
-    })
-}
-
-/// JSON Schema fragment describing the [`EnvDocument`] shape.
-fn env_document_schema() -> Value {
-    json!({
-        "type": "object",
-        "required": ["id", "env_type", "safety_class", "allowed_ops"],
-        "properties": {
-            "id": { "type": "string" },
-            "env_type": { "type": "string" },
-            "safety_class": { "type": "string" },
-            "endpoint": { "type": "string" },
-            "allowed_ops": {
-                "type": "array",
-                "items": { "type": "string" },
-            },
-            "setup": { "type": "string" },
-            "teardown": { "type": "string" },
-        },
-    })
-}
-
-/// JSON Schema describing the MCP tool's input arguments.
-#[must_use]
-pub fn input_schema() -> Value {
-    json!({
-        "type": "object",
-        "required": ["id"],
-        "additionalProperties": false,
-        "properties": {
-            "id": { "type": "string", "minLength": 1 },
-            "format": { "type": "string", "enum": ["text", "json"] },
-            "workdir": { "type": "string" },
-        },
-    })
-}
-
 /// Validate the id format ahead of any I/O. FT-040 §Error handling:
 /// malformed ids surface as `InvalidArgument { field: "id" }` (exit 2),
 /// distinct from missing ids which surface as `ArtifactNotFound` (exit 1).
