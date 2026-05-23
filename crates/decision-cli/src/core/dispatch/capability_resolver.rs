@@ -49,6 +49,11 @@ pub struct ResolvedCapability {
     /// Version of the `dec:RoleBinding` artifact that produced this
     /// resolution.
     pub binding_version: u32,
+    /// `cost_cache_hit_per_m` (in `cost_currency` units) when the
+    /// capability supports prompt caching (FT-065). `None` indicates the
+    /// dispatcher MUST NOT emit Anthropic `cache_control` markers for
+    /// this capability — see [`crate::core::dispatch::caching::should_cache`].
+    pub cost_cache_hit_per_m: Option<String>,
 }
 
 /// Structured failures from [`resolve_default_capability`].
@@ -196,5 +201,6 @@ fn build_resolved(capability: &Capability, binding_version: u32) -> ResolvedCapa
         supports_tool_calling: capability.supports_tool_calling,
         configurable_effort: capability.configurable_effort.unwrap_or(false),
         binding_version,
+        cost_cache_hit_per_m: capability.cost_cache_hit_per_m.clone(),
     }
 }

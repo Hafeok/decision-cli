@@ -200,6 +200,45 @@ pub fn cache_hit_rate(s: &SessionView) -> f32 {
     (s.input_tokens_cache_hit as f32) / (denom as f32)
 }
 
+/// ADR-037 chain-wide cache-hit fitness metric (FT-065):
+/// `Σ cache_hit / Σ (base + cache_write + cache_hit)` across every
+/// session in `chain`. Returns `0.0` when the chain has no input
+/// tokens recorded — never `NaN`.
+///
+/// The target band per ADR-037 is `> 0.70`; a chain whose computed
+/// rate persistently falls below 0.70 indicates the cache breakpoint
+/// is misplaced.
+#[must_use]
+pub fn chain_cache_hit_rate(chain: &[SessionView]) -> f32 {
+    let (hits, denom) = chain.iter().fold((0u64, 0u64), |acc, s| {
+        let denom = s
+            .input_tokens_base
+            .saturating_add(s.input_tokens_cache_write)
+            .saturating_add(s.input_tokens_cache_hit);
+        (
+            acc.0.saturating_add(s.input_tokens_cache_hit),
+            acc.1.saturating_add(denom),
+        )
+    });
+    if denom == 0 {
+        return 0.0;
+    }
+    (hits as f32) / (denom as f32)
+}
+
+/// FT-065 §Outputs warning threshold per ADR-037. The dispatcher emits
+/// a warning when [`chain_cache_hit_rate`] across the last N
+/// Anthropic-escalated dispatches falls below this value.
+pub const CACHE_HIT_RATE_WARNING_THRESHOLD: f32 = 0.70;
+
+/// True iff `rate` falls strictly below the ADR-037 warning threshold.
+/// `0.0` (no data yet) does NOT trigger the warning — callers should
+/// check that at least one chain has run before evaluating.
+#[must_use]
+pub fn cache_hit_rate_below_threshold(rate: f32) -> bool {
+    rate > 0.0 && rate < CACHE_HIT_RATE_WARNING_THRESHOLD
+}
+
 fn load_session(store: &Store, iri: &NamedNode) -> Result<SessionView, SessionError> {
     load_session_optional(store, iri)?
         .ok_or_else(|| SessionError::NotFound(iri.as_str().to_string()))

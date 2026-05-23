@@ -2,7 +2,7 @@
 id: FT-065
 title: 'decision-cli: Anthropic prompt caching with cache breakpoint placement and cache-hit fitness metric'
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-054
 - FT-057
@@ -34,7 +34,6 @@ adrs:
 - ADR-036
 - ADR-037
 tests:
-
 - TC-114
 domains:
 - api

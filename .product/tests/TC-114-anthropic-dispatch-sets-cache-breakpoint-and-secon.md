@@ -2,7 +2,7 @@
 id: TC-114
 title: Anthropic dispatch sets cache breakpoint and second escalated session records cache_hit_input_tokens > 0
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-065
@@ -11,6 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test anthropic_cache_breakpoint
 runner-timeout: 180
+last-run: 2026-05-23T10:52:34.522527194+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

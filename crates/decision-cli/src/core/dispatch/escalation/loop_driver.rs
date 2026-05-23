@@ -6,6 +6,7 @@ use oxi_events::Mutation;
 
 use crate::core::bundle::Bundle;
 use crate::core::dispatch::capability_resolver::{resolve_default_capability, ResolvedCapability};
+use crate::core::dispatch::caching::{should_cache, split_bundle_for_caching, CacheableBlock};
 use crate::core::ontology::capability::{query_by_iri, CapabilityStatus};
 use crate::core::ontology::role_binding::active_for_role;
 use crate::StreamWriter;
@@ -59,6 +60,15 @@ pub trait WorkerRunner {
         prior_attempts: &[DispatchAttempt],
         session_id: &SessionId,
     ) -> Result<DispatchAttempt, EscalationError>;
+
+    /// Optional hook invoked by the dispatcher with the cache breakpoint
+    /// split per FT-065. The dispatcher calls this **before** [`Self::run`]
+    /// when [`should_cache`] returns true for the resolved capability;
+    /// otherwise the hook is not invoked. Workers that do not care about
+    /// caching (the default impl) ignore the blocks; the production
+    /// `AnthropicRouter` (FT-060) forwards them as `cache_control`
+    /// markers on the request.
+    fn on_cache_blocks(&mut self, _blocks: Vec<CacheableBlock>) {}
 }
 
 /// Mint a deterministic session IRI from `(role, bundle_hash, tier)`.
@@ -100,6 +110,15 @@ where
 
     loop {
         let session_id = mint_session_iri(role_id, &state.bundle.hash, state.tier);
+        // FT-065: emit cache_control markers only when the resolved
+        // capability has a non-null cost_cache_hit_per_m and is Anthropic.
+        // The split is deterministic; the prefix is byte-stable across
+        // attempts in the same chain (FT-065 §Invariants).
+        if should_cache(&state.capability) {
+            let prior_attempt = state.attempts.last();
+            let blocks = split_bundle_for_caching(&state.bundle, prior_attempt);
+            runner.on_cache_blocks(blocks);
+        }
         let attempt =
             runner.run(role_id, &state.bundle, &state.capability, &state.attempts, &session_id)?;
         let tokens = tokens_fn(&attempt);
@@ -243,5 +262,6 @@ fn resolve_capability_for_step(
         supports_tool_calling: cap.supports_tool_calling,
         configurable_effort: cap.configurable_effort.unwrap_or(false),
         binding_version: 0,
+        cost_cache_hit_per_m: cap.cost_cache_hit_per_m.clone(),
     })
 }

@@ -6,6 +6,7 @@
 //! sibling features never reach into each other for the lifecycle
 //! primitives that gate `dec implement` completion.
 
+pub mod caching;
 pub mod capability_resolver;
 pub mod escalation;
 pub mod group;
@@ -14,6 +15,7 @@ pub mod params;
 pub mod pause;
 pub mod quads;
 
+pub use caching::{should_cache, split_bundle_for_caching, CacheableBlock};
 pub use capability_resolver::{resolve_default_capability, ResolvedCapability, ResolverError};
 pub use params::{compute_reasoning_effort, ReasoningEffort};
 pub use escalation::{

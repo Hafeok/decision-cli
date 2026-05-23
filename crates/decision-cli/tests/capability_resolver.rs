@@ -205,6 +205,7 @@ fn happy_path_verifier_resolves_to_code_writer() {
         supports_tool_calling: true,
         configurable_effort: false,
         binding_version: 1,
+        cost_cache_hit_per_m: None,
     };
     assert_eq!(resolved, expected);
 }

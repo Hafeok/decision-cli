@@ -115,6 +115,7 @@ mod tests {
             supports_tool_calling: true,
             configurable_effort: false,
             binding_version: 1,
+            cost_cache_hit_per_m: None,
         }
     }
 
