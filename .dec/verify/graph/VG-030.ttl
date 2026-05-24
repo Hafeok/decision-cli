@@ -1,0 +1,45 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-030>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-044> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-030/0> <https://decision-cli.dev/ns/step/VG-030/1> <https://decision-cli.dev/ns/step/VG-030/2> <https://decision-cli.dev/ns/step/VG-030/3> <https://decision-cli.dev/ns/step/VG-030/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-030/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec && touch .dec/graph.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-030/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
+    dec:command "dec verify graph create --id VG-001 --output .dec/graph.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-030/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
+    dec:command "dec verify step add VG-001 --type shell-command --field command='echo hello world' --field expect-exit-code=0" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-030/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-066> ;
+    dec:command "dec verify step add VG-001 --type sparql-assertion --field query='PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s WHERE { ?s dec:steps ?o }' --field target='.dec/store'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-030/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-067> ;
+    dec:command "dec verify step add VG-001 --type file-assertion --field path='.dec/graph.ttl'" ;
+    dec:expectExitCode 0 .

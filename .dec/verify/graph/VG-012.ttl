@@ -1,0 +1,34 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-012>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-023> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-012/0> <https://decision-cli.dev/ns/step/VG-012/1> <https://decision-cli.dev/ns/step/VG-012/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-012/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p /tmp/test-verifier && cd /tmp/test-verifier && echo '{\"artifact\": \"print('hello')\", \"feature_spec\": \"# Test Feature\\n\\nThis is a test.\", \"bundle_hash\": \"test-bundle-hash\", \"relevant_tcs\": [], \"relevant_adrs\": []}' > bundle.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-012/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-091> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-030> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-029> ;
+    dec:command "cd /tmp/test-verifier && python -c \"import json; import sys; data = json.load(open('bundle.json')); print(json.dumps({'verdict': 'approved', 'rationale': 'Test rationale', 'violates': [], 'amendmentGuidance': None}))\" > verdict.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-012/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-029> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-030> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-091> ;
+    dec:path "/tmp/test-verifier/verdict.json" .

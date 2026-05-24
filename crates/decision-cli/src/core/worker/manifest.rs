@@ -29,19 +29,30 @@ pub struct WorkerEntry {
 
 /// Static manifest. Adding a role here means editing `manifest.toml`
 /// (for the bytes / hash) and this constant (for the runtime view).
-pub const MANIFEST: &[WorkerEntry] = &[WorkerEntry {
-    role: "code-writer",
-    console_script: "code-writer",
-    python_module: "code_writer.main",
-    install_kind: "uv-tool",
-    source_hint: "./workers/code-writer",
-    env_var: "CODE_WRITER_CMD",
-}];
+pub const MANIFEST: &[WorkerEntry] = &[
+    WorkerEntry {
+        role: "code-writer",
+        console_script: "code-writer",
+        python_module: "code_writer.main",
+        install_kind: "uv-tool",
+        source_hint: "./workers/code-writer",
+        env_var: "CODE_WRITER_CMD",
+    },
+    WorkerEntry {
+        role: "verify-graph-author",
+        console_script: "verify-graph-author",
+        python_module: "verify_graph_author",
+        install_kind: "uv-tool",
+        source_hint: "./workers/verify-graph-author",
+        env_var: "VERIFY_GRAPH_AUTHOR_CMD",
+    },
+];
 
-/// Slice-1 active-role set for the bundled `engineering-development`
-/// stream. Future slices will derive this from the value stream's value
-/// actions rather than hardcoding it.
-pub const ACTIVE_ROLES_ENGINEERING_DEVELOPMENT: &[&str] = &["code-writer"];
+/// Active-role set for the bundled `engineering-development` stream.
+/// Future slices will derive this from the value stream's value actions
+/// rather than hardcoding it. Includes the verify-graph-author worker
+/// added by FT-067 so `dec init` / `dec doctor` preflight surfaces it.
+pub const ACTIVE_ROLES_ENGINEERING_DEVELOPMENT: &[&str] = &["code-writer", "verify-graph-author"];
 
 /// Look up the manifest entry for a role, if any.
 #[must_use]

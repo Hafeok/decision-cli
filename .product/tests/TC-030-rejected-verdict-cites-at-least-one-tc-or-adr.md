@@ -13,8 +13,8 @@ phase: 2
 runner: cargo-test
 runner-args: --package decision-cli --test verdict_rejected_cites
 runner-timeout: 120
-last-run: 2026-05-23T18:00:16.213042199+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-24T19:14:23.673322616+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description

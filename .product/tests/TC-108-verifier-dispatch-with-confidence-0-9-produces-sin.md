@@ -11,7 +11,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test dispatch_no_escalation
 runner-timeout: 180
-last-run: 2026-05-23T18:00:12.319510530+00:00
+last-run: 2026-05-24T19:14:20.003667351+00:00
 last-run-duration: 0.2s
 ---
 

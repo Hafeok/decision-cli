@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-094-env-new-duplicate-id.sh
 runner-timeout: 120
-last-run: 2026-05-23T17:59:45.707009194+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-24T19:13:54.892973793+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose

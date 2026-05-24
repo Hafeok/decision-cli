@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_055_dec_init_seeds_ephemeral_cli_env_idempotently
 runner-timeout: 120
-last-run: 2026-05-23T17:59:44.463472463+00:00
+last-run: 2026-05-24T19:13:53.689497560+00:00
 last-run-duration: 0.3s
 ---
 

@@ -129,8 +129,10 @@ impl From<CapabilityReadError> for ResolverError {
 
 /// Roles whose workers structurally require tool calling. A capability
 /// resolved to one of these roles with `supports_tool_calling = false`
-/// is rejected at resolution time.
-const TOOL_REQUIRING_ROLES: &[&str] = &["implementer", "verifier"];
+/// is rejected at resolution time. FT-068 adds `verify-graph-author`
+/// because the Python worker emits structured GraphProposal output via
+/// tool calls on the Scaleway endpoint.
+const TOOL_REQUIRING_ROLES: &[&str] = &["implementer", "verifier", "verify-graph-author"];
 
 /// Resolve the default capability for `role_id` against `store`.
 ///

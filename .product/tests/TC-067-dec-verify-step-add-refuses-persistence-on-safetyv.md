@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_067_dec_verify_step_add_refuses_persistence_on_safetyv
 runner-timeout: 120
-last-run: 2026-05-23T17:59:55.770418918+00:00
+last-run: 2026-05-24T19:14:04.180617388+00:00
 last-run-duration: 0.4s
 ---
 

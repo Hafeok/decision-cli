@@ -1,0 +1,55 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-022>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-031> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-022/0> <https://decision-cli.dev/ns/step/VG-022/1> <https://decision-cli.dev/ns/step/VG-022/2> <https://decision-cli.dev/ns/step/VG-022/3> <https://decision-cli.dev/ns/step/VG-022/4> <https://decision-cli.dev/ns/step/VG-022/5> <https://decision-cli.dev/ns/step/VG-022/6> ) .
+
+<https://decision-cli.dev/ns/step/VG-022/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p ./test-worker" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-022/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch ./test-worker/__init__.py && echo \"from pydantic import BaseModel\\nfrom typing import Literal\\n\\nFeedbackClass = Literal[\\\"gap\\\", \\\"contradiction\\\", \\\"unimplementable\\\",\\n                          \\\"scope-issue\\\", \\\"defect\\\", \\\"capability-request\\\"]\\n\\nclass FeedbackEmission(BaseModel):\\n    feedback_class: FeedbackClass\\n    severity: Literal[\\\"low\\\", \\\"medium\\\", \\\"high\\\"]\\n    evidence: str           # ≥ 20 chars\\n    recommendation: str | None = None\\n    target_role_override: str | None = None\\n    blocking: bool | None = None     # None = use class default\\n    disposition_rationale: str | None = None  # required if blocking != default\\n\\ndef emit_feedback(emission: FeedbackEmission) -> None:\\n    pass\" > ./test-worker/feedback.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-022/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"import json\\n\\n# Mock worker emitting feedback\\nemission = {\\n    \\\"feedback_class\\\": \\\"gap\\\",\\n    \\\"severity\\\": \\\"high\\\",\\n    \\\"evidence\\\": \\\"Test evidence string with more than twenty characters\\\",\\n    \\\"recommendation\\\": \\\"Recommendation here\\\",\\n    \\\"target_role_override\\\": \\\"test-role\\\",\\n    \\\"blocking\\\": True,\\n    \\\"disposition_rationale\\\": \\\"Rationale for blocking\\\"\\n}\\n\\nprint('__DEC_FEEDBACK__' + json.dumps(emission))\" > ./test-worker/mock_worker.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-022/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-041> ;
+    dec:command "python3 ./test-worker/mock_worker.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-022/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-022/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"PREFIX dec: <https://dec.k8s.io/ns#>\\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\\nSELECT ?s WHERE { ?s a dec:Feedback . }\" > ./query.rq" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-022/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-041> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://dec.k8s.io/ns#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nSELECT ?s WHERE { ?s a dec:Feedback . }" .

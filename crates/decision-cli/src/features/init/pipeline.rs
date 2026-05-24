@@ -234,6 +234,10 @@ fn seed_verification_envs(orchestration: &Store) -> Result<(), InitError> {
 fn seed_role_catalog(orchestration: &Store) -> Result<(), InitError> {
     let mut quads = role_catalog::verifier_seed_quads();
     quads.extend(role_catalog::implementer_seed_quads());
+    // FT-068 — verify-graph-author role + minimal Capability + RoleBinding
+    // so `dec verify graph generate` resolves a default capability
+    // immediately after `dec init` (no operator step required).
+    quads.extend(role_catalog::verify_graph_author_seed_quads());
     orchestration
         .transaction(|mut tx| {
             for q in &quads {

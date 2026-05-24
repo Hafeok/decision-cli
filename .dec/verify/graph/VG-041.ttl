@@ -1,0 +1,37 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-041>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-056> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-041/0> <https://decision-cli.dev/ns/step/VG-041/1> <https://decision-cli.dev/ns/step/VG-041/2> <https://decision-cli.dev/ns/step/VG-041/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-041/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p test_bundle && cd test_bundle && echo '---\nname: test-bundle\nversion: 0.1.0\nfocal: dec:Capability\nstakes: routine\n---' > bundle.yaml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-041/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test_bundle && dec bundle compose --input bundle.yaml --output composed_bundle.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-041/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-102> ;
+    dec:target "test_bundle/composed_bundle.ttl" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ns/dec#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nSELECT ?s ?p ?o WHERE { ?s ?p ?o . FILTER(?p = dec:stakes) }" .
+
+<https://decision-cli.dev/ns/step/VG-041/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-102> ;
+    dec:target "test_bundle/composed_bundle.ttl" ;
+    dec:query "PREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX dec: <https://decisionframework.org/ns/dec#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?shape ?property WHERE { ?shape sh:property ?property . ?property sh:path dec:stakes . ?property sh:datatype xsd:string . ?property sh:minCount 1 . ?property sh:maxCount 1 . ?property sh:in (\"routine\" \"elevated\" \"foundational\") }" .

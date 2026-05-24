@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-010>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-017> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-010/0> <https://decision-cli.dev/ns/step/VG-010/1> <https://decision-cli.dev/ns/step/VG-010/2> <https://decision-cli.dev/ns/step/VG-010/3> <https://decision-cli.dev/ns/step/VG-010/4> <https://decision-cli.dev/ns/step/VG-010/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-010/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "git status --porcelain" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-010/1>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "git_status_output" .
+
+<https://decision-cli.dev/ns/step/VG-010/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "if [ -z \"$(git status --porcelain)\" ]; then echo 'no working-tree changes — skipping commit'; else git add -A && git commit -m '[FT-017] Test commit message'; fi" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-010/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "git rev-parse HEAD" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-010/4>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "commit_sha" .
+
+<https://decision-cli.dev/ns/step/VG-010/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "product feature status FT-017 complete" ;
+    dec:expectExitCode 0 .

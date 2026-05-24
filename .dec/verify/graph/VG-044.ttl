@@ -1,0 +1,65 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-044>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-057> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-044/0> <https://decision-cli.dev/ns/step/VG-044/1> <https://decision-cli.dev/ns/step/VG-044/2> <https://decision-cli.dev/ns/step/VG-044/3> <https://decision-cli.dev/ns/step/VG-044/4> <https://decision-cli.dev/ns/step/VG-044/5> <https://decision-cli.dev/ns/step/VG-044/6> <https://decision-cli.dev/ns/step/VG-044/7> ) .
+
+<https://decision-cli.dev/ns/step/VG-044/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-044/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store/session.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-044/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-103> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ontology#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?property WHERE {\n  ?shape sh:property ?property .\n  ?property sh:path dec:escalated_from .\n}" .
+
+<https://decision-cli.dev/ns/step/VG-044/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-103> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ontology#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?property WHERE {\n  ?shape sh:property ?property .\n  ?property sh:path dec:escalated_to .\n}" .
+
+<https://decision-cli.dev/ns/step/VG-044/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-103> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ontology#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?property WHERE {\n  ?shape sh:property ?property .\n  ?property sh:path dec:escalation_reason .\n}" .
+
+<https://decision-cli.dev/ns/step/VG-044/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-103> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ontology#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?property WHERE {\n  ?shape sh:property ?property .\n  ?property sh:path dec:input_tokens_base .\n}" .
+
+<https://decision-cli.dev/ns/step/VG-044/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-103> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ontology#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?property WHERE {\n  ?shape sh:property ?property .\n  ?property sh:path dec:input_tokens_cache_write .\n}" .
+
+<https://decision-cli.dev/ns/step/VG-044/7>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-103> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ontology#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?property WHERE {\n  ?shape sh:property ?property .\n  ?property sh:path dec:input_tokens_cache_hit .\n}" .

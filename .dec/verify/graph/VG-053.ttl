@@ -1,0 +1,80 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-053>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-066> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-053/0> <https://decision-cli.dev/ns/step/VG-053/1> <https://decision-cli.dev/ns/step/VG-053/2> <https://decision-cli.dev/ns/step/VG-053/3> <https://decision-cli.dev/ns/step/VG-053/4> <https://decision-cli.dev/ns/step/VG-053/5> <https://decision-cli.dev/ns/step/VG-053/6> <https://decision-cli.dev/ns/step/VG-053/7> <https://decision-cli.dev/ns/step/VG-053/8> <https://decision-cli.dev/ns/step/VG-053/9> ) .
+
+<https://decision-cli.dev/ns/step/VG-053/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-116> ;
+    dec:command "mkdir -p /tmp/test-workspace && cd /tmp/test-workspace && echo '{\"model_id\": \"claude-opus-4-7\", \"endpoint\": \"anthropic\"}' > payload.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-116> ;
+    dec:command "cd /tmp/test-workspace && python3 -c \"import os; import json; payload = json.load(open('payload.json')); env = os.environ.copy(); env['ANTHROPIC_MODEL'] = payload['model_id']; print(json.dumps(env))\" > env_output.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-115> ;
+    dec:command "cd /tmp/test-workspace && echo '{\"model_id\": \"qwen3-coder-30b-a3b-instruct\", \"endpoint\": \"scaleway\"}' > payload2.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-115> ;
+    dec:command "cd /tmp/test-workspace && SCW_SECRET_KEY=test-key python3 -c \"import os; import json; payload = json.load(open('payload2.json')); env = os.environ.copy(); env['SCW_SECRET_KEY'] = 'test-key'; env['ANTHROPIC_BASE_URL'] = 'http://localhost:8787'; env['ANTHROPIC_AUTH_TOKEN'] = 'test-key'; env['ANTHROPIC_MODEL'] = payload['model_id']; env['ANTHROPIC_DEFAULT_HAIKU_MODEL'] = payload['model_id']; env['ANTHROPIC_SMALL_FAST_MODEL'] = payload['model_id']; env['ANTHROPIC_DEFAULT_SONET_MODEL'] = payload['model_id']; env['ANTHROPIC_DEFAULT_OPUS_MODEL'] = payload['model_id']; print(json.dumps(env))\" > scaleway_env_output.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-117> ;
+    dec:command "cd /tmp/test-workspace && echo '{\"model_id\": \"qwen3-coder-30b-a3b-instruct\", \"endpoint\": \"scaleway\"}' > payload3.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-117> ;
+    dec:command "cd /tmp/test-workspace && python3 -c \"import os; import json; payload = json.load(open('payload3.json')); env = os.environ.copy(); env['SCW_SECRET_KEY'] = ''; print('Missing SCW_SECRET_KEY'); raise Exception('Missing SCW_SECRET_KEY')\" 2>&1 || true" ;
+    dec:expectExitCode 1 .
+
+<https://decision-cli.dev/ns/step/VG-053/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-118> ;
+    dec:command "cd /tmp/test-workspace && find . -name \"*.py\" -exec grep -l \"_claude_env_for\" {} \\;" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-118> ;
+    dec:command "cd /tmp/test-workspace && grep -r \"ANTHROPIC_MODEL\" . --include=\"*.py\" | head -n 10" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-118> ;
+    dec:command "cd /tmp/test-workspace && grep -r \"SCW_SECRET_KEY\" . --include=\"*.py\" | head -n 10" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-053/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/test-workspace && ls -la" ;
+    dec:expectExitCode 0 .

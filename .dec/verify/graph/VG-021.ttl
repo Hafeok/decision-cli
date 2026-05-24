@@ -1,0 +1,38 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-021>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-035> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-021/0> <https://decision-cli.dev/ns/step/VG-021/1> <https://decision-cli.dev/ns/step/VG-021/2> <https://decision-cli.dev/ns/step/VG-021/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-021/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-054> ;
+    dec:command "mkdir -p test-workspace && cd test-workspace && dec init" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-021/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-054> ;
+    dec:path ".dec/verify/env/ENV-001-ephemeral-cli.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-021/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-055> ;
+    dec:path ".dec/verify/env/ENV-001-ephemeral-cli.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-021/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-054> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-055> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?env ?envType ?safetyClass WHERE { ?env a dec:VerificationEnvironment . ?env dec:envType ?envType . ?env dec:safetyClass ?safetyClass . FILTER(?envType = 'ephemeral-tempdir') }" .

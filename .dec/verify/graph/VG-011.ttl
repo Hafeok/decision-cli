@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-011>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-018> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-011/0> <https://decision-cli.dev/ns/step/VG-011/1> <https://decision-cli.dev/ns/step/VG-011/2> <https://decision-cli.dev/ns/step/VG-011/3> <https://decision-cli.dev/ns/step/VG-011/4> <https://decision-cli.dev/ns/step/VG-011/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-011/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-021> ;
+    dec:command "cd crates/decision-cli && cargo test --workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-011/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-020> ;
+    dec:path "crates/decision-cli/src/core" .
+
+<https://decision-cli.dev/ns/step/VG-011/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-020> ;
+    dec:path "crates/decision-cli/src/features" .
+
+<https://decision-cli.dev/ns/step/VG-011/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-020> ;
+    dec:command "cd crates/decision-cli && scripts/checks/vertical-slice-imports.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-011/4>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-021> ;
+    dec:path "crates/decision-cli/src/lib.rs" .
+
+<https://decision-cli.dev/ns/step/VG-011/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-021> ;
+    dec:path "crates/decision-cli/src/main.rs" .

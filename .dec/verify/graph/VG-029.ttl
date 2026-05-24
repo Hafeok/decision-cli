@@ -1,0 +1,91 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-029>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-041> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-029/0> <https://decision-cli.dev/ns/step/VG-029/1> <https://decision-cli.dev/ns/step/VG-029/2> <https://decision-cli.dev/ns/step/VG-029/3> <https://decision-cli.dev/ns/step/VG-029/4> <https://decision-cli.dev/ns/step/VG-029/5> <https://decision-cli.dev/ns/step/VG-029/6> <https://decision-cli.dev/ns/step/VG-029/7> <https://decision-cli.dev/ns/step/VG-029/8> <https://decision-cli.dev/ns/step/VG-029/9> <https://decision-cli.dev/ns/step/VG-029/10> <https://decision-cli.dev/ns/step/VG-029/11> ) .
+
+<https://decision-cli.dev/ns/step/VG-029/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
+    dec:command "dec verify graph new --verifies TC-051 --environment ENV-002" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-029/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
+    dec:path ".dec/verify/graph/VG-*.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-029/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s ?p ?o WHERE { ?s ?p ?o . FILTER(?s = <https://decision-cli.dev/ns/graph/VG-*> ) }" .
+
+<https://decision-cli.dev/ns/step/VG-029/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
+    dec:command "dec verify graph new --verifies TC-052 --environment ENV-002" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-029/4>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
+    dec:path ".dec/verify/graph/VG-*.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-029/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s ?p ?o WHERE { ?s ?p ?o . FILTER(?s = <https://decision-cli.dev/ns/graph/VG-*> ) }" .
+
+<https://decision-cli.dev/ns/step/VG-029/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-063> ;
+    dec:command "dec verify graph new --verifies TC-063 --environment ENV-002" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-029/7>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-063> ;
+    dec:path ".dec/verify/graph/VG-*.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-029/8>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-063> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s ?p ?o WHERE { ?s ?p ?o . FILTER(?s = <https://decision-cli.dev/ns/graph/VG-*> ) }" .
+
+<https://decision-cli.dev/ns/step/VG-029/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-095> ;
+    dec:command "dec verify graph new --verifies TC-095 --environment ENV-002" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-029/10>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-095> ;
+    dec:path ".dec/verify/graph/VG-*.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-029/11>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-095> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s ?p ?o WHERE { ?s ?p ?o . FILTER(?s = <https://decision-cli.dev/ns/graph/VG-*> ) }" .

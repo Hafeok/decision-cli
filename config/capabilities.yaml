@@ -50,6 +50,28 @@ capabilities:
     status: active
     version: 1
 
+  # --- Scaleway tier 1: verify-graph-author (FT-068) ----------------------
+  # Distinct capability id from `code-writer` so the init-time seed in
+  # `core::role_catalog::verify_graph_author_seed_quads` never collides
+  # with the YAML's `code-writer` row on `bootstrap_catalog.py` re-run.
+  # Same underlying Scaleway model — Qwen3-Coder is a fit for structured
+  # graph-proposal generation under tool calling.
+  - capability_id: verify-graph-author
+    endpoint: scaleway
+    model_identifier: qwen3-coder-30b-a3b-instruct
+    tier: 1
+    context_window: 128000
+    max_output: 32000
+    supports_vision: false
+    supports_tool_calling: true
+    cost_input_per_m: "0.20"
+    cost_output_per_m: "0.80"
+    cost_currency: EUR
+    configurable_effort: false
+    exposes_reasoning_trace: false
+    status: active
+    version: 1
+
   # --- Scaleway tier 2: heavy code (devstral) ------------------------------
   - capability_id: code-writer-heavy
     endpoint: scaleway

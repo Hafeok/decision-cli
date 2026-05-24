@@ -11,7 +11,7 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-097-env-new-fixture-source-accepts.sh
 runner-timeout: 120
-last-run: 2026-05-23T18:00:08.010786381+00:00
+last-run: 2026-05-24T19:14:13.823446275+00:00
 last-run-duration: 0.3s
 ---
 

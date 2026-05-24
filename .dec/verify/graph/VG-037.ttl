@@ -1,0 +1,60 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-037>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-050> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-037/0> <https://decision-cli.dev/ns/step/VG-037/1> <https://decision-cli.dev/ns/step/VG-037/2> <https://decision-cli.dev/ns/step/VG-037/3> <https://decision-cli.dev/ns/step/VG-037/4> <https://decision-cli.dev/ns/step/VG-037/5> <https://decision-cli.dev/ns/step/VG-037/6> ) .
+
+<https://decision-cli.dev/ns/step/VG-037/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec && touch .dec/config.toml" .
+
+<https://decision-cli.dev/ns/step/VG-037/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-085> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-084> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-083> ;
+    dec:command "dec feature create --id FT-050-test --title 'Test Feature for FT-050' --description 'A test feature to verify auto-dispatch behavior'" .
+
+<https://decision-cli.dev/ns/step/VG-037/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-083> ;
+    dec:command "dec feature link-tc --feature FT-050-test --tc TC-083" .
+
+<https://decision-cli.dev/ns/step/VG-037/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-084> ;
+    dec:command "dec feature link-tc --feature FT-050-test --tc TC-084" .
+
+<https://decision-cli.dev/ns/step/VG-037/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-085> ;
+    dec:command "dec feature link-tc --feature FT-050-test --tc TC-085" .
+
+<https://decision-cli.dev/ns/step/VG-037/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-085> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-084> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-083> ;
+    dec:command "dec verify graph generate --feature FT-050-test --environment ENV-002 --dry-run" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-037/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-083> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-084> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-085> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision.test/ns#> SELECT ?s WHERE { ?s a dec:VerifyGraphAuthorDispatchEvent . ?s dec:feature ?feature . ?feature dec:id 'FT-050-test' . ?s dec:environment ?env . ?env dec:id 'ENV-002' . }" .

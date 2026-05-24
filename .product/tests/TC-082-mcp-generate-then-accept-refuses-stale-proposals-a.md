@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: tc_082_mcp_generate_then_accept_refuses_stale_proposals_a
 runner-timeout: 120
-last-run: 2026-05-23T18:00:03.708451528+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-24T19:14:10.271430129+00:00
+last-run-duration: 0.4s
 ---
 
 ## Premise

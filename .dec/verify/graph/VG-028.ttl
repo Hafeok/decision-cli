@@ -1,0 +1,77 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-028>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-042> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-028/0> <https://decision-cli.dev/ns/step/VG-028/1> <https://decision-cli.dev/ns/step/VG-028/2> <https://decision-cli.dev/ns/step/VG-028/3> <https://decision-cli.dev/ns/step/VG-028/4> <https://decision-cli.dev/ns/step/VG-028/5> <https://decision-cli.dev/ns/step/VG-028/6> <https://decision-cli.dev/ns/step/VG-028/7> <https://decision-cli.dev/ns/step/VG-028/8> <https://decision-cli.dev/ns/step/VG-028/9> ) .
+
+<https://decision-cli.dev/ns/step/VG-028/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec verify graph create --id VG-001 --verifies FT-038 --environment ENV-002 --steps 3" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec verify graph create --id VG-002 --verifies TC-051 --environment ENV-002 --steps 2" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec verify graph create --id VG-003 --verifies FT-042 --environment ENV-001 --steps 1" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?graph ?verifies ?environment ?stepCount WHERE { ?graph a dec:VerificationGraph ; dec:verifies ?verifies ; dec:targetsEnvironment ?environment ; dec:stepCount ?stepCount . } ORDER BY ?graph" .
+
+<https://decision-cli.dev/ns/step/VG-028/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
+    dec:command "dec verify graph list --format table" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-064> ;
+    dec:command "dec verify graph list --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
+    dec:command "dec verify graph list --verifies FT-038 --format table" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
+    dec:command "dec verify graph list --environment ENV-002 --format table" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-028/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-064> ;
+    dec:command "dec verify graph list --verifies TC-051 --format json" ;
+    dec:expectExitCode 0 .

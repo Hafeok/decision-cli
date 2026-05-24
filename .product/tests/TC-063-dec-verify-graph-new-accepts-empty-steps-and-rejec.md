@@ -10,8 +10,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_063_dec_verify_graph_new_accepts_empty_steps_and_rejec
 runner-timeout: 120
-last-run: 2026-05-23T17:59:50.834933574+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-24T19:13:59.513272896+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

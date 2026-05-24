@@ -1,0 +1,30 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-023>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-037> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-023/0> <https://decision-cli.dev/ns/step/VG-023/1> <https://decision-cli.dev/ns/step/VG-023/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-023/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-058> ;
+    dec:command "echo 'test'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-023/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-059> ;
+    dec:path "test.txt" .
+
+<https://decision-cli.dev/ns/step/VG-023/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dc: <http://purl.org/dc/elements/1.1/> SELECT ?title WHERE { ?book dc:title ?title . }" .

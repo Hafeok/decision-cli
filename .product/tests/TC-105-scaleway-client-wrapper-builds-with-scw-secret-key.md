@@ -11,7 +11,7 @@ phase: 2
 runner: pytest
 runner-args: workers/_shared/tests/test_scaleway_client.py
 runner-timeout: 120
-last-run: 2026-05-23T18:00:11.431804643+00:00
+last-run: 2026-05-24T19:14:16.831662836+00:00
 last-run-duration: 0.4s
 ---
 

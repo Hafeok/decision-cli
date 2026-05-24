@@ -11,8 +11,8 @@ phase: 2
 runner: pytest
 runner-args: workers/_shared/tests/test_model_router.py
 runner-timeout: 60
-last-run: 2026-05-23T18:00:11.823551315+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-24T19:14:17.204705470+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

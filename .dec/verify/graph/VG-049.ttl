@@ -1,0 +1,86 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-049>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-062> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-049/0> <https://decision-cli.dev/ns/step/VG-049/1> <https://decision-cli.dev/ns/step/VG-049/2> <https://decision-cli.dev/ns/step/VG-049/3> <https://decision-cli.dev/ns/step/VG-049/4> <https://decision-cli.dev/ns/step/VG-049/5> <https://decision-cli.dev/ns/step/VG-049/6> <https://decision-cli.dev/ns/step/VG-049/7> <https://decision-cli.dev/ns/step/VG-049/8> <https://decision-cli.dev/ns/step/VG-049/9> <https://decision-cli.dev/ns/step/VG-049/10> <https://decision-cli.dev/ns/step/VG-049/11> ) .
+
+<https://decision-cli.dev/ns/step/VG-049/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p test-workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec init --name test-chain" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec graph create --name escalation-test" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec role create --name test-role --capability default-capability" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec escalation-step create --role test-role --trigger stakes_routine --capability escalate-to-higher" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec bundle create --name initial-bundle --stakes Routine" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-109> ;
+    dec:command "cd test-workspace && dec dispatch --role test-role --bundle initial-bundle" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-110> ;
+    dec:command "cd test-workspace && dec session list" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-111> ;
+    dec:command "cd test-workspace && dec session show --session-id $(dec session list | grep -o '[a-zA-Z0-9]\\{32\\}')" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec bundle list" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/10>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec bundle show --bundle-id $(dec bundle list | grep -o '[a-zA-Z0-9]\\{32\\}')" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-049/11>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec sparql --query 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }' --store .dec/store" ;
+    dec:expectExitCode 0 .

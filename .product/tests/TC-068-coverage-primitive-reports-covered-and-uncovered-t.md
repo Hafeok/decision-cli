@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test tc_068_coverage_primitive_reports_covered_and_uncovered_t
 runner-timeout: 120
-last-run: 2026-05-23T17:59:57.707512474+00:00
+last-run: 2026-05-24T19:14:05.812721898+00:00
 last-run-duration: 0.2s
 ---
 

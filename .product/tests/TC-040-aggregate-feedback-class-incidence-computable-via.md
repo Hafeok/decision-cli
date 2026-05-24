@@ -11,7 +11,7 @@ phase: 2
 runner: bash
 runner-args: scripts/checks/feedback-incidence-sparql.sh
 runner-timeout: 60
-last-run: 2026-05-23T17:59:40.326294673+00:00
+last-run: 2026-05-24T19:13:49.714412618+00:00
 last-run-duration: 0.1s
 ---
 

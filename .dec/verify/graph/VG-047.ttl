@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-047>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-063> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-047/0> <https://decision-cli.dev/ns/step/VG-047/1> <https://decision-cli.dev/ns/step/VG-047/2> <https://decision-cli.dev/ns/step/VG-047/3> <https://decision-cli.dev/ns/step/VG-047/4> <https://decision-cli.dev/ns/step/VG-047/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-047/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p test-workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-047/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec init --name test-bundle" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-047/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && echo '{\"stakes\": \"routine\", \"role\": \"architect\"}' > bundle.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-047/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-112> ;
+    dec:command "cd test-workspace && dec dispatch --bundle bundle.json --capability standard-reasoning" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-047/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && ls -la" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-047/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-112> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <http://decisionsystem.org/dec#>\nSELECT ?payload WHERE { ?s dec:dispatchPayload ?payload . }" .

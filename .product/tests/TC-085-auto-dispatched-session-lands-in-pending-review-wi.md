@@ -10,7 +10,7 @@ phase: 2
 runner: cargo-test
 runner-args: tc_085_auto_dispatched_session_lands_in_pending_review_wi
 runner-timeout: 120
-last-run: 2026-05-23T18:00:05.736990345+00:00
+last-run: 2026-05-24T19:14:11.893038389+00:00
 last-run-duration: 0.3s
 ---
 

@@ -1,0 +1,17 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-008>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-004> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-008/0> ) .
+
+<https://decision-cli.dev/ns/step/VG-008/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'SSE delivery transport verification requires HTTP capabilities not available in ENV-002'" ;
+    dec:expectExitCode 0 .

@@ -10,8 +10,8 @@ phase: 1
 runner: pytest
 runner-args: workers/code-writer/tests/test_claude_env_routing.py::test_anthropic_env
 runner-timeout: 60
-last-run: 2026-05-23T18:00:14.922758228+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-24T19:14:22.584356516+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

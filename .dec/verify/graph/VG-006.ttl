@@ -1,0 +1,33 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-006>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-019> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-006/0> <https://decision-cli.dev/ns/step/VG-006/1> <https://decision-cli.dev/ns/step/VG-006/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-006/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-027> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-088> ;
+    dec:command "mkdir -p /tmp/test-workspace && cd /tmp/test-workspace && dec init" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-006/1>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-027> ;
+    dec:target "/tmp/test-workspace/.dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/dec#> SELECT ?role WHERE { ?role a dec:Role . ?role dec:roleId \"verifier\" . }" .
+
+<https://decision-cli.dev/ns/step/VG-006/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-088> ;
+    dec:target "/tmp/test-workspace/.dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/dec#> SELECT ?role ?outputType WHERE { ?role a dec:Role . ?role dec:roleId \"verifier\" . ?role dec:roleOutputType ?outputType . FILTER(?outputType = <https://decisionframework.org/dec#VerificationVerdict>) }" .

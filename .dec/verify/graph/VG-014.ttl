@@ -1,0 +1,42 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-014>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-025> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-014/0> <https://decision-cli.dev/ns/step/VG-014/1> <https://decision-cli.dev/ns/step/VG-014/2> <https://decision-cli.dev/ns/step/VG-014/3> <https://decision-cli.dev/ns/step/VG-014/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-014/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p test-workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-014/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec init --name test-stream" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-014/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec session new --type action --name test-action-session" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-014/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && dec session new --type interpretation --name test-interp-session" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-014/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-031> ;
+    dec:command "cd test-workspace && dec session show test-action-session" ;
+    dec:expectExitCode 0 .

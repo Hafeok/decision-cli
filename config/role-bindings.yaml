@@ -66,3 +66,16 @@ role_bindings:
     escalation_steps: []
     version: 1
     active: true
+
+  # FT-068 — verify-graph-author binding. Seeded at `dec init` time via
+  # the embedded baseline in `core::role_catalog::verify_graph_author_seed_quads`
+  # so `dec verify graph generate` resolves a capability immediately on a
+  # fresh tree; this YAML row mirrors the embedded baseline so
+  # `bootstrap_catalog.py` is idempotent on existing trees. No escalation
+  # chain: ADR-030 §7 keeps Level-3 (human review) as the only failure
+  # mode for the verify-graph-author role.
+  - role_id: verify-graph-author
+    default_capability: verify-graph-author
+    escalation_steps: []
+    version: 1
+    active: true

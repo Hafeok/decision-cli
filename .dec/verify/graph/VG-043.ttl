@@ -1,0 +1,44 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-043>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-058> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-043/0> <https://decision-cli.dev/ns/step/VG-043/1> <https://decision-cli.dev/ns/step/VG-043/2> <https://decision-cli.dev/ns/step/VG-043/3> <https://decision-cli.dev/ns/step/VG-043/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-043/0>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-104> ;
+    dec:path "config/capabilities.yaml" .
+
+<https://decision-cli.dev/ns/step/VG-043/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-104> ;
+    dec:path "config/role-bindings.yaml" .
+
+<https://decision-cli.dev/ns/step/VG-043/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-104> ;
+    dec:command "python scripts/bootstrap_catalog.py --graph-path .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-043/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-104> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://dec.k8s.io/ns#> SELECT ?s WHERE { ?s a dec:Capability . }" .
+
+<https://decision-cli.dev/ns/step/VG-043/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-104> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://dec.k8s.io/ns#> SELECT ?s WHERE { ?s a dec:RoleBinding . }" .

@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-045>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-060> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-045/0> <https://decision-cli.dev/ns/step/VG-045/1> <https://decision-cli.dev/ns/step/VG-045/2> <https://decision-cli.dev/ns/step/VG-045/3> <https://decision-cli.dev/ns/step/VG-045/4> <https://decision-cli.dev/ns/step/VG-045/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-045/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find . -name \"model_router.py\" -type f" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-045/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find . -name \"tools.py\" -type f" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-045/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-106> ;
+    dec:path "workers/_shared/src/_shared/model_router.py" .
+
+<https://decision-cli.dev/ns/step/VG-045/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-106> ;
+    dec:path "workers/_shared/src/_shared/tools.py" .
+
+<https://decision-cli.dev/ns/step/VG-045/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-106> ;
+    dec:command "python -c \"from workers._shared.src._shared.model_router import build_router; print('ModelRouter import successful')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-045/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-106> ;
+    dec:command "python -c \"from workers._shared.src._shared.tools import OPENAI_TOOL_SCHEMA; print('Tools import successful')\"" ;
+    dec:expectExitCode 0 .

@@ -1,0 +1,45 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-042>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-059> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-042/0> <https://decision-cli.dev/ns/step/VG-042/1> <https://decision-cli.dev/ns/step/VG-042/2> <https://decision-cli.dev/ns/step/VG-042/3> <https://decision-cli.dev/ns/step/VG-042/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-042/0>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-105> ;
+    dec:path "workers/_shared/src/_shared/scaleway_client.py" .
+
+<https://decision-cli.dev/ns/step/VG-042/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-105> ;
+    dec:command "python -c \"import workers._shared.src._shared.scaleway_client; print('Module imports successfully')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-042/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-105> ;
+    dec:command "python -c \"from workers._shared.src._shared.scaleway_client import SCALEWAY_BASE_URL, SCALEWAY_KEY_ENV; print(f'BASE_URL: {SCALEWAY_BASE_URL}, KEY_ENV: {SCALEWAY_KEY_ENV}')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-042/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-105> ;
+    dec:command "python -c \"from workers._shared.src._shared.scaleway_client import build_client, missing_key_error_or_none; print('Functions imported successfully')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-042/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-105> ;
+    dec:command "python -c \"from workers._shared.src._shared.scaleway_client import scaleway_chat_caller, scaleway_tool_caller, scaleway_json_caller; print('Callers imported successfully')\"" ;
+    dec:expectExitCode 0 .

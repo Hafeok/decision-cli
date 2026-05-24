@@ -1,0 +1,60 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-035>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-047> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-035/0> <https://decision-cli.dev/ns/step/VG-035/1> <https://decision-cli.dev/ns/step/VG-035/2> <https://decision-cli.dev/ns/step/VG-035/3> <https://decision-cli.dev/ns/step/VG-035/4> <https://decision-cli.dev/ns/step/VG-035/5> <https://decision-cli.dev/ns/step/VG-035/6> ) .
+
+<https://decision-cli.dev/ns/step/VG-035/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec && touch .dec/config.toml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-035/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec init --name test-feature --description \"Test feature for chain-integrity gate\" --output-dir ." ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-035/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-073> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-074> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-075> ;
+    dec:command "cd . && dec implement --feature test-feature --test-criteria TC-073,TC-074,TC-075" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-035/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-073> ;
+    dec:command "cd . && dec implement --feature test-feature --no-waiver" ;
+    dec:expectExitCode 1 .
+
+<https://decision-cli.dev/ns/step/VG-035/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-074> ;
+    dec:command "cd . && dec implement --feature test-feature --waive-coverage \"Testing waiver functionality for chain integrity gate\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-035/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-075> ;
+    dec:command "find .dec/verify/waivers -name \"*.ttl\" | head -n 1" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-035/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-075> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision.test/ontology#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nSELECT ?waiver WHERE { ?dispatch prov:used ?waiver . ?waiver a dec:CoverageWaiver . }" .

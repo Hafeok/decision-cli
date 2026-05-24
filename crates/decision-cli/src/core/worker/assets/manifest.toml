@@ -13,3 +13,11 @@ python_module  = "code_writer.main"
 install_kind   = "uv-tool"
 source_hint    = "./workers/code-writer"
 env_var        = "CODE_WRITER_CMD"
+
+[[worker]]
+role           = "verify-graph-author"
+console_script = "verify-graph-author"
+python_module  = "verify_graph_author"
+install_kind   = "uv-tool"
+source_hint    = "./workers/verify-graph-author"
+env_var        = "VERIFY_GRAPH_AUTHOR_CMD"

@@ -1,0 +1,148 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-016>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-020> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-016/0> <https://decision-cli.dev/ns/step/VG-016/1> <https://decision-cli.dev/ns/step/VG-016/2> <https://decision-cli.dev/ns/step/VG-016/3> <https://decision-cli.dev/ns/step/VG-016/4> <https://decision-cli.dev/ns/step/VG-016/5> <https://decision-cli.dev/ns/step/VG-016/6> <https://decision-cli.dev/ns/step/VG-016/7> <https://decision-cli.dev/ns/step/VG-016/8> <https://decision-cli.dev/ns/step/VG-016/9> <https://decision-cli.dev/ns/step/VG-016/10> <https://decision-cli.dev/ns/step/VG-016/11> <https://decision-cli.dev/ns/step/VG-016/12> <https://decision-cli.dev/ns/step/VG-016/13> <https://decision-cli.dev/ns/step/VG-016/14> <https://decision-cli.dev/ns/step/VG-016/15> <https://decision-cli.dev/ns/step/VG-016/16> <https://decision-cli.dev/ns/step/VG-016/17> <https://decision-cli.dev/ns/step/VG-016/18> <https://decision-cli.dev/ns/step/VG-016/19> <https://decision-cli.dev/ns/step/VG-016/20> <https://decision-cli.dev/ns/step/VG-016/21> ) .
+
+<https://decision-cli.dev/ns/step/VG-016/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p test-project/src && echo 'fn main() { println!(\"Hello, world!\"); }' > test-project/src/main.rs" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-project && cargo init --lib" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-project && echo '[dependencies]\\ndec = { path = \"../dec\" }' >> Cargo.toml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-029> ;
+    dec:command "cd test-project && mkdir -p src/ontology && echo 'use dec::core::ontology::verdict::{Verdict, VerdictArtifact}; fn main() { let _v = Verdict::Approved; let _va = VerdictArtifact::default(); }' > src/ontology/mod.rs" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-029> ;
+    dec:command "cd test-project && cargo check" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-030> ;
+    dec:command "cd test-project && echo 'use dec::core::ontology::verdict::{Verdict, VerdictArtifact}; fn main() { let _v = Verdict::Approved; let _va = VerdictArtifact::default(); }' > src/main.rs" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-030> ;
+    dec:command "cd test-project && cargo check" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-089> ;
+    dec:command "cd test-project && cargo run" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find . -name \"*.ttl\" | head -n 1" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "ls -la .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/10>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cat .dec/store/ontology.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/11>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"dec:VerificationVerdict\" .dec/store/ontology.ttl && echo \"Found VerificationVerdict class\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/12>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"dec:VerificationVerdictShape\" .dec/store/ontology.ttl && echo \"Found VerificationVerdictShape\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/13>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"dec:verdict\" .dec/store/ontology.ttl && echo \"Found verdict property\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/14>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"dec:rationale\" .dec/store/ontology.ttl && echo \"Found rationale property\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/15>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"dec:violates\" .dec/store/ontology.ttl && echo \"Found violates property\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/16>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"dec:amendmentGuidance\" .dec/store/ontology.ttl && echo \"Found amendmentGuidance property\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/17>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"verdict:approved\" .dec/store/ontology.ttl && echo \"Found approved literal\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/18>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"verdict:rejected\" .dec/store/ontology.ttl && echo \"Found rejected literal\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/19>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "grep -q \"verdict:amendment-required\" .dec/store/ontology.ttl && echo \"Found amendment-required literal\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/20>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find . -name \"*.ttl\" -exec grep -l \"dec:VerificationVerdict\" {} \\;" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-016/21>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find . -name \"*.ttl\" -exec grep -l \"dec:VerificationVerdictShape\" {} \\;" ;
+    dec:expectExitCode 0 .

@@ -6,6 +6,11 @@
 //! [`HandlerError::Internal`] with prefix `worker:` so test fixtures can
 //! grep them out.
 //!
+//! Worker discovery is delegated to [`crate::core::worker::resolve`]
+//! (FT-016 / FT-067 / TC-050) — this module owns only the spawn / stdin
+//! / stdout-parse plumbing. No inline `python3 -m verify_graph_author`
+//! literal survives here; that path is one branch of the shared chain.
+//!
 //! A thread-local override hook lets tests inject a deterministic
 //! `GraphProposal` without ever spawning a subprocess (TC-080 explicitly
 //! requires the subprocess NOT be spawned on the match path; TC-079 /
@@ -19,9 +24,14 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use serde_json::Value;
 
 use crate::core::handler::Error as HandlerError;
+use crate::core::worker::{resolve, role_entry, Resolution, ResolveInputs};
 
 use super::bundle::VerifyGraphAuthorInputJson;
 use super::proposal::GraphProposal;
+
+/// Manifest role id for the verify-graph-author worker (matches the
+/// `[[worker]]` entry in `core/worker/assets/manifest.toml`).
+const VERIFY_GRAPH_AUTHOR_ROLE: &str = "verify-graph-author";
 
 type MockFn = Box<dyn Fn(&VerifyGraphAuthorInputJson) -> Result<GraphProposal, HandlerError>>;
 
@@ -109,9 +119,14 @@ fn invoke_real_subprocess(
 }
 
 fn spawn_worker_subprocess() -> Result<std::process::Child, HandlerError> {
-    let mut cmd = Command::new("python3");
-    cmd.arg("-m")
-        .arg("verify_graph_author")
+    let argv = resolve_worker_argv()?;
+    let (head, tail) = argv
+        .split_first()
+        .ok_or_else(|| HandlerError::Internal {
+            detail: "worker: resolved verify-graph-author argv was empty".to_string(),
+        })?;
+    let mut cmd = Command::new(head);
+    cmd.args(tail)
         .arg("--stdin")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -122,6 +137,40 @@ fn spawn_worker_subprocess() -> Result<std::process::Child, HandlerError> {
              (set up a mock via verify_graph_generate::worker::install_mock for tests)"
         ),
     })
+}
+
+/// Resolve the verify-graph-author worker through the shared chain
+/// (FT-016). Returns the argv to spawn before `--stdin` is appended.
+fn resolve_worker_argv() -> Result<Vec<String>, HandlerError> {
+    let entry = role_entry(VERIFY_GRAPH_AUTHOR_ROLE).ok_or_else(|| HandlerError::Internal {
+        detail: format!(
+            "worker: role {VERIFY_GRAPH_AUTHOR_ROLE} missing from embedded manifest \
+             (core/worker/assets/manifest.toml drift)"
+        ),
+    })?;
+    let workdir = std::env::current_dir().ok();
+    let inputs = ResolveInputs {
+        override_command: None,
+        workdir: workdir.as_deref(),
+    };
+    match resolve(entry, inputs) {
+        Resolution::Resolved { argv, .. } => Ok(argv),
+        Resolution::Missing { diagnostics } => {
+            let detail = if diagnostics.is_empty() {
+                format!(
+                    "worker: {VERIFY_GRAPH_AUTHOR_ROLE} not resolvable on PATH or via \
+                     ${env}=<command>; install with `uv tool install ./workers/verify-graph-author`",
+                    env = entry.env_var
+                )
+            } else {
+                format!(
+                    "worker: {VERIFY_GRAPH_AUTHOR_ROLE} not resolvable ({})",
+                    diagnostics.join("; ")
+                )
+            };
+            Err(HandlerError::Internal { detail })
+        }
+    }
 }
 
 fn write_bundle_to_stdin(

@@ -1,0 +1,64 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-039>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-054> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-039/0> <https://decision-cli.dev/ns/step/VG-039/1> <https://decision-cli.dev/ns/step/VG-039/2> <https://decision-cli.dev/ns/step/VG-039/3> <https://decision-cli.dev/ns/step/VG-039/4> <https://decision-cli.dev/ns/step/VG-039/5> <https://decision-cli.dev/ns/step/VG-039/6> <https://decision-cli.dev/ns/step/VG-039/7> ) .
+
+<https://decision-cli.dev/ns/step/VG-039/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find . -name \"embedded.ttl\" -o -name \"embedded_shapes.ttl\" | head -2" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-039/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:path "crates/decision-cli/core/ontology/embedded.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-039/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:path "crates/decision-cli/core/ontology/embedded.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-039/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX dec: <https://decisionframework.org/dec#>\nSELECT ?shape WHERE { ?shape a sh:NodeShape . ?shape sh:targetClass dec:Capability . }" .
+
+<https://decision-cli.dev/ns/step/VG-039/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX dec: <https://decisionframework.org/dec#>\nSELECT ?prop WHERE { ?shape sh:property ?prop . ?prop sh:path dec:capability_id . ?prop sh:minCount 1 . }" .
+
+<https://decision-cli.dev/ns/step/VG-039/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX dec: <https://decisionframework.org/dec#>\nSELECT ?prop WHERE { ?shape sh:property ?prop . ?prop sh:path dec:endpoint . ?prop sh:in (\"scaleway\" \"anthropic\") . }" .
+
+<https://decision-cli.dev/ns/step/VG-039/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX dec: <https://decisionframework.org/dec#>\nSELECT ?prop WHERE { ?shape sh:property ?prop . ?prop sh:path dec:status . ?prop sh:in (\"active\" \"preview\" \"eol\" \"candidate\") . }" .
+
+<https://decision-cli.dev/ns/step/VG-039/7>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-100> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX sh: <http://www.w3.org/ns/shacl#>\nPREFIX dec: <https://decisionframework.org/dec#>\nSELECT ?prop WHERE { ?shape sh:property ?prop . ?prop sh:path dec:cost_currency . ?prop sh:in (\"EUR\" \"USD\") . }" .

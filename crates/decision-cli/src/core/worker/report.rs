@@ -326,8 +326,11 @@ mod tests {
     #[test]
     fn inactive_row_when_role_not_in_active_set() {
         let report = build_report(&[], None, None, None);
-        assert_eq!(report.rows.len(), 1);
-        assert_eq!(report.rows[0].status, RoleStatus::Inactive);
+        // One row per manifest entry (code-writer + verify-graph-author after FT-067).
+        assert_eq!(report.rows.len(), MANIFEST.len());
+        for row in &report.rows {
+            assert_eq!(row.status, RoleStatus::Inactive);
+        }
         let text = format_report_text(&report);
         assert!(text.contains("Worker preflight:"));
         assert!(text.contains("role not active"));

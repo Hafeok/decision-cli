@@ -12,8 +12,8 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-104-catalog-bootstrap.sh
 runner-timeout: 180
-last-run: 2026-05-24T19:12:12.270219158+00:00
-last-run-duration: 1.2s
+last-run: 2026-05-24T19:14:23.673322616+00:00
+last-run-duration: 1.1s
 ---
 
 ## Description

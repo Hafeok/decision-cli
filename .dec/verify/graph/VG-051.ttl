@@ -1,0 +1,79 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-051>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-065> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-051/0> <https://decision-cli.dev/ns/step/VG-051/1> <https://decision-cli.dev/ns/step/VG-051/2> <https://decision-cli.dev/ns/step/VG-051/3> <https://decision-cli.dev/ns/step/VG-051/4> <https://decision-cli.dev/ns/step/VG-051/5> <https://decision-cli.dev/ns/step/VG-051/6> <https://decision-cli.dev/ns/step/VG-051/7> <https://decision-cli.dev/ns/step/VG-051/8> <https://decision-cli.dev/ns/step/VG-051/9> ) .
+
+<https://decision-cli.dev/ns/step/VG-051/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store/test.db" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec capability list --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec capability show anthropic-deep-reasoning --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec capability show scaleway-model --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec session create --capability anthropic-deep-reasoning --prompt 'Test prompt' --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec session show $(dec session create --capability anthropic-deep-reasoning --prompt 'Test prompt' --format json | jq -r '.id') --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec metrics --cache-hit-rate --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:command "dec session list --format json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-051/9>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-114> ;
+    dec:target ".dec/store/test.db" ;
+    dec:query "PREFIX dec: <http://dec.k8s.io/> SELECT ?session ?cacheHitRate WHERE { ?session dec:cacheHitRate ?cacheHitRate . }" .

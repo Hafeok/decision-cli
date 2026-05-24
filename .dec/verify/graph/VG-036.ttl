@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-036>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-052> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-036/0> <https://decision-cli.dev/ns/step/VG-036/1> <https://decision-cli.dev/ns/step/VG-036/2> <https://decision-cli.dev/ns/step/VG-036/3> <https://decision-cli.dev/ns/step/VG-036/4> <https://decision-cli.dev/ns/step/VG-036/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-036/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-087> ;
+    dec:command "mkdir -p test-project && cd test-project && dec init" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-036/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-087> ;
+    dec:command "cd test-project && dec preflight FT-007" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-036/2>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "dec_output" .
+
+<https://decision-cli.dev/ns/step/VG-036/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-087> ;
+    dec:command "cd test-project && product preflight FT-007" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-036/4>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "product_output" .
+
+<https://decision-cli.dev/ns/step/VG-036/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-087> ;
+    dec:command "cd test-project && diff <(echo \"$dec_output\") <(echo \"$product_output\")" ;
+    dec:expectExitCode 0 .

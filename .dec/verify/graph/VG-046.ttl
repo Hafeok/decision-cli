@@ -1,0 +1,50 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-046>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-061> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-046/0> <https://decision-cli.dev/ns/step/VG-046/1> <https://decision-cli.dev/ns/step/VG-046/2> <https://decision-cli.dev/ns/step/VG-046/3> <https://decision-cli.dev/ns/step/VG-046/4> <https://decision-cli.dev/ns/step/VG-046/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-046/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" .
+
+<https://decision-cli.dev/ns/step/VG-046/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec init --store-path .dec/store" .
+
+<https://decision-cli.dev/ns/step/VG-046/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-107> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ns#> SELECT ?binding WHERE { ?binding a dec:RoleBinding ; dec:role_id \"verifier\" ; dec:status \"active\" . }" .
+
+<https://decision-cli.dev/ns/step/VG-046/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-108> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/ns#> SELECT ?capability WHERE { ?capability a dec:Capability ; dec:id \"code-writer\" ; dec:status \"active\" . }" .
+
+<https://decision-cli.dev/ns/step/VG-046/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-108> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-107> ;
+    dec:command "dec dispatch --role verifier --bundle-hash fcf4ef03b8573e1f78accec3ede453aa71f142ade973fb78c0e05dab4418c7a4 --store-path .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-046/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-107> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-108> ;
+    dec:path ".dec/store/dispatch.log" .

@@ -1,0 +1,37 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-052>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-068> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-052/0> <https://decision-cli.dev/ns/step/VG-052/1> <https://decision-cli.dev/ns/step/VG-052/2> <https://decision-cli.dev/ns/step/VG-052/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-052/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec && touch .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-052/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec init --reseed" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-052/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-046> ;
+    dec:command "dec verify graph generate --feature-id FT-068 --env ENV-002" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-052/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-046> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s ?p ?o WHERE { ?s ?p ?o . }" .

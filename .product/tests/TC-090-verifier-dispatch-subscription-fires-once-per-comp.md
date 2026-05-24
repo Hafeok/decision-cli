@@ -11,8 +11,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test ft_022_verifier_dispatch_subscription
 runner-timeout: 120
-last-run: 2026-05-23T17:59:38.377170355+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-24T19:13:47.897877740+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose
