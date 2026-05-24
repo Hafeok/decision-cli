@@ -13,6 +13,7 @@
 pub mod authority;
 pub mod role;
 pub mod seeds;
+pub mod verify_graph_author_seed;
 
 pub use authority::{
     Authority, EscalationHint, AUTHORITY_CLASS_IRI, AUTHORITY_PRED_IRI, ESCALATE_CATEGORY_IRI,
@@ -26,6 +27,10 @@ pub use role::{
 pub use seeds::{
     implementer_seed_quads, verifier_seed_quads, IMPLEMENTER_ROLE_ID, IMPLEMENTER_ROLE_IRI,
     VERIFIER_ROLE_ID, VERIFIER_ROLE_IRI,
+};
+pub use verify_graph_author_seed::{
+    verify_graph_author_seed_quads, VERIFY_GRAPH_AUTHOR_CAPABILITY_ID,
+    VERIFY_GRAPH_AUTHOR_ROLE_ID, VERIFY_GRAPH_AUTHOR_ROLE_IRI,
 };
 
 /// Raw Turtle bytes for the verifier role seed — embedded via

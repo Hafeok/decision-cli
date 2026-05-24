@@ -109,7 +109,7 @@ fn implementer_role_quads(role: &NamedNode, authority: &NamedNode, g: &GraphName
     quads
 }
 
-fn base_role_typing_quads(role: &NamedNode, role_id: &str, g: &GraphName) -> Vec<Quad> {
+pub(super) fn base_role_typing_quads(role: &NamedNode, role_id: &str, g: &GraphName) -> Vec<Quad> {
     let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE).into_owned();
     let role_class = NamedNodeRef::new_unchecked(ROLE_CLASS_IRI).into_owned();
     let role_id_pred = NamedNodeRef::new_unchecked(ROLE_ID_IRI).into_owned();
@@ -316,3 +316,4 @@ fn short_iri_tail(iri: &NamedNode) -> String {
         .unwrap_or("authority")
         .replace(|c: char| !c.is_ascii_alphanumeric(), "-")
 }
+

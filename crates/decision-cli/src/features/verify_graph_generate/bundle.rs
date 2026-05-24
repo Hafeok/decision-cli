@@ -18,15 +18,19 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::core::dispatch::capability_resolver::ResolvedCapability;
 use crate::core::handler::Error as HandlerError;
 use crate::core::ontology::verification_env::from_turtle as env_from_turtle;
 use crate::core::verify::coverage::feature_resolver::{resolve_feature_tcs_short, tc_iri_for};
 use crate::core::verify::matcher::MatchReport;
-use crate::core::vocab::{
-    IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX, STEP_KIND_CAPTURE, STEP_KIND_FILE_ASSERTION,
-    STEP_KIND_HTTP_REQUEST, STEP_KIND_SHELL_COMMAND, STEP_KIND_SPARQL_ASSERTION,
-    STEP_KIND_WAIT_FOR,
-};
+use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
+
+use super::step_vocabulary::default_step_vocabulary;
+
+/// Default `max_tokens` requested from the worker when the resolved
+/// capability has no explicit ceiling. Matches the Python pydantic
+/// shape's default (FT-064 `VerifyGraphAuthorInput.max_tokens = 4096`).
+const DEFAULT_MAX_TOKENS: u32 = 4096;
 
 /// Bundle envelope sent to the worker on stdin (FT-049 §Behaviour).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +49,22 @@ pub struct VerifyGraphAuthorInputJson {
     pub step_vocabulary: Vec<StepKindRecord>,
     /// SHA-256 hex of the canonical bundle (echoed in the proposal).
     pub bundle_hash: String,
+    /// FT-068 / ADR-033 — endpoint discriminator resolved by the
+    /// dispatcher (`"anthropic"` | `"scaleway"`). Mirrors the field on
+    /// the Python pydantic model.
+    pub endpoint: String,
+    /// FT-068 — exact provider model identifier from the resolved
+    /// capability (e.g. `qwen3-coder-30b-a3b-instruct`). The worker
+    /// passes this straight to the SDK.
+    pub model_id: String,
+    /// FT-068 — capability-resolved parameters forwarded to the router
+    /// untouched. Empty object today; FT-063's `reasoning_effort` and
+    /// future per-capability knobs flow through here.
+    pub parameters: serde_json::Value,
+    /// FT-068 — maximum output tokens. Sourced from the resolved
+    /// capability's `max_output`, capped at the Python pydantic
+    /// schema's bounds (256..=64_000).
+    pub max_tokens: u32,
 }
 
 /// One test-criterion record in the bundle.
@@ -123,16 +143,20 @@ pub struct StepKindRecord {
     pub description: String,
 }
 
-/// Assemble the bundle for `(feature, env, match_report)`.
+/// Assemble the bundle for `(feature, env, match_report, capability)`.
 ///
 /// `product_root` is where `.product/features/` lives (already resolved
 /// by the caller); `workdir` is where `.dec/verify/env/` lives.
+/// `capability` is the FT-068 resolved capability the dispatcher pinned
+/// for the verify-graph-author role — `endpoint`, `model_id`, and
+/// `max_tokens` propagate verbatim into the bundle.
 pub fn assemble_bundle(
     workdir: &Path,
     product_root: &Path,
     feature_id: &str,
     env_short: &str,
     match_report: &MatchReport,
+    capability: &ResolvedCapability,
 ) -> Result<VerifyGraphAuthorInputJson, HandlerError> {
     let feature_spec = load_feature_body(product_root, feature_id)?;
     let tc_shorts = resolve_feature_tcs_short(product_root, feature_id).map_err(|e| {
@@ -151,6 +175,7 @@ pub fn assemble_bundle(
     let target_environment = load_env_record(workdir, env_short)?;
     let candidate_graphs = candidate_records_from_report(match_report);
     let step_vocabulary = default_step_vocabulary();
+    let max_tokens = clamp_max_tokens(capability.max_output);
     let mut bundle = VerifyGraphAuthorInputJson {
         feature_id: feature_id.to_string(),
         feature_spec,
@@ -159,9 +184,24 @@ pub fn assemble_bundle(
         candidate_graphs,
         step_vocabulary,
         bundle_hash: String::new(),
+        endpoint: capability.endpoint.as_str().to_string(),
+        model_id: capability.model_identifier.clone(),
+        parameters: serde_json::json!({}),
+        max_tokens,
     };
     bundle.bundle_hash = compute_bundle_hash(&bundle);
     Ok(bundle)
+}
+
+/// Clamp the resolved capability's `max_output` into the Python worker's
+/// pydantic-enforced `[256, 64_000]` window. Falls back to
+/// [`DEFAULT_MAX_TOKENS`] when the capability declares `0` (e.g.
+/// embedding capabilities that should never be used here, but defensive).
+fn clamp_max_tokens(max_output: u32) -> u32 {
+    if max_output == 0 {
+        return DEFAULT_MAX_TOKENS;
+    }
+    max_output.clamp(256, 64_000)
 }
 
 fn load_feature_body(product_root: &Path, feature_id: &str) -> Result<String, HandlerError> {
@@ -263,64 +303,6 @@ fn candidate_records_from_report(report: &MatchReport) -> Vec<ExistingGraphRecor
             }
         })
         .collect()
-}
-
-/// The six FT-036 seed step kinds plus their `required_ops` (per
-/// ADR-028 §Typed step vocabulary). Mirrors `core::verify::safety`'s
-/// op-derivation table.
-fn default_step_vocabulary() -> Vec<StepKindRecord> {
-    let mut vocab = assertion_step_kinds();
-    vocab.extend(control_step_kinds());
-    vocab
-}
-
-fn assertion_step_kinds() -> Vec<StepKindRecord> {
-    vec![
-        step_kind_record(
-            STEP_KIND_SHELL_COMMAND,
-            &["shell", "filesystem"],
-            "Run a shell command; assert exit code.",
-        ),
-        step_kind_record(
-            STEP_KIND_SPARQL_ASSERTION,
-            &["sparql-local"],
-            "Run a SPARQL query; assert row count.",
-        ),
-        step_kind_record(
-            STEP_KIND_FILE_ASSERTION,
-            &["filesystem"],
-            "Assert file existence or content.",
-        ),
-        step_kind_record(
-            STEP_KIND_HTTP_REQUEST,
-            &["http"],
-            "Make an HTTP call; assert status.",
-        ),
-    ]
-}
-
-fn control_step_kinds() -> Vec<StepKindRecord> {
-    vec![
-        step_kind_record(
-            STEP_KIND_WAIT_FOR,
-            &[],
-            "Poll a sub-condition with timeout.",
-        ),
-        step_kind_record(
-            STEP_KIND_CAPTURE,
-            &[],
-            "Bind a prior step's stdout/result to a name.",
-        ),
-    ]
-}
-
-fn step_kind_record(kind: &str, required_ops: &[&str], description: &str) -> StepKindRecord {
-    StepKindRecord {
-        kind: kind.to_string(),
-        required_ops: required_ops.iter().map(|s| (*s).to_string()).collect(),
-        fields_schema: serde_json::json!({}),
-        description: description.to_string(),
-    }
 }
 
 fn compute_bundle_hash(bundle: &VerifyGraphAuthorInputJson) -> String {

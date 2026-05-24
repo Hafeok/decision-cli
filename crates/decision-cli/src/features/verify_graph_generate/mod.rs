@@ -16,25 +16,30 @@
 //! persist; only `Accept` does.
 
 pub mod bundle;
+mod finalize;
 mod internal;
 pub mod persist;
 pub mod proposal;
+mod step_vocabulary;
 pub mod surface;
 pub mod worker;
 
 use std::path::{Path, PathBuf};
 
+use oxigraph::store::Store;
 use serde::{Deserialize, Serialize};
 
+use crate::core::dispatch::capability_resolver::{
+    resolve_default_capability, ResolvedCapability, ResolverError,
+};
 use crate::core::handler::Error as HandlerError;
+use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::verify::matcher::{MatchKind, MatchReport};
 
 use self::bundle::{assemble_bundle, env_iri_to_short};
-use self::internal::{
-    coverage_preview_from_report, preview_bundle_hash_for_match, run_matcher, short_graph_id,
-};
-use self::persist::{persist_new_proposal, Persisted};
-use self::proposal::{CoverageReportSummary, GraphProposal, MatchProposal, ProposalKind};
+use self::finalize::{build_match_response, finalize_generate, persist_if_new};
+use self::internal::{coverage_preview_from_report, run_matcher};
+use self::proposal::{CoverageReportSummary, GraphProposal, ProposalKind};
 
 pub use self::surface::{
     accept_input_schema, accept_tool_descriptor, generate_input_schema, generate_tool_descriptor,
@@ -155,9 +160,21 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
         return Ok(build_match_response(&report));
     }
 
-    // 3. Assemble the bundle and invoke the worker.
+    // 3. Resolve the verify-graph-author capability (FT-068) before
+    //    assembling the bundle — the worker needs endpoint + model_id
+    //    on every dispatch (ADR-033 / ADR-037).
+    let capability = resolve_verify_graph_author_capability(workdir)?;
+
+    // 4. Assemble the bundle and invoke the worker.
     let env_short = env_iri_to_short(&report.environment);
-    let bundle = assemble_bundle(workdir, product_root, &req.feature_id, &env_short, &report)?;
+    let bundle = assemble_bundle(
+        workdir,
+        product_root,
+        &req.feature_id,
+        &env_short,
+        &report,
+        &capability,
+    )?;
     let proposal = worker::invoke_worker(&bundle)?;
     verify_bundle_hash(&proposal, &bundle)?;
 
@@ -171,6 +188,36 @@ fn require_workdir(workdir: Option<&Path>) -> Result<&Path, HandlerError> {
         detail: "no working directory available; run from a `dec init`-bootstrapped tree"
             .to_string(),
     })
+}
+
+/// FT-068 — open the orchestration store and resolve the
+/// verify-graph-author role's default capability. Errors map onto the
+/// shared `capability:` prefix the dispatcher (FT-061) uses, so
+/// operator-facing messages stay consistent across `dec implement` and
+/// `dec verify graph generate`.
+fn resolve_verify_graph_author_capability(
+    workdir: &Path,
+) -> Result<ResolvedCapability, HandlerError> {
+    let dump = orchestration_dump_path(workdir);
+    let store: Store =
+        load_store_from_dump(&dump).map_err(|e| HandlerError::Internal {
+            detail: format!(
+                "capability: opening orchestration store at {p}: {e}",
+                p = dump.display()
+            ),
+        })?;
+    resolve_default_capability(&store, "verify-graph-author").map_err(resolver_to_handler_error)
+}
+
+fn resolver_to_handler_error(err: ResolverError) -> HandlerError {
+    let detail = match &err {
+        ResolverError::NoActiveBinding { .. } => format!(
+            "capability: {err}; run `dec init` (fresh tree) or seed via \
+             `python3 scripts/bootstrap_catalog.py`"
+        ),
+        _ => format!("capability: {err}"),
+    };
+    HandlerError::Internal { detail }
 }
 
 fn verify_bundle_hash(
@@ -188,33 +235,6 @@ fn verify_bundle_hash(
             bp = bundle.bundle_hash
         ),
     })
-}
-
-fn finalize_generate(
-    req: &GenerateRequest,
-    workdir: &Path,
-    env_short: &str,
-    proposal: GraphProposal,
-    preview: CoverageReportSummary,
-) -> Result<GenerateResponse, HandlerError> {
-    let token = proposal.bundle_hash.clone();
-    match req.mode {
-        GenerateMode::Accept => {
-            let persisted = persist_if_new(&proposal, workdir, &req.feature_id, env_short)?;
-            Ok(GenerateResponse {
-                proposal,
-                proposal_token: token,
-                coverage_preview: preview,
-                persisted,
-            })
-        }
-        GenerateMode::Interactive | GenerateMode::PrintOnly => Ok(GenerateResponse {
-            proposal,
-            proposal_token: token,
-            coverage_preview: preview,
-            persisted: None,
-        }),
-    }
 }
 
 /// Single handler for the accept verb (companion to `run_generate`).
@@ -292,69 +312,6 @@ fn refuse_proposal_kind(kind: &str, reason: &str) -> HandlerError {
     HandlerError::InvalidArgument {
         field: "proposal.kind".to_string(),
         detail: format!("accept refuses {kind} proposals — {reason}"),
-    }
-}
-
-fn build_match_response(report: &MatchReport) -> GenerateResponse {
-    let match_graph_short = report
-        .graphs
-        .first()
-        .map(|g| short_graph_id(&g.id))
-        .unwrap_or_else(|| "unknown".to_string());
-    let preview = coverage_preview_from_report(report);
-    let proposal = GraphProposal::new_match(
-        preview_bundle_hash_for_match(&match_graph_short),
-        MatchProposal {
-            graph_id: match_graph_short,
-            rationale: "An existing graph in this environment already covers \
-                every TC the feature lists; no new graph needed."
-                .to_string(),
-        },
-    );
-    let token = proposal.bundle_hash.clone();
-    GenerateResponse {
-        proposal,
-        proposal_token: token,
-        coverage_preview: preview,
-        persisted: None,
-    }
-}
-
-fn persist_if_new(
-    proposal: &GraphProposal,
-    workdir: &Path,
-    feature_id: &str,
-    env_short: &str,
-) -> Result<Option<PersistedSummary>, HandlerError> {
-    let new_payload = match proposal.kind {
-        ProposalKind::New => proposal
-            .new
-            .as_ref()
-            .ok_or_else(|| HandlerError::Internal {
-                detail: "proposal.kind = New but proposal.new payload missing".to_string(),
-            })?,
-        _ => return Ok(None),
-    };
-    let persisted = persist_new_proposal(workdir, feature_id, env_short, &new_payload.steps)?;
-    Ok(Some(post_persist_summary(
-        persisted, workdir, feature_id, env_short,
-    )))
-}
-
-fn post_persist_summary(
-    persisted: Persisted,
-    workdir: &Path,
-    feature_id: &str,
-    env_short: &str,
-) -> PersistedSummary {
-    let coverage_report = match run_matcher(workdir, workdir, feature_id, env_short) {
-        Ok(report) => coverage_preview_from_report(&report),
-        Err(_) => CoverageReportSummary::default(),
-    };
-    PersistedSummary {
-        graph_id: persisted.graph_id,
-        graph_path: persisted.graph_path,
-        coverage_report,
     }
 }
 

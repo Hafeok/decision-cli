@@ -5,38 +5,29 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
+from ._endpoint_errors import (
+    ErrorCategory,
+    ModelRouterError,
+    classify_endpoint_error as _classify_endpoint_error,
+    scaleway_error_to_router_error as _scaleway_error_to_router_error,
+)
 from .scaleway_client import (
-    ScalewayClientError,
     _extract_message_content,
     _extract_message_reasoning,
     _extract_token_counts,
     build_client as build_scaleway_client,
+    ScalewayClientError,
 )
 from .tools import translate_tools_for_anthropic
 
 Endpoint = Literal["scaleway", "anthropic"]
 ReasoningEffort = Literal["none", "low", "medium", "high"]
-ErrorCategory = Literal[
-    "auth_failed",
-    "rate_limited",
-    "network_error",
-    "invalid_response",
-    "unknown",
-]
 
 #: Tool name used to emulate structured output across endpoints. Both
 #: routers declare a single tool with this name whose schema is the
 #: caller-supplied ``response_schema``, and force ``tool_choice`` to it.
 #: Anthropic uses ``input_schema``; Scaleway/OpenAI uses ``parameters``.
 ANTHROPIC_STRUCTURED_OUTPUT_TOOL = "submit_verdict"
-
-
-class ModelRouterError(Exception):
-    """Normalised endpoint error surfaced to worker callers."""
-
-    def __init__(self, message: str, *, category: ErrorCategory = "unknown") -> None:
-        super().__init__(message)
-        self.category = category
 
 
 @dataclass
@@ -379,37 +370,3 @@ def build_router(endpoint: Endpoint | str, *, client: Any = None) -> ModelRouter
     )
 
 
-def _scaleway_error_to_router_error(exc: ScalewayClientError) -> ModelRouterError:
-    """Map a Scaleway client error to the router's normalised shape."""
-    category = "auth_failed" if exc.category == "missing_key" else "unknown"
-    return ModelRouterError(str(exc), category=category)
-
-
-_AUTH_HINTS = ("auth", "401", "unauthorized", "api key", "permission")
-_RATE_HINTS = ("rate", "429", "too many", "quota")
-_NETWORK_HINTS = ("timeout", "connection", "network", "unreachable", "dns")
-_INVALID_HINTS = ("invalid", "400", "validation", "bad request", "schema")
-
-
-def _classify_endpoint_error(exc: Exception) -> ModelRouterError:
-    """Map an arbitrary SDK error to a normalised :class:`ModelRouterError`."""
-    if isinstance(exc, ModelRouterError):
-        return exc
-    category = _detect_error_category(exc)
-    return ModelRouterError(str(exc) or exc.__class__.__name__, category=category)
-
-
-def _detect_error_category(exc: Exception) -> ErrorCategory:
-    """Inspect an exception for hints that map it to an :data:`ErrorCategory`."""
-    class_name = exc.__class__.__name__.lower()
-    message = str(exc).lower()
-    haystack = f"{class_name} {message}"
-    if any(h in haystack for h in _AUTH_HINTS):
-        return "auth_failed"
-    if any(h in haystack for h in _RATE_HINTS):
-        return "rate_limited"
-    if any(h in haystack for h in _NETWORK_HINTS):
-        return "network_error"
-    if any(h in haystack for h in _INVALID_HINTS):
-        return "invalid_response"
-    return "unknown"
