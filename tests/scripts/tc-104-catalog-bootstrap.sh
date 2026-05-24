@@ -75,8 +75,8 @@ if ! run_bootstrap "$A" >/dev/null 2>"$WORK/step1.err"; then
   exit 1
 fi
 
-assert_count "$(count_capabilities "$A")" 12 "first-bootstrap capability count"
-assert_count "$(count_bindings "$A")" 5 "first-bootstrap binding count"
+assert_count "$(count_capabilities "$A")" 13 "first-bootstrap capability count"
+assert_count "$(count_bindings "$A")" 6 "first-bootstrap binding count"
 
 # Spot-check key PRD §5.2 / §6.2 properties via SPARQL ASK.
 check_ask() {
@@ -158,8 +158,8 @@ if ! echo "$out" | grep -q "catalog: unchanged"; then
   echo "$out" >&2
   exit 1
 fi
-assert_count "$(count_capabilities "$A")" 12 "post-idempotent capability count"
-assert_count "$(count_bindings "$A")" 5 "post-idempotent binding count"
+assert_count "$(count_capabilities "$A")" 13 "post-idempotent capability count"
+assert_count "$(count_bindings "$A")" 6 "post-idempotent binding count"
 
 # -----------------------------------------------------------------------
 # Step 5 — Strict divergence handling.
@@ -189,8 +189,8 @@ if ! grep -q "graph is authoritative" "$WORK/div.err"; then
   exit 1
 fi
 # No writes occurred — counts unchanged.
-assert_count "$(count_capabilities "$A")" 12 "post-divergence capability count"
-assert_count "$(count_bindings "$A")" 5 "post-divergence binding count"
+assert_count "$(count_capabilities "$A")" 13 "post-divergence capability count"
+assert_count "$(count_bindings "$A")" 6 "post-divergence binding count"
 
 # -----------------------------------------------------------------------
 # Step 6 — Ordering enforcement.
@@ -214,8 +214,10 @@ if ! grep -qi "unresolved capability reference" "$WORK/ord.err"; then
   exit 1
 fi
 # Atomicity: no capability writes leaked even though caps were processed first.
-assert_count "$(count_capabilities "$B")" 0 "post-unresolved capability count"
-assert_count "$(count_bindings "$B")" 0 "post-unresolved binding count"
+# FT-068 — `dec init` itself seeds the `verify-graph-author` capability +
+# binding, so the rollback-baseline is 1, not 0.
+assert_count "$(count_capabilities "$B")" 1 "post-unresolved capability count"
+assert_count "$(count_bindings "$B")" 1 "post-unresolved binding count"
 
 # -----------------------------------------------------------------------
 # Step 9 — Atomicity on SHACL violation.
@@ -239,7 +241,8 @@ if ! grep -qiE "(SHACL|endpoint|invalid)" "$WORK/shacl.err"; then
   cat "$WORK/shacl.err" >&2
   exit 1
 fi
-assert_count "$(count_capabilities "$C")" 0 "post-SHACL capability count"
+# FT-068 — see `post-unresolved` rationale: init-seeded capability survives.
+assert_count "$(count_capabilities "$C")" 1 "post-SHACL capability count"
 
 # -----------------------------------------------------------------------
 # Step 7 + 8 — Bundle and session migration idempotence.

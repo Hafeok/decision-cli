@@ -1,6 +1,6 @@
 ---
 id: TC-104
-title: Catalog bootstrap seeds 10 Capability and 5 RoleBinding artifacts idempotently
+title: Catalog bootstrap seeds 13 Capability and 6 RoleBinding artifacts idempotently
 type: exit-criteria
 status: passing
 validates:
@@ -12,19 +12,19 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-104-catalog-bootstrap.sh
 runner-timeout: 180
-last-run: 2026-05-23T18:00:16.213042199+00:00
+last-run: 2026-05-24T19:12:12.270219158+00:00
 last-run-duration: 1.2s
 ---
 
 ## Description
 
-Scenario: `scripts/bootstrap_catalog.py` against an empty orchestration store seeds the catalog from `config/capabilities.yaml` and `config/role-bindings.yaml` per [FT-058](FT-058) / [ADR-036](ADR-036), producing exactly 12 `dec:Capability` and 5 `dec:RoleBinding` artifacts. A second run against the same store with unchanged YAML is a no-op. A run against a store with divergent state errors out without writing.
+Scenario: `scripts/bootstrap_catalog.py` against an empty orchestration store seeds the catalog from `config/capabilities.yaml` and `config/role-bindings.yaml` per [FT-058](FT-058) / [ADR-036](ADR-036), producing exactly 13 `dec:Capability` and 6 `dec:RoleBinding` artifacts. A second run against the same store with unchanged YAML is a no-op. A run against a store with divergent state errors out without writing.
 
 The runner is `bash` driving the Python bootstrap script against a temp store, asserting via `dec capability list` / `dec binding list` (or direct SPARQL via `oxigraph::sparql`) the expected counts and contents.
 
 Acceptance:
 
-1. **First-bootstrap counts.** After `python scripts/bootstrap_catalog.py --graph-path <temp-store>` on a fresh store, query the graph for `SELECT (COUNT(?c) AS ?n) WHERE { ?c a dec:Capability }` returns 12 (the PRD §5.2 catalog: classifier, code-writer, code-writer-heavy, standard-reasoning, standard-reasoning-frontier, deep-reasoning, mid-reasoning, fast-reasoning, vision-gui, vision-general, embedding, audio-transcribe). Same for `dec:RoleBinding` returns 5.
+1. **First-bootstrap counts.** After `python scripts/bootstrap_catalog.py --graph-path <temp-store>` on a fresh store, query the graph for `SELECT (COUNT(?c) AS ?n) WHERE { ?c a dec:Capability }` returns 13 (the PRD §5.2 catalog: classifier, code-writer, code-writer-heavy, standard-reasoning, standard-reasoning-frontier, deep-reasoning, mid-reasoning, fast-reasoning, vision-gui, vision-general, embedding, audio-transcribe, plus the FT-068 `verify-graph-author` row). Same for `dec:RoleBinding` returns 6 (the original five plus the FT-068 `verify-graph-author` binding).
 2. **Content matches PRD.**
    - Each capability's `(capability_id, endpoint, model_identifier, tier, status, cost_currency)` tuple matches PRD §5.2 byte-for-byte.
    - Anthropic capabilities (`deep-reasoning`, `mid-reasoning`, `fast-reasoning`) carry `cost_cache_hit_per_m` and `cost_cache_write_5m`; Scaleway capabilities do not.
@@ -33,7 +33,7 @@ Acceptance:
    - `mid-reasoning` and `fast-reasoning` carry `status = "candidate"`.
    - Each binding's `(role_id, default_capability)` plus ordered escalation_steps matches PRD §6.2.
 3. **Source hashes recorded.** Every Capability and RoleBinding artifact carries `dec:bootstrap_source = "<sha256 of yaml file>"`. The hash matches `sha256sum config/capabilities.yaml` (after canonical whitespace normalisation).
-4. **Idempotency.** Run the bootstrap script a second time with unchanged YAML. Assert the graph state is unchanged (same artifact IRIs, no new versions, no rewrites). The script's exit code is 0; its output explicitly reports `"catalog: unchanged"` or `"capabilities skipped: 12, bindings skipped: 5, 0 divergent"`.
+4. **Idempotency.** Run the bootstrap script a second time with unchanged YAML. Assert the graph state is unchanged (same artifact IRIs, no new versions, no rewrites). The script's exit code is 0; its output explicitly reports `"catalog: unchanged"` or `"capabilities skipped: 13, bindings skipped: 6, 0 divergent"`.
 5. **Strict divergence handling.** Edit `config/capabilities.yaml` to change one `cost_input_per_m` value without bumping `version`. Re-run the script. Assert:
    - Exit code is **non-zero**.
    - Error output names the diverging artifact id (e.g. `code-writer@v1`) and shows the YAML-vs-graph diff.
@@ -54,5 +54,5 @@ Acceptance:
   bootstrap(store, y_invalid) = error ∧ store_after = store_before                       -- atomic
   bootstrap(store_with_data, y_divergent) = Divergence(...) ∧ store_after = store_before -- strict no-overwrite
   ∀ a ∈ catalog: a.bootstrap_source ∈ {hash(y_capabilities), hash(y_bindings)}
-  |catalog.capabilities| = 12 ∧ |catalog.bindings| = 5 (after first bootstrap of §5.2/§6.2 YAML)
+  |catalog.capabilities| = 13 ∧ |catalog.bindings| = 6 (after first bootstrap of §5.2/§6.2 YAML)
 }
