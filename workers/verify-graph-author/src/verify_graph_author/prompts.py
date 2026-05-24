@@ -47,6 +47,13 @@ Hard constraints (any violation invalidates the proposal):
   - Steps that need operations not in the target environment's
     `allowed_ops` MUST NOT appear in a `new` proposal — return `gap`
     instead.
+  - **Every step's `fields` object MUST contain every key listed as
+    REQUIRED under that step kind's vocabulary entry.** A step's `fields`
+    is NOT freeform — it is a typed payload. Missing a REQUIRED key
+    (e.g. `command` on `shell-command`, `query`+`target` on
+    `sparql-assertion`, `path` on `file-assertion`) invalidates the
+    whole proposal. Use exactly the field names shown in the vocabulary
+    (kebab-case: `expect-exit-code` not `expectExitCode`).
   - You do not have tool access. You judge from the bundle text alone.
   - You do not modify, augment, or invent TC identifiers or env
     identifiers — use the exact ids from the bundle.
@@ -56,6 +63,19 @@ Hard constraints (any violation invalidates the proposal):
 Output a single JSON object that matches the GraphProposal schema
 exactly: top-level keys `kind`, `bundle_hash`, and exactly one of
 `match`, `new`, or `gap` populated.
+
+Example of a well-formed `new` proposal step (note `fields` populated
+with the REQUIRED keys for the step's kind):
+
+  {
+    "step_type": "shell-command",
+    "fields": {
+      "command": "dec doctor --format json",
+      "expect-exit-code": 0,
+      "capture-output": true
+    },
+    "provides_evidence_for": ["TC-046"]
+  }
 """
 
 
@@ -173,8 +193,35 @@ def _render_kind(kind: StepKindRecord) -> str:
         "- required_ops: "
         + (", ".join(kind.required_ops) if kind.required_ops else "(none)")
     )
-    parts.append("- fields_schema: " + json.dumps(kind.fields_schema, sort_keys=True))
+    parts.extend(_render_fields_block(kind.fields_schema))
     return "\n".join(parts)
+
+
+def _render_fields_block(schema: dict) -> list[str]:
+    """Render `fields_schema` as an LLM-friendly bulleted list instead of
+    a raw JSON dump.
+
+    Models (Qwen3-Coder in particular) tended to skim the JSON dump and
+    populate `fields: {}` even when required keys were declared. The
+    bulleted form calls out REQUIRED vs optional explicitly.
+    """
+    properties = (schema.get("properties") or {}) if isinstance(schema, dict) else {}
+    required = set(schema.get("required") or []) if isinstance(schema, dict) else set()
+    if not properties:
+        return ["- fields: (no payload — `fields: {}`)"]
+    lines = ["- fields (populate `step.fields` with these keys):"]
+    # Stable order: required first (in declaration order), then optional.
+    req_keys = [k for k in properties if k in required]
+    opt_keys = [k for k in properties if k not in required]
+    for key in req_keys + opt_keys:
+        spec = properties.get(key, {}) if isinstance(properties, dict) else {}
+        marker = "REQUIRED" if key in required else "optional"
+        type_label = spec.get("type", "string") if isinstance(spec, dict) else "string"
+        desc = spec.get("description", "") if isinstance(spec, dict) else ""
+        lines.append(f"  - `{key}` ({type_label}, {marker}): {desc}".rstrip(": "))
+    # Final JSON dump kept as a fallback for models that prefer reading it.
+    lines.append("- fields_schema (raw): " + json.dumps(schema, sort_keys=True))
+    return lines
 
 
 def _render_candidate(graph: ExistingGraphRecord) -> str:

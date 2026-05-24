@@ -24,9 +24,10 @@ ErrorCategory = Literal[
     "unknown",
 ]
 
-#: Tool name used to emulate Anthropic structured output. The router
-#: declares a single tool with this name whose ``input_schema`` is the
-#: caller-supplied JSON schema, and forces ``tool_choice`` to it.
+#: Tool name used to emulate structured output across endpoints. Both
+#: routers declare a single tool with this name whose schema is the
+#: caller-supplied ``response_schema``, and force ``tool_choice`` to it.
+#: Anthropic uses ``input_schema``; Scaleway/OpenAI uses ``parameters``.
 ANTHROPIC_STRUCTURED_OUTPUT_TOOL = "submit_verdict"
 
 
@@ -114,7 +115,19 @@ class ScalewayRouter:
 def _build_scaleway_kwargs(
     *, system: str, user: str, params: CallParams
 ) -> dict[str, Any]:
-    """Build kwargs for ``chat.completions.create`` on a Scaleway endpoint."""
+    """Build kwargs for ``chat.completions.create`` on a Scaleway endpoint.
+
+    When ``response_schema`` is set the router mirrors the Anthropic path:
+    it declares a single function tool whose ``parameters`` field is the
+    JSON schema and forces ``tool_choice`` to that tool. Scaleway's
+    OpenAI-compatible ``response_format={"type":"json_schema",...}`` was
+    found to enforce only the top-level shape — nested ``required`` keys
+    in objects-of-objects were ignored by Qwen3-Coder, so the worker had
+    no way to extract a populated ``fields`` payload. Forcing a tool call
+    eliminates the ambiguity: the model has to emit a function call
+    matching the schema, and the SDK surfaces parsed arguments via
+    ``message.tool_calls`` for downstream extraction.
+    """
     kwargs: dict[str, Any] = {
         "model": params.model_identifier,
         "max_tokens": params.max_tokens,
@@ -126,17 +139,26 @@ def _build_scaleway_kwargs(
     }
     if params.reasoning_effort is not None:
         kwargs["reasoning_effort"] = params.reasoning_effort
+
+    tools: list[dict[str, Any]] = []
     if params.tools:
-        kwargs["tools"] = params.tools
+        tools.extend(params.tools)
     if params.response_schema is not None:
-        kwargs["response_format"] = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "Verdict",
-                "schema": params.response_schema,
-                "strict": True,
+        structured_tool = {
+            "type": "function",
+            "function": {
+                "name": ANTHROPIC_STRUCTURED_OUTPUT_TOOL,
+                "description": "Emit the structured artifact required by the worker.",
+                "parameters": params.response_schema,
             },
         }
+        tools.append(structured_tool)
+        kwargs["tool_choice"] = {
+            "type": "function",
+            "function": {"name": ANTHROPIC_STRUCTURED_OUTPUT_TOOL},
+        }
+    if tools:
+        kwargs["tools"] = tools
     if params.extra:
         kwargs.update(params.extra)
     return kwargs

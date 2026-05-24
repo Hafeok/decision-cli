@@ -14,6 +14,7 @@ from pydantic import ValidationError
 from .bundle import StepKindRecord, VerifyGraphAuthorInput
 from .output import GraphProposal, ProposedStep
 from .prompts import SYSTEM_PROMPT, build_retry_prompt, build_user_prompt
+from .schema import build_proposal_response_schema
 
 # The shared package lives in a sibling worker directory; make it
 # importable without requiring an editable install.
@@ -161,7 +162,7 @@ def _run_via_router(
         max_tokens=bundle.max_tokens,
         temperature=0.0,
         reasoning_effort=bundle.parameters.get("reasoning_effort"),
-        response_schema=GraphProposal.model_json_schema(),
+        response_schema=build_proposal_response_schema(bundle.step_vocabulary),
         exposes_reasoning_trace=bool(
             bundle.parameters.get("exposes_reasoning_trace", False)
         ),

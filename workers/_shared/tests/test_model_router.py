@@ -307,19 +307,34 @@ _SAMPLE_SCHEMA = {
 }
 
 
-def test_scaleway_router_translates_response_schema_to_response_format() -> None:
+def test_scaleway_router_translates_response_schema_to_forced_tool_call() -> None:
+    """Scaleway/OpenAI-compatible structured output is emitted via a forced
+    function-call tool whose ``parameters`` carry the JSON schema.
+
+    Previously the router used ``response_format={"type":"json_schema",...}``,
+    but Qwen3-Coder on Scaleway honoured only the top-level shape — nested
+    ``required`` keys (e.g. ``step.fields.command``) were silently dropped,
+    producing empty payloads. Forcing a tool call closes that loophole and
+    mirrors the Anthropic structured-output path.
+    """
     client = _FakeScalewayClient()
     router = ScalewayRouter(client=client)
     params = _basic_params("scaleway", response_schema=_SAMPLE_SCHEMA)
     router.call("sys", "user", params)
-    response_format = client.calls[0]["response_format"]
-    assert response_format == {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "Verdict",
-            "schema": _SAMPLE_SCHEMA,
-            "strict": True,
-        },
+    call_kwargs = client.calls[0]
+    # No longer using response_format — the structured output rides on tools.
+    assert "response_format" not in call_kwargs
+    sent_tools = call_kwargs["tools"]
+    structured = [
+        t for t in sent_tools
+        if t.get("type") == "function"
+        and t.get("function", {}).get("name") == ANTHROPIC_STRUCTURED_OUTPUT_TOOL
+    ]
+    assert len(structured) == 1
+    assert structured[0]["function"]["parameters"] == _SAMPLE_SCHEMA
+    assert call_kwargs["tool_choice"] == {
+        "type": "function",
+        "function": {"name": ANTHROPIC_STRUCTURED_OUTPUT_TOOL},
     }
 
 
