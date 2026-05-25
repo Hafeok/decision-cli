@@ -1,5 +1,10 @@
 """Public surface re-exporting the pipeline-worker SDK's wire/session/provider layers."""
 
+from .artifact import (
+    BuilderBase,
+    CommitError,
+    MotivationalDescriptor,
+)
 from .bundle import (
     ADR_TYPE_IRI,
     DEC_NS,
@@ -63,10 +68,12 @@ __all__ = [
     "OUTCOME_SUCCESS",
     "TC_TYPE_IRI",
     "Bundle",
+    "BuilderBase",
     "CapabilityCatalogEntry",
     "CatalogCache",
     "ClaimClient",
     "ClaimResult",
+    "CommitError",
     "CompletionFailed",
     "CompletionFn",
     "CompletionPayload",
@@ -85,6 +92,7 @@ __all__ = [
     "LiteLLMClient",
     "LiteLLMConfig",
     "LiteLLMResult",
+    "MotivationalDescriptor",
     "Provider",
     "RetryPolicy",
     "Session",

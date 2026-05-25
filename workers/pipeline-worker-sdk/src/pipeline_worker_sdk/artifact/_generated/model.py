@@ -9,33 +9,47 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Iterable
+from .._base import BuilderBase, MotivationalDescriptor, RDF_TYPE_IRI
 
 
 TARGET_CLASS_IRI = 'https://decision-cli.dev/ns#Model'
-RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
-class ModelBuilder:
+class ModelBuilder(BuilderBase):
     """Builder for emitting dec:Model artifacts.
 
-    Workers call ``add_*`` / ``set_*`` then ``to_triples()`` to obtain
+    Workers call ``add_*`` / ``set_*`` then ``commit()`` to obtain
     a list of ``(s, p, o)`` triples ready for the harness's GraphWriter.
-    SHACL conformance is re-validated authoritatively on the harness side
-    (ADR-041); this builder enforces only the per-field cardinality the
-    SHACL shape declares, as a fast-feedback check.
+    SHACL conformance is enforced locally on ``commit()`` (FT-080) and
+    re-validated authoritatively on the harness side (ADR-041 / FT-073).
+    The shared escape hatches ``emit_triple`` / ``link_to`` /
+    ``mark_boundary_artifact`` come from :class:`BuilderBase`.
     """
 
     TARGET_CLASS_IRI: str = TARGET_CLASS_IRI
+    TARGET_CLASS_LOCAL: str = 'Model'
+    SOURCE_SHAPE: str = 'workers/_shared/shapes/model.ttl'
+    ACCEPTS_BOUNDARY: bool = True
+    MOTIVATIONAL: tuple[MotivationalDescriptor, ...] = (
+        MotivationalDescriptor(
+            predicate_local='addresses',
+            predicate_iri='https://decision-cli.dev/ns#addresses',
+            target_class_local='Feedback',
+            target_class_iri='https://decision-cli.dev/ns#Feedback',
+        ),
+        MotivationalDescriptor(
+            predicate_local='decomposesFrom',
+            predicate_iri='https://decision-cli.dev/ns#decomposesFrom',
+            target_class_local='Brief',
+            target_class_iri='https://decision-cli.dev/ns#Brief',
+        ),
+    )
 
     P_addresses: str = 'https://decision-cli.dev/ns#addresses'
     P_decomposesFrom: str = 'https://decision-cli.dev/ns#decomposesFrom'
 
     def __init__(self, iri: str) -> None:
-        if not iri:
-            raise ValueError("artifact IRI must not be empty")
-        self.iri: str = iri
+        super().__init__(iri)
         self._addresses: list[str] = []
         self._decomposesFrom: list[str] = []
 
@@ -54,23 +68,38 @@ class ModelBuilder:
         return self
 
     def _validate_required(self) -> None:
-        """Lightweight required-field check; SHACL is authoritative."""
+        """Per-shape body-field cardinality check (FT-080 / ADR-041)."""
         return None
 
-    def to_triples(self) -> list[tuple[str, str, str]]:
-        """Return ``(subject, predicate, object)`` triples for this artifact.
+    def _motivational_state(self) -> dict[str, bool]:
+        """Map ``{predicate_local: any_added}`` for SHACL ``sh:or`` evaluation."""
+        return {
+            'addresses': bool(self._addresses),
+            'decomposesFrom': bool(self._decomposesFrom),
+        }
 
-        Objects are returned as strings: IRIs for edges, lexical forms for
-        body-field values. The caller is responsible for quoting / datatype
-        annotation when serializing to N-Quads.
-        """
-        self._validate_required()
+    def _type_triples(self) -> list[tuple[str, str, str]]:
+        """rdf:type + per-shape body triples (used by ``commit``)."""
         triples: list[tuple[str, str, str]] = []
         triples.append((self.iri, RDF_TYPE_IRI, self.TARGET_CLASS_IRI))
         for v in self._addresses:
             triples.append((self.iri, self.P_addresses, v))
         for v in self._decomposesFrom:
             triples.append((self.iri, self.P_decomposesFrom, v))
+        return triples
+
+    def to_triples(self) -> list[tuple[str, str, str]]:
+        """Backward-compatible accessor: returns the same triples
+        as :meth:`commit` without enforcing SHACL ``sh:or``.
+
+        New code should prefer :meth:`commit`, which raises on
+        missing motivational / required fields per FT-080 success
+        criterion 1.
+        """
+        self._validate_required()
+        triples = list(self._type_triples())
+        triples.extend(self._extra_triples)
+        triples.extend(self._boundary_triples())
         return triples
 
 

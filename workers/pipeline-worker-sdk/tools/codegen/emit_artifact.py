@@ -1,4 +1,4 @@
-"""Artifact-builder emitter — write-side typed surface (FT-085 / ADR-048)."""
+"""Artifact-builder emitter — write-side typed surface (FT-085 / ADR-048 / FT-080)."""
 
 from __future__ import annotations
 
@@ -19,29 +19,33 @@ def emit_artifact_builder(spec: ShapeSpec) -> str:
     lines.extend(header_lines(spec, f"Typed builder for dec:{cls} artifacts."))
     lines.append("from __future__ import annotations")
     lines.append("")
-    lines.append("from dataclasses import dataclass, field")
-    lines.append("from typing import Iterable")
+    lines.append("from .._base import BuilderBase, MotivationalDescriptor, RDF_TYPE_IRI")
     lines.append("")
     lines.append("")
     lines.append(f"TARGET_CLASS_IRI = {spec.target_class_iri!r}")
-    lines.append(
-        'RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"'
-    )
     lines.append("")
     lines.append("")
-    lines.append(f"class {cls}Builder:")
+    lines.append(f"class {cls}Builder(BuilderBase):")
     lines.append(_class_docstring(cls))
     lines.append("")
-    lines.append("    TARGET_CLASS_IRI: str = TARGET_CLASS_IRI")
+    lines.append(f"    TARGET_CLASS_IRI: str = TARGET_CLASS_IRI")
+    lines.append(f"    TARGET_CLASS_LOCAL: str = {cls!r}")
+    lines.append(f"    SOURCE_SHAPE: str = {f'workers/_shared/shapes/{spec.source_file}'!r}")
+    lines.append(f"    ACCEPTS_BOUNDARY: bool = {spec.accepts_boundary!r}")
+    _emit_motivational_class_var(lines, spec)
     lines.append("")
     _emit_constants(lines, spec)
     lines.append("")
     _emit_init(lines, spec, motivational_preds)
     lines.append("")
     _emit_setters(lines, spec, motivational_preds)
-    _emit_validator(lines, spec)
+    _emit_required_validator(lines, spec)
     lines.append("")
-    _emit_to_triples(lines, spec, motivational_preds)
+    _emit_motivational_state(lines, spec, motivational_preds)
+    lines.append("")
+    _emit_type_triples(lines, spec, motivational_preds)
+    lines.append("")
+    _emit_legacy_to_triples(lines)
     lines.append("")
     lines.append("")
     lines.append("__all__ = [")
@@ -55,13 +59,36 @@ def _class_docstring(cls: str) -> str:
     return (
         f'    """Builder for emitting dec:{cls} artifacts.\n'
         f"\n"
-        f"    Workers call ``add_*`` / ``set_*`` then ``to_triples()`` to obtain\n"
+        f"    Workers call ``add_*`` / ``set_*`` then ``commit()`` to obtain\n"
         f"    a list of ``(s, p, o)`` triples ready for the harness's GraphWriter.\n"
-        f"    SHACL conformance is re-validated authoritatively on the harness side\n"
-        f"    (ADR-041); this builder enforces only the per-field cardinality the\n"
-        f"    SHACL shape declares, as a fast-feedback check.\n"
+        f"    SHACL conformance is enforced locally on ``commit()`` (FT-080) and\n"
+        f"    re-validated authoritatively on the harness side (ADR-041 / FT-073).\n"
+        f"    The shared escape hatches ``emit_triple`` / ``link_to`` /\n"
+        f"    ``mark_boundary_artifact`` come from :class:`BuilderBase`.\n"
         f'    """'
     )
+
+
+def _emit_motivational_class_var(lines: list[str], spec: ShapeSpec) -> None:
+    if not spec.motivational:
+        lines.append("    MOTIVATIONAL: tuple[MotivationalDescriptor, ...] = ()")
+        return
+    lines.append("    MOTIVATIONAL: tuple[MotivationalDescriptor, ...] = (")
+    # Deduplicate by predicate-local (same shape can list one predicate twice
+    # for different target classes — collapse into one descriptor labelling
+    # both possibilities).
+    seen: set[str] = set()
+    for m in spec.motivational:
+        if m.predicate_local in seen:
+            continue
+        seen.add(m.predicate_local)
+        lines.append("        MotivationalDescriptor(")
+        lines.append(f"            predicate_local={m.predicate_local!r},")
+        lines.append(f"            predicate_iri={m.predicate_iri!r},")
+        lines.append(f"            target_class_local={m.target_class_local!r},")
+        lines.append(f"            target_class_iri={m.target_class_iri!r},")
+        lines.append("        ),")
+    lines.append("    )")
 
 
 def _emit_constants(lines: list[str], spec: ShapeSpec) -> None:
@@ -90,9 +117,7 @@ def _emit_init(
     lines: list[str], spec: ShapeSpec, motivational_preds: list[str]
 ) -> None:
     lines.append("    def __init__(self, iri: str) -> None:")
-    lines.append('        if not iri:')
-    lines.append('            raise ValueError("artifact IRI must not be empty")')
-    lines.append("        self.iri: str = iri")
+    lines.append("        super().__init__(iri)")
     for f in spec.fields:
         attr = safe_attr(f.local_name)
         if f.single_valued:
@@ -168,10 +193,10 @@ def _emit_setters(
         lines.append("")
 
 
-def _emit_validator(lines: list[str], spec: ShapeSpec) -> None:
+def _emit_required_validator(lines: list[str], spec: ShapeSpec) -> None:
     lines.append("    def _validate_required(self) -> None:")
     lines.append(
-        '        """Lightweight required-field check; SHACL is authoritative."""'
+        '        """Per-shape body-field cardinality check (FT-080 / ADR-041)."""'
     )
     any_required = False
     for f in spec.fields:
@@ -182,26 +207,64 @@ def _emit_validator(lines: list[str], spec: ShapeSpec) -> None:
         cond = f"self._{attr} is None" if f.single_valued else f"not self._{attr}"
         lines.append(f"        if {cond}:")
         lines.append(
-            f"            raise ValueError("
-            f'"missing required body field: {f.local_name}")'
+            f"            from .._base import CommitError"
+        )
+        lines.append(
+            f'            raise CommitError(\n'
+            f"                self.TARGET_CLASS_LOCAL,\n"
+            f'                "missing required body field: dec:{f.local_name}",\n'
+            f"                focus_iri=self.iri,\n"
+            f"            )"
         )
     if not any_required:
         lines.append("        return None")
 
 
-def _emit_to_triples(
+def _emit_motivational_state(
     lines: list[str], spec: ShapeSpec, motivational_preds: list[str]
 ) -> None:
-    lines.append("    def to_triples(self) -> list[tuple[str, str, str]]:")
+    lines.append("    def _motivational_state(self) -> dict[str, bool]:")
     lines.append(
-        '        """Return ``(subject, predicate, object)`` triples for this artifact.\n'
-        "\n"
-        "        Objects are returned as strings: IRIs for edges, lexical forms for\n"
-        "        body-field values. The caller is responsible for quoting / datatype\n"
-        "        annotation when serializing to N-Quads.\n"
-        '        """'
+        '        """Map ``{predicate_local: any_added}`` for SHACL ``sh:or`` evaluation."""'
     )
-    lines.append("        self._validate_required()")
+    if not motivational_preds:
+        lines.append("        return {}")
+        return
+    lines.append("        return {")
+    for pred in motivational_preds:
+        attr = safe_attr(pred)
+        if is_already_emitted(pred, spec):
+            # The predicate is also a regular body field / edge.
+            # Determine if the matching field/edge is single- or multi-valued.
+            single = _is_field_single_valued(spec, pred)
+            cond = (
+                f"self._{attr} is not None"
+                if single
+                else f"bool(self._{attr})"
+            )
+        else:
+            cond = f"bool(self._{attr})"
+        lines.append(f"            {pred!r}: {cond},")
+    lines.append("        }")
+
+
+def _is_field_single_valued(spec: ShapeSpec, pred_local: str) -> bool:
+    for f in spec.fields:
+        if f.local_name == pred_local:
+            return f.single_valued
+    for e in spec.edges:
+        if e.local_name == pred_local:
+            return e.single_valued
+    return False
+
+
+def _emit_type_triples(
+    lines: list[str], spec: ShapeSpec, motivational_preds: list[str]
+) -> None:
+    lines.append("    def _type_triples(self) -> list[tuple[str, str, str]]:")
+    lines.append(
+        '        """rdf:type + per-shape body triples (used by ``commit``)."""'
+    )
     lines.append("        triples: list[tuple[str, str, str]] = []")
     lines.append(
         "        triples.append((self.iri, RDF_TYPE_IRI, self.TARGET_CLASS_IRI))"
@@ -237,4 +300,23 @@ def _emit_to_triples(
         const = f"self.P_{const_safe(pred)}"
         lines.append(f"        for v in self._{attr}:")
         lines.append(f"            triples.append((self.iri, {const}, v))")
+    lines.append("        return triples")
+
+
+def _emit_legacy_to_triples(lines: list[str]) -> None:
+    """Emit a back-compat ``to_triples()`` that mirrors pre-FT-080 callers."""
+    lines.append("    def to_triples(self) -> list[tuple[str, str, str]]:")
+    lines.append(
+        '        """Backward-compatible accessor: returns the same triples\n'
+        "        as :meth:`commit` without enforcing SHACL ``sh:or``.\n"
+        "\n"
+        "        New code should prefer :meth:`commit`, which raises on\n"
+        "        missing motivational / required fields per FT-080 success\n"
+        "        criterion 1.\n"
+        '        """'
+    )
+    lines.append("        self._validate_required()")
+    lines.append("        triples = list(self._type_triples())")
+    lines.append("        triples.extend(self._extra_triples)")
+    lines.append("        triples.extend(self._boundary_triples())")
     lines.append("        return triples")

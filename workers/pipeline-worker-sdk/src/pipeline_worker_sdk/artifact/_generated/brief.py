@@ -9,25 +9,35 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Iterable
+from .._base import BuilderBase, MotivationalDescriptor, RDF_TYPE_IRI
 
 
 TARGET_CLASS_IRI = 'https://decision-cli.dev/ns#Brief'
-RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
-class BriefBuilder:
+class BriefBuilder(BuilderBase):
     """Builder for emitting dec:Brief artifacts.
 
-    Workers call ``add_*`` / ``set_*`` then ``to_triples()`` to obtain
+    Workers call ``add_*`` / ``set_*`` then ``commit()`` to obtain
     a list of ``(s, p, o)`` triples ready for the harness's GraphWriter.
-    SHACL conformance is re-validated authoritatively on the harness side
-    (ADR-041); this builder enforces only the per-field cardinality the
-    SHACL shape declares, as a fast-feedback check.
+    SHACL conformance is enforced locally on ``commit()`` (FT-080) and
+    re-validated authoritatively on the harness side (ADR-041 / FT-073).
+    The shared escape hatches ``emit_triple`` / ``link_to`` /
+    ``mark_boundary_artifact`` come from :class:`BuilderBase`.
     """
 
     TARGET_CLASS_IRI: str = TARGET_CLASS_IRI
+    TARGET_CLASS_LOCAL: str = 'Brief'
+    SOURCE_SHAPE: str = 'workers/_shared/shapes/brief.ttl'
+    ACCEPTS_BOUNDARY: bool = True
+    MOTIVATIONAL: tuple[MotivationalDescriptor, ...] = (
+        MotivationalDescriptor(
+            predicate_local='respondsTo',
+            predicate_iri='https://decision-cli.dev/ns#respondsTo',
+            target_class_local='Feedback',
+            target_class_iri='https://decision-cli.dev/ns#Feedback',
+        ),
+    )
 
     P_goal: str = 'https://decision-cli.dev/ns#goal'
     P_premise: str = 'https://decision-cli.dev/ns#premise'
@@ -40,9 +50,7 @@ class BriefBuilder:
     P_respondsTo: str = 'https://decision-cli.dev/ns#respondsTo'
 
     def __init__(self, iri: str) -> None:
-        if not iri:
-            raise ValueError("artifact IRI must not be empty")
-        self.iri: str = iri
+        super().__init__(iri)
         self._goal: str | None = None
         self._premise: str | None = None
         self._successCriteria: str | None = None
@@ -101,24 +109,44 @@ class BriefBuilder:
         return self
 
     def _validate_required(self) -> None:
-        """Lightweight required-field check; SHACL is authoritative."""
+        """Per-shape body-field cardinality check (FT-080 / ADR-041)."""
         if self._goal is None:
-            raise ValueError("missing required body field: goal")
+            from .._base import CommitError
+            raise CommitError(
+                self.TARGET_CLASS_LOCAL,
+                "missing required body field: dec:goal",
+                focus_iri=self.iri,
+            )
         if self._premise is None:
-            raise ValueError("missing required body field: premise")
+            from .._base import CommitError
+            raise CommitError(
+                self.TARGET_CLASS_LOCAL,
+                "missing required body field: dec:premise",
+                focus_iri=self.iri,
+            )
         if self._successCriteria is None:
-            raise ValueError("missing required body field: successCriteria")
+            from .._base import CommitError
+            raise CommitError(
+                self.TARGET_CLASS_LOCAL,
+                "missing required body field: dec:successCriteria",
+                focus_iri=self.iri,
+            )
         if self._title is None:
-            raise ValueError("missing required body field: title")
+            from .._base import CommitError
+            raise CommitError(
+                self.TARGET_CLASS_LOCAL,
+                "missing required body field: dec:title",
+                focus_iri=self.iri,
+            )
 
-    def to_triples(self) -> list[tuple[str, str, str]]:
-        """Return ``(subject, predicate, object)`` triples for this artifact.
+    def _motivational_state(self) -> dict[str, bool]:
+        """Map ``{predicate_local: any_added}`` for SHACL ``sh:or`` evaluation."""
+        return {
+            'respondsTo': bool(self._respondsTo),
+        }
 
-        Objects are returned as strings: IRIs for edges, lexical forms for
-        body-field values. The caller is responsible for quoting / datatype
-        annotation when serializing to N-Quads.
-        """
-        self._validate_required()
+    def _type_triples(self) -> list[tuple[str, str, str]]:
+        """rdf:type + per-shape body triples (used by ``commit``)."""
         triples: list[tuple[str, str, str]] = []
         triples.append((self.iri, RDF_TYPE_IRI, self.TARGET_CLASS_IRI))
         if self._goal is not None:
@@ -139,6 +167,20 @@ class BriefBuilder:
             triples.append((self.iri, self.P_references, v))
         for v in self._respondsTo:
             triples.append((self.iri, self.P_respondsTo, v))
+        return triples
+
+    def to_triples(self) -> list[tuple[str, str, str]]:
+        """Backward-compatible accessor: returns the same triples
+        as :meth:`commit` without enforcing SHACL ``sh:or``.
+
+        New code should prefer :meth:`commit`, which raises on
+        missing motivational / required fields per FT-080 success
+        criterion 1.
+        """
+        self._validate_required()
+        triples = list(self._type_triples())
+        triples.extend(self._extra_triples)
+        triples.extend(self._boundary_triples())
         return triples
 
 

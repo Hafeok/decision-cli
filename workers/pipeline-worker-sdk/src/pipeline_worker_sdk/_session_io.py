@@ -12,6 +12,7 @@ import pyoxigraph
 from .types import DispatchEvent
 
 _NQUADS = pyoxigraph.RdfFormat.N_QUADS
+_RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
 def now_iso() -> str:
@@ -35,6 +36,48 @@ def derive_session_iri(dispatch: DispatchEvent, explicit: str | None) -> str:
     if metadata_session:
         return str(metadata_session)
     return f"urn:dec:session:{uuid.uuid4()}"
+
+
+def triples_to_quads(
+    triples: list[tuple[str, str, str]], graph_iri: str
+) -> list[pyoxigraph.Quad]:
+    """Convert ``(s, p, o)`` strings into Quads under a named graph.
+
+    Each triple's object is interpreted as an IRI when it parses as one
+    (starts with a scheme followed by ``:``) and as a literal otherwise.
+    This matches the builder convention (FT-080): typed edges carry IRIs,
+    body fields carry lexical literal values.
+    """
+    if not triples:
+        return []
+    graph = pyoxigraph.NamedNode(graph_iri)
+    out: list[pyoxigraph.Quad] = []
+    for subj, pred, obj in triples:
+        s = pyoxigraph.NamedNode(subj)
+        p = pyoxigraph.NamedNode(pred)
+        o = (
+            pyoxigraph.NamedNode(obj)
+            if _looks_like_iri(obj)
+            else pyoxigraph.Literal(obj)
+        )
+        out.append(pyoxigraph.Quad(s, p, o, graph))
+    return out
+
+
+def _looks_like_iri(value: str) -> bool:
+    if not value:
+        return False
+    # Match RFC 3987-style schemes (alpha + alnum/+/-/. then ':').
+    head = value.split(":", 1)
+    if len(head) < 2:
+        return False
+    scheme = head[0]
+    if not scheme or not scheme[0].isalpha():
+        return False
+    for ch in scheme[1:]:
+        if not (ch.isalnum() or ch in "+-."):
+            return False
+    return True
 
 
 def load_nquads(store: pyoxigraph.Store, nquads: str) -> None:
@@ -101,4 +144,5 @@ __all__ = [
     "dump_nquads",
     "load_nquads",
     "now_iso",
+    "triples_to_quads",
 ]
