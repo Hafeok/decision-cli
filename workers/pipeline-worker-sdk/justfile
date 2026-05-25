@@ -1,0 +1,14 @@
+# Convenience targets for the pipeline-worker-sdk (FT-085).
+#
+# Run from this directory:
+#   just codegen        # regenerate the SHACL-driven typed surfaces
+#   just codegen-check  # CI-style drift detection (no writes)
+
+# Regenerate Bundle accessors, Artifact builders, and Pydantic schemas
+# from the shapes under ../_shared/shapes/.
+codegen:
+    uv run python -m tools.codegen
+
+# Refuse to pass when the on-disk tree differs from what the shapes produce.
+codegen-check:
+    uv run python -m tools.codegen --check

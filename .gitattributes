@@ -1,0 +1,7 @@
+# Generated SHACL-driven typed surfaces (FT-085 / ADR-048).
+# Listed as linguist-generated so diffs are collapsed by default on
+# review; regenerate via `uv run codegen` from
+# workers/pipeline-worker-sdk/.
+workers/pipeline-worker-sdk/src/pipeline_worker_sdk/bundle/_generated/** linguist-generated=true
+workers/pipeline-worker-sdk/src/pipeline_worker_sdk/artifact/_generated/** linguist-generated=true
+workers/pipeline-worker-sdk/src/pipeline_worker_sdk/schemas/_generated/** linguist-generated=true
