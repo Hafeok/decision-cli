@@ -1,0 +1,18 @@
+# Per-type provenance composition shape for dec:Subscription (FT-072 / ADR-038).
+#
+# A Subscription artifact records a standing interest one role or system
+# has in a class of events. Its motivational origin is the Brief, ADR,
+# or Policy that authored the subscription as a deliberate decision.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:SubscriptionShape a sh:NodeShape ;
+    sh:targetClass dec:Subscription ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:motivatedBy ; sh:minCount 1 ; sh:class dec:Brief  ] ]
+        [ sh:property [ sh:path dec:motivatedBy ; sh:minCount 1 ; sh:class dec:ADR    ] ]
+        [ sh:property [ sh:path dec:motivatedBy ; sh:minCount 1 ; sh:class dec:Policy ] ]
+    ) .

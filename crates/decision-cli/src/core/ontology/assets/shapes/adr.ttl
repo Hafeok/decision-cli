@@ -1,0 +1,19 @@
+# Per-type provenance composition shape for dec:ADR (FT-072 / ADR-038).
+#
+# Composes the dual-provenance discipline for the ADR artifact type. The
+# motivational alternatives in the sh:or block reflect the three load-
+# bearing reasons an ADR is authored: it addresses a Question, decides
+# for one or more Features, or supersedes a prior ADR.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:ADRShape a sh:NodeShape ;
+    sh:targetClass dec:ADR ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:addresses   ; sh:minCount 1 ; sh:class dec:Question ] ]
+        [ sh:property [ sh:path dec:decidesFor  ; sh:minCount 1 ; sh:class dec:Feature  ] ]
+        [ sh:property [ sh:path dec:supersedes  ; sh:minCount 1 ; sh:class dec:ADR      ] ]
+    ) .

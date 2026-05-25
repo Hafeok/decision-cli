@@ -1,0 +1,18 @@
+# Per-type provenance composition shape for dec:DiscoveryFinding (FT-072 / ADR-038).
+#
+# A DiscoveryFinding is the typed output of a sensing action: a queryable
+# record of a market signal, monitoring read, log query, or user
+# interview. Its motivational origin is the SensingAction that produced
+# it. Many findings — those entering from outside the orchestration
+# graph — satisfy the sh:or via the BoundaryArtifact branch instead.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:DiscoveryFindingShape a sh:NodeShape ;
+    sh:targetClass dec:DiscoveryFinding ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:derivedFrom ; sh:minCount 1 ; sh:class dec:SensingAction ] ]
+    ) .

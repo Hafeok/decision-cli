@@ -2,12 +2,17 @@
 id: TC-122
 title: per_type_shape_files_load_and_compose_universal_blocks
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_122_per_type_shape_files_load_and_compose_universal_bl
+runner-timeout: 120
+last-run: 2026-05-25T20:00:21.644850523+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

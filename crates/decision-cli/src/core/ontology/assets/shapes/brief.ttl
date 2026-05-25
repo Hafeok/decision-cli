@@ -1,0 +1,19 @@
+# Per-type provenance composition shape for dec:Brief (FT-072 / ADR-038 / ADR-044).
+#
+# A Brief's motivational origin is the surfacing Request or Feedback it
+# responds to. Many Briefs (especially in early slices) are themselves
+# boundary artifacts — authored in conversation outside the orchestration
+# graph; those instances satisfy the sh:or via the first BoundaryArtifact
+# branch and carry dec:external_origin instead of a motivational edge.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:BriefShape a sh:NodeShape ;
+    sh:targetClass dec:Brief ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:respondsTo ; sh:minCount 1 ; sh:class dec:Request  ] ]
+        [ sh:property [ sh:path dec:respondsTo ; sh:minCount 1 ; sh:class dec:Feedback ] ]
+    ) .

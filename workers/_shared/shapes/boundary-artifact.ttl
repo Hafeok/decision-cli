@@ -1,0 +1,127 @@
+# BoundaryArtifact class + four slice-1 subclasses + SHACL shapes (FT-071 / ADR-040).
+#
+# The dual-provenance discipline (ADR-038) requires every artifact to
+# carry both a mechanical block and at least one motivational predicate
+# edge. Some artifacts legitimately have NO graph-internal motivational
+# ancestor — their motivational origin is external (sensing-action
+# outputs, initial requests, bootstrap-era writes, migration backfills).
+# `dec:BoundaryArtifact` is the orphan-motivational escape hatch:
+# instances are exempt from the per-type `sh:or` motivational requirement
+# at the type-shape level (FT-072 wires the boundary branch into each
+# per-type `sh:or`) but MUST still carry the universal mechanical block
+# (FT-069) AND an explicit `dec:external_origin` literal that documents
+# how the artifact entered the system.
+#
+# Slice-1 subclasses (FT-071):
+#
+#   dec:SensingActionOutput — artifacts produced by sensing-action sessions
+#                             (monitoring reads, log queries, API polls).
+#   dec:InitialRequest      — artifacts entering from outside the
+#                             orchestration graph (customer requests,
+#                             upstream Feedback, Briefs authored before
+#                             the system existed).
+#   dec:BootstrapArtifact   — artifacts written during the catalog
+#                             bootstrap path (initial role catalog,
+#                             shape files, capability seed entries).
+#   dec:MigrationBackfill   — artifacts whose informal pre-discipline
+#                             provenance was reconstructed by tooling
+#                             (FT-074). Requires `dec:isMigrationBackfill
+#                             true` so synthetic provenance is queryable
+#                             per ADR-042.
+#
+# Per-type composition: each per-type shape file (FT-072) lists
+# `[ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]` as the first
+# branch of its `sh:or` — a `sh:class` constraint with subClassOf
+# reasoning (the per-FT-073 oxigraph-shacl default) admits every
+# subclass instance uniformly.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# --- Top class --------------------------------------------------------------
+
+dec:BoundaryArtifact a rdfs:Class ;
+    rdfs:label "BoundaryArtifact" ;
+    rdfs:comment "Artifact whose motivational origin is external to the orchestration graph (FT-071 / ADR-040)." .
+
+# --- Slice-1 subclasses -----------------------------------------------------
+# Open question 4 resolution: subclasses with per-subtype shape extensions
+# (centralises the boundary concept; admits per-subtype tightening of
+# `dec:external_origin` in slice 2+).
+
+dec:SensingActionOutput a rdfs:Class ;
+    rdfs:subClassOf dec:BoundaryArtifact ;
+    rdfs:label "SensingActionOutput" ;
+    rdfs:comment "Artifact produced by a sensing-action session — motivational origin is an external endpoint (FT-071 / ADR-040)." .
+
+dec:InitialRequest a rdfs:Class ;
+    rdfs:subClassOf dec:BoundaryArtifact ;
+    rdfs:label "InitialRequest" ;
+    rdfs:comment "Artifact entering from outside the orchestration graph (customer request, upstream feedback, pre-discipline Brief) — FT-071 / ADR-040." .
+
+dec:BootstrapArtifact a rdfs:Class ;
+    rdfs:subClassOf dec:BoundaryArtifact ;
+    rdfs:label "BootstrapArtifact" ;
+    rdfs:comment "Artifact written during the catalog bootstrap path before any non-synthetic Session existed (FT-071 / ADR-040)." .
+
+dec:MigrationBackfill a rdfs:Class ;
+    rdfs:subClassOf dec:BoundaryArtifact ;
+    rdfs:label "MigrationBackfill" ;
+    rdfs:comment "Artifact whose informal pre-discipline provenance was reconstructed by migration tooling (FT-074 / ADR-042). Requires dec:isMigrationBackfill true." .
+
+# --- Base shape: mechanical block + external_origin -------------------------
+#
+# Composes the universal mechanical fragment via `sh:and`. BoundaryArtifact
+# instances STILL carry the mechanical block: they are produced by SOME
+# session (even if synthetic — a :BootstrapSession or :HistoricalSession).
+# `dec:external_origin` is a single required non-empty string documenting
+# how the artifact entered the system. The format is intentionally
+# unstructured in slice 1; per-subtype tightening (chat-transcript IDs,
+# CI-run refs, sensing-action references) is deferred to slice 2+.
+
+dec:BoundaryArtifactShape a sh:NodeShape ;
+    sh:targetClass dec:BoundaryArtifact ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:property [
+        sh:path     dec:external_origin ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:BoundaryArtifact requires exactly one non-empty dec:external_origin literal (FT-071 / ADR-040)."
+    ] .
+
+# --- MigrationBackfill shape extension --------------------------------------
+#
+# ADR-042 requires synthetic backfill provenance to be queryable. Every
+# `dec:MigrationBackfill` instance MUST additionally carry
+# `dec:isMigrationBackfill true` so the standard "real provenance only"
+# filter (`FILTER NOT EXISTS { ?session dec:isMigrationBackfill true }`)
+# can elide synthetic artifacts.
+
+dec:MigrationBackfillShape a sh:NodeShape ;
+    sh:targetClass dec:MigrationBackfill ;
+    sh:property [
+        sh:path     dec:isMigrationBackfill ;
+        sh:hasValue true ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message  "dec:MigrationBackfill requires dec:isMigrationBackfill true (FT-071 / ADR-042)."
+    ] .
+
+# --- Property declarations --------------------------------------------------
+
+dec:external_origin a rdf:Property ;
+    rdfs:domain dec:BoundaryArtifact ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "external_origin" ;
+    rdfs:comment "Free-form string documenting how a BoundaryArtifact entered the system (FT-071 / ADR-040)." .
+
+dec:isMigrationBackfill a rdf:Property ;
+    rdfs:domain dec:MigrationBackfill ;
+    rdfs:range  xsd:boolean ;
+    rdfs:label  "isMigrationBackfill" ;
+    rdfs:comment "Marks an artifact as a synthetic migration-backfill record so synthetic provenance is queryable (FT-071 / ADR-042 / FT-074)." .

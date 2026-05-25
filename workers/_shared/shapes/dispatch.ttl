@@ -1,0 +1,17 @@
+# Per-type provenance composition shape for dec:Dispatch (FT-072 / ADR-038).
+#
+# Per FT-072 §Invariants, Dispatch carries its own mechanical block and
+# is never boundary-originated; its shape therefore composes the
+# universal mechanical fragment via sh:and but intentionally omits the
+# sh:or motivational/boundary alternatives. Dispatch is a structural
+# event in the orchestration lifecycle — its "origin" is always the
+# orchestrator's own act of placing work on a worker, and that
+# attribution is already covered by the mechanical block's
+# prov:wasGeneratedBy and prov:wasAttributedTo triples.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:DispatchProvenanceShape a sh:NodeShape ;
+    sh:targetClass dec:Dispatch ;
+    sh:and ( dec:MechanicalProvenanceShape ) .

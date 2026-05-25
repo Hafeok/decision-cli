@@ -22,11 +22,17 @@ pub mod capability;
 pub mod coverage_waiver;
 mod helpers;
 pub mod mechanical_provenance;
+mod per_type_shapes;
 pub mod role_binding;
 pub mod session_record;
 pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;
+
+pub use per_type_shapes::{
+    PER_TYPE_BOUNDARY_EXEMPT_FILES, PER_TYPE_SHAPE_FILES, PER_TYPE_SHAPE_IRIS,
+    SHAPES_MANIFEST_TTL,
+};
 
 use std::sync::OnceLock;
 
@@ -41,6 +47,7 @@ use helpers::{
     invariant_ontology_classes_present, invariant_shapes_present, load_turtle_into_graph,
     sha256_hex_of_assets,
 };
+use per_type_shapes::invariant_per_type_shape_files_present;
 
 /// The version baked into the embedded ontology header. Bumping this
 /// constant requires regenerating `ontology.ttl`'s `owl:versionInfo`
@@ -84,6 +91,7 @@ pub const MOTIVATIONAL_PREDICATES_TTL: &str =
 /// per-type shapes (FT-072) can reference `:BoundaryArtifact` class
 /// membership in the first branch of their `sh:or` block.
 pub const BOUNDARY_ARTIFACT_SHAPES_TTL: &str = include_str!("assets/shapes/boundary-artifact.ttl");
+
 
 /// IRI of the universal mechanical-provenance `sh:NodeShape` (FT-069 /
 /// ADR-038). Composed via `sh:and` from every artifact-type shape.
@@ -226,12 +234,22 @@ impl OntologyHandle {
         // `:BoundaryArtifact` class membership in their `sh:or` blocks
         // and SPARQL `rdfs:subClassOf` reasoning is queryable.
         load_turtle_into_graph(&store, BOUNDARY_ARTIFACT_SHAPES_TTL, SHAPES_GRAPH_IRI)?;
+        // FT-072 / ADR-038: per-type shape catalog. Each file composes
+        // the mechanical block (loaded above) via sh:and and the
+        // BoundaryArtifact branch (loaded above) via the first sh:or
+        // alternative. Load order is enumerated in `PER_TYPE_SHAPE_FILES`
+        // and mirrored in `assets/shapes/manifest.ttl` for non-Rust
+        // consumers.
+        for (_filename, ttl) in PER_TYPE_SHAPE_FILES {
+            load_turtle_into_graph(&store, ttl, SHAPES_GRAPH_IRI)?;
+        }
 
         invariant_ontology_classes_present(&store)?;
         invariant_shapes_present(&store)?;
         invariant_mechanical_provenance_shapes_present(&store)?;
         invariant_motivational_predicates_present(&store)?;
         invariant_boundary_artifact_shapes_present(&store)?;
+        invariant_per_type_shape_files_present(&store)?;
 
         let hash = sha256_hex_of_assets();
         let version = extract_version_info(&store)?.unwrap_or_else(|| ONTOLOGY_VERSION.to_string());

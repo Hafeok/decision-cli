@@ -1,0 +1,50 @@
+# Shape-file manifest (FT-072 / ADR-038).
+#
+# Lists every shape file shipped under
+# `crates/decision-cli/src/core/ontology/assets/shapes/` in the load
+# order the orchestration store's bootstrap walk must use. Mechanical
+# and boundary fragments are loaded first so per-type shapes that
+# reference :MechanicalProvenanceShape (via sh:and) or :BoundaryArtifact
+# (via sh:or's first branch) resolve correctly when their files parse.
+#
+# Consumed by the Rust ontology loader (FT-072 wiring in
+# `crates/decision-cli/src/core/ontology/mod.rs`) and packaged into
+# `workers/_shared/shapes/` for the Python defensive validator (pyshacl).
+# The Rust and Python copies of this directory MUST be byte-identical;
+# CI enforces that property via TC-122.
+#
+# The manifest is a flat rdf:Seq so callers can iterate in declared
+# order without re-deriving it from filenames.
+
+@prefix dec:      <https://decision-cli.dev/ns#> .
+@prefix manifest: <https://decision-cli.dev/ns/shapes/manifest#> .
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+
+manifest:ShapesManifest a rdf:Seq ;
+    rdfs:label "FT-072 shape-file load manifest" ;
+    rdfs:comment "Files to load into the SHAPES_GRAPH_IRI named graph at orchestration-store bootstrap, in declared order." ;
+
+    # ----- Universal blocks first -------------------------------------------
+    rdf:_1  "mechanical-provenance.ttl" ;
+    rdf:_2  "boundary-artifact.ttl" ;
+    rdf:_3  "motivational-predicates.ttl" ;
+
+    # ----- Per-type shapes (alphabetical for stability) ---------------------
+    rdf:_4  "acknowledgement.ttl" ;
+    rdf:_5  "adr.ttl" ;
+    rdf:_6  "brief.ttl" ;
+    rdf:_7  "conformance-audit.ttl" ;
+    rdf:_8  "dependency.ttl" ;
+    rdf:_9  "discovery-finding.ttl" ;
+    rdf:_10 "dispatch.ttl" ;
+    rdf:_11 "feature.ttl" ;
+    rdf:_12 "feedback.ttl" ;
+    rdf:_13 "model.ttl" ;
+    rdf:_14 "policy.ttl" ;
+    rdf:_15 "query-template.ttl" ;
+    rdf:_16 "subscription.ttl" ;
+    rdf:_17 "tc.ttl" ;
+    rdf:_18 "worker-image-submission.ttl" ;
+    rdf:_19 "worker-image.ttl" ;
+    rdf:_20 "question.ttl" .

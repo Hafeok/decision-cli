@@ -1,0 +1,18 @@
+# Per-type provenance composition shape for dec:Acknowledgement (FT-072 / ADR-038 / ADR-044).
+#
+# An Acknowledgement's motivational origin is the Brief, ADR, or Policy
+# whose authored debt it records. The :motivatedBy predicate's range is
+# left to per-type shapes per FT-070.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:AcknowledgementShape a sh:NodeShape ;
+    sh:targetClass dec:Acknowledgement ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:motivatedBy ; sh:minCount 1 ; sh:class dec:Brief  ] ]
+        [ sh:property [ sh:path dec:motivatedBy ; sh:minCount 1 ; sh:class dec:ADR    ] ]
+        [ sh:property [ sh:path dec:motivatedBy ; sh:minCount 1 ; sh:class dec:Policy ] ]
+    ) .

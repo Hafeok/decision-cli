@@ -11,8 +11,9 @@ use super::{
     BOUNDARY_ARTIFACT_SHAPES_TTL, BOUNDARY_ARTIFACT_SUBCLASSES, EXTERNAL_ORIGIN_PROP,
     IS_MIGRATION_BACKFILL_PROP, MECHANICAL_PROVENANCE_SHAPE, MECHANICAL_PROVENANCE_SHAPES_TTL,
     MIGRATION_BACKFILL, MIGRATION_BACKFILL_SHAPE, MOTIVATIONAL_PREDICATES,
-    MOTIVATIONAL_PREDICATES_TTL, ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL, PROV_WAS_DERIVED_FROM,
-    SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_TTL,
+    MOTIVATIONAL_PREDICATES_TTL, ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL, PER_TYPE_SHAPE_FILES,
+    PROV_WAS_DERIVED_FROM, SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_MANIFEST_TTL,
+    SHAPES_TTL,
 };
 
 pub(super) fn load_turtle_into_graph(
@@ -41,6 +42,14 @@ pub(super) fn sha256_hex_of_assets() -> String {
     hasher.update(MOTIVATIONAL_PREDICATES_TTL.as_bytes());
     hasher.update(b"\x00");
     hasher.update(BOUNDARY_ARTIFACT_SHAPES_TTL.as_bytes());
+    // FT-072: per-type shape files contribute to the embedded-asset
+    // hash so any byte-level drift bumps the ontology version digest.
+    for (_filename, ttl) in PER_TYPE_SHAPE_FILES {
+        hasher.update(b"\x00");
+        hasher.update(ttl.as_bytes());
+    }
+    hasher.update(b"\x00");
+    hasher.update(SHAPES_MANIFEST_TTL.as_bytes());
     let digest = hasher.finalize();
     let mut out = String::with_capacity(digest.len() * 2);
     for b in digest {
@@ -437,3 +446,4 @@ fn ensure_subclass_of(store: &Store, subclass: &str, parent: &str) -> Result<(),
     }
     Ok(())
 }
+

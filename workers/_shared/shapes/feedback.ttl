@@ -1,0 +1,27 @@
+# Per-type provenance composition shape for dec:Feedback (FT-072 / ADR-038).
+#
+# Note: dec:Feedback already has a field-level shape `dec:FeedbackShape`
+# in shapes.ttl that enforces required-field cardinality (feedbackClass,
+# lifecycleState, targetRole, evidence, sourceSession, inStream). This
+# file adds the dual-provenance composition through a *separate* shape
+# (`dec:FeedbackProvenanceShape`) so both constraint sets apply
+# simultaneously without colliding on the same shape IRI.
+#
+# Motivational alternatives for Feedback (per FT-070):
+#   * dec:observedIn  → dec:Session       — the feedback surfaced inside
+#                                          a session that consumed it.
+#   * dec:observedVia → dec:SensingAction  — a sensing action raised it.
+#   * dec:producedBy  → dec:Role           — the authoring role.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:FeedbackProvenanceShape a sh:NodeShape ;
+    sh:targetClass dec:Feedback ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:observedIn  ; sh:minCount 1 ; sh:class dec:Session       ] ]
+        [ sh:property [ sh:path dec:observedVia ; sh:minCount 1 ; sh:class dec:SensingAction ] ]
+        [ sh:property [ sh:path dec:producedBy  ; sh:minCount 1 ; sh:class dec:Role          ] ]
+    ) .

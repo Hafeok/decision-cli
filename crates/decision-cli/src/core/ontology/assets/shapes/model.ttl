@@ -1,0 +1,18 @@
+# Per-type provenance composition shape for dec:Model (FT-072 / ADR-038).
+#
+# A Model artifact (Model catalog entry, distinct from dec:Capability)
+# originates either at the boundary (CI-posted, externally vetted) or
+# from a Brief authorising its addition, or from a Feedback identifying
+# a capability gap the new Model addresses.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:ModelShape a sh:NodeShape ;
+    sh:targetClass dec:Model ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+        [ sh:property [ sh:path dec:addresses      ; sh:minCount 1 ; sh:class dec:Feedback ] ]
+        [ sh:property [ sh:path dec:decomposesFrom ; sh:minCount 1 ; sh:class dec:Brief    ] ]
+    ) .

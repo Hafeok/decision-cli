@@ -1,0 +1,18 @@
+# Per-type provenance composition shape for dec:WorkerImageSubmission (FT-072 / ADR-038 / ADR-055).
+#
+# A WorkerImageSubmission is the artifact carrying an OCI image + sigstore
+# attestation + SBOM into the catalog for registration. By definition it
+# is *always* boundary-originated (CI posts the submission), so the only
+# satisfying branch of the sh:or is the BoundaryArtifact escape hatch.
+# Motivational branches are intentionally absent — there is no
+# graph-internal predecessor that motivates a submission's existence.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+dec:WorkerImageSubmissionShape a sh:NodeShape ;
+    sh:targetClass dec:WorkerImageSubmission ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:or (
+        [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
+    ) .
