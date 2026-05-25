@@ -1,4 +1,4 @@
-"""Public surface of the pipeline-worker SDK wire layer (FT-077) plus session (FT-078)."""
+"""Public surface re-exporting the pipeline-worker SDK's wire/session/provider layers."""
 
 from .catalog import CatalogCache
 from .claim import ClaimClient
@@ -7,6 +7,17 @@ from .poster import (
     CompletionPoster,
     CompletionRejected,
     RetryPolicy,
+)
+from .provider import (
+    DEFAULT_LITELLM_BASE_URL,
+    CompletionFn,
+    CompletionResult,
+    CompletionTelemetry,
+    LiteLLMClient,
+    LiteLLMConfig,
+    LiteLLMResult,
+    Provider,
+    StructuredFn,
 )
 from .session import (
     OUTCOME_BLOCKED,
@@ -25,6 +36,7 @@ from .types import (
 from .wire import HarnessEndpoints, WireClient
 
 __all__ = [
+    "DEFAULT_LITELLM_BASE_URL",
     "OUTCOME_BLOCKED",
     "OUTCOME_ESCALATED",
     "OUTCOME_FAILED",
@@ -34,14 +46,22 @@ __all__ = [
     "ClaimClient",
     "ClaimResult",
     "CompletionFailed",
+    "CompletionFn",
     "CompletionPayload",
     "CompletionPoster",
     "CompletionRejected",
+    "CompletionResult",
+    "CompletionTelemetry",
     "DispatchEvent",
     "HarnessEndpoints",
+    "LiteLLMClient",
+    "LiteLLMConfig",
+    "LiteLLMResult",
+    "Provider",
     "RetryPolicy",
     "Session",
     "SseConsumer",
+    "StructuredFn",
     "WireClient",
     "envelope_to_dispatch",
     "parse_sse_block",
