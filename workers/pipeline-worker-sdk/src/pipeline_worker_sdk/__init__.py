@@ -2,7 +2,7 @@
 
 from .catalog import CatalogCache
 from .claim import ClaimClient
-from .driver import Driver, FakeDispatch, FakeDriver
+from .driver import Driver, EventDriver, FakeDispatch, FakeDriver
 from .poster import (
     CompletionFailed,
     CompletionPoster,
@@ -65,6 +65,7 @@ __all__ = [
     "CompletionTelemetry",
     "DispatchEvent",
     "Driver",
+    "EventDriver",
     "FakeDispatch",
     "FakeDriver",
     "FeedbackClass",
