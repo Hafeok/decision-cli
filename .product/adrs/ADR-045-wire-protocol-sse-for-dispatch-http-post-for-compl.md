@@ -1,13 +1,14 @@
 ---
 id: ADR-045
 title: 'Wire protocol: SSE for dispatch, HTTP POST for completion'
-status: proposed
+status: accepted
 features:
 - FT-077
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:99a717209d5b8add8bfdd73ce813c6eaee827774d384fc0dabc5372f52ce0b5b
 ---
 
 ## Context

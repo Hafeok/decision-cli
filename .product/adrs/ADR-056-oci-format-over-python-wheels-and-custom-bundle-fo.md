@@ -1,13 +1,14 @@
 ---
 id: ADR-056
 title: OCI format over Python wheels and custom bundle for worker packaging
-status: proposed
+status: accepted
 features:
 - FT-088
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:426084824ca4ece87b19dc2d87b4082939420daf8b9c9abbd8b0be100abba3f9
 ---
 
 ## Context

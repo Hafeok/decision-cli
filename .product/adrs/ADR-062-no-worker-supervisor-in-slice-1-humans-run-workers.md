@@ -1,13 +1,14 @@
 ---
 id: ADR-062
 title: No worker supervisor in slice 1; humans run workers manually
-status: proposed
+status: accepted
 features:
 - FT-095
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:5d28e06b3f1c4b1bcdfbe5cdff54d49b6a835f92a338cce19850379dfccd3be3
 ---
 
 ## Context

@@ -1,13 +1,14 @@
 ---
 id: ADR-058
 title: Cosign keyless signing via GitHub OIDC from slice 1
-status: proposed
+status: accepted
 features:
 - FT-089
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:edc60803c265f0df178b7cc8f790faa8974addeb6cac2ec3dbeab279c52c3dcb
 ---
 
 ## Context

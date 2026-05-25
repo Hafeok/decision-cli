@@ -1,13 +1,14 @@
 ---
 id: ADR-051
 title: Artifact builders codegen alongside bundle accessors (one shape, two surfaces)
-status: proposed
+status: accepted
 features:
 - FT-080
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:5eacc28e9b0f9a01d482ce05ab053b42c0690cc7efda3bbaea7872350a39ba41
 ---
 
 ## Context

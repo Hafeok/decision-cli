@@ -1,13 +1,14 @@
 ---
 id: ADR-049
 title: pyoxigraph as the in-memory bundle store on the worker
-status: proposed
+status: accepted
 features:
 - FT-078
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:b9f5a2c3e033d3713f6730c860b1b928e0563ee8af6b9ea869e610570381078c
 ---
 
 ## Context

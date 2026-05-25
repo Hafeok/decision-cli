@@ -1,13 +1,14 @@
 ---
 id: ADR-060
 title: Manual conformance review for WorkerImage admission in slice 1
-status: proposed
+status: accepted
 features:
 - FT-092
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:bc0e0abefc34fd2d75b387d249d268d1bb53e615ffbb7990482a7b415cbff508
 ---
 
 ## Context

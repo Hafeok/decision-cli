@@ -1,13 +1,14 @@
 ---
 id: ADR-054
 title: LiteLLM as the worker SDK's provider substrate (no per-provider adapters)
-status: proposed
+status: accepted
 features:
 - FT-081
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:7a8a24888df513abdb7e3bc6546aac0cc067e6ce7f17be4b706c2a9e785fe9db
 ---
 
 ## Context

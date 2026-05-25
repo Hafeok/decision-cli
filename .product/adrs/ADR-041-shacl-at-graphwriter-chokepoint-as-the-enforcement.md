@@ -1,7 +1,7 @@
 ---
 id: ADR-041
 title: SHACL at GraphWriter chokepoint as the enforcement mechanism for provenance discipline
-status: proposed
+status: accepted
 features:
 - FT-072
 - FT-073
@@ -11,6 +11,7 @@ domains:
 - data-model
 - error-handling
 scope: cross-cutting
+content-hash: sha256:886e1992c1692fa2c513edd7754b5921336b1edecc1e2f2ce064b917d5dad474
 ---
 
 ## Context

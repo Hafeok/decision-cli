@@ -1,13 +1,14 @@
 ---
 id: ADR-057
 title: Capability tags carried as OCI labels for manifest-level discovery
-status: proposed
+status: accepted
 features:
 - FT-088
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:ae5c385247b9b23ca331b1da35ba750bdd0d8d0070a75dcb77fe47d2f8035635
 ---
 
 ## Context

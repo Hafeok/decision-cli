@@ -1,7 +1,7 @@
 ---
 id: ADR-042
 title: 'Migration policy: grandfather with backfill, quarantine orphans'
-status: proposed
+status: accepted
 features:
 - FT-074
 supersedes: []
@@ -9,6 +9,7 @@ superseded-by: []
 domains:
 - data-model
 scope: domain
+content-hash: sha256:b30e9936478989fa338269fd302cc485990288438806c3743311a29d99592a59
 ---
 
 ## Context

@@ -1,7 +1,7 @@
 ---
 id: ADR-048
 title: Build-time SHACL codegen for typed worker Bundle accessors and Artifact builders
-status: proposed
+status: accepted
 features:
 - FT-079
 - FT-080
@@ -10,6 +10,7 @@ supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:c4ccbae5a7280573c0e1cfa4d1355bbdb10013a9e10d2f0d2db3c8937b0d4e74
 ---
 
 ## Context

@@ -1,13 +1,14 @@
 ---
 id: ADR-044
 title: Brief as a typed artifact in product-cli's catalog
-status: proposed
+status: accepted
 features:
 - FT-076
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:923d511bfc6351f7078f085815a03fffcf96612ffe3f3722fe46e968dc1104b5
 ---
 
 ## Context

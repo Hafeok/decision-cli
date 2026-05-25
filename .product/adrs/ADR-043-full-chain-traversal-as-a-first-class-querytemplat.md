@@ -1,7 +1,7 @@
 ---
 id: ADR-043
 title: Full-chain traversal as a first-class QueryTemplate artifact
-status: proposed
+status: accepted
 features:
 - FT-075
 supersedes: []
@@ -10,6 +10,7 @@ domains:
 - api
 - data-model
 scope: cross-cutting
+content-hash: sha256:54349e806972afd39e9564a53ac154a56399868f54af970acaa5318ab458516c
 ---
 
 ## Context

@@ -1,13 +1,14 @@
 ---
 id: ADR-064
 title: LiteLLM proxy as the LLM-call substrate from slice 1
-status: proposed
+status: accepted
 features:
 - FT-096
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:321e40b08d621e20efbbdbabce5f4fa3c4e947d57584bb2b5d3a261925070df0
 ---
 
 ## Context

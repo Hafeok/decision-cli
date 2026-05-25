@@ -1,13 +1,14 @@
 ---
 id: ADR-059
 title: CycloneDX SBOM attached as an OCI referrer
-status: proposed
+status: accepted
 features:
 - FT-091
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:49c59d9fb18c7d409432db461ae79daf08e25ddb21e5d135c526bf70bc2650fd
 ---
 
 ## Context

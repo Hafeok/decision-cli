@@ -1,13 +1,14 @@
 ---
 id: ADR-061
 title: Reusable GitHub Actions workflow over per-repo duplication
-status: proposed
+status: accepted
 features:
 - FT-093
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:abade6b6271b78a3854c8d1d3f8bde10db2e8be2775fb4845c0b3ed2b426d851
 ---
 
 ## Context

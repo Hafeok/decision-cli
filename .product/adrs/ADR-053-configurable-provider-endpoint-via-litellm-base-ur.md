@@ -1,13 +1,14 @@
 ---
 id: ADR-053
 title: Configurable provider endpoint via LITELLM_BASE_URL and LITELLM_API_KEY
-status: proposed
+status: accepted
 features:
 - FT-081
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:73906b53ac0038cbe99a84d04933378c0bc605f95289d784bed78b59f970c3cb
 ---
 
 ## Context

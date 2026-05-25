@@ -1,13 +1,14 @@
 ---
 id: ADR-050
 title: Session as a direct materialization of the PROV-O Activity
-status: proposed
+status: accepted
 features:
 - FT-078
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:3b9240eb4b3164a8333e37a1454ef368cf5613354e31eb90c9d745f9bc04e3e9
 ---
 
 ## Context

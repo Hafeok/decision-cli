@@ -1,13 +1,14 @@
 ---
 id: ADR-046
 title: N-Quads as wire serialization for dispatch and completion payloads
-status: proposed
+status: accepted
 features:
 - FT-077
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:90980cc72ceed1352e0217d8b86641c11ff67de73ca845b7caca33dd294e685b
 ---
 
 ## Context

@@ -1,7 +1,7 @@
 ---
 id: ADR-038
 title: 'Dual provenance: mechanical (PROV-O auto-attached) and motivational (per-type predicate vocabulary)'
-status: proposed
+status: accepted
 features:
 - FT-069
 - FT-070
@@ -10,6 +10,7 @@ superseded-by: []
 domains:
 - data-model
 scope: cross-cutting
+content-hash: sha256:423e71fcdf24805a875840cbca820e9d378c8f36352e17d879c13e3a40607733
 ---
 
 ## Context

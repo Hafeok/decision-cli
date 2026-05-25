@@ -1,13 +1,14 @@
 ---
 id: ADR-055
 title: Worker image artifact type mirrors the Model catalog shape
-status: proposed
+status: accepted
 features:
 - FT-086
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:2d281419967c6a171775aeabf376e2d7ab6471b7cbe82866226cfcaa0d47bfd2
 ---
 
 ## Context

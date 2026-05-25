@@ -1,13 +1,14 @@
 ---
 id: ADR-065
 title: Dagger deferred as worker runtime model
-status: proposed
+status: accepted
 features:
 - FT-095
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:361922bdcbda7a4e347a716890be914ecbf9b024507f2a2bb39974c4c01cec61
 ---
 
 ## Context

@@ -1,7 +1,7 @@
 ---
 id: ADR-039
 title: Motivational predicates as rdfs:subPropertyOf prov:wasDerivedFrom
-status: proposed
+status: accepted
 features:
 - FT-070
 supersedes: []
@@ -9,6 +9,7 @@ superseded-by: []
 domains:
 - data-model
 scope: cross-cutting
+content-hash: sha256:f113500b448087db0b6e96992cf9ca417e54ed12252fee8a41a9cf857d3f95f4
 ---
 
 ## Context

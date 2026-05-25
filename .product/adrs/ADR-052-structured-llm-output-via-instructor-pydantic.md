@@ -1,13 +1,14 @@
 ---
 id: ADR-052
 title: Structured LLM output via instructor + Pydantic
-status: proposed
+status: accepted
 features:
 - FT-081
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:e1c14fb5952b043130b44b34a5523b7977ac06ea7c8114d3abcb02a8db6f17aa
 ---
 
 ## Context

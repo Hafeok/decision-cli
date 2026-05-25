@@ -1,13 +1,14 @@
 ---
 id: ADR-063
 title: Worker secrets via env vars sourced from a local config file in slice 1
-status: proposed
+status: accepted
 features:
 - FT-095
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:86c74eeac3a2084da3c96a840a524efc5f573894c6c34cc397d16f116b1bc98b
 ---
 
 ## Context
