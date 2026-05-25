@@ -23,6 +23,7 @@ from ._session_io import (
     load_nquads,
     now_iso,
 )
+from .bundle import Bundle
 from .side_channel import (
     FeedbackEmission,
     build_feedback_quads,
@@ -78,6 +79,7 @@ class Session:
 
         self._telemetry: dict[str, Any] = {}
         self._counters: dict[str, float] = {}
+        self._raw_store_access_count = 0
         self._closed = False
         # FT-082: a blocking feedback emission forces ``build_completion``
         # to return ``outcome=blocked`` per ADR-025, regardless of caller
@@ -128,6 +130,24 @@ class Session:
     @property
     def bundle_size(self) -> int:
         return len(self._bundle)
+
+    @property
+    def raw_store_access_count(self) -> int:
+        """Times the curated bundle facade exposed ``raw_store`` (FT-079)."""
+        return self._raw_store_access_count
+
+    def bundle(self, focal_iri: str) -> Bundle:
+        """Curated read-only facade over the session's bundle sub-graph (FT-079).
+
+        Wires ``raw_store`` access to a session counter so gap-surface
+        signal aggregates per-session and surfaces on completion telemetry.
+        """
+        return Bundle(
+            self._bundle, focal_iri, on_raw_store_access=self._bump_raw_store
+        )
+
+    def _bump_raw_store(self) -> None:
+        self._raw_store_access_count += 1
 
     def emit_artifact_quads(self, quads: Iterable[pyoxigraph.Quad]) -> None:
         for quad in quads:
@@ -259,7 +279,7 @@ class Session:
         self._counters[key] = self._counters.get(key, 0) + delta
 
     def _final_telemetry(self) -> dict[str, Any]:
-        return build_telemetry(
+        block = build_telemetry(
             base=self._telemetry,
             counters=self._counters,
             session_iri=self._session_iri,
@@ -270,6 +290,8 @@ class Session:
             artifact=self._artifact,
             side_channel=self._side_channel,
         )
+        block["bundle_raw_store_access_count"] = self._raw_store_access_count
+        return block
 
     # ------------------------------------------------------------------ #
     # Completion payload construction                                    #

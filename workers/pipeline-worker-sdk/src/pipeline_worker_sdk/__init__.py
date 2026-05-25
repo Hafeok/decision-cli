@@ -1,5 +1,12 @@
 """Public surface re-exporting the pipeline-worker SDK's wire/session/provider layers."""
 
+from .bundle import (
+    ADR_TYPE_IRI,
+    DEC_NS,
+    TC_TYPE_IRI,
+    Bundle,
+    UnknownFocalTypeError,
+)
 from .catalog import CatalogCache
 from .claim import ClaimClient
 from .driver import Driver, EventDriver, FakeDispatch, FakeDriver
@@ -46,12 +53,16 @@ from .types import (
 from .wire import HarnessEndpoints, WireClient
 
 __all__ = [
+    "ADR_TYPE_IRI",
+    "DEC_NS",
     "DEFAULT_LITELLM_BASE_URL",
     "FEEDBACK_CLASSES",
     "OUTCOME_BLOCKED",
     "OUTCOME_ESCALATED",
     "OUTCOME_FAILED",
     "OUTCOME_SUCCESS",
+    "TC_TYPE_IRI",
+    "Bundle",
     "CapabilityCatalogEntry",
     "CatalogCache",
     "ClaimClient",
@@ -79,6 +90,7 @@ __all__ = [
     "Session",
     "SseConsumer",
     "StructuredFn",
+    "UnknownFocalTypeError",
     "WireClient",
     "build_feedback_quads",
     "build_judgment_quads",
