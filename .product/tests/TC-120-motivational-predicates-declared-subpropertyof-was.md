@@ -2,12 +2,17 @@
 id: TC-120
 title: motivational_predicates_declared_subpropertyof_wasderivedfrom
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-070
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --test ft_070_motivational_vocabulary
+runner-timeout: 120
+last-run: 2026-05-25T19:33:35.334586775+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

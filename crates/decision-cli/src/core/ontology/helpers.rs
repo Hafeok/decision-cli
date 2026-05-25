@@ -8,7 +8,8 @@ use sha2::{Digest, Sha256};
 
 use super::{
     OntologyError, MECHANICAL_PROVENANCE_SHAPE, MECHANICAL_PROVENANCE_SHAPES_TTL,
-    ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL, SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_TTL,
+    MOTIVATIONAL_PREDICATES, MOTIVATIONAL_PREDICATES_TTL, ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL,
+    PROV_WAS_DERIVED_FROM, SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_TTL,
 };
 
 pub(super) fn load_turtle_into_graph(
@@ -33,6 +34,8 @@ pub(super) fn sha256_hex_of_assets() -> String {
     hasher.update(SHAPES_TTL.as_bytes());
     hasher.update(b"\x00");
     hasher.update(MECHANICAL_PROVENANCE_SHAPES_TTL.as_bytes());
+    hasher.update(b"\x00");
+    hasher.update(MOTIVATIONAL_PREDICATES_TTL.as_bytes());
     let digest = hasher.finalize();
     let mut out = String::with_capacity(digest.len() * 2);
     for b in digest {
@@ -311,6 +314,44 @@ fn ensure_universal_min_count_property(store: &Store, prop: &str) -> Result<(), 
     if !matches!(result, QueryResults::Boolean(true)) {
         return Err(OntologyError::InvariantViolation(format!(
             "mechanical-provenance shape is missing a sh:minCount constraint on {prop}"
+        )));
+    }
+    Ok(())
+}
+
+/// FT-070 / ADR-038 / ADR-039: assert that every motivational predicate
+/// listed in [`MOTIVATIONAL_PREDICATES`] is declared as an `rdf:Property`
+/// in the shapes graph AND carries `rdfs:subPropertyOf prov:wasDerivedFrom`.
+/// Failure means the shipped TTL drifted from the Rust constant — both
+/// sides must agree.
+pub(super) fn invariant_motivational_predicates_present(
+    store: &Store,
+) -> Result<(), OntologyError> {
+    for pred in MOTIVATIONAL_PREDICATES {
+        ensure_subproperty_of_prov_was_derived_from(store, pred)?;
+    }
+    Ok(())
+}
+
+fn ensure_subproperty_of_prov_was_derived_from(
+    store: &Store,
+    pred: &str,
+) -> Result<(), OntologyError> {
+    let q = format!(
+        "ASK {{ GRAPH <{g}> {{ \
+            <{pred}> a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ; \
+                     <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <{parent}> . \
+         }} }}",
+        g = SHAPES_GRAPH_IRI,
+        parent = PROV_WAS_DERIVED_FROM,
+    );
+    let result = store
+        .query(q.as_str())
+        .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
+    if !matches!(result, QueryResults::Boolean(true)) {
+        return Err(OntologyError::InvariantViolation(format!(
+            "motivational predicate <{pred}> must be declared as rdf:Property AND \
+             rdfs:subPropertyOf prov:wasDerivedFrom in motivational-predicates.ttl"
         )));
     }
     Ok(())

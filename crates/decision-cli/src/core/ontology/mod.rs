@@ -36,8 +36,8 @@ use thiserror::Error;
 
 use helpers::{
     extract_version_info, invariant_mechanical_provenance_shapes_present,
-    invariant_ontology_classes_present, invariant_shapes_present, load_turtle_into_graph,
-    sha256_hex_of_assets,
+    invariant_motivational_predicates_present, invariant_ontology_classes_present,
+    invariant_shapes_present, load_turtle_into_graph, sha256_hex_of_assets,
 };
 
 /// The version baked into the embedded ontology header. Bumping this
@@ -68,6 +68,14 @@ pub const SHAPES_TTL: &str = include_str!("assets/shapes.ttl");
 pub const MECHANICAL_PROVENANCE_SHAPES_TTL: &str =
     include_str!("assets/shapes/mechanical-provenance.ttl");
 
+/// Raw Turtle bytes for the slice-1 motivational-predicate vocabulary
+/// (FT-070 / ADR-038 / ADR-039). Loaded into the shapes named graph;
+/// each motivational predicate is declared as
+/// `rdfs:subPropertyOf prov:wasDerivedFrom` so the full-chain traversal
+/// (FT-075 / ADR-043) walks them uniformly.
+pub const MOTIVATIONAL_PREDICATES_TTL: &str =
+    include_str!("assets/shapes/motivational-predicates.ttl");
+
 /// IRI of the universal mechanical-provenance `sh:NodeShape` (FT-069 /
 /// ADR-038). Composed via `sh:and` from every artifact-type shape.
 pub const MECHANICAL_PROVENANCE_SHAPE: &str =
@@ -76,6 +84,35 @@ pub const MECHANICAL_PROVENANCE_SHAPE: &str =
 /// IRI of the `dec:Session` provenance shape (FT-069 / ADR-038). Targets
 /// `dec:Session` and composes the universal mechanical fragment.
 pub const SESSION_PROVENANCE_SHAPE: &str = "https://decision-cli.dev/ns#SessionProvenanceShape";
+
+/// IRI of the PROV-O `wasDerivedFrom` property. Parent property of every
+/// motivational predicate shipped in [`MOTIVATIONAL_PREDICATES_TTL`]
+/// (FT-070 / ADR-039).
+pub const PROV_WAS_DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+
+/// The slice-1 motivational-predicate IRIs declared by
+/// [`MOTIVATIONAL_PREDICATES_TTL`] (FT-070). The list mirrors the
+/// slice-1 vocabulary table in FT-070's feature_spec; the parsed shape
+/// file is cross-checked against this constant by FT-070's exit-criterion
+/// test (TC-120) to keep the Turtle file and the Rust source in lockstep.
+pub const MOTIVATIONAL_PREDICATES: &[&str] = &[
+    "https://decision-cli.dev/ns#addresses",
+    "https://decision-cli.dev/ns#decomposesFrom",
+    "https://decision-cli.dev/ns#originatedFrom",
+    "https://decision-cli.dev/ns#respondsTo",
+    "https://decision-cli.dev/ns#decidesFor",
+    "https://decision-cli.dev/ns#supersedes",
+    "https://decision-cli.dev/ns#validates",
+    "https://decision-cli.dev/ns#requiredBy",
+    "https://decision-cli.dev/ns#motivatedBy",
+    "https://decision-cli.dev/ns#observedIn",
+    "https://decision-cli.dev/ns#observedVia",
+    "https://decision-cli.dev/ns#producedBy",
+    "https://decision-cli.dev/ns#derivedFrom",
+    "https://decision-cli.dev/ns#raisedIn",
+    "https://decision-cli.dev/ns#raisedBy",
+    "https://decision-cli.dev/ns#audits",
+];
 
 /// Single shared parsed ontology — populated on first request.
 static SHARED: OnceLock<OntologyHandle> = OnceLock::new();
@@ -133,10 +170,16 @@ impl OntologyHandle {
             MECHANICAL_PROVENANCE_SHAPES_TTL,
             SHAPES_GRAPH_IRI,
         )?;
+        // FT-070 / ADR-038 / ADR-039: slice-1 motivational-predicate
+        // declarations. Loaded into the same shapes named graph so the
+        // subPropertyOf relationship and the rdfs:range constraints are
+        // queryable alongside the universal mechanical fragment.
+        load_turtle_into_graph(&store, MOTIVATIONAL_PREDICATES_TTL, SHAPES_GRAPH_IRI)?;
 
         invariant_ontology_classes_present(&store)?;
         invariant_shapes_present(&store)?;
         invariant_mechanical_provenance_shapes_present(&store)?;
+        invariant_motivational_predicates_present(&store)?;
 
         let hash = sha256_hex_of_assets();
         let version = extract_version_info(&store)?.unwrap_or_else(|| ONTOLOGY_VERSION.to_string());

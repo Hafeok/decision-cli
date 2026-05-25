@@ -1,0 +1,130 @@
+# Motivational-provenance predicate vocabulary (FT-070 / ADR-038 / ADR-039).
+#
+# The dual-provenance discipline (ADR-038) splits provenance into:
+#   * mechanical — how the artifact was physically produced
+#     (shapes/mechanical-provenance.ttl);
+#   * motivational — why the artifact exists (this file).
+#
+# This file ships the slice-1 motivational-predicate vocabulary as a flat
+# set of rdf:Property declarations. Every predicate carries
+# `rdfs:subPropertyOf prov:wasDerivedFrom` (ADR-039) so generic traversal
+# via `prov:wasDerivedFrom*` walks every motivational edge uniformly —
+# the full-chain query (FT-075 / ADR-043) consumes that property.
+#
+# Per-type composition (which artifact type requires WHICH alternatives)
+# lives in FT-072's per-type shape files; this file holds only the
+# predicate declarations themselves. Ranges declared here apply to every
+# instance of the predicate; predicates with multiple legitimate ranges
+# (e.g. dec:respondsTo accepts Question, Request, or Feedback) omit
+# rdfs:range here and let the per-type shape pin the target class via
+# sh:class on the per-type sh:property block.
+#
+# Vocabulary growth is governed work: adding a predicate requires an ADR
+# amendment (FT-070 §Invariants). The list below is the slice-1 catalog;
+# the slice-1 vocabulary table in FT-070's feature_spec body is the
+# single source of truth that test fixtures cross-check against.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+# --- prov:wasDerivedFrom re-declaration -------------------------------------
+# Re-declared in the dec: namespace alongside the mechanical-provenance
+# fragment's PROV-O predicate declarations (ontology.ttl) so the loader's
+# `declares_property` introspection answers truthfully when callers ask
+# whether the parent property is part of the embedded vocabulary.
+
+prov:wasDerivedFrom a rdf:Property ;
+    rdfs:comment "PROV-O: links an entity to the entity it was derived from. Parent property of every motivational predicate in this file (ADR-039)." .
+
+# --- Slice-1 motivational predicates ----------------------------------------
+
+dec:addresses a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "addresses" ;
+    rdfs:comment "The artifact exists to resolve the named target. Range is left to per-type shapes — Feature/WorkerImage/Policy address Feedback; ADR addresses Question; Model addresses CapabilityGap (FT-070)." .
+
+dec:decomposesFrom a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:Brief ;
+    rdfs:label "decomposesFrom" ;
+    rdfs:comment "The artifact is one of the Features/WorkerImages/Models/Policies/QueryTemplates a Brief authorises (FT-070)." .
+
+dec:originatedFrom a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:DiscoveryFinding ;
+    rdfs:label "originatedFrom" ;
+    rdfs:comment "The artifact's motivation traces to a DiscoveryFinding produced by a sensing action (FT-070)." .
+
+dec:respondsTo a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "respondsTo" ;
+    rdfs:comment "The artifact exists in response to a Request/Feedback/Question. Range is left to per-type shapes — Brief respondsTo Request|Feedback; Feature respondsTo Question (FT-070)." .
+
+dec:decidesFor a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:Feature ;
+    rdfs:label "decidesFor" ;
+    rdfs:comment "An ADR's motivation: it records the decision authorising work on the named Feature (FT-070)." .
+
+dec:supersedes a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "supersedes" ;
+    rdfs:comment "An ADR's motivation: the new ADR exists because it revises a prior ADR. (Note: dec:supersedes is also used by the Capability catalog with Capability→Capability range — those domains are disjoint at instance level and SHACL ranges live on the per-type shapes, not this declaration.) (FT-070 / ADR-039)." .
+
+dec:validates a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "validates" ;
+    rdfs:comment "A TC's motivation: it exists to validate the named Feature or ADR (FT-070)." .
+
+dec:requiredBy a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "requiredBy" ;
+    rdfs:comment "A Dependency's motivation: the artifact is needed by the named Feature or ADR (FT-070)." .
+
+dec:motivatedBy a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "motivatedBy" ;
+    rdfs:comment "An Acknowledgement/Subscription's motivation: the named Brief/ADR/Policy is what brought it into existence (FT-070)." .
+
+dec:observedIn a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:Session ;
+    rdfs:label "observedIn" ;
+    rdfs:comment "A Feedback's motivation: the issue was first surfaced inside the named Session (FT-070)." .
+
+dec:observedVia a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:SensingAction ;
+    rdfs:label "observedVia" ;
+    rdfs:comment "A Feedback's motivation: the issue was surfaced by the named SensingAction (FT-070)." .
+
+dec:producedBy a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:Role ;
+    rdfs:label "producedBy" ;
+    rdfs:comment "A Feedback's motivation: the named Role authored it (FT-070)." .
+
+dec:derivedFrom a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:SensingAction ;
+    rdfs:label "derivedFrom" ;
+    rdfs:comment "A DiscoveryFinding's motivation: it was derived from the named SensingAction (FT-070)." .
+
+dec:raisedIn a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:Session ;
+    rdfs:label "raisedIn" ;
+    rdfs:comment "A Question's motivation: it was raised during the named Session (FT-070)." .
+
+dec:raisedBy a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:label "raisedBy" ;
+    rdfs:comment "A Question's motivation: it was raised by the named Brief or ADR. Range is left to per-type shapes (FT-070)." .
+
+dec:audits a rdf:Property ;
+    rdfs:subPropertyOf prov:wasDerivedFrom ;
+    rdfs:range  dec:WorkerImage ;
+    rdfs:label "audits" ;
+    rdfs:comment "A ConformanceAudit's motivation: it audits the named WorkerImage (FT-070)." .
