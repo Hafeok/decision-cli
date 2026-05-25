@@ -20,6 +20,7 @@
 pub mod capability;
 pub mod coverage_waiver;
 mod helpers;
+pub mod mechanical_provenance;
 pub mod role_binding;
 pub mod session_record;
 pub mod verdict;
@@ -34,8 +35,9 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use helpers::{
-    extract_version_info, invariant_ontology_classes_present, invariant_shapes_present,
-    load_turtle_into_graph, sha256_hex_of_assets,
+    extract_version_info, invariant_mechanical_provenance_shapes_present,
+    invariant_ontology_classes_present, invariant_shapes_present, load_turtle_into_graph,
+    sha256_hex_of_assets,
 };
 
 /// The version baked into the embedded ontology header. Bumping this
@@ -43,7 +45,7 @@ use helpers::{
 /// and is intentionally tied to a binary release.
 ///
 /// Recorded on every bootstrap session (ADR-007).
-pub const ONTOLOGY_VERSION: &str = "0.6.0";
+pub const ONTOLOGY_VERSION: &str = "0.7.0";
 
 /// Named graph the embedded ontology is loaded into. Exposed so FT-008
 /// can run shapes / queries against the same graph the handle parses.
@@ -57,6 +59,23 @@ pub const ONTOLOGY_TTL: &str = include_str!("assets/ontology.ttl");
 
 /// Raw Turtle bytes for the SHACL shapes graph. Read-only.
 pub const SHAPES_TTL: &str = include_str!("assets/shapes.ttl");
+
+/// Raw Turtle bytes for the universal mechanical-provenance fragment
+/// (FT-069 / ADR-038). Loaded into the shapes named graph alongside
+/// `SHAPES_TTL`. Kept as a separate file so per-type shapes shipped
+/// later (FT-072) can reference the universal fragment by its IRI
+/// without textual inlining.
+pub const MECHANICAL_PROVENANCE_SHAPES_TTL: &str =
+    include_str!("assets/shapes/mechanical-provenance.ttl");
+
+/// IRI of the universal mechanical-provenance `sh:NodeShape` (FT-069 /
+/// ADR-038). Composed via `sh:and` from every artifact-type shape.
+pub const MECHANICAL_PROVENANCE_SHAPE: &str =
+    "https://decision-cli.dev/ns#MechanicalProvenanceShape";
+
+/// IRI of the `dec:Session` provenance shape (FT-069 / ADR-038). Targets
+/// `dec:Session` and composes the universal mechanical fragment.
+pub const SESSION_PROVENANCE_SHAPE: &str = "https://decision-cli.dev/ns#SessionProvenanceShape";
 
 /// Single shared parsed ontology — populated on first request.
 static SHARED: OnceLock<OntologyHandle> = OnceLock::new();
@@ -106,9 +125,18 @@ impl OntologyHandle {
 
         load_turtle_into_graph(&store, ONTOLOGY_TTL, ONTOLOGY_GRAPH_IRI)?;
         load_turtle_into_graph(&store, SHAPES_TTL, SHAPES_GRAPH_IRI)?;
+        // FT-069 / ADR-038: universal mechanical-provenance fragment lives
+        // beside the per-type shapes in the same shapes named graph so
+        // SHACL composition (sh:and) resolves without further wiring.
+        load_turtle_into_graph(
+            &store,
+            MECHANICAL_PROVENANCE_SHAPES_TTL,
+            SHAPES_GRAPH_IRI,
+        )?;
 
         invariant_ontology_classes_present(&store)?;
         invariant_shapes_present(&store)?;
+        invariant_mechanical_provenance_shapes_present(&store)?;
 
         let hash = sha256_hex_of_assets();
         let version = extract_version_info(&store)?.unwrap_or_else(|| ONTOLOGY_VERSION.to_string());

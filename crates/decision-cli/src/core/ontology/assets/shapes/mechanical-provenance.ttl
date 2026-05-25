@@ -1,0 +1,83 @@
+# Universal mechanical-provenance SHACL fragment (FT-069 / ADR-038).
+#
+# The dual-provenance discipline (ADR-038) splits provenance into:
+#   * mechanical — how the artifact was physically produced (this fragment);
+#   * motivational — why the artifact exists (per-type vocabularies, FT-070).
+#
+# This file ships the universal mechanical-provenance NodeShape every
+# artifact-type shape composes in via sh:and (wired by FT-072). Three
+# triples, three semantics:
+#
+#   prov:wasGeneratedBy  — the Session that produced the artifact (1..1).
+#   prov:wasAttributedTo — the Agent the producing Session was attributed
+#                          to (1..n; multi-valued allowed for jointly
+#                          attributed sessions).
+#   prov:generatedAtTime — the write timestamp from GraphWriter's
+#                          transaction (1..1, xsd:dateTime).
+#
+# These triples are materialised by GraphWriter from the session record
+# handed in by the harness's session-completion handler. Workers do not
+# author them. That separation is what makes mechanical provenance
+# uniformly trustworthy.
+#
+# The fragment is intentionally targetless: it has no sh:targetClass and
+# is only meaningful when composed via sh:and from a type-specific shape.
+# FT-072 wires this for every artifact type.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# --- Universal mechanical-provenance fragment -------------------------------
+
+dec:MechanicalProvenanceShape a sh:NodeShape ;
+    sh:property [
+        sh:path     prov:wasGeneratedBy ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class    dec:Session ;
+        sh:message  "every artifact requires exactly one prov:wasGeneratedBy → dec:Session (FT-069 / ADR-038)."
+    ] ;
+    sh:property [
+        sh:path     prov:wasAttributedTo ;
+        sh:minCount 1 ;
+        sh:class    dec:Agent ;
+        sh:message  "every artifact requires at least one prov:wasAttributedTo → dec:Agent (FT-069 / ADR-038)."
+    ] ;
+    sh:property [
+        sh:path     prov:generatedAtTime ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message  "every artifact requires exactly one prov:generatedAtTime (xsd:dateTime, FT-069 / ADR-038)."
+    ] .
+
+# --- Session-provenance shape -----------------------------------------------
+# The Session is the Activity that connects mechanical provenance to
+# motivational provenance. It composes the universal mechanical fragment
+# via sh:and and additionally records the bundle it used, the prior
+# sessions whose outputs informed it, and the Agent it was associated
+# with (ADR-038 §Session itself).
+
+dec:SessionProvenanceShape a sh:NodeShape ;
+    sh:targetClass dec:Session ;
+    sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:property [
+        sh:path     prov:used ;
+        sh:nodeKind sh:IRI ;
+        sh:class    dec:Artifact ;
+        sh:message  "dec:Session prov:used entries must be IRIs of dec:Artifact (FT-069 / ADR-038)."
+    ] ;
+    sh:property [
+        sh:path     prov:wasInformedBy ;
+        sh:nodeKind sh:IRI ;
+        sh:class    dec:Session ;
+        sh:message  "dec:Session prov:wasInformedBy entries must be IRIs of dec:Session (FT-069 / ADR-038)."
+    ] ;
+    sh:property [
+        sh:path     prov:wasAssociatedWith ;
+        sh:minCount 1 ;
+        sh:class    dec:Agent ;
+        sh:message  "dec:Session requires at least one prov:wasAssociatedWith → dec:Agent (FT-069 / ADR-038)."
+    ] .

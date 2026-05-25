@@ -9,6 +9,7 @@
 mod auto_dispatch;
 mod capability;
 mod feedback;
+mod mechanical_provenance;
 mod role_binding;
 mod session_record;
 mod verify_env;
@@ -18,6 +19,7 @@ mod waiver;
 pub use auto_dispatch::*;
 pub use capability::*;
 pub use feedback::*;
+pub use mechanical_provenance::*;
 pub use role_binding::*;
 pub use session_record::*;
 pub use verify_env::*;

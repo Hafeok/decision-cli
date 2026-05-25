@@ -6,7 +6,10 @@ use oxigraph::sparql::QueryResults;
 use oxigraph::store::Store;
 use sha2::{Digest, Sha256};
 
-use super::{OntologyError, ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL, SHAPES_GRAPH_IRI, SHAPES_TTL};
+use super::{
+    OntologyError, MECHANICAL_PROVENANCE_SHAPE, MECHANICAL_PROVENANCE_SHAPES_TTL,
+    ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL, SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_TTL,
+};
 
 pub(super) fn load_turtle_into_graph(
     store: &Store,
@@ -28,6 +31,8 @@ pub(super) fn sha256_hex_of_assets() -> String {
     hasher.update(ONTOLOGY_TTL.as_bytes());
     hasher.update(b"\x00");
     hasher.update(SHAPES_TTL.as_bytes());
+    hasher.update(b"\x00");
+    hasher.update(MECHANICAL_PROVENANCE_SHAPES_TTL.as_bytes());
     let digest = hasher.finalize();
     let mut out = String::with_capacity(digest.len() * 2);
     for b in digest {
@@ -68,6 +73,8 @@ const REQUIRED_ONTOLOGY_CLASSES: &[&str] = &[
     "ValueAction",
     "Goal",
     "Session",
+    "Agent",
+    "Artifact",
     "Dispatch",
     "Event",
     "Role",
@@ -247,6 +254,66 @@ const REQUIRED_SHAPES: &[ShapeRequirement] = &[
 
 fn required_shape_properties() -> &'static [ShapeRequirement] {
     REQUIRED_SHAPES
+}
+
+/// FT-069 / ADR-038: assert that the universal mechanical-provenance
+/// fragment and the Session-provenance shape are both reachable in the
+/// shapes graph after parsing. Failure means the embedded shape file
+/// did not load (build-time bug; ontology loader handles the path).
+pub(super) fn invariant_mechanical_provenance_shapes_present(
+    store: &Store,
+) -> Result<(), OntologyError> {
+    ensure_node_shape_declared(store, MECHANICAL_PROVENANCE_SHAPE)?;
+    ensure_node_shape_declared(store, SESSION_PROVENANCE_SHAPE)?;
+    ensure_min_count_property(
+        store,
+        "https://decision-cli.dev/ns#Session",
+        "http://www.w3.org/ns/prov#wasAssociatedWith",
+    )?;
+    // The universal fragment's three properties live under
+    // MECHANICAL_PROVENANCE_SHAPE (no sh:targetClass); per-type
+    // composition (FT-072) wires it into each artifact-type shape.
+    ensure_universal_min_count_property(store, "http://www.w3.org/ns/prov#wasGeneratedBy")?;
+    ensure_universal_min_count_property(store, "http://www.w3.org/ns/prov#wasAttributedTo")?;
+    ensure_universal_min_count_property(store, "http://www.w3.org/ns/prov#generatedAtTime")?;
+    Ok(())
+}
+
+fn ensure_node_shape_declared(store: &Store, shape_iri: &str) -> Result<(), OntologyError> {
+    let q = format!(
+        "ASK {{ GRAPH <{g}> {{ <{shape_iri}> a <http://www.w3.org/ns/shacl#NodeShape> }} }}",
+        g = SHAPES_GRAPH_IRI
+    );
+    let result = store
+        .query(q.as_str())
+        .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
+    if !matches!(result, QueryResults::Boolean(true)) {
+        return Err(OntologyError::InvariantViolation(format!(
+            "shapes graph is missing a sh:NodeShape declaration for {shape_iri}"
+        )));
+    }
+    Ok(())
+}
+
+fn ensure_universal_min_count_property(store: &Store, prop: &str) -> Result<(), OntologyError> {
+    let shape = MECHANICAL_PROVENANCE_SHAPE;
+    let q = format!(
+        "ASK {{ GRAPH <{g}> {{ \
+            <{shape}> <http://www.w3.org/ns/shacl#property> ?p . \
+            ?p <http://www.w3.org/ns/shacl#path> <{prop}> ; \
+               <http://www.w3.org/ns/shacl#minCount> ?_ . \
+         }} }}",
+        g = SHAPES_GRAPH_IRI
+    );
+    let result = store
+        .query(q.as_str())
+        .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
+    if !matches!(result, QueryResults::Boolean(true)) {
+        return Err(OntologyError::InvariantViolation(format!(
+            "mechanical-provenance shape is missing a sh:minCount constraint on {prop}"
+        )));
+    }
+    Ok(())
 }
 
 fn ensure_min_count_property(

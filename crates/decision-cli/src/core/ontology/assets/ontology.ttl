@@ -19,7 +19,7 @@
 
 <https://decision-cli.dev/ns> a owl:Ontology ;
     rdfs:label       "decision-cli base ontology" ;
-    owl:versionInfo  "0.6.0" .
+    owl:versionInfo  "0.7.0" .
 
 # --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
 
@@ -38,6 +38,14 @@ dec:Goal a rdfs:Class ;
 dec:Session a rdfs:Class ;
     rdfs:label "Session" ;
     rdfs:comment "An orchestrator-managed role execution; emits a typed artifact." .
+
+dec:Agent a rdfs:Class ;
+    rdfs:label "Agent" ;
+    rdfs:comment "An attributed actor (role + model, or role + human) the Session was attributed to (FT-069 / ADR-038). Opaque-class for slice 1; per-attribute decomposition (role, model identifier, human identity) deferred to slice 2+." .
+
+dec:Artifact a rdfs:Class ;
+    rdfs:label "Artifact" ;
+    rdfs:comment "A generic graph-resident artifact (FT-069 / ADR-038). Used as the range of prov:used on Session artifacts." .
 
 dec:Dispatch a rdfs:Class ;
     rdfs:label "Dispatch" ;
@@ -645,3 +653,27 @@ dec:capability a rdf:Property ;
     rdfs:domain dec:Session ;
     rdfs:range  dec:Capability ;
     rdfs:comment "Capability that resolved for this session (FT-057). Records full reproducibility tuple alongside the bundle hash." .
+
+# --- FT-069 / ADR-038: PROV-O mechanical-provenance property declarations ----
+# These properties are W3C PROV-O standard predicates. We re-declare them in
+# the dec: ontology graph so the loader's `declares_property` introspection
+# answers truthfully when callers ask whether the mechanical block's
+# predicates are part of the embedded vocabulary.
+
+<http://www.w3.org/ns/prov#wasGeneratedBy> a rdf:Property ;
+    rdfs:comment "PROV-O: links an artifact to the Activity (Session) that produced it (FT-069 / ADR-038 mechanical-provenance fragment)." .
+
+<http://www.w3.org/ns/prov#wasAttributedTo> a rdf:Property ;
+    rdfs:comment "PROV-O: links an artifact to the Agent it was attributed to (FT-069 / ADR-038 mechanical-provenance fragment)." .
+
+<http://www.w3.org/ns/prov#generatedAtTime> a rdf:Property ;
+    rdfs:comment "PROV-O: wall-clock timestamp the producing Session committed the artifact (FT-069 / ADR-038 mechanical-provenance fragment)." .
+
+<http://www.w3.org/ns/prov#used> a rdf:Property ;
+    rdfs:comment "PROV-O: links a Session (Activity) to an artifact it consumed (FT-069 / ADR-038 session-provenance fragment)." .
+
+<http://www.w3.org/ns/prov#wasAssociatedWith> a rdf:Property ;
+    rdfs:comment "PROV-O: links a Session to the Agent it was associated with (FT-069 / ADR-038 session-provenance fragment)." .
+
+<http://www.w3.org/ns/prov#wasInformedBy> a rdf:Property ;
+    rdfs:comment "PROV-O: links a Session to a prior Session whose output informed it (FT-069 / ADR-038 session-provenance fragment)." .

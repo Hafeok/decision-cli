@@ -2,12 +2,17 @@
 id: TC-119
 title: mechanical_provenance_shape_loads_and_validates_session_record
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-069
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --test ft_069_mechanical_provenance
+runner-timeout: 120
+last-run: 2026-05-25T19:24:32.914471994+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description
