@@ -28,6 +28,7 @@ pub mod session_record;
 pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;
+pub mod worker_image;
 
 pub use per_type_shapes::{
     PER_TYPE_BOUNDARY_EXEMPT_FILES, PER_TYPE_SHAPE_FILES, PER_TYPE_SHAPE_IRIS,

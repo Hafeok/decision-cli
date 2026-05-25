@@ -2,7 +2,7 @@
 id: FT-086
 title: 'decision-cli: WorkerImage artifact type in the orchestration catalog'
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-055
@@ -19,28 +19,28 @@ tests:
 - TC-128
 domains: []
 domains-acknowledged:
-  ADR-054: Feature does not call LiteLLM; SDK provider substrate is wired in FT-095 / FT-096.
-  ADR-033: Worker SDK provider routing is governed by ADR-047 (capability-tag binding) and ADR-054 (LiteLLM as substrate); ADR-033's earlier formulation does not apply.
-  ADR-021: Feature does not produce an action-interpretation pair, so the agreement metric does not apply.
-  ADR-040: No new boundary artifact introduced by this feature.
-  ADR-065: Dagger deferral is a runtime-substrate decision affecting FT-088 / FT-095; this feature does not depend on the runtime model.
-  ADR-024: No Feedback artifact produced; lifecycle state machine not invoked here.
-  ADR-012: Not a per-stream command; no working-directory walk-up involved.
-  ADR-005: Worker-registration discipline is independent of value-stream scope.
-  ADR-023: No Feedback artifact produced; controlled vocabulary not invoked here.
-  ADR-035: Feature does not assemble a bundle that carries a stakes judgment.
-  ADR-001: Application-layer feature; does not touch the oxi-events crate boundary.
-  ADR-037: Provider defaults (Scaleway / Anthropic) are configured inside LiteLLM (ADR-064) rather than in feature code.
-  ADR-034: Worker registration flow does not invoke escalation tiers; the WorkerCurator's reject path produces Feedback, not an escalation step.
-  ADR-014: No new fitness function introduced; cost-reconciliation drift (ADR-064) and action-interpretation agreement (ADR-021) cover the slice-1 worker fitness signals.
   ADR-064: LiteLLM substrate concerns are isolated to FT-095 / FT-096; this feature does not call LiteLLM.
-  ADR-004: Feature does not emit dispatch or session events; PROV-O hookup happens in features that write artifacts.
+  ADR-033: Worker SDK provider routing is governed by ADR-047 (capability-tag binding) and ADR-054 (LiteLLM as substrate); ADR-033's earlier formulation does not apply.
+  ADR-040: No new boundary artifact introduced by this feature.
+  ADR-024: No Feedback artifact produced; lifecycle state machine not invoked here.
+  ADR-005: Worker-registration discipline is independent of value-stream scope.
+  ADR-037: Provider defaults (Scaleway / Anthropic) are configured inside LiteLLM (ADR-064) rather than in feature code.
+  ADR-002: Feature ships infrastructure / packaging conventions, not graph mutations.
   ADR-025: No Feedback artifact produced; blocking semantics not invoked here.
-  ADR-027: No new role registered by this feature.
-  ADR-022: No Feedback artifact produced by this feature.
+  ADR-054: Feature does not call LiteLLM; SDK provider substrate is wired in FT-095 / FT-096.
+  ADR-012: Not a per-stream command; no working-directory walk-up involved.
+  ADR-023: No Feedback artifact produced; controlled vocabulary not invoked here.
   ADR-017: Feature is not an action-interpretation pair; no paired interpretation session involved.
   ADR-018: No verification verdict artifact produced by this feature.
-  ADR-002: Feature ships infrastructure / packaging conventions, not graph mutations.
+  ADR-001: Application-layer feature; does not touch the oxi-events crate boundary.
+  ADR-021: Feature does not produce an action-interpretation pair, so the agreement metric does not apply.
+  ADR-035: Feature does not assemble a bundle that carries a stakes judgment.
+  ADR-022: No Feedback artifact produced by this feature.
+  ADR-034: Worker registration flow does not invoke escalation tiers; the WorkerCurator's reject path produces Feedback, not an escalation step.
+  ADR-014: No new fitness function introduced; cost-reconciliation drift (ADR-064) and action-interpretation agreement (ADR-021) cover the slice-1 worker fitness signals.
+  ADR-004: Feature does not emit dispatch or session events; PROV-O hookup happens in features that write artifacts.
+  ADR-027: No new role registered by this feature.
+  ADR-065: Dagger deferral is a runtime-substrate decision affecting FT-088 / FT-095; this feature does not depend on the runtime model.
 ---
 
 ## Motivation

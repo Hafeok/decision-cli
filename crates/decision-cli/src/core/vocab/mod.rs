@@ -15,6 +15,7 @@ mod session_record;
 mod verify_env;
 mod verify_graph;
 mod waiver;
+mod worker_image;
 
 pub use auto_dispatch::*;
 pub use capability::*;
@@ -25,6 +26,7 @@ pub use session_record::*;
 pub use verify_env::*;
 pub use verify_graph::*;
 pub use waiver::*;
+pub use worker_image::*;
 
 use oxigraph::model::NamedNodeRef;
 

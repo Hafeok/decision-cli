@@ -767,3 +767,91 @@ dec:references a rdf:Property ;
 dec:Feature a rdfs:Class ;
     rdfs:label "Feature" ;
     rdfs:comment "An engineering feature_spec authored in product-cli's catalog (ADR-015 / FT-076)." .
+
+# --- FT-086 / ADR-055: WorkerImage artifact in the orchestration catalog -----
+#
+# A WorkerImage is the catalog entry for an executable worker image (parallel
+# to dec:Model for LLM endpoints). Identity is (worker_image_id, version).
+# The per-type SHACL composition shape (worker-image.ttl) already requires
+# mechanical provenance + a motivational branch (boundary, addresses, or
+# decomposesFrom); the property declarations below enable validators that
+# also enforce the field-level invariants (registry_ref present, eligibility
+# enum, at least one capability_tag, etc.).
+
+dec:WorkerImage a rdfs:Class ;
+    rdfs:label "WorkerImage" ;
+    rdfs:comment "A versioned, signed worker image registered in the orchestration catalog. Mirrors dec:Model: identity-versioned, claims capability tags, accumulates ConformanceAudits, gains/loses eligibility (FT-086 / ADR-055)." .
+
+dec:worker_image_id a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Stable id used for catalog lookup. Combined with dec:worker_image_version forms the unique key." .
+
+dec:worker_image_name a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Human-readable display name." .
+
+dec:worker_image_version a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Semver-style version string (e.g. \"1.2.0\"); SHACL pattern enforces semver." .
+
+dec:registry_ref a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "OCI reference with digest, e.g. ghcr.io/example/worker@sha256:abc…." .
+
+dec:capability_tag a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Capability-tag claim used by policy for dispatch routing (multi-valued; at least one required)." .
+
+dec:compatible_role a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  dec:Role ;
+    rdfs:comment "Role this image can serve (multi-valued)." .
+
+dec:signed_by_subject a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Sigstore Fulcio certificate subject (typically a CI identity URI)." .
+
+dec:signed_by_issuer a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Sigstore Fulcio issuer URI (e.g. https://token.actions.githubusercontent.com)." .
+
+dec:sbom_ref a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "OCI referrer URI for the SBOM attestation." .
+
+dec:conformance_audit a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  dec:ConformanceAudit ;
+    rdfs:comment "Conformance audit referencing this image (multi-valued, optional)." .
+
+dec:eligibility_status a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "One of {qualified, candidate, deprecated, pulled}." .
+
+dec:source_repo_uri a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Provenance: source repo URI." .
+
+dec:source_commit_hash a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Provenance: commit SHA the image was built from." .
+
+dec:build_run_url a rdf:Property ;
+    rdfs:domain dec:WorkerImage ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Provenance: CI run URL (GitHub Actions, etc.)." .
+
+dec:ConformanceAudit a rdfs:Class ;
+    rdfs:label "ConformanceAudit" ;
+    rdfs:comment "An audit record linked to a WorkerImage (FT-086 / ADR-055). class ∈ {manual-review, automated-replay}; slice 1 uses manual-review only (ADR-060)." .
