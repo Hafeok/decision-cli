@@ -2,12 +2,17 @@
 id: TC-124
 title: migration_backfills_mechanical_and_flags_orphans
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-074
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_124_migration_backfills_mechanical_and_flags_orphans
+runner-timeout: 120
+last-run: 2026-05-25T20:40:44.484607360+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

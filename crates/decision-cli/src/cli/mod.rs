@@ -10,6 +10,7 @@ pub mod health;
 pub mod implement;
 pub mod init;
 pub mod mcp;
+pub mod migrate;
 pub mod preflight;
 pub mod session;
 pub mod sparql;

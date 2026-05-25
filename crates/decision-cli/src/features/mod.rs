@@ -8,6 +8,7 @@
 pub mod events;
 pub mod feedback;
 pub mod finalize;
+pub mod ft_074_migrate_provenance;
 pub mod health;
 pub mod implement;
 pub mod init;
