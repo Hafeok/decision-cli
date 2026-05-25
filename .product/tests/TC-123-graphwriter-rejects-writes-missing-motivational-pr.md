@@ -2,12 +2,17 @@
 id: TC-123
 title: graphwriter_rejects_writes_missing_motivational_provenance
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-073
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_123_graphwriter_rejects_writes_missing_motivational_pr
+runner-timeout: 120
+last-run: 2026-05-25T20:21:36.993345265+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description
