@@ -677,3 +677,27 @@ dec:capability a rdf:Property ;
 
 <http://www.w3.org/ns/prov#wasInformedBy> a rdf:Property ;
     rdfs:comment "PROV-O: links a Session to a prior Session whose output informed it (FT-069 / ADR-038 session-provenance fragment)." .
+
+# --- FT-075 / ADR-043: QueryTemplate as a first-class artifact ---------------
+#
+# A versioned, graph-resident SPARQL template referenced by ID. The slice-1
+# instances ship the canonical full-chain backward and forward traversals
+# (qt:full-chain-backward-v1, qt:full-chain-forward-v1) that walk the
+# dual-provenance discipline (ADR-038 mechanical + ADR-039 motivational).
+# QueryTemplate is itself subject to the dual-provenance discipline; its
+# per-type shape (FT-072 query-template.ttl) composes the universal
+# mechanical fragment via sh:and and the motivational alternatives via sh:or.
+
+dec:QueryTemplate a rdfs:Class ;
+    rdfs:label "QueryTemplate" ;
+    rdfs:comment "Versioned, graph-resident SPARQL template referenced by ID (FT-075 / ADR-043)." .
+
+dec:querySpec a rdf:Property ;
+    rdfs:domain dec:QueryTemplate ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "The SPARQL source verbatim; binding substitution happens at execute time via the engine's query-with-bindings API (FT-075 / ADR-043)." .
+
+dec:queryLanguage a rdf:Property ;
+    rdfs:domain dec:QueryTemplate ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Closed enum: currently the singleton {\"SPARQL-1.1\"}. Extension requires an ADR amendment (FT-075 / ADR-043)." .

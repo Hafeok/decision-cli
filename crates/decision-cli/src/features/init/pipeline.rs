@@ -6,6 +6,7 @@ use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 use oxigraph::store::Store;
 
 use crate::core::bundled;
+use crate::core::queries;
 use crate::core::role_catalog;
 
 use super::parse::parse_into_graph;
@@ -203,8 +204,27 @@ pub(super) fn build_orchestration_store(
     seed_bootstrap_subscriptions(&orchestration).map_err(|e| InitError::Internal(e.to_string()))?;
     seed_role_catalog(&orchestration)?;
     seed_verification_envs(&orchestration)?;
+    seed_query_templates(&orchestration)?;
 
     Ok(orchestration)
+}
+
+/// FT-075 / ADR-043 — seed the slice-1 QueryTemplate catalog (canonical
+/// full-chain backward + forward traversals) so consumers can fetch them
+/// by ID immediately after `dec init`. The TTL fixtures embedded under
+/// `core::queries::bootstrap` are the source of truth; the store-resident
+/// copies are written once here and updated only by an explicit
+/// re-bootstrap or version bump.
+fn seed_query_templates(orchestration: &Store) -> Result<(), InitError> {
+    let quads = queries::bootstrap_query_template_quads();
+    orchestration
+        .transaction(|mut tx| {
+            for q in &quads {
+                tx.insert(q.as_ref())?;
+            }
+            Ok::<_, oxigraph::store::StorageError>(())
+        })
+        .map_err(|e| InitError::Internal(e.to_string()))
 }
 
 /// FT-035 / ADR-028 — project the seeded `ephemeral-cli` env into the

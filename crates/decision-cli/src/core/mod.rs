@@ -18,6 +18,7 @@ pub mod handler;
 pub mod mcp;
 pub mod metrics;
 pub mod ontology;
+pub mod queries;
 pub mod role_catalog;
 pub mod scope;
 pub mod sparql;

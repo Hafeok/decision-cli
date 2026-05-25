@@ -2,12 +2,17 @@
 id: TC-125
 title: full_chain_backward_returns_terminal_boundary_artifacts
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --test ft_075_full_chain_query
+runner-timeout: 120
+last-run: 2026-05-25T21:00:45.754835082+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

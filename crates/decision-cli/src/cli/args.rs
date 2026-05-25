@@ -14,8 +14,9 @@ use super::{
     bootstrap_catalog, bootstrap_catalog::BootstrapCatalogArgs, check_goal,
     check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd, feedback,
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
-    mcp, mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, session,
-    session::SessionCmd, sparql, sparql::SparqlArgs, status, verify, verify::VerifyCmd,
+    mcp, mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, query,
+    query::QueryCmd, session, session::SessionCmd, sparql, sparql::SparqlArgs, status, verify,
+    verify::VerifyCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -79,6 +80,9 @@ pub enum Command {
     /// Provenance migration tooling (FT-074 / ADR-042).
     #[command(subcommand)]
     Migrate(MigrateCmd),
+    /// QueryTemplate catalog inspection (FT-075 / ADR-043).
+    #[command(subcommand)]
+    Query(QueryCmd),
 }
 
 /// Route a parsed `Command` into the matching feature module. The
@@ -100,5 +104,6 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Mcp(cmd) => mcp::run(workdir, cmd),
         Command::Verify(cmd) => verify::run(workdir, cmd),
         Command::Migrate(cmd) => migrate::run(workdir, cmd),
+        Command::Query(cmd) => query::run(workdir, cmd),
     }
 }

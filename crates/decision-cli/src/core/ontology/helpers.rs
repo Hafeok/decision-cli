@@ -109,6 +109,7 @@ const REQUIRED_ONTOLOGY_CLASSES: &[&str] = &[
     "EscalationStep",
     "EscalationTrigger",
     "Bundle",
+    "QueryTemplate",
 ];
 
 pub(super) fn invariant_ontology_classes_present(store: &Store) -> Result<(), OntologyError> {

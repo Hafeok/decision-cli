@@ -1,0 +1,43 @@
+# Bootstrap fixture for qt:full-chain-backward-v1 (FT-075 / ADR-043).
+#
+# Canonical SPARQL traversal that walks any focal artifact backward through
+# mechanical provenance (prov:wasGeneratedBy / prov:used) and motivational
+# provenance (prov:wasDerivedFrom*, walkable uniformly via the FT-070 /
+# ADR-039 subPropertyOf relationship) to terminal origins (BoundaryArtifact
+# subclasses or nodes with no further derivation).
+#
+# Seeded into the orchestration store by `dec init`; the TTL fixture is the
+# source of truth and the store-resident copy is written once at bootstrap.
+# Bootstrapped QueryTemplate instances satisfy the QueryTemplateShape sh:or
+# via the BoundaryArtifact branch (their motivational origin is the
+# bootstrap process itself).
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/qt/full-chain-backward-v1>
+    a dec:QueryTemplate , dec:BoundaryArtifact , dec:BootstrapArtifact ;
+    dec:querySpec """PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dec:  <https://decision-cli.dev/ns#>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?ancestor ?ancestor_type ?via WHERE {
+    {
+        ?focal (prov:wasGeneratedBy/prov:used)* ?ancestor .
+        BIND(\"mechanical\" AS ?via)
+    } UNION {
+        ?focal (prov:wasDerivedFrom)* ?ancestor .
+        BIND(\"motivational\" AS ?via)
+    }
+    ?ancestor rdf:type ?ancestor_type .
+    FILTER (
+        EXISTS { ?ancestor rdf:type/rdfs:subClassOf* dec:BoundaryArtifact }
+        || NOT EXISTS { ?ancestor prov:wasDerivedFrom ?_ }
+    )
+}""" ;
+    dec:queryLanguage "SPARQL-1.1" ;
+    dec:version       "1.0.0" ;
+    dec:external_origin "bootstrap:qt-full-chain-backward-v1.ttl" .

@@ -1,4 +1,4 @@
-# Per-type provenance composition shape for dec:QueryTemplate (FT-072 / ADR-038 / ADR-043).
+# Per-type provenance composition shape for dec:QueryTemplate (FT-075 / ADR-043).
 #
 # A QueryTemplate is itself a first-class artifact (the full-chain
 # traversal query of ADR-043 ships as the canonical instance). Its
@@ -8,10 +8,32 @@
 
 @prefix dec:  <https://decision-cli.dev/ns#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
 dec:QueryTemplateShape a sh:NodeShape ;
     sh:targetClass dec:QueryTemplate ;
     sh:and ( dec:MechanicalProvenanceShape ) ;
+    sh:property [
+        sh:path     dec:querySpec ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:QueryTemplate requires exactly one dec:querySpec literal."
+    ] ;
+    sh:property [
+        sh:path     dec:queryLanguage ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in       ( "SPARQL-1.1" ) ;
+        sh:message  "dec:QueryTemplate requires dec:queryLanguage \"SPARQL-1.1\" (closed enum)."
+    ] ;
+    sh:property [
+        sh:path     dec:version ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message  "dec:QueryTemplate requires exactly one dec:version literal (semver-style string)."
+    ] ;
     sh:or (
         [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
         [ sh:property [ sh:path dec:decomposesFrom ; sh:minCount 1 ; sh:class dec:Brief    ] ]

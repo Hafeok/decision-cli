@@ -1,0 +1,37 @@
+# Bootstrap fixture for qt:full-chain-forward-v1 (FT-075 / ADR-043).
+#
+# Symmetric forward counterpart to qt-full-chain-backward-v1: walks any
+# focal artifact forward through the inverse property paths
+# (^prov:wasGeneratedBy / ^prov:used and ^prov:wasDerivedFrom*) to find
+# terminal value-action artifacts. Terminal condition: artifact is a
+# value-action output (no further outgoing mechanical lineage) or has no
+# further `prov:wasDerivedFrom` consumers.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/qt/full-chain-forward-v1>
+    a dec:QueryTemplate , dec:BoundaryArtifact , dec:BootstrapArtifact ;
+    dec:querySpec """PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dec:  <https://decision-cli.dev/ns#>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?descendant ?descendant_type ?via WHERE {
+    {
+        ?descendant (prov:wasGeneratedBy/prov:used)* ?focal .
+        BIND(\"mechanical\" AS ?via)
+    } UNION {
+        ?descendant (prov:wasDerivedFrom)* ?focal .
+        BIND(\"motivational\" AS ?via)
+    }
+    ?descendant rdf:type ?descendant_type .
+    FILTER (
+        NOT EXISTS { ?_ prov:wasDerivedFrom ?descendant }
+    )
+}""" ;
+    dec:queryLanguage "SPARQL-1.1" ;
+    dec:version       "1.0.0" ;
+    dec:external_origin "bootstrap:qt-full-chain-forward-v1.ttl" .

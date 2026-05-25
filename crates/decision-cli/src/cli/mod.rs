@@ -12,6 +12,7 @@ pub mod init;
 pub mod mcp;
 pub mod migrate;
 pub mod preflight;
+pub mod query;
 pub mod session;
 pub mod sparql;
 pub mod status;
