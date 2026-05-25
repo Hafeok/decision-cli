@@ -2,7 +2,7 @@
 id: FT-067
 title: 'decision-cli: route verify-graph-author worker through shared resolver'
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-016
 - FT-048
@@ -16,36 +16,36 @@ tests:
 - TC-139
 domains: []
 domains-acknowledged:
-  ADR-005: Worker-resolver routing is independent of value-stream scope.
-  ADR-055: Feature does not introduce or extend the WorkerImage catalog.
-  ADR-038: No new artifact type introduced by this feature.
-  ADR-021: Feature does not produce an action-interpretation pair, so the agreement metric does not apply.
-  ADR-024: No Feedback artifact produced; lifecycle state machine not invoked here.
-  ADR-037: Provider defaults are out of scope; this feature routes the worker spawn, not LLM provider selection.
-  ADR-043: Feature does not introduce a new full-chain query.
-  ADR-027: No new role registered by this feature; existing verify-graph-author role unchanged.
-  ADR-034: Worker-resolver routing does not invoke escalation tiers.
-  ADR-054: Feature does not call LiteLLM.
-  ADR-044: Feature is a direct code refactor and not authored from a Brief.
-  ADR-040: No new boundary artifact introduced by this feature.
-  ADR-018: No verification verdict artifact produced by this feature.
-  ADR-022: No Feedback artifact produced by this feature.
-  ADR-039: No new motivational predicate introduced by this feature.
-  ADR-017: Feature is not an action-interpretation pair; no paired interpretation session involved.
-  ADR-035: Feature does not assemble a bundle that carries a stakes judgment.
-  ADR-033: Worker resolution here is filesystem / PATH lookup, not capability-tag-based model routing.
-  ADR-065: Worker runtime substrate decision (Dagger deferral) does not apply; this feature routes an existing Python worker invocation.
-  ADR-002: Feature ships a worker-resolver wiring change, not graph mutations.
-  ADR-064: Feature does not call LiteLLM.
-  ADR-025: No Feedback artifact produced; blocking semantics not invoked here.
-  ADR-023: No Feedback artifact produced; controlled vocabulary not invoked here.
-  ADR-014: No new fitness function introduced; TC-050's existing structural invariant is the relevant fitness signal.
-  ADR-036: Feature does not touch the Capability/RoleBinding catalog.
-  ADR-004: Feature does not emit dispatch or session events.
-  ADR-041: Feature does not write artifacts through GraphWriter.
-  ADR-047: Feature does not perform capability-tag-to-entry binding at dispatch time; worker resolution is filesystem/PATH-based here.
-  ADR-012: Not a per-stream command; no working-directory walk-up involved.
   ADR-001: Application-layer feature; does not touch the oxi-events crate boundary.
+  ADR-025: No Feedback artifact produced; blocking semantics not invoked here.
+  ADR-012: Not a per-stream command; no working-directory walk-up involved.
+  ADR-043: Feature does not introduce a new full-chain query.
+  ADR-039: No new motivational predicate introduced by this feature.
+  ADR-054: Feature does not call LiteLLM.
+  ADR-018: No verification verdict artifact produced by this feature.
+  ADR-035: Feature does not assemble a bundle that carries a stakes judgment.
+  ADR-065: Worker runtime substrate decision (Dagger deferral) does not apply; this feature routes an existing Python worker invocation.
+  ADR-044: Feature is a direct code refactor and not authored from a Brief.
+  ADR-023: No Feedback artifact produced; controlled vocabulary not invoked here.
+  ADR-027: No new role registered by this feature; existing verify-graph-author role unchanged.
+  ADR-055: Feature does not introduce or extend the WorkerImage catalog.
+  ADR-022: No Feedback artifact produced by this feature.
+  ADR-047: Feature does not perform capability-tag-to-entry binding at dispatch time; worker resolution is filesystem/PATH-based here.
+  ADR-038: No new artifact type introduced by this feature.
+  ADR-017: Feature is not an action-interpretation pair; no paired interpretation session involved.
+  ADR-014: No new fitness function introduced; TC-050's existing structural invariant is the relevant fitness signal.
+  ADR-041: Feature does not write artifacts through GraphWriter.
+  ADR-036: Feature does not touch the Capability/RoleBinding catalog.
+  ADR-040: No new boundary artifact introduced by this feature.
+  ADR-064: Feature does not call LiteLLM.
+  ADR-024: No Feedback artifact produced; lifecycle state machine not invoked here.
+  ADR-033: Worker resolution here is filesystem / PATH lookup, not capability-tag-based model routing.
+  ADR-005: Worker-resolver routing is independent of value-stream scope.
+  ADR-021: Feature does not produce an action-interpretation pair, so the agreement metric does not apply.
+  ADR-004: Feature does not emit dispatch or session events.
+  ADR-034: Worker-resolver routing does not invoke escalation tiers.
+  ADR-037: Provider defaults are out of scope; this feature routes the worker spawn, not LLM provider selection.
+  ADR-002: Feature ships a worker-resolver wiring change, not graph mutations.
 ---
 
 ## Description
