@@ -6,13 +6,101 @@
 # satisfying branch of the sh:or is the BoundaryArtifact escape hatch.
 # Motivational branches are intentionally absent — there is no
 # graph-internal predecessor that motivates a submission's existence.
+#
+# Field-level invariants (FT-087):
+#   * submission_id, candidate_registry_ref required.
+#   * candidate_registry_ref pinned by `@sha256:` digest (OCI digest).
+#   * claimed_capability_tag multi-valued, at least one.
+#   * claimed_sbom_ref, claimed_signature_subject, claimed_signature_issuer required.
+#   * Provenance fields (source_repo_uri, source_commit_hash, build_run_url) required.
+#   * submission_lifecycle_state ∈ {received, under-review, admitted, rejected}.
 
 @prefix dec:  <https://decision-cli.dev/ns#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
 dec:WorkerImageSubmissionShape a sh:NodeShape ;
     sh:targetClass dec:WorkerImageSubmission ;
     sh:and ( dec:MechanicalProvenanceShape ) ;
     sh:or (
         [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
-    ) .
+    ) ;
+    sh:property [
+        sh:path     dec:submission_id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:submission_id (FT-087)."
+    ] ;
+    sh:property [
+        sh:path     dec:candidate_registry_ref ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:pattern  "@sha256:" ;
+        sh:message  "dec:WorkerImageSubmission requires dec:candidate_registry_ref to be an OCI reference pinned by @sha256: digest (FT-087)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_capability_tag ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires at least one dec:claimed_capability_tag (FT-087)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_sbom_ref ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:claimed_sbom_ref (FT-087 / FT-091)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_signature_subject ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:claimed_signature_subject (FT-087 / FT-089)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_signature_issuer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:claimed_signature_issuer (FT-087 / FT-089)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_source_repo_uri ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:claimed_source_repo_uri (FT-087)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_source_commit_hash ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:claimed_source_commit_hash (FT-087)."
+    ] ;
+    sh:property [
+        sh:path     dec:claimed_build_run_url ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message  "dec:WorkerImageSubmission requires exactly one non-empty dec:claimed_build_run_url (FT-087)."
+    ] ;
+    sh:property [
+        sh:path     dec:submission_lifecycle_state ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in       ( "received" "under-review" "admitted" "rejected" ) ;
+        sh:message  "dec:submission_lifecycle_state must be one of {received, under-review, admitted, rejected} (FT-087)."
+    ] .

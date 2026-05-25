@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-144-pipeline-worker-sdk-bundle-layer.sh
 runner-timeout: 120
-last-run: 2026-05-25T22:36:17.714465466+00:00
-last-run-duration: 0.9s
+last-run: 2026-05-25T23:43:32.181201737+00:00
+last-run-duration: 0.7s
 ---
 
 ## Purpose

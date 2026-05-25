@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-147-pipeline-worker-sdk-side-channel.sh
 runner-timeout: 120
-last-run: 2026-05-25T21:48:29.984917598+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-25T23:43:37.401105492+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description

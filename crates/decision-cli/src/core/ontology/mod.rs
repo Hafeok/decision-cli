@@ -29,6 +29,7 @@ pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;
 pub mod worker_image;
+pub mod worker_image_submission;
 
 pub use per_type_shapes::{
     PER_TYPE_BOUNDARY_EXEMPT_FILES, PER_TYPE_SHAPE_FILES, PER_TYPE_SHAPE_IRIS,
@@ -92,7 +93,6 @@ pub const MOTIVATIONAL_PREDICATES_TTL: &str =
 /// per-type shapes (FT-072) can reference `:BoundaryArtifact` class
 /// membership in the first branch of their `sh:or` block.
 pub const BOUNDARY_ARTIFACT_SHAPES_TTL: &str = include_str!("assets/shapes/boundary-artifact.ttl");
-
 
 /// IRI of the universal mechanical-provenance `sh:NodeShape` (FT-069 /
 /// ADR-038). Composed via `sh:and` from every artifact-type shape.

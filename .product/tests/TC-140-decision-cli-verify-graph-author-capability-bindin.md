@@ -10,7 +10,7 @@ phase: 1
 runner: cargo-test
 runner-args: tc_140_verify_graph_author_capability_binding
 runner-timeout: 120
-last-run: 2026-05-25T19:09:58.308776805+00:00
+last-run: 2026-05-25T23:43:27.076604364+00:00
 last-run-duration: 0.5s
 ---
 

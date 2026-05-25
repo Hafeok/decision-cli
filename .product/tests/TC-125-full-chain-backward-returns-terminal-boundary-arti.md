@@ -11,8 +11,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test ft_075_full_chain_query
 runner-timeout: 120
-last-run: 2026-05-25T21:00:45.754835082+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-25T23:43:30.039525774+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: TC-122
 title: per_type_shape_files_load_and_compose_universal_blocks
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features:
   - FT-072
@@ -11,8 +11,9 @@ phase: 1
 runner: cargo-test
 runner-args: tc_122_per_type_shape_files_load_and_compose_universal_bl
 runner-timeout: 120
-last-run: 2026-05-25T20:00:21.644850523+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-25T23:43:28.428209899+00:00
+last-run-duration: 0.4s
+failure-message: "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s\n     Running unittests src/lib.rs (target/debug/deps/decision_cli-5a57efa364e6b418)\n     Running unittests src/main.rs (target/debug/deps/dec-a1adbe2e30e8a6b1)\n     Running tests/anthropic_cache_breakpoint.rs (target/debug/deps/anthropic_cache_breakpoint-fe8cd0afdb6dea96)\n     Running tests/bundle_stakes.rs (target/debug/deps/bundle_stakes-3069bc6d56d5fdb6)\n     Running tests/capability_resolver.rs (target/debug/deps/capabi"
 ---
 
 ## Description

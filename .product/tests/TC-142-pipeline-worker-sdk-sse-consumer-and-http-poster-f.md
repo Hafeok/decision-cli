@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-142-pipeline-worker-sdk-wire.sh
 runner-timeout: 120
-last-run: 2026-05-25T21:20:52.644704677+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-25T23:43:30.632974223+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description

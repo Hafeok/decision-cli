@@ -2,7 +2,7 @@
 id: TC-017
 title: every_cross_cutting_adr_is_backed_by_a_runner_tc
 type: invariant
-status: passing
+status: failing
 validates:
   features: []
   adrs:
@@ -11,8 +11,9 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/cross-cutting-rules-have-checks.sh
 runner-timeout: 60
-last-run: 2026-05-24T19:14:23.673322616+00:00
-last-run-duration: 5.6s
+last-run: 2026-05-25T23:43:40.429452005+00:00
+last-run-duration: 18.0s
+failure-message: ""
 ---
 
 ## Purpose

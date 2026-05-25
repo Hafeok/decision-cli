@@ -10,8 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: tc_150_pipeline_worker_sdk_build_time_codegen_of_typed_bu
 runner-timeout: 120
-last-run: 2026-05-25T22:21:00.404460337+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-25T23:43:39.542655412+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

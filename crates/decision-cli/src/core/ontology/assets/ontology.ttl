@@ -855,3 +855,85 @@ dec:build_run_url a rdf:Property ;
 dec:ConformanceAudit a rdfs:Class ;
     rdfs:label "ConformanceAudit" ;
     rdfs:comment "An audit record linked to a WorkerImage (FT-086 / ADR-055). class ∈ {manual-review, automated-replay}; slice 1 uses manual-review only (ADR-060)." .
+
+# --- FT-087 / ADR-040 / ADR-055: WorkerImageSubmission initial-request artifact -
+#
+# A WorkerImageSubmission is the boundary artifact CI posts when a worker
+# author releases a new image version. The Submission carries the claim
+# payload the WorkerCurator (FT-092) consumes to decide admission. By
+# construction it is *always* boundary-originated — the producer-side world
+# (worker repo, CI) is outside the orchestration graph — so it is declared
+# as a subclass of dec:InitialRequest (a dec:BoundaryArtifact subclass per
+# FT-071 / ADR-040). The shape composition lives in
+# `shapes/worker-image-submission.ttl`; the property declarations below
+# enable field-level validators.
+
+dec:WorkerImageSubmission a rdfs:Class ;
+    rdfs:subClassOf dec:InitialRequest ;
+    rdfs:label "WorkerImageSubmission" ;
+    rdfs:comment "Initial-request artifact carrying a worker-image admission claim from CI (FT-087 / ADR-055). Subclass of dec:InitialRequest (a BoundaryArtifact subclass per FT-071)." .
+
+dec:submission_id a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Stable id for submission lookup (FT-087)." .
+
+dec:candidate_registry_ref a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Proposed OCI reference with digest, e.g. ghcr.io/example/worker@sha256:abc… (FT-087)." .
+
+dec:claimed_capability_tag a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Capability-tag claim carried by the Submission (multi-valued; ≥1). Validated against the catalog at admission time (FT-087)." .
+
+dec:claimed_compatible_role a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  dec:Role ;
+    rdfs:comment "Role the candidate image claims compatibility with (multi-valued; optional in slice 1) (FT-087)." .
+
+dec:claimed_sbom_ref a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "OCI referrer URI for the SBOM attestation accompanying the Submission (FT-087 / FT-091)." .
+
+dec:claimed_signature_subject a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Sigstore Fulcio certificate subject claimed by the Submission (FT-087 / FT-089)." .
+
+dec:claimed_signature_issuer a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Sigstore Fulcio issuer URI claimed by the Submission (FT-087 / FT-089)." .
+
+dec:claimed_source_repo_uri a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Provenance claim: source repository URI (FT-087)." .
+
+dec:claimed_source_commit_hash a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Provenance claim: commit SHA the candidate image was built from (FT-087)." .
+
+dec:claimed_build_run_url a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Provenance claim: CI run URL (GitHub Actions, etc.) (FT-087)." .
+
+dec:submission_lifecycle_state a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Submission lifecycle: one of {received, under-review, admitted, rejected}. Curator session output transitions the state (FT-087 / FT-092)." .
+
+dec:produced_workerimage a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  dec:WorkerImage ;
+    rdfs:comment "Edge written on admission: the minted WorkerImage that the Submission produced (FT-087 / FT-092)." .
+
+dec:produced_feedback a rdf:Property ;
+    rdfs:domain dec:WorkerImageSubmission ;
+    rdfs:range  dec:Feedback ;
+    rdfs:comment "Edge written on rejection: the Feedback artifact (class submission-rejected) explaining why (FT-087 / FT-092)." .

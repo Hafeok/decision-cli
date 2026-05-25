@@ -12,8 +12,8 @@ phase: 2
 runner: bash
 runner-args: tests/scripts/tc-113-no-hardcoded-models.sh
 runner-timeout: 60
-last-run: 2026-05-24T19:14:23.673322616+00:00
-last-run-duration: 1.2s
+last-run: 2026-05-25T23:43:40.429452005+00:00
+last-run-duration: 1.4s
 ---
 
 ## Description

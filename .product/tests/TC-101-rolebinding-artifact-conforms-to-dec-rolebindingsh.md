@@ -12,7 +12,7 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test role_binding_shape
 runner-timeout: 120
-last-run: 2026-05-24T19:14:23.673322616+00:00
+last-run: 2026-05-25T23:43:40.429452005+00:00
 last-run-duration: 0.3s
 ---
 

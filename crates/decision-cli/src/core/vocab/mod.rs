@@ -16,6 +16,7 @@ mod verify_env;
 mod verify_graph;
 mod waiver;
 mod worker_image;
+mod worker_image_submission;
 
 pub use auto_dispatch::*;
 pub use capability::*;
@@ -27,6 +28,7 @@ pub use verify_env::*;
 pub use verify_graph::*;
 pub use waiver::*;
 pub use worker_image::*;
+pub use worker_image_submission::*;
 
 use oxigraph::model::NamedNodeRef;
 
