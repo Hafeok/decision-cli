@@ -26,6 +26,15 @@ from .session import (
     OUTCOME_SUCCESS,
     Session,
 )
+from .side_channel import (
+    FEEDBACK_CLASSES,
+    FeedbackClass,
+    FeedbackEmission,
+    build_feedback_quads,
+    build_judgment_quads,
+    mint_feedback_iri,
+    mint_judgment_iri,
+)
 from .sse import SseConsumer, envelope_to_dispatch, parse_sse_block
 from .types import (
     CapabilityCatalogEntry,
@@ -37,6 +46,7 @@ from .wire import HarnessEndpoints, WireClient
 
 __all__ = [
     "DEFAULT_LITELLM_BASE_URL",
+    "FEEDBACK_CLASSES",
     "OUTCOME_BLOCKED",
     "OUTCOME_ESCALATED",
     "OUTCOME_FAILED",
@@ -53,6 +63,8 @@ __all__ = [
     "CompletionResult",
     "CompletionTelemetry",
     "DispatchEvent",
+    "FeedbackClass",
+    "FeedbackEmission",
     "HarnessEndpoints",
     "LiteLLMClient",
     "LiteLLMConfig",
@@ -63,6 +75,10 @@ __all__ = [
     "SseConsumer",
     "StructuredFn",
     "WireClient",
+    "build_feedback_quads",
+    "build_judgment_quads",
     "envelope_to_dispatch",
+    "mint_feedback_iri",
+    "mint_judgment_iri",
     "parse_sse_block",
 ]

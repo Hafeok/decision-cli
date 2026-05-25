@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import time
-import uuid
 from collections.abc import Iterable
-from datetime import datetime, timezone
 from types import TracebackType
 from typing import Any
 
@@ -17,48 +15,28 @@ except ImportError as exc:  # pragma: no cover - environment misconfig
         "install via `uv pip install pyoxigraph`."
     ) from exc
 
+from ._session_io import (
+    build_telemetry,
+    derive_session_iri,
+    dump_combined,
+    dump_nquads,
+    load_nquads,
+    now_iso,
+)
+from .side_channel import (
+    FeedbackEmission,
+    build_feedback_quads,
+    build_judgment_quads,
+    emission_is_blocking,
+    mint_feedback_iri,
+    mint_judgment_iri,
+)
 from .types import CompletionPayload, DispatchEvent
 
 OUTCOME_SUCCESS = "success"
 OUTCOME_BLOCKED = "blocked"
 OUTCOME_ESCALATED = "escalated"
 OUTCOME_FAILED = "failed"
-
-_NQUADS = pyoxigraph.RdfFormat.N_QUADS
-
-
-def _now_iso() -> str:
-    """ISO-8601 UTC timestamp used for session start/end telemetry."""
-    return datetime.now(timezone.utc).isoformat()
-
-
-def _derive_session_iri(dispatch: DispatchEvent, explicit: str | None) -> str:
-    """Pick the Session URI per ADR-050 (Session IS a prov:Activity).
-
-    Priority: explicit argument > ``session_id`` from dispatch metadata >
-    fall back to a freshly-minted urn:uuid IRI. The Session URI is the
-    same identity the harness uses in its session record.
-    """
-    if explicit:
-        return explicit
-    metadata_session = dispatch.metadata.get("session_id") if dispatch.metadata else None
-    if metadata_session:
-        return str(metadata_session)
-    return f"urn:dec:session:{uuid.uuid4()}"
-
-
-def _load_nquads(store: pyoxigraph.Store, nquads: str) -> None:
-    """Parse a (possibly empty) N-Quads string into ``store``."""
-    if nquads and nquads.strip():
-        store.load(input=nquads, format=_NQUADS)
-
-
-def _dump_nquads(store: pyoxigraph.Store) -> str:
-    """Serialize ``store`` back to N-Quads text (empty string if empty)."""
-    if len(store) == 0:
-        return ""
-    raw = store.dump(format=_NQUADS)
-    return raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else str(raw)
 
 
 class Session:
@@ -82,15 +60,15 @@ class Session:
         session_iri: str | None = None,
     ) -> None:
         self._dispatch = dispatch
-        self._session_iri = _derive_session_iri(dispatch, session_iri)
+        self._session_iri = derive_session_iri(dispatch, session_iri)
         self._agent_iri = agent_iri
-        self._started_at = _now_iso()
+        self._started_at = now_iso()
         self._monotonic_start = time.monotonic()
 
         # Bundle store: holds the dispatch's N-Quads payload for the
         # session's lifetime; discarded when the session is dropped.
         self._bundle = pyoxigraph.Store()
-        _load_nquads(self._bundle, dispatch.nquads_payload)
+        load_nquads(self._bundle, dispatch.nquads_payload)
 
         # Output sub-stores: artifact triples and side-channel triples
         # are kept separately so the blocked path can drop one without
@@ -101,9 +79,15 @@ class Session:
         self._telemetry: dict[str, Any] = {}
         self._counters: dict[str, float] = {}
         self._closed = False
+        # FT-082: a blocking feedback emission forces ``build_completion``
+        # to return ``outcome=blocked`` per ADR-025, regardless of caller
+        # request. Tracked across multiple emissions in one session.
+        self._blocking_feedback_emitted = False
+        self._emitted_feedback_iris: list[str] = []
+        self._emitted_judgment_iris: list[str] = []
 
     # ------------------------------------------------------------------ #
-    # Identity
+    # Identity                                                           #
     # ------------------------------------------------------------------ #
 
     @property
@@ -133,7 +117,7 @@ class Session:
         return self._closed
 
     # ------------------------------------------------------------------ #
-    # Bundle access
+    # Bundle / artifact / side-channel access                            #
     # ------------------------------------------------------------------ #
 
     @property
@@ -145,38 +129,121 @@ class Session:
     def bundle_size(self) -> int:
         return len(self._bundle)
 
-    # ------------------------------------------------------------------ #
-    # Artifact emission
-    # ------------------------------------------------------------------ #
-
     def emit_artifact_quads(self, quads: Iterable[pyoxigraph.Quad]) -> None:
         for quad in quads:
             self._artifact.add(quad)
 
     def emit_artifact_nquads(self, nquads: str) -> None:
-        _load_nquads(self._artifact, nquads)
+        load_nquads(self._artifact, nquads)
 
     @property
     def artifact_size(self) -> int:
         return len(self._artifact)
-
-    # ------------------------------------------------------------------ #
-    # Side-channel emission (feedback, defects, capability requests …)
-    # ------------------------------------------------------------------ #
 
     def emit_side_channel_quads(self, quads: Iterable[pyoxigraph.Quad]) -> None:
         for quad in quads:
             self._side_channel.add(quad)
 
     def emit_side_channel_nquads(self, nquads: str) -> None:
-        _load_nquads(self._side_channel, nquads)
+        load_nquads(self._side_channel, nquads)
 
     @property
     def side_channel_size(self) -> int:
         return len(self._side_channel)
 
     # ------------------------------------------------------------------ #
-    # Telemetry
+    # FT-082: structured side-channel APIs                               #
+    # ------------------------------------------------------------------ #
+
+    def record_emergent_judgment(
+        self,
+        *,
+        decision: str,
+        rationale: str,
+        judgment_iri: str | None = None,
+        recorded_at: str | None = None,
+    ) -> str:
+        """Record an in-authority emergent judgment as artifact metadata.
+
+        Per FT-082 the judgment is attached to the produced artifact's
+        emission set (not the side-channel) so it surfaces to the paired
+        interpretation session's bundle alongside the main artifact.
+        Returns the minted ``dec:EmergentJudgment`` IRI.
+        """
+        self._require_open()
+        iri = judgment_iri or mint_judgment_iri()
+        quads = build_judgment_quads(
+            iri=iri,
+            decision=decision,
+            rationale=rationale,
+            source_session_iri=self._session_iri,
+            recorded_at=recorded_at,
+        )
+        self.emit_artifact_quads(quads)
+        self._emitted_judgment_iris.append(iri)
+        return iri
+
+    def emit_feedback(
+        self,
+        *,
+        feedback_class: str,
+        evidence: str,
+        severity: str = "warning",
+        recommendation: str | None = None,
+        target_role: str | None = None,
+        blocking: bool | None = None,
+        disposition_rationale: str | None = None,
+        feedback_iri: str | None = None,
+    ) -> str:
+        """Emit a `dec:Feedback` artifact through the session's side-channel.
+
+        Per ADR-025: a blocking emission (``blocking=True``, or the class
+        default for ``gap``/``contradiction``/``unimplementable``) forces
+        the session's next ``build_completion`` to return
+        ``outcome=blocked`` and to drop the artifact triples. A
+        non-blocking emission flows alongside the artifact on completion.
+
+        Returns the minted ``dec:Feedback`` IRI.
+        """
+        self._require_open()
+        emission = FeedbackEmission(
+            feedback_class=feedback_class,
+            severity=severity,
+            evidence=evidence,
+            recommendation=recommendation,
+            target_role=target_role,
+            blocking=blocking,
+            disposition_rationale=disposition_rationale,
+        )
+        iri = feedback_iri or mint_feedback_iri()
+        quads = build_feedback_quads(
+            iri=iri,
+            emission=emission,
+            source_session_iri=self._session_iri,
+        )
+        self.emit_side_channel_quads(quads)
+        self._emitted_feedback_iris.append(iri)
+        if emission_is_blocking(emission):
+            self._blocking_feedback_emitted = True
+        return iri
+
+    @property
+    def emitted_feedback_iris(self) -> tuple[str, ...]:
+        """IRIs of every `dec:Feedback` emitted in this session."""
+        return tuple(self._emitted_feedback_iris)
+
+    @property
+    def emitted_judgment_iris(self) -> tuple[str, ...]:
+        """IRIs of every `dec:EmergentJudgment` recorded in this session."""
+        return tuple(self._emitted_judgment_iris)
+
+    @property
+    def has_blocking_feedback(self) -> bool:
+        """True iff at least one blocking feedback emission has occurred."""
+        return self._blocking_feedback_emitted
+
+    # ------------------------------------------------------------------ #
+    # Telemetry                                                          #
     # ------------------------------------------------------------------ #
 
     def record_telemetry(self, key: str, value: Any) -> None:
@@ -192,56 +259,64 @@ class Session:
         self._counters[key] = self._counters.get(key, 0) + delta
 
     def _final_telemetry(self) -> dict[str, Any]:
-        elapsed = max(0.0, time.monotonic() - self._monotonic_start)
-        ended = _now_iso()
-        return {
-            **self._telemetry,
-            **self._counters,
-            "session_id": self._session_iri,
-            "dispatch_id": self._dispatch.dispatch_id,
-            "capability_tag": self._dispatch.capability_tag,
-            "started_at": self._started_at,
-            "ended_at": ended,
-            "duration_seconds": elapsed,
-            "bundle_quad_count": len(self._bundle),
-            "artifact_quad_count": len(self._artifact),
-            "side_channel_quad_count": len(self._side_channel),
-        }
+        return build_telemetry(
+            base=self._telemetry,
+            counters=self._counters,
+            session_iri=self._session_iri,
+            dispatch=self._dispatch,
+            started_at=self._started_at,
+            monotonic_start=self._monotonic_start,
+            bundle=self._bundle,
+            artifact=self._artifact,
+            side_channel=self._side_channel,
+        )
 
     # ------------------------------------------------------------------ #
-    # Completion payload construction
+    # Completion payload construction                                    #
     # ------------------------------------------------------------------ #
 
-    def _dump_combined(self) -> str:
-        """Combine artifact + side-channel quads into one N-Quads string."""
-        if len(self._artifact) == 0 and len(self._side_channel) == 0:
-            return ""
-        combined = pyoxigraph.Store()
-        for quad in self._artifact:
-            combined.add(quad)
-        for quad in self._side_channel:
-            combined.add(quad)
-        return _dump_nquads(combined)
-
-    def build_completion(
-        self, *, outcome: str = OUTCOME_SUCCESS
-    ) -> CompletionPayload:
-        """Construct the success completion payload for FT-077 to POST.
-
-        Includes the union of artifact + side-channel triples in
-        ``nquads_payload`` plus the merged telemetry block. Marks the
-        session closed so a double-completion attempt is detectable.
-        """
+    def _require_open(self) -> None:
         if self._closed:
             raise RuntimeError(
                 f"session {self._session_iri} already produced a completion"
             )
+
+    def _resolve_outcome(self, requested: str | None) -> str:
+        """Resolve completion outcome, honouring ADR-025 blocking semantics."""
+        if self._blocking_feedback_emitted:
+            return OUTCOME_BLOCKED
+        if requested is None:
+            return OUTCOME_SUCCESS
+        return requested
+
+    def build_completion(
+        self, *, outcome: str | None = None
+    ) -> CompletionPayload:
+        """Construct the completion payload for FT-077 to POST.
+
+        - No blocking feedback emitted → ``outcome=success`` with the
+          union of artifact + side-channel triples in ``nquads_payload``.
+        - A blocking feedback emission has occurred (FT-082, ADR-025) →
+          ``outcome=blocked`` and the artifact triples are dropped from
+          the payload (a half-formed artifact is worse than none);
+          side-channel triples remain so the harness sees the feedback.
+
+        An explicit ``outcome`` argument is honoured unless a blocking
+        feedback emission has already forced the session into the blocked
+        path — ADR-025 makes blocking-on-emission load-bearing.
+        """
+        self._require_open()
         self._closed = True
+        effective = self._resolve_outcome(outcome)
+        if effective == OUTCOME_BLOCKED and self._blocking_feedback_emitted:
+            nquads = dump_nquads(self._side_channel)
+        else:
+            nquads = dump_combined(self._artifact, self._side_channel)
         return CompletionPayload(
             dispatch_id=self._dispatch.dispatch_id,
             session_id=self._session_iri,
-            nquads_payload=self._dump_combined(),
-            outcome=outcome,
+            nquads_payload=nquads,
+            outcome=effective,
             telemetry=self._final_telemetry(),
         )
 
@@ -258,14 +333,11 @@ class Session:
         artifact is worse than none. Outcome defaults to ``blocked`` but
         callers can pass ``OUTCOME_ESCALATED`` or ``OUTCOME_FAILED``.
         """
-        if self._closed:
-            raise RuntimeError(
-                f"session {self._session_iri} already produced a completion"
-            )
+        self._require_open()
         self._closed = True
         if error is not None:
             self._telemetry["error"] = error
-        side_only = _dump_nquads(self._side_channel)
+        side_only = dump_nquads(self._side_channel)
         return CompletionPayload(
             dispatch_id=self._dispatch.dispatch_id,
             session_id=self._session_iri,
@@ -275,7 +347,7 @@ class Session:
         )
 
     # ------------------------------------------------------------------ #
-    # Context manager
+    # Context manager                                                    #
     # ------------------------------------------------------------------ #
 
     def __enter__(self) -> Session:
