@@ -17,6 +17,7 @@
 //!   user-supplied definition documents (FT-008) and it does **not**
 //!   persist any triples into the orchestration store (FT-009).
 
+pub mod boundary_artifact;
 pub mod capability;
 pub mod coverage_waiver;
 mod helpers;
@@ -35,9 +36,10 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use helpers::{
-    extract_version_info, invariant_mechanical_provenance_shapes_present,
-    invariant_motivational_predicates_present, invariant_ontology_classes_present,
-    invariant_shapes_present, load_turtle_into_graph, sha256_hex_of_assets,
+    extract_version_info, invariant_boundary_artifact_shapes_present,
+    invariant_mechanical_provenance_shapes_present, invariant_motivational_predicates_present,
+    invariant_ontology_classes_present, invariant_shapes_present, load_turtle_into_graph,
+    sha256_hex_of_assets,
 };
 
 /// The version baked into the embedded ontology header. Bumping this
@@ -76,6 +78,13 @@ pub const MECHANICAL_PROVENANCE_SHAPES_TTL: &str =
 pub const MOTIVATIONAL_PREDICATES_TTL: &str =
     include_str!("assets/shapes/motivational-predicates.ttl");
 
+/// Raw Turtle bytes for the BoundaryArtifact class + four slice-1
+/// subclasses + their SHACL shapes (FT-071 / ADR-040). Loaded into the
+/// shapes named graph alongside the universal mechanical fragment so
+/// per-type shapes (FT-072) can reference `:BoundaryArtifact` class
+/// membership in the first branch of their `sh:or` block.
+pub const BOUNDARY_ARTIFACT_SHAPES_TTL: &str = include_str!("assets/shapes/boundary-artifact.ttl");
+
 /// IRI of the universal mechanical-provenance `sh:NodeShape` (FT-069 /
 /// ADR-038). Composed via `sh:and` from every artifact-type shape.
 pub const MECHANICAL_PROVENANCE_SHAPE: &str =
@@ -89,6 +98,42 @@ pub const SESSION_PROVENANCE_SHAPE: &str = "https://decision-cli.dev/ns#SessionP
 /// motivational predicate shipped in [`MOTIVATIONAL_PREDICATES_TTL`]
 /// (FT-070 / ADR-039).
 pub const PROV_WAS_DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+
+/// IRI of the `dec:BoundaryArtifact` top class (FT-071 / ADR-040).
+pub const BOUNDARY_ARTIFACT_CLASS: &str = "https://decision-cli.dev/ns#BoundaryArtifact";
+
+/// IRI of the `dec:SensingActionOutput` BoundaryArtifact subclass.
+pub const SENSING_ACTION_OUTPUT: &str = "https://decision-cli.dev/ns#SensingActionOutput";
+
+/// IRI of the `dec:InitialRequest` BoundaryArtifact subclass.
+pub const INITIAL_REQUEST: &str = "https://decision-cli.dev/ns#InitialRequest";
+
+/// IRI of the `dec:BootstrapArtifact` BoundaryArtifact subclass.
+pub const BOOTSTRAP_ARTIFACT: &str = "https://decision-cli.dev/ns#BootstrapArtifact";
+
+/// IRI of the `dec:MigrationBackfill` BoundaryArtifact subclass.
+pub const MIGRATION_BACKFILL: &str = "https://decision-cli.dev/ns#MigrationBackfill";
+
+/// IRI of the `dec:external_origin` property required by `:BoundaryArtifactShape`.
+pub const EXTERNAL_ORIGIN_PROP: &str = "https://decision-cli.dev/ns#external_origin";
+
+/// IRI of the `dec:isMigrationBackfill` property required by `:MigrationBackfillShape`.
+pub const IS_MIGRATION_BACKFILL_PROP: &str = "https://decision-cli.dev/ns#isMigrationBackfill";
+
+/// IRI of the `:BoundaryArtifactShape` SHACL NodeShape (FT-071 / ADR-040).
+pub const BOUNDARY_ARTIFACT_SHAPE: &str = "https://decision-cli.dev/ns#BoundaryArtifactShape";
+
+/// IRI of the `:MigrationBackfillShape` SHACL NodeShape extension (FT-071 / ADR-042).
+pub const MIGRATION_BACKFILL_SHAPE: &str = "https://decision-cli.dev/ns#MigrationBackfillShape";
+
+/// The four slice-1 BoundaryArtifact subclasses, cross-checked against
+/// the shipped TTL by FT-071's exit-criterion test (TC-121).
+pub const BOUNDARY_ARTIFACT_SUBCLASSES: &[&str] = &[
+    SENSING_ACTION_OUTPUT,
+    INITIAL_REQUEST,
+    BOOTSTRAP_ARTIFACT,
+    MIGRATION_BACKFILL,
+];
 
 /// The slice-1 motivational-predicate IRIs declared by
 /// [`MOTIVATIONAL_PREDICATES_TTL`] (FT-070). The list mirrors the
@@ -175,11 +220,18 @@ impl OntologyHandle {
         // subPropertyOf relationship and the rdfs:range constraints are
         // queryable alongside the universal mechanical fragment.
         load_turtle_into_graph(&store, MOTIVATIONAL_PREDICATES_TTL, SHAPES_GRAPH_IRI)?;
+        // FT-071 / ADR-040: BoundaryArtifact class + four slice-1
+        // subclasses + per-subtype shape extensions. Loaded into the
+        // shapes named graph so per-type shapes (FT-072) can reference
+        // `:BoundaryArtifact` class membership in their `sh:or` blocks
+        // and SPARQL `rdfs:subClassOf` reasoning is queryable.
+        load_turtle_into_graph(&store, BOUNDARY_ARTIFACT_SHAPES_TTL, SHAPES_GRAPH_IRI)?;
 
         invariant_ontology_classes_present(&store)?;
         invariant_shapes_present(&store)?;
         invariant_mechanical_provenance_shapes_present(&store)?;
         invariant_motivational_predicates_present(&store)?;
+        invariant_boundary_artifact_shapes_present(&store)?;
 
         let hash = sha256_hex_of_assets();
         let version = extract_version_info(&store)?.unwrap_or_else(|| ONTOLOGY_VERSION.to_string());

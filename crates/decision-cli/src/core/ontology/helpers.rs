@@ -7,9 +7,12 @@ use oxigraph::store::Store;
 use sha2::{Digest, Sha256};
 
 use super::{
-    OntologyError, MECHANICAL_PROVENANCE_SHAPE, MECHANICAL_PROVENANCE_SHAPES_TTL,
-    MOTIVATIONAL_PREDICATES, MOTIVATIONAL_PREDICATES_TTL, ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL,
-    PROV_WAS_DERIVED_FROM, SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_TTL,
+    OntologyError, BOUNDARY_ARTIFACT_CLASS, BOUNDARY_ARTIFACT_SHAPE,
+    BOUNDARY_ARTIFACT_SHAPES_TTL, BOUNDARY_ARTIFACT_SUBCLASSES, EXTERNAL_ORIGIN_PROP,
+    IS_MIGRATION_BACKFILL_PROP, MECHANICAL_PROVENANCE_SHAPE, MECHANICAL_PROVENANCE_SHAPES_TTL,
+    MIGRATION_BACKFILL, MIGRATION_BACKFILL_SHAPE, MOTIVATIONAL_PREDICATES,
+    MOTIVATIONAL_PREDICATES_TTL, ONTOLOGY_GRAPH_IRI, ONTOLOGY_TTL, PROV_WAS_DERIVED_FROM,
+    SESSION_PROVENANCE_SHAPE, SHAPES_GRAPH_IRI, SHAPES_TTL,
 };
 
 pub(super) fn load_turtle_into_graph(
@@ -36,6 +39,8 @@ pub(super) fn sha256_hex_of_assets() -> String {
     hasher.update(MECHANICAL_PROVENANCE_SHAPES_TTL.as_bytes());
     hasher.update(b"\x00");
     hasher.update(MOTIVATIONAL_PREDICATES_TTL.as_bytes());
+    hasher.update(b"\x00");
+    hasher.update(BOUNDARY_ARTIFACT_SHAPES_TTL.as_bytes());
     let digest = hasher.finalize();
     let mut out = String::with_capacity(digest.len() * 2);
     for b in digest {
@@ -377,6 +382,57 @@ fn ensure_min_count_property(
     if !matches!(result, QueryResults::Boolean(true)) {
         return Err(OntologyError::InvariantViolation(format!(
             "shapes graph is missing a sh:minCount constraint on {prop} for {target_class}"
+        )));
+    }
+    Ok(())
+}
+
+/// FT-071 / ADR-040: assert the BoundaryArtifact class, its four
+/// slice-1 subclasses, and both NodeShapes (`:BoundaryArtifactShape`,
+/// `:MigrationBackfillShape`) are reachable in the shapes graph after
+/// parsing. Failure means `boundary-artifact.ttl` did not load (a
+/// build-time bug; the ontology loader is the only path to load).
+pub(super) fn invariant_boundary_artifact_shapes_present(
+    store: &Store,
+) -> Result<(), OntologyError> {
+    ensure_class_iri_declared(store, BOUNDARY_ARTIFACT_CLASS)?;
+    for subclass in BOUNDARY_ARTIFACT_SUBCLASSES {
+        ensure_subclass_of(store, subclass, BOUNDARY_ARTIFACT_CLASS)?;
+    }
+    ensure_node_shape_declared(store, BOUNDARY_ARTIFACT_SHAPE)?;
+    ensure_node_shape_declared(store, MIGRATION_BACKFILL_SHAPE)?;
+    ensure_min_count_property(store, BOUNDARY_ARTIFACT_CLASS, EXTERNAL_ORIGIN_PROP)?;
+    ensure_min_count_property(store, MIGRATION_BACKFILL, IS_MIGRATION_BACKFILL_PROP)?;
+    Ok(())
+}
+
+fn ensure_class_iri_declared(store: &Store, iri: &str) -> Result<(), OntologyError> {
+    let q = format!(
+        "ASK {{ GRAPH <{g}> {{ <{iri}> a <http://www.w3.org/2000/01/rdf-schema#Class> }} }}",
+        g = SHAPES_GRAPH_IRI
+    );
+    let result = store
+        .query(q.as_str())
+        .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
+    if !matches!(result, QueryResults::Boolean(true)) {
+        return Err(OntologyError::InvariantViolation(format!(
+            "shapes graph must declare <{iri}> as rdfs:Class"
+        )));
+    }
+    Ok(())
+}
+
+fn ensure_subclass_of(store: &Store, subclass: &str, parent: &str) -> Result<(), OntologyError> {
+    let q = format!(
+        "ASK {{ GRAPH <{g}> {{ <{subclass}> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <{parent}> }} }}",
+        g = SHAPES_GRAPH_IRI
+    );
+    let result = store
+        .query(q.as_str())
+        .map_err(|err| OntologyError::CompiledAssetMalformed(err.to_string()))?;
+    if !matches!(result, QueryResults::Boolean(true)) {
+        return Err(OntologyError::InvariantViolation(format!(
+            "shapes graph must declare <{subclass}> rdfs:subClassOf <{parent}>"
         )));
     }
     Ok(())

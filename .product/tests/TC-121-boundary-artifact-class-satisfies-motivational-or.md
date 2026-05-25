@@ -2,12 +2,17 @@
 id: TC-121
 title: boundary_artifact_class_satisfies_motivational_or_branch
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --test ft_071_boundary_artifact
+runner-timeout: 120
+last-run: 2026-05-25T19:44:40.764856934+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
