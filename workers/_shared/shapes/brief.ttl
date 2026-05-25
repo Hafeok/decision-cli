@@ -5,9 +5,19 @@
 # boundary artifacts — authored in conversation outside the orchestration
 # graph; those instances satisfy the sh:or via the first BoundaryArtifact
 # branch and carry dec:external_origin instead of a motivational edge.
+#
+# Field-level constraints (FT-076 / ADR-044) live on the same shape via
+# sh:property — the four required body fields (title, premise, goal,
+# successCriteria) plus the four Brief-side forward edges (decomposesInto,
+# excludes, acknowledges, references). Keeping them on a single shape with
+# sh:targetClass dec:Brief means the per-type composition invariant
+# (TC-122: every dec:-namespaced sh:targetClass shape composes the
+# universal mechanical fragment via sh:and) holds without splitting the
+# Brief into two top-level shapes.
 
 @prefix dec:  <https://decision-cli.dev/ns#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
 dec:BriefShape a sh:NodeShape ;
     sh:targetClass dec:Brief ;
@@ -16,4 +26,45 @@ dec:BriefShape a sh:NodeShape ;
         [ a sh:NodeShape ; sh:class dec:BoundaryArtifact ]
         [ sh:property [ sh:path dec:respondsTo ; sh:minCount 1 ; sh:class dec:Request  ] ]
         [ sh:property [ sh:path dec:respondsTo ; sh:minCount 1 ; sh:class dec:Feedback ] ]
-    ) .
+    ) ;
+    # --- FT-076 / ADR-044: required body fields ------------------------
+    sh:property [
+        sh:path dec:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:premise ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:goal ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:successCriteria ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+    ] ;
+    # --- FT-076 / ADR-044: forward edges -------------------------------
+    # decomposesInto and excludes both point to Features the Brief
+    # authored or explicitly removed from scope. acknowledges points to
+    # Acknowledgement instances. references is open-typed (out-of-band
+    # docs, sibling Briefs, external standards).
+    sh:property [
+        sh:path dec:decomposesInto ;
+        sh:class dec:Feature ;
+    ] ;
+    sh:property [
+        sh:path dec:excludes ;
+        sh:class dec:Feature ;
+    ] ;
+    sh:property [
+        sh:path dec:acknowledges ;
+        sh:class dec:Acknowledgement ;
+    ] ;
+    sh:property [
+        sh:path dec:references ;
+    ] .

@@ -701,3 +701,69 @@ dec:queryLanguage a rdf:Property ;
     rdfs:domain dec:QueryTemplate ;
     rdfs:range  xsd:string ;
     rdfs:comment "Closed enum: currently the singleton {\"SPARQL-1.1\"}. Extension requires an ADR amendment (FT-075 / ADR-043)." .
+
+# --- FT-076 / ADR-044: Brief as a typed artifact in product-cli's catalog ----
+#
+# A Brief is a framing artifact authored before a slice of work: it states the
+# premise, goal, success criteria, and explicit non-goals; it decomposes into
+# the Features that ship it; it acknowledges debts taken on; it references
+# out-of-band material. Briefs almost always enter as BoundaryArtifacts
+# (authored in conversation outside the orchestration graph) — the per-type
+# shape (FT-072 brief.ttl) accepts BoundaryArtifact membership as the first
+# sh:or alternative.
+
+dec:Brief a rdfs:Class ;
+    rdfs:label "Brief" ;
+    rdfs:comment "A framing artifact authored before a slice of work; decomposes into Features and records what was excluded (FT-076 / ADR-044)." .
+
+dec:Acknowledgement a rdfs:Class ;
+    rdfs:label "Acknowledgement" ;
+    rdfs:comment "A recorded debt that a Brief, ADR, or Policy takes on. The motivating artifact is named via dec:motivatedBy (FT-076 / FT-070)." .
+
+# --- FT-076: Brief body fields ----------------------------------------------
+
+dec:premise a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form markdown body stating the premise the Brief proceeds from (FT-076 / ADR-044)." .
+
+dec:goal a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form markdown body stating the goal the Brief authorises work toward (FT-076 / ADR-044)." .
+
+dec:successCriteria a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  xsd:string ;
+    rdfs:comment "Free-form markdown body stating what success looks like (FT-076 / ADR-044)." .
+
+# --- FT-076: Brief edges -----------------------------------------------------
+
+dec:decomposesInto a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  dec:Feature ;
+    rdfs:comment "Forward edge: a Feature this Brief authorises (FT-076 / ADR-044). The reverse motivational edge (dec:decomposesFrom on the Feature) is the audit-friendly path; this edge is the Brief-side complement." .
+
+dec:excludes a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  dec:Feature ;
+    rdfs:comment "Forward edge: a Feature explicitly excluded from this Brief's scope (FT-076 / ADR-044). Tracked so a later Brief silently re-promising an excluded item becomes a detectable graph anomaly." .
+
+dec:acknowledges a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  dec:Acknowledgement ;
+    rdfs:comment "Forward edge: a debt the Brief takes on (FT-076 / ADR-044)." .
+
+dec:references a rdf:Property ;
+    rdfs:domain dec:Brief ;
+    rdfs:range  dec:Artifact ;
+    rdfs:comment "Forward edge: an out-of-band reference (docs, sibling Briefs, external standards) the Brief invokes (FT-076 / ADR-044)." .
+
+# Feature is referenced as the range of dec:decomposesInto / dec:excludes; the
+# class itself is declared as a shape target via the FT-072 per-type catalog
+# (no further class declaration here — features are first-class instances
+# carried into the graph from product-cli's catalog, see ADR-015).
+
+dec:Feature a rdfs:Class ;
+    rdfs:label "Feature" ;
+    rdfs:comment "An engineering feature_spec authored in product-cli's catalog (ADR-015 / FT-076)." .
