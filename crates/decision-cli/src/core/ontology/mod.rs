@@ -19,6 +19,7 @@
 
 pub mod boundary_artifact;
 pub mod capability;
+pub mod conformance_audit;
 pub mod coverage_waiver;
 mod helpers;
 pub mod mechanical_provenance;
@@ -90,8 +91,7 @@ pub const MOTIVATIONAL_PREDICATES_TTL: &str =
 /// Raw Turtle bytes for the BoundaryArtifact class + four slice-1
 /// subclasses + their SHACL shapes (FT-071 / ADR-040). Loaded into the
 /// shapes named graph alongside the universal mechanical fragment so
-/// per-type shapes (FT-072) can reference `:BoundaryArtifact` class
-/// membership in the first branch of their `sh:or` block.
+/// per-type shapes (FT-072) reference `:BoundaryArtifact` class membership.
 pub const BOUNDARY_ARTIFACT_SHAPES_TTL: &str = include_str!("assets/shapes/boundary-artifact.ttl");
 
 /// IRI of the universal mechanical-provenance `sh:NodeShape` (FT-069 /

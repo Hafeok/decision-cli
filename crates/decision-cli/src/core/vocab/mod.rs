@@ -8,6 +8,7 @@
 
 mod auto_dispatch;
 mod capability;
+mod conformance_audit;
 mod feedback;
 mod mechanical_provenance;
 mod role_binding;
@@ -21,6 +22,7 @@ mod worker_image_submission;
 
 pub use auto_dispatch::*;
 pub use capability::*;
+pub use conformance_audit::*;
 pub use feedback::*;
 pub use mechanical_provenance::*;
 pub use role_binding::*;
