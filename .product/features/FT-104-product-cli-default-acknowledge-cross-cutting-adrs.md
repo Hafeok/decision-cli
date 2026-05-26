@@ -2,7 +2,7 @@
 id: FT-104
 title: 'product-cli: Default-acknowledge cross-cutting ADRs via product.toml, with explicit per-feature opt-out'
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-066

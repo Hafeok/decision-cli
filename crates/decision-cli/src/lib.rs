@@ -25,6 +25,7 @@ pub use features::events;
 pub use features::feedback;
 pub use features::finalize;
 pub use features::ft_074_migrate_provenance as migrate_provenance;
+pub use features::ft_104_default_ack as default_ack;
 pub use features::health;
 pub use features::implement;
 pub use features::init;

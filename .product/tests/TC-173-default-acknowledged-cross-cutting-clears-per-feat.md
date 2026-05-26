@@ -2,12 +2,17 @@
 id: TC-173
 title: default-acknowledged-cross-cutting clears per-feature preflight gaps without requiring per-feature adrs link
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-104
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_173_default_acknowledged_cross_cutting_clears_per_feat
+runner-timeout: 120
+last-run: 2026-05-26T15:45:08.466211219+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

@@ -2,12 +2,17 @@
 id: TC-175
 title: graph check warns when default-acknowledged-cross-cutting drifts from the live ADR catalog
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-104
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_175_graph_check_warns_when_default_acknowledged_cross
+runner-timeout: 120
+last-run: 2026-05-26T15:45:08.466211219+00:00
+last-run-duration: 0.5s
 ---
 
 ## Claim
