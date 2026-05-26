@@ -2,7 +2,7 @@
 id: FT-101
 title: 'decision-cli: CapabilityReference, OntologyDescription, ExemplarGraph artifact types'
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-066

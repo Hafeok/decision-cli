@@ -19,6 +19,7 @@
 
 pub mod boundary_artifact;
 pub mod capability;
+pub mod catalog;
 pub mod conformance_audit;
 pub mod coverage_waiver;
 mod helpers;

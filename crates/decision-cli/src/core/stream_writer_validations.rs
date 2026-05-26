@@ -6,6 +6,7 @@ use oxigraph::model::Quad;
 use crate::core::bundle::validate_quads as validate_bundle_quads;
 use crate::core::feedback::validate_quads as validate_feedback_quads;
 use crate::core::ontology::capability::validate_quads as validate_capability_quads;
+use crate::core::ontology::catalog::validate_quads_with_store as validate_catalog_quads_with_store;
 use crate::core::ontology::coverage_waiver::validate_quads as validate_waiver_quads;
 use crate::core::ontology::role_binding::validate_quads as validate_role_binding_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
@@ -106,4 +107,15 @@ pub(super) fn validate_role_bindings(quads: &[Quad]) -> Result<()> {
 pub(super) fn validate_bundles(quads: &[Quad]) -> Result<()> {
     validate_bundle_quads(quads)
         .map_err(|err| anyhow!("SHACL violation: bundle mutation refused\n{}", err.report))
+}
+
+/// SHACL-validate every `dec:CapabilityReference` / `dec:OntologyDescription`
+/// / `dec:ExemplarGraph` subject present in `quads` (FT-101 / ADR-066).
+/// The validator consults `store` for cross-mutation invariants: command
+/// uniqueness across the active set, the single-active OntologyDescription
+/// rule, and ExemplarGraph backing-result resolution.
+pub(super) fn validate_catalog(quads: &[Quad], store: Option<&Store>) -> Result<()> {
+    validate_catalog_quads_with_store(quads, store).map_err(|err| {
+        anyhow!("SHACL violation: catalog mutation refused\n{}", err.report)
+    })
 }

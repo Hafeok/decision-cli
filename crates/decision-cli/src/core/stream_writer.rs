@@ -19,8 +19,8 @@ use oxigraph::store::Store;
 use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::ontology::session_record::validate_quads_with_store as validate_session_record_quads_with_store;
 use crate::core::stream_writer_validations::{
-    validate_bundles, validate_capabilities, validate_envs, validate_feedback, validate_graphs,
-    validate_results, validate_role_bindings, validate_verdicts, validate_waivers,
+    validate_bundles, validate_capabilities, validate_catalog, validate_envs, validate_feedback,
+    validate_graphs, validate_results, validate_role_bindings, validate_verdicts, validate_waivers,
 };
 use crate::core::verify::quads::{check_inserts_against_store, touches_verification_artifacts};
 use crate::core::vocab::{
@@ -103,6 +103,7 @@ impl StreamWriter {
         validate_capabilities(&mutation.inserts)?;
         validate_role_bindings(&mutation.inserts)?;
         validate_bundles(&mutation.inserts)?;
+        validate_catalog(&mutation.inserts, Some(self.inner.store().as_ref()))?;
         self.validate_session_records(&mutation.inserts)?;
         self.validate_feedback_transitions(&mutation)?;
         self.inner

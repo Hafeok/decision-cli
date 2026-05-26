@@ -2,12 +2,17 @@
 id: TC-166
 title: OntologyDescription enforces single-active invariant; parallel non-superseded write is rejected by SHACL
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-101
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_166_ontologydescription_enforces_single_active_invaria
+runner-timeout: 120
+last-run: 2026-05-26T14:52:51.702363790+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim

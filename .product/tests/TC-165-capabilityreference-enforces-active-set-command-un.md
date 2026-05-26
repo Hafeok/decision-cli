@@ -2,12 +2,17 @@
 id: TC-165
 title: CapabilityReference enforces active-set command uniqueness; supersession is the only path to evolve
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-101
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_165_capabilityreference_enforces_active_set_command_un
+runner-timeout: 120
+last-run: 2026-05-26T14:52:51.702363790+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim
