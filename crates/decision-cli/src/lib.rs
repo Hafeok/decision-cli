@@ -30,6 +30,7 @@ pub use features::mcp;
 pub use features::preflight;
 pub use features::session_inspect;
 pub use features::submissions;
+pub use features::telemetry;
 pub use features::verify_env_list;
 pub use features::verify_env_new;
 pub use features::verify_env_show;

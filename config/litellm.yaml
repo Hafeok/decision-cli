@@ -1,0 +1,40 @@
+# config/litellm.yaml — LiteLLM proxy deployment config (FT-096 / ADR-064).
+#
+# Operator-facing config for the LiteLLM proxy that workers route every
+# LLM call through. Workers never see provider API keys; the proxy holds
+# `ANTHROPIC_API_KEY` (and future provider keys) in its process env.
+# Workers carry only a scoped virtual key issued at proxy startup by
+# `scripts/bootstrap_litellm_virtual_key.py`.
+#
+# The `model_name` values ARE the framework's capability tags. A worker
+# calling LiteLLM with `model="frontier-reasoning"` is routed to whatever
+# provider + model that group binds — adding providers or fallbacks is a
+# config edit + proxy restart, not a code change.
+#
+# Slice 1 ships one model group (Anthropic via Anthropic's API). New
+# groups land here without any SDK or worker code change.
+
+model_list:
+  - model_name: frontier-reasoning
+    litellm_params:
+      model: anthropic/claude-opus-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: fast-cheap
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # database_url left unset in slice 1 (persistent spend tracking is a
+  # slice-2 progression per FT-096's "Out of scope").
+
+litellm_settings:
+  # `pipeline-cli-telemetry` is the custom callback shipped in
+  # `workers/litellm-telemetry-callback/`. It POSTs every call's
+  # telemetry (tokens, latency, cost, model, provider, fallback chain,
+  # retry count) to pipeline-cli's `/llm-call-telemetry` endpoint,
+  # indexed by the `ddd_session_id` metadata workers propagate.
+  callbacks:
+    - pipeline-cli-telemetry

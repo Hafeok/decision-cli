@@ -16,6 +16,7 @@ pub mod mcp;
 pub mod preflight;
 pub mod session_inspect;
 pub mod submissions;
+pub mod telemetry;
 pub mod verify_env_list;
 pub mod verify_env_new;
 pub mod verify_env_show;
