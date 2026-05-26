@@ -2,7 +2,7 @@
 id: FT-072
 title: 'decision-cli: Ship provenance SHACL shape files (mechanical, motivational, boundary, per-type)'
 phase: 3
-status: in-progress
+status: complete
 depends-on:
 - FT-069
 - FT-070
@@ -13,36 +13,36 @@ tests:
 domains:
 - data-model
 domains-acknowledged:
-  ADR-064: ADR-064 governs LiteLLM as the LLM-call substrate. This feature does not call LiteLLM.
-  ADR-024: ADR-024 governs the Feedback lifecycle state machine. Not invoked here.
-  ADR-055: ADR-055 governs WorkerImage as a catalog mirroring the Model catalog. This feature does not extend that catalog.
-  ADR-054: ADR-054 governs LiteLLM as the worker SDK's provider substrate. This feature does not call LiteLLM.
-  ADR-005: ADR-005 governs value-stream-resident scope. This feature is not value-stream-scoped.
-  ADR-025: ADR-025 governs blocking vs non-blocking Feedback semantics. Not invoked here.
-  ADR-038: ADR-038 governs dual-provenance discipline (mechanical + motivational). This feature does not introduce a new artifact type subject to dual provenance.
-  ADR-033: ADR-033 governs capability-based model routing as a graph-resident layer. This feature does not route models.
-  ADR-039: ADR-039 governs motivational predicates as rdfs:subPropertyOf prov:wasDerivedFrom. This feature does not introduce new motivational predicates.
-  ADR-035: ADR-035 governs Bundle.stakes as a first-class judgment field. This feature does not assemble a stakes-bearing bundle.
   ADR-027: ADR-027 governs authority declarations in the role catalog. This feature does not register a new role.
-  ADR-040: ADR-040 governs the BoundaryArtifact class. This feature does not introduce a new boundary artifact.
-  ADR-023: ADR-023 governs the Feedback controlled vocabulary. Not invoked here.
-  ADR-036: ADR-036 governs the Capability and RoleBinding catalog as graph artifacts. This feature does not extend that catalog.
-  ADR-017: ADR-017 governs action-interpretation pairing as a structural requirement. This feature does not produce an action-interpretation pair.
-  ADR-022: ADR-022 governs Feedback as a first-class flow class. This feature does not produce Feedback artifacts.
-  ADR-001: ADR-001 governs the oxi-events crate's SDP boundary. This feature does not modify oxi-events' public surface.
-  data-model: Domain 'data-model' is in scope of this feature; not paving in extra cross-cutting governance beyond the linked ADRs.
-  ADR-002: ADR-002 governs graph-as-state vs event-sourced semantics. This feature's scope does not change that choice.
-  ADR-047: ADR-047 governs capability-tag binding via catalog at dispatch time. This feature does not perform capability-tag-to-entry binding.
-  ADR-018: ADR-018 governs the VerificationVerdict schema. This feature does not produce a verification verdict.
-  ADR-034: ADR-034 governs tiered escalation policy with controlled trigger vocabulary. This feature does not invoke escalation.
+  ADR-038: ADR-038 governs dual-provenance discipline (mechanical + motivational). This feature does not introduce a new artifact type subject to dual provenance.
+  ADR-055: ADR-055 governs WorkerImage as a catalog mirroring the Model catalog. This feature does not extend that catalog.
   ADR-014: ADR-014 governs Architectural Fitness Functions as product-cli artifacts. This feature does not introduce a new fitness function.
-  ADR-012: ADR-012 governs per-stream working-directory discovery. This feature does not introduce a stream-bound command.
-  ADR-004: ADR-004 governs PROV-O event and session shapes. This feature does not introduce new event or session types.
-  ADR-037: ADR-037 governs Scaleway/Anthropic provider defaults. This feature does not configure provider routing.
-  ADR-043: ADR-043 governs full-chain traversal as a QueryTemplate artifact. This feature does not introduce a new full-chain query.
-  ADR-044: ADR-044 governs Brief as a typed artifact in product-cli's catalog. This feature was not authored from a Brief.
   ADR-021: ADR-021 governs action-interpretation agreement as a fitness metric. Not applicable without a paired action-interpretation session.
   ADR-065: ADR-065 governs the Dagger deferral for the worker runtime model. This feature does not depend on the runtime model.
+  data-model: Domain 'data-model' is in scope of this feature; not paving in extra cross-cutting governance beyond the linked ADRs.
+  ADR-043: ADR-043 governs full-chain traversal as a QueryTemplate artifact. This feature does not introduce a new full-chain query.
+  ADR-037: ADR-037 governs Scaleway/Anthropic provider defaults. This feature does not configure provider routing.
+  ADR-044: ADR-044 governs Brief as a typed artifact in product-cli's catalog. This feature was not authored from a Brief.
+  ADR-035: ADR-035 governs Bundle.stakes as a first-class judgment field. This feature does not assemble a stakes-bearing bundle.
+  ADR-036: ADR-036 governs the Capability and RoleBinding catalog as graph artifacts. This feature does not extend that catalog.
+  ADR-004: ADR-004 governs PROV-O event and session shapes. This feature does not introduce new event or session types.
+  ADR-001: ADR-001 governs the oxi-events crate's SDP boundary. This feature does not modify oxi-events' public surface.
+  ADR-039: ADR-039 governs motivational predicates as rdfs:subPropertyOf prov:wasDerivedFrom. This feature does not introduce new motivational predicates.
+  ADR-002: ADR-002 governs graph-as-state vs event-sourced semantics. This feature's scope does not change that choice.
+  ADR-018: ADR-018 governs the VerificationVerdict schema. This feature does not produce a verification verdict.
+  ADR-024: ADR-024 governs the Feedback lifecycle state machine. Not invoked here.
+  ADR-025: ADR-025 governs blocking vs non-blocking Feedback semantics. Not invoked here.
+  ADR-022: ADR-022 governs Feedback as a first-class flow class. This feature does not produce Feedback artifacts.
+  ADR-012: ADR-012 governs per-stream working-directory discovery. This feature does not introduce a stream-bound command.
+  ADR-033: ADR-033 governs capability-based model routing as a graph-resident layer. This feature does not route models.
+  ADR-005: ADR-005 governs value-stream-resident scope. This feature is not value-stream-scoped.
+  ADR-064: ADR-064 governs LiteLLM as the LLM-call substrate. This feature does not call LiteLLM.
+  ADR-054: ADR-054 governs LiteLLM as the worker SDK's provider substrate. This feature does not call LiteLLM.
+  ADR-047: ADR-047 governs capability-tag binding via catalog at dispatch time. This feature does not perform capability-tag-to-entry binding.
+  ADR-017: ADR-017 governs action-interpretation pairing as a structural requirement. This feature does not produce an action-interpretation pair.
+  ADR-023: ADR-023 governs the Feedback controlled vocabulary. Not invoked here.
+  ADR-034: ADR-034 governs tiered escalation policy with controlled trigger vocabulary. This feature does not invoke escalation.
+  ADR-040: ADR-040 governs the BoundaryArtifact class. This feature does not introduce a new boundary artifact.
 ---
 
 ## Description

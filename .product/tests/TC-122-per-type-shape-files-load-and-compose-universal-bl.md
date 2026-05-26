@@ -2,7 +2,7 @@
 id: TC-122
 title: per_type_shape_files_load_and_compose_universal_blocks
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-072
@@ -11,9 +11,8 @@ phase: 1
 runner: cargo-test
 runner-args: tc_122_per_type_shape_files_load_and_compose_universal_bl
 runner-timeout: 120
-last-run: 2026-05-26T12:43:55.078775547+00:00
-last-run-duration: 39.0s
-failure-message: "   Compiling decision-cli v0.1.0 (/home/hafeok/projects/decision-cli/crates/decision-cli)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 38.66s\n     Running unittests src/lib.rs (target/debug/deps/decision_cli-c00df67ac81ae180)\n     Running unittests src/main.rs (target/debug/deps/dec-a9016108561f1b4b)\n     Running tests/anthropic_cache_breakpoint.rs (target/debug/deps/anthropic_cache_breakpoint-bfbe290a85998cbf)\n     Running tests/bundle_stakes.rs (target/debug/deps/bundle_s"
+last-run: 2026-05-26T12:52:32.415214500+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description
