@@ -17,3 +17,4 @@ pub mod session;
 pub mod sparql;
 pub mod status;
 pub mod verify;
+pub mod workers;

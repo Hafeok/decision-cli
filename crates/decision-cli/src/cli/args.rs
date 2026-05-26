@@ -16,7 +16,7 @@ use super::{
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
     mcp, mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, query,
     query::QueryCmd, session, session::SessionCmd, sparql, sparql::SparqlArgs, status, verify,
-    verify::VerifyCmd,
+    verify::VerifyCmd, workers, workers::WorkersCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -83,6 +83,9 @@ pub enum Command {
     /// QueryTemplate catalog inspection (FT-075 / ADR-043).
     #[command(subcommand)]
     Query(QueryCmd),
+    /// Worker container lifecycle (FT-095 — slice 1: `run` only).
+    #[command(subcommand)]
+    Workers(WorkersCmd),
 }
 
 /// Route a parsed `Command` into the matching feature module. The
@@ -105,5 +108,6 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Verify(cmd) => verify::run(workdir, cmd),
         Command::Migrate(cmd) => migrate::run(workdir, cmd),
         Command::Query(cmd) => query::run(workdir, cmd),
+        Command::Workers(cmd) => workers::run(workdir, cmd),
     }
 }
