@@ -2,12 +2,17 @@
 id: TC-158
 title: dec verify graph run prints per-step trace, final verdict, and maps verdict to exit code
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-099
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-158-dec-verify-graph-run.sh
+runner-timeout: 180
+last-run: 2026-05-26T14:11:38.572067190+00:00
+last-run-duration: 0.5s
 ---
 
 ## Claim

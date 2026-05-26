@@ -11,6 +11,7 @@
 //! other content-management) features add a single line below pointing
 //! at their `feature::tool_descriptor()` plus any workdir binding.
 
+mod register_ft099;
 mod register_generate;
 
 use std::path::{Path, PathBuf};
@@ -91,6 +92,8 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
     register_verify_graph_list(&mut registry, workdir)?;
     register_verify_graph_show(&mut registry, workdir)?;
     register_verify_step_add(&mut registry, workdir)?;
+    register_ft099::register_verify_graph_run(&mut registry, workdir)?;
+    register_ft099::register_verify_feature(&mut registry, workdir)?;
     register_generate::register_verify_graph_generate(&mut registry, workdir)?;
     register_generate::register_verify_graph_accept(&mut registry, workdir)?;
     Ok(registry)

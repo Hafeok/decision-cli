@@ -2,7 +2,7 @@
 id: FT-099
 title: 'decision-cli: dec verify graph run + dec verify feature (CLI + MCP)'
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-097
 - FT-098

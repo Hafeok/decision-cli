@@ -10,6 +10,7 @@
 //! module.
 
 pub mod env;
+pub mod feature;
 pub mod graph;
 pub mod step;
 
@@ -42,10 +43,12 @@ pub const PAIRED_TOOL_NAMES: &[&str] = &[
     "dec_verify_env_list",
     "dec_verify_env_new",
     "dec_verify_env_show",
+    "dec_verify_feature",
     "dec_verify_graph_accept",
     "dec_verify_graph_generate",
     "dec_verify_graph_list",
     "dec_verify_graph_new",
+    "dec_verify_graph_run",
     "dec_verify_graph_show",
     "dec_verify_step_add",
 ];
@@ -61,6 +64,9 @@ pub enum VerifyCmd {
     /// Manage `dec:VerificationStep` artifacts within a graph.
     #[command(subcommand)]
     Step(StepCmd),
+    /// Verify a feature by running every covering VerificationGraph
+    /// and aggregating verdicts (FT-099).
+    Feature(feature::FeatureArgs),
 }
 
 pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
@@ -68,6 +74,7 @@ pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
         VerifyCmd::Env(c) => env::run(workdir, c),
         VerifyCmd::Graph(c) => graph::run(workdir, c),
         VerifyCmd::Step(c) => step::run(workdir, c),
+        VerifyCmd::Feature(args) => feature::run_feature(workdir, args),
     }
 }
 

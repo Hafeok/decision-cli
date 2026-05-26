@@ -2,12 +2,17 @@
 id: TC-161
 title: dec verify graph run --dry-run and dec verify feature --dry-run write no artifacts and open no sessions
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-099
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-161-dec-verify-dry-run.sh
+runner-timeout: 240
+last-run: 2026-05-26T14:11:38.572067190+00:00
+last-run-duration: 0.5s
 ---
 
 ## Claim

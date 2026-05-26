@@ -34,6 +34,10 @@ pub struct StepAddArgs {
     /// MCP tool schema) for the per-kind set.
     #[arg(long = "field", value_name = "KEY=VALUE")]
     pub fields: Vec<String>,
+    /// TC short id (e.g. `TC-001`) the step provides evidence for
+    /// (FT-049 / ADR-030 §Coverage predicate). Repeatable.
+    #[arg(long = "provides-evidence-for", value_name = "TC-NNN")]
+    pub provides_evidence_for: Vec<String>,
 }
 
 /// Convert clap args into the structured [`StepAddRequest`]. Exposed so
@@ -57,7 +61,7 @@ pub fn step_add_request(
         graph_id: args.graph_id.clone(),
         step_type: args.r#type.clone(),
         fields,
-        provides_evidence_for: Vec::new(),
+        provides_evidence_for: args.provides_evidence_for.clone(),
         workdir: Some(workdir.to_path_buf()),
     })
 }

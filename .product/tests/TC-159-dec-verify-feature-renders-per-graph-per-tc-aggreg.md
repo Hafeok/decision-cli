@@ -2,12 +2,17 @@
 id: TC-159
 title: dec verify feature renders per-graph + per-TC + aggregate verdict and maps aggregate to exit code
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-099
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-159-dec-verify-feature.sh
+runner-timeout: 240
+last-run: 2026-05-26T14:11:38.572067190+00:00
+last-run-duration: 0.7s
 ---
 
 ## Claim

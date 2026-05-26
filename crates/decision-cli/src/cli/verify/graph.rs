@@ -9,6 +9,7 @@ use decision_cli::core::handler::Error as HandlerError;
 use decision_cli::verify_graph_generate::{self, GenerateMode, GenerateRequest};
 use decision_cli::verify_graph_list::{self, GraphListRequest, OutputFormat as GraphListFormat};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
+use decision_cli::verify_graph_run::{self, GraphRunRequest, OutputFormat as GraphRunFormat};
 use decision_cli::verify_graph_show::{self, GraphShowRequest, OutputFormat as GraphShowFormat};
 
 use super::exit_code_for;
@@ -23,6 +24,26 @@ pub enum GraphCmd {
     Show(GraphShowArgs),
     /// Propose a graph for a feature in an environment (FT-049 / ADR-030).
     Generate(GraphGenerateArgs),
+    /// Run a VerificationGraph and persist its VerificationGraphResult (FT-099).
+    Run(GraphRunArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct GraphRunArgs {
+    /// Identifier of the graph to run (e.g. `VG-001`).
+    pub graph_id: String,
+    /// Pre-seeded capture binding (`name=value`). Repeatable.
+    #[arg(long = "capture", value_name = "NAME=VALUE")]
+    pub captures: Vec<String>,
+    /// Output format. Defaults to `text`. `sse` falls back to text per FT-099.
+    #[arg(long, value_name = "FORMAT", default_value = "text")]
+    pub format: String,
+    /// Skip Feedback emission for failing evidence-bearing steps.
+    #[arg(long = "no-feedback")]
+    pub no_feedback: bool,
+    /// Set `DEC_KEEP_TMP=1` so ephemeral env tempdirs survive for debugging.
+    #[arg(long = "keep-tmp")]
+    pub keep_tmp: bool,
 }
 
 #[derive(Debug, clap::Args)]
@@ -153,6 +174,71 @@ pub(super) fn run(workdir: &Path, cmd: GraphCmd) -> ExitCode {
         GraphCmd::List(args) => run_graph_list(workdir, args),
         GraphCmd::Show(args) => run_graph_show(workdir, args),
         GraphCmd::Generate(args) => run_graph_generate(workdir, args),
+        GraphCmd::Run(args) => run_graph_run(workdir, args),
+    }
+}
+
+/// Build a [`GraphRunRequest`] from clap args (CLI ↔ MCP twin parity).
+pub fn graph_run_request(args: &GraphRunArgs, workdir: &Path) -> Result<GraphRunRequest, HandlerError> {
+    let _ = GraphRunFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
+        field: "format".to_string(),
+        detail: format!(
+            "format must be one of {{text, json, sse}}; got {got:?}",
+            got = args.format
+        ),
+    })?;
+    let mut capture_bindings = std::collections::HashMap::new();
+    for raw in &args.captures {
+        let mut split = raw.splitn(2, '=');
+        let key = split.next().unwrap_or("").trim();
+        let value = split.next().ok_or_else(|| HandlerError::InvalidArgument {
+            field: "capture".to_string(),
+            detail: format!("--capture must be NAME=VALUE; got {raw:?}"),
+        })?;
+        if key.is_empty() {
+            return Err(HandlerError::InvalidArgument {
+                field: "capture".to_string(),
+                detail: "--capture key must be non-empty".to_string(),
+            });
+        }
+        capture_bindings.insert(key.to_string(), value.to_string());
+    }
+    Ok(GraphRunRequest {
+        graph_id: args.graph_id.clone(),
+        capture_bindings,
+        no_feedback: args.no_feedback,
+        keep_tmp: args.keep_tmp,
+        workdir: Some(workdir.to_path_buf()),
+    })
+}
+
+fn run_graph_run(workdir: &Path, args: GraphRunArgs) -> ExitCode {
+    let format_requested = args.format.clone();
+    let req = match graph_run_request(&args, workdir) {
+        Ok(r) => r,
+        Err(err) => {
+            eprintln!("dec verify graph run: {err}");
+            return ExitCode::from(exit_code_for(&err));
+        }
+    };
+    if format_requested == "sse" {
+        eprintln!(
+            "warning: --format sse falls back to text rendering (the dec CLI does not yet stream over stdout)"
+        );
+    }
+    match verify_graph_run::run(&req) {
+        Ok(resp) => {
+            let format = GraphRunFormat::parse(&format_requested).unwrap_or_default();
+            match format {
+                GraphRunFormat::Text => print!("{}", verify_graph_run::render_text(&resp)),
+                GraphRunFormat::Json => println!("{}", verify_graph_run::render_json(&resp)),
+            }
+            ExitCode::from(resp.exit_code())
+        }
+        Err(err) => {
+            eprintln!("dec verify graph run: {err}");
+            ExitCode::from(exit_code_for(&err))
+        }
     }
 }
 

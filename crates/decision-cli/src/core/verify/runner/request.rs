@@ -12,7 +12,7 @@ use oxigraph::model::NamedNode;
 use thiserror::Error;
 
 use crate::core::ontology::verdict::Verdict;
-use crate::core::ontology::verification_result::StepOutcome;
+use crate::core::ontology::verification_result::{StepOutcome, VerificationGraphResult};
 
 /// What triggered the runner invocation. PROV-O `wasInformedBy` chains
 /// are built from this tag at the call site.
@@ -92,6 +92,10 @@ pub struct RunGraphResponse {
     /// evidence-bearing steps (FT-026 / ADR-022). Empty when the run
     /// produced no failures.
     pub emitted_feedback: Vec<NamedNode>,
+    /// Full persisted `VerificationGraphResult` artifact (FT-097). Used
+    /// by FT-099's `dec verify feature` aggregator to feed
+    /// `aggregate_verdict` without a separate store round-trip.
+    pub result_artifact: VerificationGraphResult,
 }
 
 /// Runner failure surface. Per FT-098 §Error handling, per-step failures

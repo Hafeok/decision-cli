@@ -2,12 +2,17 @@
 id: TC-160
 title: dec verify feature exits 3 when any TC has no covering graph even if covered TCs all pass
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-099
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-160-dec-verify-feature-coverage-gap.sh
+runner-timeout: 180
+last-run: 2026-05-26T14:11:38.572067190+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim
