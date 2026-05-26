@@ -11,6 +11,8 @@ use crate::core::ontology::role_binding::validate_quads as validate_role_binding
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
 use crate::core::ontology::verification_graph::validate_quads as validate_graph_quads;
+use crate::core::ontology::verification_result::validate_quads_with_store as validate_result_quads_with_store;
+use oxigraph::store::Store;
 
 /// SHACL-validate every `dec:VerificationVerdict` subject present in
 /// `quads` (FT-020 / ADR-018). The error message keeps the
@@ -49,6 +51,17 @@ pub(super) fn validate_graphs(quads: &[Quad]) -> Result<()> {
     validate_graph_quads(quads).map_err(|err| {
         anyhow!(
             "SHACL violation: verification graph mutation refused\n{}",
+            err.report
+        )
+    })
+}
+
+/// SHACL-validate every `dec:VerificationGraphResult` /
+/// `dec:VerificationStepTrace` subject present in `quads` (FT-097 / ADR-028).
+pub(super) fn validate_results(quads: &[Quad], store: Option<&Store>) -> Result<()> {
+    validate_result_quads_with_store(quads, store).map_err(|err| {
+        anyhow!(
+            "SHACL violation: verification result mutation refused\n{}",
             err.report
         )
     })

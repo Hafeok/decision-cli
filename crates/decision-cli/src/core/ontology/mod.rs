@@ -30,6 +30,7 @@ pub mod session_record;
 pub mod verdict;
 pub mod verification_env;
 pub mod verification_graph;
+pub mod verification_result;
 pub mod worker_image;
 pub mod worker_image_submission;
 

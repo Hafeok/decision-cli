@@ -2,12 +2,17 @@
 id: TC-151
 title: VerificationGraphResult and StepTrace conform to ADR-028 SHACL shapes
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-097
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_151_verificationgraphresult_and_steptrace_conform_to_a
+runner-timeout: 120
+last-run: 2026-05-26T13:12:58.060493885+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

@@ -2,7 +2,7 @@
 id: FT-097
 title: 'decision-cli: VerificationStepTrace + VerificationGraphResult artifact types and multi-graph aggregation'
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-028

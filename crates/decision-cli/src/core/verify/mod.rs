@@ -8,12 +8,17 @@
 //! here. The graph and env schemas live under `core::ontology`; the
 //! StreamWriter chokepoint integrates the check at write time.
 
+pub mod aggregate;
 pub mod chain_integrity;
 pub mod coverage;
 pub mod matcher;
 pub mod quads;
 pub mod safety;
 
+pub use aggregate::{
+    aggregate_verdict, single_graph_verdict, verdict_from_result, AggregateVerdict,
+    AggregationTarget,
+};
 pub use chain_integrity::{
     persist_waiver, run_chain_integrity_gate, validate_waiver_reason, ChainIntegrityError,
     GateOutcome, NextWaiverIdResolver, WaiverIntent, WaiverPersistError, WaiverReasonError,

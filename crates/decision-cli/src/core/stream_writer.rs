@@ -20,7 +20,7 @@ use crate::core::feedback::lifecycle::{validate_transition, LifecycleState};
 use crate::core::ontology::session_record::validate_quads_with_store as validate_session_record_quads_with_store;
 use crate::core::stream_writer_validations::{
     validate_bundles, validate_capabilities, validate_envs, validate_feedback, validate_graphs,
-    validate_role_bindings, validate_verdicts, validate_waivers,
+    validate_results, validate_role_bindings, validate_verdicts, validate_waivers,
 };
 use crate::core::verify::quads::{check_inserts_against_store, touches_verification_artifacts};
 use crate::core::vocab::{
@@ -98,6 +98,7 @@ impl StreamWriter {
         validate_feedback(&mutation.inserts)?;
         validate_envs(&mutation.inserts)?;
         validate_graphs(&mutation.inserts)?;
+        validate_results(&mutation.inserts, Some(self.inner.store().as_ref()))?;
         validate_waivers(&mutation.inserts)?;
         validate_capabilities(&mutation.inserts)?;
         validate_role_bindings(&mutation.inserts)?;

@@ -2,12 +2,17 @@
 id: TC-152
 title: Single-graph verdict derivation matches FT-097 rule for every step-outcome combination
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-097
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_152_single_graph_verdict_derivation_matches_ft_097_rul
+runner-timeout: 120
+last-run: 2026-05-26T13:12:58.060493885+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim

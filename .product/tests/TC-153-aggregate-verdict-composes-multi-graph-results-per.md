@@ -2,12 +2,17 @@
 id: TC-153
 title: aggregate_verdict() composes multi-graph results per ADR-028 with rejection dominance and gap reporting
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-097
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_153_aggregate_verdict_composes_multi_graph_results_per
+runner-timeout: 120
+last-run: 2026-05-26T13:12:58.060493885+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim
