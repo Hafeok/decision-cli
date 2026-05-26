@@ -2,7 +2,7 @@
 id: FT-103
 title: 'decision-cli: Backfill cross-cutting ADR links across existing features'
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-066
