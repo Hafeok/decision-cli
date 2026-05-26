@@ -1,0 +1,199 @@
+# Reusable release workflow for decision-cli workers (FT-089 / ADR-058 / ADR-061).
+#
+# This workflow signs a worker OCI image keyless using cosign and the
+# ambient GitHub Actions OIDC token, then records the resulting Sigstore
+# Fulcio identity + Rekor transparency-log entry so the orchestration
+# system's identity-verifier action (FT-090) can confirm:
+#
+#   1. signature validity,
+#   2. signer identity is on the trust list (ADR-058),
+#   3. Rekor log inclusion.
+#
+# The full release flow (build OCI multi-arch, generate SBOM, push to
+# registry, submit the WorkerImageSubmission) is the responsibility of
+# FT-093 — this file is the slice-of-the-flow that FT-089 owns: the
+# signing primitives + identity capture. FT-093's workflow file calls
+# this one as a reusable workflow, passing the freshly-pushed image
+# reference.
+#
+# How worker repos consume this workflow:
+#
+#   # In worker_repo/.github/workflows/release.yml
+#   name: release
+#   on:
+#     push:
+#       tags: ['implementer-v*.*.*']
+#   jobs:
+#     sign:
+#       uses: Hafeok/decision-cli/.github/workflows/release-worker.yml@v1
+#       permissions:
+#         id-token: write   # required for keyless OIDC
+#         contents: read
+#         packages: write   # if pushing to ghcr
+#       with:
+#         image_ref: ghcr.io/example/worker@sha256:abc...
+#
+# What you get back as workflow outputs:
+#   signature_subject — the Fulcio cert subject (workflow run identity)
+#   signature_issuer  — the OIDC issuer URI
+#   rekor_entry_uuid  — the Rekor log entry UUID
+#   rekor_log_index   — the Rekor log index (integer)
+#
+# Trust-list entries (maintained inside the orchestration system per
+# ADR-058) reference (repo, workflow_path, tag pattern) tuples. The
+# workflow_path component for a reusable workflow invocation looks
+# like `<owner>/<repo>/.github/workflows/release-worker.yml`; operators
+# enrol the reusable-workflow path itself rather than each worker's
+# trivial `release.yml` wrapper.
+
+name: release-worker (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      image_ref:
+        description: >
+          The OCI reference (with digest) of the pushed worker image to
+          sign. Must include the @sha256:... digest so cosign signs the
+          immutable bytes rather than a moving tag.
+        required: true
+        type: string
+      rekor_url:
+        description: >
+          Rekor instance to publish to. Defaults to the public Sigstore
+          instance (https://rekor.sigstore.dev) per ADR-058.
+        required: false
+        type: string
+        default: https://rekor.sigstore.dev
+      fulcio_url:
+        description: >
+          Fulcio CA to request a signing certificate from. Defaults to
+          the public Sigstore instance per ADR-058.
+        required: false
+        type: string
+        default: https://fulcio.sigstore.dev
+      cosign_version:
+        description: Cosign release tag to install.
+        required: false
+        type: string
+        default: v2.4.0
+    outputs:
+      signature_subject:
+        description: Fulcio certificate subject (workflow run identity).
+        value: ${{ jobs.sign.outputs.signature_subject }}
+      signature_issuer:
+        description: OIDC issuer URI used by cosign.
+        value: ${{ jobs.sign.outputs.signature_issuer }}
+      rekor_entry_uuid:
+        description: Rekor transparency-log entry UUID.
+        value: ${{ jobs.sign.outputs.rekor_entry_uuid }}
+      rekor_log_index:
+        description: Rekor transparency-log entry index.
+        value: ${{ jobs.sign.outputs.rekor_log_index }}
+
+jobs:
+  sign:
+    name: Cosign keyless sign + Rekor record
+    runs-on: ubuntu-latest
+    permissions:
+      # Required so the Actions runtime can mint an OIDC token for
+      # cosign to exchange with Fulcio. Without `id-token: write` cosign
+      # falls back to interactive OAuth and the run hangs.
+      id-token: write
+      contents: read
+    outputs:
+      signature_subject: ${{ steps.identity.outputs.signature_subject }}
+      signature_issuer: ${{ steps.identity.outputs.signature_issuer }}
+      rekor_entry_uuid: ${{ steps.sign.outputs.rekor_entry_uuid }}
+      rekor_log_index: ${{ steps.sign.outputs.rekor_log_index }}
+    steps:
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: ${{ inputs.cosign_version }}
+
+      - name: Verify image reference includes digest
+        # Refuse to sign a mutable tag — cosign would otherwise sign
+        # whatever bytes the tag currently points at, and that binding
+        # can change after the workflow completes. Worker repos MUST
+        # resolve the tag to a digest at push time and pass the digest
+        # form here.
+        run: |
+          set -euo pipefail
+          case "${{ inputs.image_ref }}" in
+            *@sha256:*) echo "OK: image_ref is digest-pinned" ;;
+            *) echo "::error::image_ref ${{ inputs.image_ref }} must include @sha256:<digest>"; exit 1 ;;
+          esac
+
+      - name: Compute keyless signing identity
+        id: identity
+        # The cosign keyless flow records the workflow's OIDC subject
+        # on the issued Fulcio cert. We pre-compute it here so the
+        # workflow's outputs match what cosign will actually record,
+        # giving the WorkerImageSubmission a stable identity payload
+        # to claim BEFORE the cosign step runs.
+        run: |
+          set -euo pipefail
+          subject="https://github.com/${GITHUB_REPOSITORY}/${GITHUB_WORKFLOW_REF#${GITHUB_REPOSITORY}/}"
+          # GITHUB_WORKFLOW_REF already encodes <owner>/<repo>/<workflow-path>@<ref>;
+          # the prefix-strip above keeps the canonical form.
+          # Fallback: construct from parts if GITHUB_WORKFLOW_REF is empty.
+          if [ -z "${GITHUB_WORKFLOW_REF:-}" ]; then
+            subject="https://github.com/${GITHUB_REPOSITORY}/${GITHUB_WORKFLOW}@${GITHUB_REF}"
+          else
+            subject="https://github.com/${GITHUB_WORKFLOW_REF}"
+          fi
+          echo "signature_subject=${subject}" >> "$GITHUB_OUTPUT"
+          echo "signature_issuer=https://token.actions.githubusercontent.com" >> "$GITHUB_OUTPUT"
+          echo "identity: ${subject}"
+
+      - name: Cosign sign --keyless
+        id: sign
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+          COSIGN_YES: "true"
+        # The actual keyless signing call. `--yes` waives the
+        # interactive confirmation; the OIDC token is sourced
+        # automatically from the GitHub Actions runtime via the
+        # `id-token: write` permission. Output is captured via the
+        # `--output-signature` and `--output-certificate` flags so we
+        # can attach them as workflow artifacts for FT-090 / FT-094
+        # consumption. The Rekor entry UUID + index are parsed from
+        # cosign's structured stderr output.
+        run: |
+          set -euo pipefail
+          mkdir -p ./.cosign-out
+          cosign sign \
+            --yes \
+            --rekor-url "${{ inputs.rekor_url }}" \
+            --fulcio-url "${{ inputs.fulcio_url }}" \
+            --output-signature ./.cosign-out/signature.sig \
+            --output-certificate ./.cosign-out/certificate.pem \
+            "${{ inputs.image_ref }}" 2>&1 | tee ./.cosign-out/cosign.log
+
+          # cosign prints `tlog entry created with index: <N>` and
+          # `tlog entry created with UUID: <UUID>` to stderr (captured
+          # into the combined log above by `2>&1`). Parse them out.
+          uuid=$(grep -oE 'UUID: [a-f0-9]{64}' ./.cosign-out/cosign.log | tail -n1 | awk '{print $2}' || true)
+          index=$(grep -oE 'index: [0-9]+' ./.cosign-out/cosign.log | tail -n1 | awk '{print $2}' || true)
+
+          if [ -z "$uuid" ]; then
+            echo "::error::cosign did not report a Rekor entry UUID"
+            exit 1
+          fi
+          if [ -z "$index" ]; then
+            echo "::error::cosign did not report a Rekor entry index"
+            exit 1
+          fi
+
+          echo "rekor_entry_uuid=${uuid}" >> "$GITHUB_OUTPUT"
+          echo "rekor_log_index=${index}" >> "$GITHUB_OUTPUT"
+          echo "Rekor entry: ${{ inputs.rekor_url }}/api/v1/log/entries/${uuid}"
+
+      - name: Upload cosign signing artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosign-signing-artifacts
+          path: ./.cosign-out/
+          if-no-files-found: error
+          retention-days: 30

@@ -11,6 +11,7 @@
 pub mod bootstrap;
 pub mod bundle;
 pub mod bundled;
+pub mod cosign_trust;
 pub mod dispatch;
 pub mod feedback;
 pub mod graph;
