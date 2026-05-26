@@ -97,6 +97,7 @@ fn sentinel_bundle() -> VerifyGraphAuthorInputJson {
         model_id: "stub-model".to_string(),
         parameters: serde_json::json!({}),
         max_tokens: 4096,
+        enrichment: Default::default(),
     }
 }
 

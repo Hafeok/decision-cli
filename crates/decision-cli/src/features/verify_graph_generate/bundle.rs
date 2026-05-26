@@ -20,11 +20,18 @@ use sha2::{Digest, Sha256};
 
 use crate::core::dispatch::capability_resolver::ResolvedCapability;
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::from_turtle as env_from_turtle;
+use crate::core::ontology::verification_env::{
+    from_turtle as env_from_turtle, VerificationEnvironment,
+};
+use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::verify::coverage::feature_resolver::{resolve_feature_tcs_short, tc_iri_for};
 use crate::core::verify::matcher::MatchReport;
 use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
 
+use super::enrichment::{
+    assemble_enrichment, read_concrete_capabilities_from_turtle, EnrichmentFields,
+    DEFAULT_DEC_VERSION,
+};
 use super::step_vocabulary::default_step_vocabulary;
 
 /// Default `max_tokens` requested from the worker when the resolved
@@ -65,6 +72,12 @@ pub struct VerifyGraphAuthorInputJson {
     /// capability's `max_output`, capped at the Python pydantic
     /// schema's bounds (256..=64_000).
     pub max_tokens: u32,
+    /// ADR-066 / FT-102 — the five bundle-completeness fields the
+    /// verify-graph-author worker reads as the ground truth for its
+    /// proposal. Populated by SPARQL queries against the catalog.
+    /// `Default::default()` for legacy / pre-FT-102 paths.
+    #[serde(default)]
+    pub enrichment: EnrichmentFields,
 }
 
 /// One test-criterion record in the bundle.
@@ -173,9 +186,11 @@ pub fn assemble_bundle(
         })
         .collect();
     let target_environment = load_env_record(workdir, env_short)?;
+    let env_struct = load_env_struct(workdir, env_short)?;
     let candidate_graphs = candidate_records_from_report(match_report);
     let step_vocabulary = default_step_vocabulary();
     let max_tokens = clamp_max_tokens(capability.max_output);
+    let enrichment = assemble_enrichment_for(workdir, env_struct.as_ref(), env_short)?;
     let mut bundle = VerifyGraphAuthorInputJson {
         feature_id: feature_id.to_string(),
         feature_spec,
@@ -188,9 +203,57 @@ pub fn assemble_bundle(
         model_id: capability.model_identifier.clone(),
         parameters: serde_json::json!({}),
         max_tokens,
+        enrichment,
     };
     bundle.bundle_hash = compute_bundle_hash(&bundle);
     Ok(bundle)
+}
+
+/// Helper that builds the env struct for the enrichment query path.
+/// Mirrors [`load_env_record`] but returns the full
+/// `VerificationEnvironment` rather than the wire-shape record.
+fn load_env_struct(
+    workdir: &Path,
+    env_short: &str,
+) -> Result<Option<VerificationEnvironment>, HandlerError> {
+    let env_path = env_path_for(workdir, env_short);
+    if !env_path.is_file() {
+        return Ok(None);
+    }
+    let env = env_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
+        detail: format!("bundle: parsing env {p}: {e}", p = env_path.display()),
+    })?;
+    Ok(Some(env))
+}
+
+fn env_path_for(workdir: &Path, env_short: &str) -> std::path::PathBuf {
+    workdir
+        .join(".dec")
+        .join("verify")
+        .join("env")
+        .join(format!("{env_short}.ttl"))
+}
+
+/// Run the catalog SPARQL queries that populate the five ADR-066 fields.
+/// The orchestration store is loaded from `<workdir>/.dec/store/`.
+pub fn assemble_enrichment_for(
+    workdir: &Path,
+    env: Option<&VerificationEnvironment>,
+    env_short: &str,
+) -> Result<EnrichmentFields, HandlerError> {
+    let dump_path = orchestration_dump_path(workdir);
+    let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
+        detail: format!("enrichment: opening orchestration store: {e}"),
+    })?;
+    let env_path = env_path_for(workdir, env_short);
+    let concrete = read_concrete_capabilities_from_turtle(&env_path)?;
+    let dec_version = resolved_dec_version();
+    assemble_enrichment(&store, env, concrete.as_ref(), &dec_version)
+}
+
+fn resolved_dec_version() -> String {
+    std::env::var("DEC_VERIFY_BUNDLE_DEC_VERSION")
+        .unwrap_or_else(|_| DEFAULT_DEC_VERSION.to_string())
 }
 
 /// Clamp the resolved capability's `max_output` into the Python worker's

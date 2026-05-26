@@ -325,6 +325,7 @@ fn ac3_bundle_hash_covers_endpoint_and_model_id() {
         model_id: "qwen3-coder-30b-a3b-instruct".to_string(),
         parameters: serde_json::json!({}),
         max_tokens: 32_000,
+        enrichment: Default::default(),
     };
 
     let h_baseline = canonical_hash(&baseline);

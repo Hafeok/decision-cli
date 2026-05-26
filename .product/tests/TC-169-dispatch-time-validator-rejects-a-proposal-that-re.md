@@ -2,12 +2,17 @@
 id: TC-169
 title: Dispatch-time validator rejects a proposal that references commands, namespaces, or hosts not in the bundle
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-102
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_169_dispatch_time_validator_rejects_a_proposal_that_re
+runner-timeout: 120
+last-run: 2026-05-26T15:22:03.477099377+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim

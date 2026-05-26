@@ -2,12 +2,17 @@
 id: TC-168
 title: Bundle assembler populates the five ADR-066 fields from catalog artifacts via SPARQL CONSTRUCT
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-102
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_168_bundle_assembler_populates_the_five_adr_066_fields
+runner-timeout: 120
+last-run: 2026-05-26T15:22:03.477099377+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

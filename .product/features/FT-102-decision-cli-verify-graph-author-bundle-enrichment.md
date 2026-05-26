@@ -2,7 +2,7 @@
 id: FT-102
 title: 'decision-cli: verify-graph-author bundle enrichment and dispatch-time completeness validator'
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-101
 - FT-048

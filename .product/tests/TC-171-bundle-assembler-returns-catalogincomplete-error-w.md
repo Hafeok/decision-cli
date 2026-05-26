@@ -2,12 +2,17 @@
 id: TC-171
 title: Bundle assembler returns CatalogIncomplete error when a mandatory field has zero artifacts and no default
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-102
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_171_bundle_assembler_returns_catalogincomplete_error_w
+runner-timeout: 120
+last-run: 2026-05-26T15:22:03.477099377+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

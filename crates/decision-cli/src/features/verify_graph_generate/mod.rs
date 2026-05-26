@@ -16,12 +16,15 @@
 //! persist; only `Accept` does.
 
 pub mod bundle;
+pub mod enrichment;
+pub mod feedback;
 mod finalize;
 mod internal;
 pub mod persist;
 pub mod proposal;
 mod step_vocabulary;
 pub mod surface;
+pub mod validator;
 pub mod worker;
 
 use std::path::{Path, PathBuf};
@@ -178,8 +181,28 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
     let proposal = worker::invoke_worker(&bundle)?;
     verify_bundle_hash(&proposal, &bundle)?;
 
+    // ADR-066 §Rule 4 — dispatch-time chokepoint validator runs after
+    // the worker returns and before persistence. Non-empty violation
+    // set ⇒ refuse to persist + emit gap feedback against the upstream
+    // catalog category.
+    apply_chokepoint_validator(&proposal, &bundle.enrichment)?;
+
     let preview = coverage_preview_from_report(&report);
     finalize_generate(req, workdir, &env_short, proposal, preview)
+}
+
+fn apply_chokepoint_validator(
+    proposal: &GraphProposal,
+    enrichment: &enrichment::EnrichmentFields,
+) -> Result<(), HandlerError> {
+    let violations = validator::validate_proposal(proposal, enrichment);
+    if violations.is_empty() {
+        return Ok(());
+    }
+    // Emit one feedback per natural upstream target so the operator's
+    // inbox has one actionable item per catalog edit (ADR-066 §Rule 3).
+    let _ = feedback::emit_gap_feedback(&violations);
+    Err(validator::build_rejection_error(&violations))
 }
 
 fn require_workdir(workdir: Option<&Path>) -> Result<&Path, HandlerError> {

@@ -2,12 +2,17 @@
 id: TC-170
 title: Validator emits one dec:Feedback with class=gap targeted at the upstream catalog artifact, not the worker
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-102
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_170_validator_emits_one_dec_feedback_with_class_gap_ta
+runner-timeout: 120
+last-run: 2026-05-26T15:22:03.477099377+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim
