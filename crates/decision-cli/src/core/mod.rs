@@ -16,6 +16,7 @@ pub mod dispatch;
 pub mod feedback;
 pub mod graph;
 pub mod handler;
+pub mod identity_verifier;
 pub mod mcp;
 pub mod metrics;
 pub mod oci_manifest;
