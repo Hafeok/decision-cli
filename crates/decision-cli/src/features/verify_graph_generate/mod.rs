@@ -273,7 +273,23 @@ pub fn run_accept(req: &AcceptRequest) -> Result<AcceptResponse, HandlerError> {
     // Persist (only `New` proposals reach this path).
     let env_short = env_iri_to_short(&report.environment);
     let persisted = persist_for_accept(req, workdir, &env_short)?;
+    // FT-100: graph is now whole and ready; fire the auto-dispatch.
+    fire_graph_accepted_dispatch(workdir, &persisted.graph_id);
     Ok(AcceptResponse { persisted })
+}
+
+/// Best-effort FT-100 hook: invoke `graph_accepted_dispatch::dispatch_for_graph`
+/// after a complete graph has been persisted. Errors are logged, never
+/// propagated — the persistence already succeeded.
+pub(super) fn fire_graph_accepted_dispatch(workdir: &Path, graph_id: &str) {
+    if let Err(e) = crate::core::subscriptions::dispatch_for_graph(workdir, graph_id) {
+        tracing::warn!(
+            target: "verify_graph_generate",
+            graph = %graph_id,
+            err = %e,
+            "graph_accepted_dispatch failed (best-effort)"
+        );
+    }
 }
 
 fn verify_proposal_token(req: &AcceptRequest) -> Result<(), HandlerError> {

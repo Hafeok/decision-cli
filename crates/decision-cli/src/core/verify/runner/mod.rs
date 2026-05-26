@@ -225,15 +225,17 @@ fn load_env(
 
 /// Spawn `bash -c` for the env's setup script.
 fn run_setup(script: &str, workdir: &Path) -> Result<(), String> {
-    // Bind `$TMPDIR` to the resolved ephemeral working directory so the
-    // standard ephemeral-tempdir env's seed `dec:setup` (`mkdir -p
-    // "$TMPDIR" && cd "$TMPDIR"`) is a no-op rather than a failure.
+    // `$DEC_VERIFY_TMP` is the canonical env-var name advertised by the
+    // capability surface (see verify_graph_generate::validator); `$TMPDIR`
+    // and `$DEC_WORKDIR` are retained for back-compat with the seed env
+    // and earlier graphs.
     let output = std::process::Command::new("bash")
         .arg("-c")
         .arg(script)
         .current_dir(workdir)
         .env("TMPDIR", workdir)
         .env("DEC_WORKDIR", workdir)
+        .env("DEC_VERIFY_TMP", workdir)
         .output()
         .map_err(|e| format!("spawn: {e}"))?;
     if output.status.success() {

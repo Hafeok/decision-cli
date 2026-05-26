@@ -55,6 +55,12 @@ pub(super) fn finalize_generate(
     match req.mode {
         GenerateMode::Accept => {
             let persisted = persist_if_new(&proposal, workdir, &req.feature_id, env_short)?;
+            // FT-100: a whole new graph just landed; fire auto-dispatch.
+            // Match-/Gap-kind proposals return None here and skip dispatch
+            // (no fresh graph to run).
+            if let Some(summary) = &persisted {
+                super::fire_graph_accepted_dispatch(workdir, &summary.graph_id);
+            }
             Ok(GenerateResponse {
                 proposal,
                 proposal_token: token,

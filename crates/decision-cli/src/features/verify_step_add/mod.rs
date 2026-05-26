@@ -185,20 +185,10 @@ pub fn run(req: &StepAddRequest) -> Result<StepAddResponse, HandlerError> {
     commit::commit_graph_update(workdir, &new_graph)?;
     let written_path = persist::rewrite_graph_file(&graph_dir, &graph_id_str, &new_graph)?;
 
-    // FT-100 / graph_accepted_dispatch: a fresh step makes the graph
-    // ready to run; fire the subscription handler so the
-    // verify-graph-runner is dispatched. Errors here are best-effort —
-    // the step_add itself has already committed.
-    if let Err(e) =
-        crate::core::subscriptions::dispatch_for_graph(workdir, &graph_id_str)
-    {
-        tracing::warn!(
-            target: "verify_step_add",
-            graph = %graph_id_str,
-            err = %e,
-            "graph_accepted_dispatch failed (best-effort)"
-        );
-    }
+    // FT-100 / graph_accepted_dispatch is NOT fired here: a single
+    // step_add leaves the graph in an intermediate state. The dispatch
+    // fires from `verify_graph_generate::{run_accept, finalize_generate}`
+    // once the whole graph is persisted and ready to run.
 
     Ok(StepAddResponse {
         step_id: new_step_iri.as_str().to_string(),

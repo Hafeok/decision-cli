@@ -53,6 +53,9 @@ impl StepKindHandler for ShellHandler {
             .arg("-c")
             .arg(&substituted)
             .current_dir(&ctx.dec_workdir)
+            .env("TMPDIR", &ctx.dec_workdir)
+            .env("DEC_WORKDIR", &ctx.dec_workdir)
+            .env("DEC_VERIFY_TMP", &ctx.dec_workdir)
             .output();
         let ended = iso_now();
         let result = match output {
