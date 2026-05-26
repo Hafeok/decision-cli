@@ -1,0 +1,84 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-080>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-092> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-080/0> <https://decision-cli.dev/ns/step/VG-080/1> <https://decision-cli.dev/ns/step/VG-080/2> <https://decision-cli.dev/ns/step/VG-080/3> <https://decision-cli.dev/ns/step/VG-080/4> <https://decision-cli.dev/ns/step/VG-080/5> <https://decision-cli.dev/ns/step/VG-080/6> <https://decision-cli.dev/ns/step/VG-080/7> <https://decision-cli.dev/ns/step/VG-080/8> <https://decision-cli.dev/ns/step/VG-080/9> <https://decision-cli.dev/ns/step/VG-080/10> ) .
+
+<https://decision-cli.dev/ns/step/VG-080/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-080/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo '{\"id\": \"SUB-001\", \"status\": \"received\", \"worker_image\": \"worker-image-123\"}' > submission.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-080/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo '{\"id\": \"SIG-001\", \"verdict\": \"valid\", \"submission_id\": \"SUB-001\"}' > signature_verdict.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-080/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo '{\"id\": \"SBOM-001\", \"reference\": \"sbom-ref-123\", \"submission_id\": \"SUB-001\"}' > sbom_ref.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-080/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decentralized-data.eu/#> SELECT ?s WHERE { ?s dec:hasStatus ?status . FILTER(?status = \"received\") }" .
+
+<https://decision-cli.dev/ns/step/VG-080/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decentralized-data.eu/#> SELECT ?s WHERE { ?s dec:hasVerdict ?verdict . FILTER(?verdict = \"valid\") }" .
+
+<https://decision-cli.dev/ns/step/VG-080/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decentralized-data.eu/#> SELECT ?s WHERE { ?s dec:hasReference ?ref . FILTER(?ref = \"sbom-ref-123\") }" .
+
+<https://decision-cli.dev/ns/step/VG-080/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:command "echo '{\"id\": \"WI-001\", \"status\": \"qualified\", \"submission_id\": \"SUB-001\"}' > worker_image.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-080/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:command "echo '{\"id\": \"CA-001\", \"class\": \"manual-review\", \"worker_image_id\": \"WI-001\"}' > conformance_audit.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-080/9>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decentralized-data.eu/#> SELECT ?s WHERE { ?s dec:hasStatus ?status . FILTER(?status = \"qualified\") }" .
+
+<https://decision-cli.dev/ns/step/VG-080/10>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-134> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decentralized-data.eu/#> SELECT ?s WHERE { ?s dec:hasClass ?class . FILTER(?class = \"manual-review\") }" .

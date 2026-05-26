@@ -1,0 +1,53 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-071>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-083> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-071/0> <https://decision-cli.dev/ns/step/VG-071/1> <https://decision-cli.dev/ns/step/VG-071/2> <https://decision-cli.dev/ns/step/VG-071/3> <https://decision-cli.dev/ns/step/VG-071/4> <https://decision-cli.dev/ns/step/VG-071/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-071/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-148> ;
+    dec:command "python -c \"from pipeline_worker_sdk.driver import base; print('Base module imports successfully')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-071/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-148> ;
+    dec:command "python -c \"from pipeline_worker_sdk.driver import fake; print('Fake driver module imports successfully')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-071/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-148> ;
+    dec:command "python -c \"import asyncio; from pipeline_worker_sdk.driver import fake; from pipeline_worker_sdk.driver.base import Driver; print('Driver ABC imports successfully')\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-071/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-148> ;
+    dec:command "python -c \"from pipeline_worker_sdk.driver import fake; import inspect; print('FakeDriver methods:', [m for m in dir(fake.FakeDriver) if not m.startswith('_')])\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-071/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-148> ;
+    dec:command "find . -name \"test*driver*.py\" -o -name \"*test*driver*\" | head -5" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-071/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-148> ;
+    dec:command "python -m pytest tests/test_driver.py -v" ;
+    dec:expectExitCode 0 .

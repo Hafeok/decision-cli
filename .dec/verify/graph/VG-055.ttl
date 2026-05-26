@@ -1,0 +1,36 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-055>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-067> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-055/0> <https://decision-cli.dev/ns/step/VG-055/1> <https://decision-cli.dev/ns/step/VG-055/2> <https://decision-cli.dev/ns/step/VG-055/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-055/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p ./test-workspace/workers/verify-graph-author" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-055/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch ./test-workspace/workers/verify-graph-author/__init__.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-055/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo '#!/bin/bash\necho \"verify-graph-author called\"' > ./test-workspace/verify-graph-author && chmod +x ./test-workspace/verify-graph-author" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-055/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-139> ;
+    dec:command "cd ./test-workspace && dec verify graph generate FT-067 --environment ENV-002" ;
+    dec:expectExitCode 0 .

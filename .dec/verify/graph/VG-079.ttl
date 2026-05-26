@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-079>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-091> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-079/0> <https://decision-cli.dev/ns/step/VG-079/1> <https://decision-cli.dev/ns/step/VG-079/2> <https://decision-cli.dev/ns/step/VG-079/3> <https://decision-cli.dev/ns/step/VG-079/4> <https://decision-cli.dev/ns/step/VG-079/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-079/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p /tmp/test-image && echo 'mock image content' > /tmp/test-image/Dockerfile" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-079/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "docker build -t test-image /tmp/test-image" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-079/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch /tmp/sbom.json && echo '{\"version\": \"1.4\", \"components\": []}' > /tmp/sbom.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-079/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'mock cosign attach sbom command'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-079/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-133> ;
+    dec:command "ls -l /tmp/sbom.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-079/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-133> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX dec: <https://decentralized-data.net/ns/> SELECT ?s WHERE { ?s dec:hasSbomRef ?o . }" .

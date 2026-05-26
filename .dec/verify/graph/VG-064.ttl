@@ -1,0 +1,68 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-064>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-076> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-064/0> <https://decision-cli.dev/ns/step/VG-064/1> <https://decision-cli.dev/ns/step/VG-064/2> <https://decision-cli.dev/ns/step/VG-064/3> <https://decision-cli.dev/ns/step/VG-064/4> <https://decision-cli.dev/ns/step/VG-064/5> <https://decision-cli.dev/ns/step/VG-064/6> <https://decision-cli.dev/ns/step/VG-064/7> <https://decision-cli.dev/ns/step/VG-064/8> ) .
+
+<https://decision-cli.dev/ns/step/VG-064/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p test-workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && echo \"## Brief BRIEF-001\" > brief.md" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && echo \"title: Pipeline Worker Slice 1\" >> brief.md" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && echo \"premise: Initial slice of pipeline worker development\" >> brief.md" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && echo \"goal: Implement basic pipeline worker functionality\" >> brief.md" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd test-workspace && echo \"success_criteria: All tests pass and documentation is updated\" >> brief.md" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-141> ;
+    dec:command "cd test-workspace && product brief new --file brief.md" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-141> ;
+    dec:command "cd test-workspace && product brief show BRIEF-001" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-064/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-141> ;
+    dec:command "cd test-workspace && product graph check" ;
+    dec:expectExitCode 0 .

@@ -1,0 +1,40 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-063>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-075> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-063/0> <https://decision-cli.dev/ns/step/VG-063/1> <https://decision-cli.dev/ns/step/VG-063/2> <https://decision-cli.dev/ns/step/VG-063/3> <https://decision-cli.dev/ns/step/VG-063/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-063/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" .
+
+<https://decision-cli.dev/ns/step/VG-063/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store/test.db" .
+
+<https://decision-cli.dev/ns/step/VG-063/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-125> ;
+    dec:path "bootstrap/qt-full-chain-backward-v1.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-063/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-125> ;
+    dec:path "bootstrap/qt-full-chain-forward-v1.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-063/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-125> ;
+    dec:target ".dec/store/test.db" ;
+    dec:query "PREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX dec:  <https://decision-cli.dev/ns#>\nPREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT ?ancestor ?ancestor_type ?via WHERE {\n    {\n        ?focal (prov:wasGeneratedBy/prov:used)* ?ancestor .\n        BIND(\"mechanical\" AS ?via)\n    } UNION {\n        ?focal (prov:wasDerivedFrom)* ?ancestor .\n        BIND(\"motivational\" AS ?via)\n    }\n    ?ancestor rdf:type ?ancestor_type .\n    FILTER (\n        EXISTS { ?ancestor rdf:type/rdfs:subClassOf* dec:BoundaryArtifact }\n        || NOT EXISTS { ?ancestor prov:wasDerivedFrom ?_ }\n    )\n}" .

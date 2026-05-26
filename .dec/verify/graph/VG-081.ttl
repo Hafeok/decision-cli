@@ -1,0 +1,73 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-081>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-093> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-081/0> <https://decision-cli.dev/ns/step/VG-081/1> <https://decision-cli.dev/ns/step/VG-081/2> <https://decision-cli.dev/ns/step/VG-081/3> <https://decision-cli.dev/ns/step/VG-081/4> <https://decision-cli.dev/ns/step/VG-081/5> <https://decision-cli.dev/ns/step/VG-081/6> <https://decision-cli.dev/ns/step/VG-081/7> <https://decision-cli.dev/ns/step/VG-081/8> <https://decision-cli.dev/ns/step/VG-081/9> ) .
+
+<https://decision-cli.dev/ns/step/VG-081/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-135> ;
+    dec:command "mkdir -p /tmp/test-workspace && cd /tmp/test-workspace && echo '[worker]\\nname = \"test-worker\"\\nsdk_version = \"0.3.0\"\\nwire_protocol = \"1.0\"\\n\\n[capabilities]\\ntags = [\"code-writer\"]\\ncompatible_roles = [\"engineering.implementer\"]\\n\\n[runtime]\\nkind = \"subscribed\"\\nentrypoint = \"test-worker.main:run\"' > worker.toml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-081/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/test-workspace && mkdir -p .dec/store && touch .dec/store/test-store.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-081/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/test-workspace && echo 'mock-image-ref' > image-ref.txt" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-081/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/test-workspace && echo 'mock-sbom-ref' > sbom-ref.txt" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-081/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/test-workspace && echo '{\"registry_ref\": \"ghcr.io/test/test-worker:v1.0.0\", \"capability_tags\": [\"code-writer\"], \"compatible_roles\": [\"engineering.implementer\"], \"sbom_ref\": \"sbom-ref\", \"signed_by\": \"test@example.com\", \"provenance\": \"mock-provenance\"}' > submission.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-081/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-135> ;
+    dec:path "/tmp/test-workspace/worker.toml" .
+
+<https://decision-cli.dev/ns/step/VG-081/6>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-135> ;
+    dec:path "/tmp/test-workspace/image-ref.txt" .
+
+<https://decision-cli.dev/ns/step/VG-081/7>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-135> ;
+    dec:path "/tmp/test-workspace/sbom-ref.txt" .
+
+<https://decision-cli.dev/ns/step/VG-081/8>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-135> ;
+    dec:path "/tmp/test-workspace/submission.json" .
+
+<https://decision-cli.dev/ns/step/VG-081/9>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-135> ;
+    dec:target "/tmp/test-workspace/.dec/store/test-store.ttl" ;
+    dec:query "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX dec: <https://decentralized.id/ns/> SELECT ?s ?p ?o WHERE { ?s ?p ?o . }" .

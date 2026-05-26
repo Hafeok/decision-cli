@@ -1,0 +1,143 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-060>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-072> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-060/0> <https://decision-cli.dev/ns/step/VG-060/1> <https://decision-cli.dev/ns/step/VG-060/2> <https://decision-cli.dev/ns/step/VG-060/3> <https://decision-cli.dev/ns/step/VG-060/4> <https://decision-cli.dev/ns/step/VG-060/5> <https://decision-cli.dev/ns/step/VG-060/6> <https://decision-cli.dev/ns/step/VG-060/7> <https://decision-cli.dev/ns/step/VG-060/8> <https://decision-cli.dev/ns/step/VG-060/9> <https://decision-cli.dev/ns/step/VG-060/10> <https://decision-cli.dev/ns/step/VG-060/11> <https://decision-cli.dev/ns/step/VG-060/12> <https://decision-cli.dev/ns/step/VG-060/13> <https://decision-cli.dev/ns/step/VG-060/14> <https://decision-cli.dev/ns/step/VG-060/15> <https://decision-cli.dev/ns/step/VG-060/16> <https://decision-cli.dev/ns/step/VG-060/17> <https://decision-cli.dev/ns/step/VG-060/18> <https://decision-cli.dev/ns/step/VG-060/19> <https://decision-cli.dev/ns/step/VG-060/20> <https://decision-cli.dev/ns/step/VG-060/21> ) .
+
+<https://decision-cli.dev/ns/step/VG-060/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cargo build" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-060/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/mechanical-provenance.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/motivational-predicates.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/boundary-artifact.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/4>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/feature.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/adr.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/6>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/tc.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/7>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/dependency.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/8>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/brief.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/9>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/acknowledgement.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/10>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/feedback.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/11>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/discovery-finding.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/12>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/question.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/13>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/worker-image.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/14>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/conformance-audit.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/15>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/model.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/16>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/policy.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/17>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/worker-image-submission.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/18>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/subscription.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/19>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/dispatch.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/20>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/query-template.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-060/21>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-122> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/manifest.ttl" .

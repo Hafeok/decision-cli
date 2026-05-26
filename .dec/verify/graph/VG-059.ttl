@@ -1,0 +1,68 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-059>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-071> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-059/0> <https://decision-cli.dev/ns/step/VG-059/1> <https://decision-cli.dev/ns/step/VG-059/2> <https://decision-cli.dev/ns/step/VG-059/3> <https://decision-cli.dev/ns/step/VG-059/4> <https://decision-cli.dev/ns/step/VG-059/5> <https://decision-cli.dev/ns/step/VG-059/6> <https://decision-cli.dev/ns/step/VG-059/7> <https://decision-cli.dev/ns/step/VG-059/8> ) .
+
+<https://decision-cli.dev/ns/step/VG-059/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p crates/decision-cli/src/core/ontology/shapes" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-059/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cat > crates/decision-cli/src/core/ontology/shapes/boundary-artifact.ttl << 'EOF'\n@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n@prefix sh:   <http://www.w3.org/ns/shacl#> .\n@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .\n@prefix dec:  <https://decision-cli.dev/ns#> .\n\n# Top class\ndec:BoundaryArtifact a rdfs:Class ;\n    rdfs:label \"BoundaryArtifact\" ;\n    rdfs:comment \"Artifact whose motivational origin is external to the orchestration graph.\" .\n\n# Subclasses (open question 4 resolution: subclasses with per-subtype shape extensions)\ndec:SensingActionOutput a rdfs:Class ;\n    rdfs:subClassOf dec:BoundaryArtifact ;\n    rdfs:label \"SensingActionOutput\" .\n\ndec:InitialRequest a rdfs:Class ;\n    rdfs:subClassOf dec:BoundaryArtifact ;\n    rdfs:label \"InitialRequest\" .\n\ndec:BootstrapArtifact a rdfs:Class ;\n    rdfs:subClassOf dec:BoundaryArtifact ;\n    rdfs:label \"BootstrapArtifact\" .\n\ndec:MigrationBackfill a rdfs:Class ;\n    rdfs:subClassOf dec:BoundaryArtifact ;\n    rdfs:label \"MigrationBackfill\" .\n\n# Base shape: mechanical block + external_origin\ndec:BoundaryArtifactShape a sh:NodeShape ;\n    sh:targetClass dec:BoundaryArtifact ;\n    sh:and ( dec:MechanicalProvenanceShape ) ;\n    sh:property [\n        sh:path dec:external_origin ;\n        sh:minCount 1 ; sh:maxCount 1 ;\n        sh:datatype xsd:string ;\n        sh:minLength 1\n    ] .\n\n# MigrationBackfill must additionally carry the synthetic-annotation flag\ndec:MigrationBackfillShape a sh:NodeShape ;\n    sh:targetClass dec:MigrationBackfill ;\n    sh:property [\n        sh:path dec:isMigrationBackfill ;\n        sh:hasValue true ;\n        sh:minCount 1 ; sh:maxCount 1\n    ] .\nEOF" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-059/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cat > crates/decision-cli/src/core/ontology/boundary_artifact_constants.rs << 'EOF'\npub const BOUNDARY_ARTIFACT_CLASS: &str   = \"https://decision-cli.dev/ns#BoundaryArtifact\";\npub const SENSING_ACTION_OUTPUT: &str     = \"https://decision-cli.dev/ns#SensingActionOutput\";\npub const INITIAL_REQUEST: &str           = \"https://decision-cli.dev/ns#InitialRequest\";\npub const BOOTSTRAP_ARTIFACT: &str        = \"https://decision-cli.dev/ns#BootstrapArtifact\";\npub const MIGRATION_BACKFILL: &str        = \"https://decision-cli.dev/ns#MigrationBackfill\";\npub const EXTERNAL_ORIGIN_PROP: &str      = \"https://decision-cli.dev/ns#external_origin\";\nEOF" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-059/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'Loading boundary-artifact.ttl into ontology loader...'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-059/4>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-121> ;
+    dec:path "crates/decision-cli/src/core/ontology/shapes/boundary-artifact.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-059/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-121> ;
+    dec:path "crates/decision-cli/src/core/ontology/boundary_artifact_constants.rs" .
+
+<https://decision-cli.dev/ns/step/VG-059/6>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-121> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?class WHERE { ?class a rdfs:Class ; rdfs:label \"BoundaryArtifact\" . }" .
+
+<https://decision-cli.dev/ns/step/VG-059/7>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-121> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?subclass WHERE { ?subclass rdfs:subClassOf dec:BoundaryArtifact ; rdfs:label ?label . FILTER(?label IN (\"SensingActionOutput\", \"InitialRequest\", \"BootstrapArtifact\", \"MigrationBackfill\")) }" .
+
+<https://decision-cli.dev/ns/step/VG-059/8>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-121> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#>\nPREFIX sh: <http://www.w3.org/ns/shacl#>\nSELECT ?shape WHERE { ?shape a sh:NodeShape ; sh:targetClass dec:BoundaryArtifact . }" .

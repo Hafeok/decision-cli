@@ -1,0 +1,69 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-065>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-077> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-065/0> <https://decision-cli.dev/ns/step/VG-065/1> <https://decision-cli.dev/ns/step/VG-065/2> <https://decision-cli.dev/ns/step/VG-065/3> <https://decision-cli.dev/ns/step/VG-065/4> <https://decision-cli.dev/ns/step/VG-065/5> <https://decision-cli.dev/ns/step/VG-065/6> <https://decision-cli.dev/ns/step/VG-065/7> <https://decision-cli.dev/ns/step/VG-065/8> ) .
+
+<https://decision-cli.dev/ns/step/VG-065/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-065/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store/dispatch-event.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-065/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:command "echo '{\"id\": \"evt-123\", \"capabilityTag\": \"test-tag\", \"payload\": \"dispatch-payload\"}' > .dec/store/dispatch-event.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-065/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:command "echo '{\"eventId\": \"evt-123\", \"status\": \"claimed\"}' > .dec/store/claim-result.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-065/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:command "echo '{\"eventId\": \"evt-123\", \"status\": \"completed\", \"result\": \"success\"}' > .dec/store/completion-event.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-065/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX ex: <http://example.org/> SELECT ?event WHERE { ?event a ex:DispatchEvent . }" .
+
+<https://decision-cli.dev/ns/step/VG-065/6>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:path ".dec/store/dispatch-event.json" .
+
+<https://decision-cli.dev/ns/step/VG-065/7>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:path ".dec/store/claim-result.json" .
+
+<https://decision-cli.dev/ns/step/VG-065/8>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-142> ;
+    dec:path ".dec/store/completion-event.json" .

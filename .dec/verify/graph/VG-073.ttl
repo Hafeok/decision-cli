@@ -1,0 +1,36 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-073>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-085> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-073/0> <https://decision-cli.dev/ns/step/VG-073/1> <https://decision-cli.dev/ns/step/VG-073/2> <https://decision-cli.dev/ns/step/VG-073/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-073/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-150> ;
+    dec:command "cd workers/pipeline-worker-sdk && uv run codegen" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-073/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-150> ;
+    dec:path "workers/pipeline-worker-sdk/src/pipeline_worker_sdk/bundle/_generated/__init__.py" .
+
+<https://decision-cli.dev/ns/step/VG-073/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-150> ;
+    dec:path "workers/pipeline-worker-sdk/src/pipeline_worker_sdk/artifact/_generated/__init__.py" .
+
+<https://decision-cli.dev/ns/step/VG-073/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-150> ;
+    dec:path "workers/pipeline-worker-sdk/src/pipeline_worker_sdk/schemas/_generated/__init__.py" .

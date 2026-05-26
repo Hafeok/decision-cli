@@ -1,0 +1,72 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-077>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-089> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-077/0> <https://decision-cli.dev/ns/step/VG-077/1> <https://decision-cli.dev/ns/step/VG-077/2> <https://decision-cli.dev/ns/step/VG-077/3> <https://decision-cli.dev/ns/step/VG-077/4> <https://decision-cli.dev/ns/step/VG-077/5> <https://decision-cli.dev/ns/step/VG-077/6> <https://decision-cli.dev/ns/step/VG-077/7> <https://decision-cli.dev/ns/step/VG-077/8> <https://decision-cli.dev/ns/step/VG-077/9> ) .
+
+<https://decision-cli.dev/ns/step/VG-077/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store/trustlist.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"@prefix ex: <http://example.org/> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\nex:trustEntry a rdf:Statement ;\n  ex:repo \"owner/repo\" ;\n  ex:workflowPath \".github/workflows/release.yml\" ;\n  ex:tagPattern \"implementer-v*.*.*\" ;\n  ex:issuer \"https://accounts.google.com\" ;\n  ex:subject \"https://github.com/owner/repo/.github/workflows/release.yml@refs/heads/main\" .\" > .dec/store/trustlist.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"mock_oidc_token\" > .dec/mock_oidc_token.txt" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"mock_image_digest\" > .dec/mock_image_digest.txt" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"mock_rekor_entry\" > .dec/mock_rekor_entry.txt" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"mock_signature_identity\" > .dec/mock_signature_identity.txt" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cat .dec/mock_oidc_token.txt | cosign sign --keyless --rekor-url https://rekor.sigstore.dev --output-signature .dec/signature.der --output-certificate .dec/cert.pem" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo \"{\" > .dec/submission.json && echo \"  \\\"image_digest\\\": \\\"$(cat .dec/mock_image_digest.txt)\\\",\" >> .dec/submission.json && echo \"  \\\"signature_identity\\\": \\\"$(cat .dec/mock_signature_identity.txt)\\\",\" >> .dec/submission.json && echo \"  \\\"rekor_entry\\\": \\\"$(cat .dec/mock_rekor_entry.txt)\\\"\" >> .dec/submission.json && echo \"}\" >> .dec/submission.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-077/9>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-131> ;
+    dec:target ".dec/store/trustlist.ttl" ;
+    dec:query "PREFIX ex: <http://example.org/>\nSELECT ?entry WHERE {\n  ?entry a ex:trustEntry .\n  ?entry ex:repo \"owner/repo\" .\n  ?entry ex:workflowPath \".github/workflows/release.yml\" .\n  ?entry ex:tagPattern \"implementer-v*.*.*\" .\n}" .

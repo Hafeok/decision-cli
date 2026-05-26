@@ -1,0 +1,50 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-082>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-094> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-082/0> <https://decision-cli.dev/ns/step/VG-082/1> <https://decision-cli.dev/ns/step/VG-082/2> <https://decision-cli.dev/ns/step/VG-082/3> <https://decision-cli.dev/ns/step/VG-082/4> <https://decision-cli.dev/ns/step/VG-082/5> ) .
+
+<https://decision-cli.dev/ns/step/VG-082/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec && touch .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-082/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec pipeline-cli --port 8080 --token-secret test-secret &" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-082/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "sleep 2" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-082/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-136> ;
+    dec:command "curl -X POST http://localhost:8080/submissions -H \"Authorization: Bearer test-token\" -H \"Content-Type: application/json\" -d '{\"registry_ref\": \"test-image:latest\", \"claimed_capability_tags\": [\"tag1\"], \"claimed_compatible_roles\": [\"role1\"], \"sbom_ref\": \"sbom-ref\", \"signature_identity\": \"sig-id\", \"provenance\": \"prov-data\"}'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-082/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-136> ;
+    dec:command "dec graph query --query 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }' --store .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-082/5>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-136> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX dec: <https://decentralized-cloud.io/ns/> SELECT ?submission WHERE { ?submission a dec:WorkerImageSubmission . }" .

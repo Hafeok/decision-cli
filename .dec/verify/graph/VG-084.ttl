@@ -1,0 +1,60 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-084>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-096> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-084/0> <https://decision-cli.dev/ns/step/VG-084/1> <https://decision-cli.dev/ns/step/VG-084/2> <https://decision-cli.dev/ns/step/VG-084/3> <https://decision-cli.dev/ns/step/VG-084/4> <https://decision-cli.dev/ns/step/VG-084/5> <https://decision-cli.dev/ns/step/VG-084/6> <https://decision-cli.dev/ns/step/VG-084/7> ) .
+
+<https://decision-cli.dev/ns/step/VG-084/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p /tmp/litellm-proxy && cd /tmp/litellm-proxy && echo 'model_list: []\ngeneral_settings:\n  master_key: test-key\n  database_url: sqlite:///test.db\nlitellm_settings:\n  callbacks: [\"pipeline-cli-telemetry\"]' > config.yaml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-084/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-138> ;
+    dec:path "/tmp/litellm-proxy/config.yaml" .
+
+<https://decision-cli.dev/ns/step/VG-084/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/litellm-proxy && echo 'model_list:\n  - model_name: frontier-reasoning\n    litellm_params:\n      model: anthropic/claude-opus-4-5\n      api_key: os.environ/ANTHROPIC_API_KEY\n  - model_name: fast-cheap\n    litellm_params:\n      model: anthropic/claude-haiku-4-5\n      api_key: os.environ/ANTHROPIC_API_KEY\ngeneral_settings:\n  master_key: os.environ/LITELLM_MASTER_KEY\n  database_url: os.environ/LITELLM_DB_URL\nlitellm_settings:\n  callbacks: [\"pipeline-cli-telemetry\"]' > config.yaml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-084/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-138> ;
+    dec:path "/tmp/litellm-proxy/config.yaml" .
+
+<https://decision-cli.dev/ns/step/VG-084/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/litellm-proxy && echo 'LITELLM_MASTER_KEY=test-key\nLITELLM_DB_URL=sqlite:///test.db' > workers.env" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-084/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-138> ;
+    dec:path "/tmp/litellm-proxy/workers.env" .
+
+<https://decision-cli.dev/ns/step/VG-084/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cd /tmp/litellm-proxy && echo 'model_list:\n  - model_name: frontier-reasoning\n    litellm_params:\n      model: anthropic/claude-opus-4-5\n      api_key: os.environ/ANTHROPIC_API_KEY\n  - model_name: fast-cheap\n    litellm_params:\n      model: anthropic/claude-haiku-4-5\n      api_key: os.environ/ANTHROPIC_API_KEY\ngeneral_settings:\n  master_key: test-key\n  database_url: sqlite:///test.db\nlitellm_settings:\n  callbacks: [\"pipeline-cli-telemetry\"]' > config.yaml && echo 'LITELLM_MASTER_KEY=test-key\nLITELLM_DB_URL=sqlite:///test.db' > workers.env" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-084/7>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-138> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX ddd: <https://ddd.example.org/>\nSELECT ?s WHERE { ?s a ddd:LLMCallTelemetry . }" .

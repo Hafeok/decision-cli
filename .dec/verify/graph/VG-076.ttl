@@ -1,0 +1,35 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-076>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-088> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-076/0> <https://decision-cli.dev/ns/step/VG-076/1> <https://decision-cli.dev/ns/step/VG-076/2> <https://decision-cli.dev/ns/step/VG-076/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-076/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p /tmp/test-image && echo 'Mock image content' > /tmp/test-image/config.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-076/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo '{\"schemaVersion\": 2, \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\", \"config\": {\"digest\": \"sha256:e692418e4cbaf90ca69d05a66403747baa33ee08806650b51fab815ad7fc331f\", \"size\": 1234}, \"layers\": []}' > /tmp/test-image/manifest.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-076/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'ddd.capability-tag.test=true' >> /tmp/test-image/manifest.json && echo 'ddd.sdk-version=1.0.0' >> /tmp/test-image/manifest.json && echo 'ddd.wire-protocol=2.0.0' >> /tmp/test-image/manifest.json" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-076/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-130> ;
+    dec:path "/tmp/test-image/manifest.json" .
