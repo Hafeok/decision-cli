@@ -112,7 +112,25 @@ fn parse_bootstrap_ttl(ttl: &str) -> Vec<Quad> {
 
 /// List every `dec:QueryTemplate` instance in `store`, sorted by IRI.
 pub fn list_query_templates(store: &Store) -> Result<Vec<QueryTemplate>, QueryTemplateError> {
-    let q = format!(
+    let q = build_list_query();
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| QueryTemplateError::Store(e.to_string()))?;
+    let QueryResults::Solutions(sols) = results else {
+        return Ok(Vec::new());
+    };
+    let mut out = Vec::new();
+    for sol in sols {
+        let sol = sol.map_err(|e| QueryTemplateError::Store(e.to_string()))?;
+        if let Some(template) = parse_list_solution(&sol) {
+            out.push(template);
+        }
+    }
+    Ok(out)
+}
+
+fn build_list_query() -> String {
+    format!(
         "PREFIX dec: <https://decision-cli.dev/ns#>\n\
          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\
          SELECT ?iri ?spec ?lang ?ver WHERE {{ \
@@ -130,33 +148,22 @@ pub fn list_query_templates(store: &Store) -> Result<Vec<QueryTemplate>, QueryTe
         spec_pred = DEC_QUERY_SPEC,
         lang_pred = DEC_QUERY_LANGUAGE,
         ver_pred = DEC_VERSION,
-    );
-    let results = store
-        .query(q.as_str())
-        .map_err(|e| QueryTemplateError::Store(e.to_string()))?;
-    let QueryResults::Solutions(sols) = results else {
-        return Ok(Vec::new());
+    )
+}
+
+fn parse_list_solution(sol: &oxigraph::sparql::QuerySolution) -> Option<QueryTemplate> {
+    let iri_term = sol.get("iri")?;
+    let oxigraph::model::Term::NamedNode(iri_node) = iri_term else {
+        return None;
     };
-    let mut out = Vec::new();
-    for sol in sols {
-        let sol = sol.map_err(|e| QueryTemplateError::Store(e.to_string()))?;
-        let Some(iri_term) = sol.get("iri") else { continue };
-        let oxigraph::model::Term::NamedNode(iri_node) = iri_term else {
-            continue;
-        };
-        let iri = iri_node.as_str().to_string();
-        let spec = literal_value(sol.get("spec")).unwrap_or_default();
-        let lang = literal_value(sol.get("lang")).unwrap_or_default();
-        let ver = literal_value(sol.get("ver")).unwrap_or_default();
-        out.push(QueryTemplate {
-            id: short_id_from_iri(&iri),
-            iri,
-            spec,
-            language: lang,
-            version: ver,
-        });
-    }
-    Ok(out)
+    let iri = iri_node.as_str().to_string();
+    Some(QueryTemplate {
+        id: short_id_from_iri(&iri),
+        iri,
+        spec: literal_value(sol.get("spec")).unwrap_or_default(),
+        language: literal_value(sol.get("lang")).unwrap_or_default(),
+        version: literal_value(sol.get("ver")).unwrap_or_default(),
+    })
 }
 
 /// Fetch a single `dec:QueryTemplate` by id (shorthand `qt:foo` or full
@@ -167,7 +174,22 @@ pub fn fetch_query_template(
     id: &str,
 ) -> Result<QueryTemplate, QueryTemplateError> {
     let iri = resolve_id_to_iri(id);
-    let q = format!(
+    let q = build_fetch_query(&iri);
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| QueryTemplateError::Store(e.to_string()))?;
+    let QueryResults::Solutions(mut sols) = results else {
+        return Err(QueryTemplateError::TemplateNotFound { id: id.to_string() });
+    };
+    let Some(sol) = sols.next() else {
+        return Err(QueryTemplateError::TemplateNotFound { id: id.to_string() });
+    };
+    let sol = sol.map_err(|e| QueryTemplateError::Store(e.to_string()))?;
+    parse_fetch_solution(&sol, id, iri)
+}
+
+fn build_fetch_query(iri: &str) -> String {
+    format!(
         "PREFIX dec: <https://decision-cli.dev/ns#>\n\
          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\
          SELECT ?spec ?lang ?ver WHERE {{ \
@@ -186,26 +208,22 @@ pub fn fetch_query_template(
         spec_pred = DEC_QUERY_SPEC,
         lang_pred = DEC_QUERY_LANGUAGE,
         ver_pred = DEC_VERSION,
-    );
-    let results = store
-        .query(q.as_str())
-        .map_err(|e| QueryTemplateError::Store(e.to_string()))?;
-    let QueryResults::Solutions(mut sols) = results else {
-        return Err(QueryTemplateError::TemplateNotFound { id: id.to_string() });
-    };
-    let Some(sol) = sols.next() else {
-        return Err(QueryTemplateError::TemplateNotFound { id: id.to_string() });
-    };
-    let sol = sol.map_err(|e| QueryTemplateError::Store(e.to_string()))?;
+    )
+}
+
+fn parse_fetch_solution(
+    sol: &oxigraph::sparql::QuerySolution,
+    id: &str,
+    iri: String,
+) -> Result<QueryTemplate, QueryTemplateError> {
     let spec = literal_value(sol.get("spec")).ok_or(QueryTemplateError::MalformedTemplate {
         id: id.to_string(),
         field: "dec:querySpec",
     })?;
-    let language =
-        literal_value(sol.get("lang")).ok_or(QueryTemplateError::MalformedTemplate {
-            id: id.to_string(),
-            field: "dec:queryLanguage",
-        })?;
+    let language = literal_value(sol.get("lang")).ok_or(QueryTemplateError::MalformedTemplate {
+        id: id.to_string(),
+        field: "dec:queryLanguage",
+    })?;
     let version = literal_value(sol.get("ver")).ok_or(QueryTemplateError::MalformedTemplate {
         id: id.to_string(),
         field: "dec:version",
