@@ -21,6 +21,7 @@ use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
 use crate::core::ontology::EXTERNAL_ORIGIN_PROP;
+use crate::core::sbom_referrer::validate_oci_referrer_uri;
 use crate::core::vocab::{
     IRI_DEC_CANDIDATE_REGISTRY_REF, IRI_DEC_CLAIMED_BUILD_RUN_URL, IRI_DEC_CLAIMED_CAPABILITY_TAG,
     IRI_DEC_CLAIMED_SBOM_REF, IRI_DEC_CLAIMED_SIGNATURE_ISSUER,
@@ -97,9 +98,43 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<WorkerImageSubmi
     require_registry_ref(quads, subject, &mut v);
     require_min_one_capability_tag(quads, subject, &mut v);
     check_required_string_block(quads, subject, &mut v);
+    require_sbom_referrer_shape(quads, subject, &mut v);
     require_lifecycle_state(quads, subject, &mut v);
     require_external_origin(quads, subject, &mut v);
     v
+}
+
+/// FT-091: validate that every `claimed_sbom_ref` literal parses as a
+/// syntactically-correct OCI referrer descriptor. The base `sh:minCount 1`
+/// + non-empty check in [`check_required_string_block`] already rejects
+/// missing or empty values; this rule layers the FT-091 OCI-shape check
+/// on top so a Submission carrying `ghcr.io/foo:latest` is rejected at
+/// write time rather than at Curator-bundle assembly.
+fn require_sbom_referrer_shape(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<WorkerImageSubmissionViolation>,
+) {
+    for value in literal_values(quads, subject, IRI_DEC_CLAIMED_SBOM_REF) {
+        if value.is_empty() {
+            // Already reported by check_required_string_block.
+            continue;
+        }
+        if let Err(err) = validate_oci_referrer_uri(value.as_str()) {
+            for u in &err.violations {
+                violations.push(violation(
+                    subject,
+                    IRI_DEC_CLAIMED_SBOM_REF,
+                    &format!(
+                        "dec:claimed_sbom_ref is not a syntactically-correct OCI referrer \
+                         descriptor (FT-091 / ADR-059): [{code}] {detail}",
+                        code = u.code,
+                        detail = u.detail,
+                    ),
+                ));
+            }
+        }
+    }
 }
 
 /// Bundles the eight single-cardinality non-empty string properties FT-087

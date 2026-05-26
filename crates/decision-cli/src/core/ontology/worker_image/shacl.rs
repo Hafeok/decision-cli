@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
+use crate::core::sbom_referrer::validate_oci_referrer_uri;
 use crate::core::vocab::{
     ELIGIBILITY_CANDIDATE, ELIGIBILITY_DEPRECATED, ELIGIBILITY_PULLED, ELIGIBILITY_QUALIFIED,
     IRI_DEC_BUILD_RUN_URL, IRI_DEC_CAPABILITY_TAG, IRI_DEC_ELIGIBILITY_STATUS, IRI_DEC_REGISTRY_REF,
@@ -103,6 +104,7 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<WorkerImageViola
         &mut v,
     );
     require_string_one(quads, subject, IRI_DEC_SBOM_REF, "dec:sbom_ref", &mut v);
+    require_sbom_referrer_shape(quads, subject, &mut v);
     require_string_one(
         quads,
         subject,
@@ -274,6 +276,36 @@ fn require_eligibility(
                     "dec:eligibility_status must be one of {{qualified, candidate, deprecated, pulled}}, got {v:?}"
                 ),
             ));
+        }
+    }
+}
+
+/// FT-091: validate that the `dec:sbom_ref` literal parses as a
+/// syntactically-correct OCI referrer descriptor. Layered on top of the
+/// base non-empty check so admitted WorkerImages carry a discoverable
+/// SBOM referrer URI rather than an opaque string.
+fn require_sbom_referrer_shape(
+    quads: &[Quad],
+    subject: &NamedNode,
+    violations: &mut Vec<WorkerImageViolation>,
+) {
+    for value in literal_values(quads, subject, IRI_DEC_SBOM_REF) {
+        if value.is_empty() {
+            continue;
+        }
+        if let Err(err) = validate_oci_referrer_uri(value.as_str()) {
+            for u in &err.violations {
+                violations.push(violation(
+                    subject,
+                    IRI_DEC_SBOM_REF,
+                    &format!(
+                        "dec:sbom_ref is not a syntactically-correct OCI referrer descriptor \
+                         (FT-091 / ADR-059): [{code}] {detail}",
+                        code = u.code,
+                        detail = u.detail,
+                    ),
+                ));
+            }
         }
     }
 }

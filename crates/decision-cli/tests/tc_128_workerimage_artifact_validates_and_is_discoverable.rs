@@ -39,7 +39,7 @@ fn qualified_image(id: &str, tags: &[&str]) -> WorkerImage {
         ),
         signed_by_issuer: "https://token.actions.githubusercontent.com".to_string(),
         sbom_ref: format!(
-            "ghcr.io/example/{id}@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef:sbom"
+            "ghcr.io/example/{id}@sha256:cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe"
         ),
         conformance_audits: Vec::new(),
         eligibility_status: EligibilityStatus::Qualified,

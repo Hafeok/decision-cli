@@ -1,4 +1,4 @@
-# Reusable release workflow for decision-cli workers (FT-089 / ADR-058 / ADR-061).
+# Reusable release workflow for decision-cli workers (FT-089 / FT-091 / ADR-058 / ADR-059 / ADR-061).
 #
 # This workflow signs a worker OCI image keyless using cosign and the
 # ambient GitHub Actions OIDC token, then records the resulting Sigstore
@@ -9,12 +9,18 @@
 #   2. signer identity is on the trust list (ADR-058),
 #   3. Rekor log inclusion.
 #
-# The full release flow (build OCI multi-arch, generate SBOM, push to
-# registry, submit the WorkerImageSubmission) is the responsibility of
-# FT-093 — this file is the slice-of-the-flow that FT-089 owns: the
-# signing primitives + identity capture. FT-093's workflow file calls
-# this one as a reusable workflow, passing the freshly-pushed image
-# reference.
+# It also generates a CycloneDX SBOM via syft and attaches it to the image
+# as an OCI referrer per OCI v1.1 (FT-091 / ADR-059), so the WorkerCurator's
+# bundle (FT-092) can name the SBOM and slice-3+ vulnerability gates can
+# fetch it on demand without re-deriving it. The attached SBOM is
+# discoverable via `cosign download sbom <image-ref>` and through the
+# registry's referrers API at the image digest.
+#
+# The full release flow (build OCI multi-arch, push to registry, submit the
+# WorkerImageSubmission) is the responsibility of FT-093 — this file owns
+# the signing primitives + identity capture (FT-089) and SBOM generation +
+# attachment (FT-091). FT-093's workflow file calls this one as a reusable
+# workflow, passing the freshly-pushed image reference.
 #
 # How worker repos consume this workflow:
 #
@@ -77,6 +83,11 @@ on:
         required: false
         type: string
         default: v2.4.0
+      syft_version:
+        description: Syft release tag to install for CycloneDX SBOM generation (FT-091 / ADR-059).
+        required: false
+        type: string
+        default: v1.14.0
     outputs:
       signature_subject:
         description: Fulcio certificate subject (workflow run identity).
@@ -90,6 +101,14 @@ on:
       rekor_log_index:
         description: Rekor transparency-log entry index.
         value: ${{ jobs.sign.outputs.rekor_log_index }}
+      sbom_ref:
+        description: >
+          OCI referrer descriptor URI for the attached CycloneDX SBOM
+          (FT-091 / ADR-059). Identical to the input image_ref by digest;
+          consumers resolve the attached SBOM via the referrers API at
+          this digest or via `cosign download sbom <ref>`. The
+          WorkerImageSubmission's claimed_sbom_ref field carries this URI.
+        value: ${{ jobs.sign.outputs.sbom_ref }}
 
 jobs:
   sign:
@@ -106,6 +125,7 @@ jobs:
       signature_issuer: ${{ steps.identity.outputs.signature_issuer }}
       rekor_entry_uuid: ${{ steps.sign.outputs.rekor_entry_uuid }}
       rekor_log_index: ${{ steps.sign.outputs.rekor_log_index }}
+      sbom_ref: ${{ steps.sbom.outputs.sbom_ref }}
     steps:
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
@@ -190,10 +210,80 @@ jobs:
           echo "rekor_log_index=${index}" >> "$GITHUB_OUTPUT"
           echo "Rekor entry: ${{ inputs.rekor_url }}/api/v1/log/entries/${uuid}"
 
+      - name: Install syft for CycloneDX SBOM generation
+        # FT-091 / ADR-059: every worker OCI image carries a CycloneDX
+        # SBOM attached as an OCI referrer (OCI v1.1) so the
+        # WorkerCurator's bundle can name it and slice-3+ vulnerability
+        # gates can fetch it on demand. syft is the reference producer
+        # for CycloneDX from container images.
+        uses: anchore/sbom-action/download-syft@v0
+        with:
+          syft-version: ${{ inputs.syft_version }}
+
+      - name: Generate CycloneDX SBOM
+        id: sbom_generate
+        # syft scans the image's filesystem layers and emits a
+        # CycloneDX-JSON document covering installed packages, language
+        # ecosystems, and OS distros. The file is uploaded as a workflow
+        # artifact alongside the cosign output for auditability; cosign
+        # attach in the next step is what makes it reachable from the
+        # registry.
+        run: |
+          set -euo pipefail
+          mkdir -p ./.sbom-out
+          syft "${{ inputs.image_ref }}" \
+            --output cyclonedx-json=./.sbom-out/sbom.cyclonedx.json
+          # Sanity-check the produced document so a downstream "attach"
+          # against an empty file fails fast and surfaces here, not at
+          # admission time on the orchestrator side.
+          if [ ! -s ./.sbom-out/sbom.cyclonedx.json ]; then
+            echo "::error::syft produced an empty CycloneDX SBOM file"
+            exit 1
+          fi
+          if ! head -c 4096 ./.sbom-out/sbom.cyclonedx.json | grep -q '"bomFormat" *: *"CycloneDX"'; then
+            echo "::error::syft output does not declare bomFormat=CycloneDX"
+            exit 1
+          fi
+          echo "OK: CycloneDX SBOM generated ($(wc -c < ./.sbom-out/sbom.cyclonedx.json) bytes)"
+
+      - name: Attach SBOM as OCI referrer
+        id: sbom
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+          COSIGN_YES: "true"
+        # `cosign attach sbom` attaches the CycloneDX document as an OCI
+        # artifact whose manifest's subject field points back to the
+        # image's digest, per OCI v1.1 referrers. After this step a
+        # caller can resolve the SBOM via the registry's referrers API
+        # at the image digest, or directly via
+        # `cosign download sbom <image-ref>` (which is the discovery
+        # path the WorkerCurator bundle relies on per ADR-059).
+        #
+        # The sbom_ref output is the digest-pinned image reference — the
+        # subject ref the referrers API resolves under. The
+        # WorkerImageSubmission carries this in claimed_sbom_ref;
+        # decision-cli's core::sbom_referrer validator (FT-091) admits
+        # it as a syntactically-correct OCI referrer descriptor URI.
+        run: |
+          set -euo pipefail
+          cosign attach sbom \
+            --sbom ./.sbom-out/sbom.cyclonedx.json \
+            --type cyclonedx \
+            "${{ inputs.image_ref }}"
+          echo "sbom_ref=${{ inputs.image_ref }}" >> "$GITHUB_OUTPUT"
+
       - name: Upload cosign signing artifacts
         uses: actions/upload-artifact@v4
         with:
           name: cosign-signing-artifacts
           path: ./.cosign-out/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyclonedx-sbom
+          path: ./.sbom-out/
           if-no-files-found: error
           retention-days: 30

@@ -16,7 +16,9 @@ fn well_formed_image() -> WorkerImage {
         compatible_roles: Vec::new(),
         signed_by_subject: "https://github.com/example/worker/.github/workflows/build.yml@refs/heads/main".to_string(),
         signed_by_issuer: "https://token.actions.githubusercontent.com".to_string(),
-        sbom_ref: "ghcr.io/example/worker@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef:sbom".to_string(),
+        // FT-091: SBOM referrer is a digest-pinned OCI reference — the
+        // image's referrers API resolves to the attached CycloneDX SBOM.
+        sbom_ref: "ghcr.io/example/worker@sha256:cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe".to_string(),
         conformance_audits: Vec::new(),
         eligibility_status: EligibilityStatus::Qualified,
         source_repo_uri: "https://github.com/example/worker".to_string(),

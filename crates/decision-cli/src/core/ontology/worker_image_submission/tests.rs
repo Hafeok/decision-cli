@@ -19,8 +19,10 @@ fn well_formed_submission() -> WorkerImageSubmission {
                 .to_string(),
         claimed_capability_tags: vec!["code-writer".to_string(), "implementer".to_string()],
         claimed_compatible_roles: Vec::new(),
+        // FT-091: SBOM referrer is a digest-pinned OCI reference — the
+        // subject image's referrers API resolves to the attached SBOM.
         claimed_sbom_ref:
-            "ghcr.io/example/worker@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef:sbom"
+            "ghcr.io/example/worker@sha256:cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe"
                 .to_string(),
         claimed_signature_subject:
             "https://github.com/example/worker/.github/workflows/build.yml@refs/heads/main"

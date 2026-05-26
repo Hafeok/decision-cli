@@ -23,6 +23,7 @@ pub mod oci_manifest;
 pub mod ontology;
 pub mod queries;
 pub mod role_catalog;
+pub mod sbom_referrer;
 pub mod scope;
 pub mod sparql;
 pub mod store;

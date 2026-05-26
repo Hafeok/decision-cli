@@ -40,7 +40,7 @@ fn well_formed_submission(id: &str) -> WorkerImageSubmission {
         claimed_capability_tags: vec!["code-writer".to_string(), "implementer".to_string()],
         claimed_compatible_roles: Vec::new(),
         claimed_sbom_ref: format!(
-            "ghcr.io/example/{id}@sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef:sbom"
+            "ghcr.io/example/{id}@sha256:cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe"
         ),
         claimed_signature_subject: format!(
             "https://github.com/example/{id}/.github/workflows/build.yml@refs/heads/main"
