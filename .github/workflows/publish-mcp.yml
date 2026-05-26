@@ -1,0 +1,144 @@
+# Publishes both server.json files to the official MCP registry after a
+# successful GitHub Release. Authored under FT-106 / ADR-067 — the slice
+# that preserves product-cli's distribution surface (registry name
+# `io.github.Hafeok/product-cli`) and introduces the peer entry for the
+# absorbed `dec` binary (`io.github.Hafeok/decision-cli`).
+#
+# Trigger: runs after the `Release` workflow completes (tag push). Can
+# also be invoked manually via `workflow_dispatch` to retry a failed
+# registry publish without re-running the full release.
+#
+# Per FT-106 §Phase 4 invariants:
+#   - The two publish steps are independent: a failure on one server.json
+#     does NOT block the other. `continue-on-error: true` per step.
+#   - MCPB-target pinned to x86_64-unknown-linux-gnu (MCP registry's
+#     current distribution model targets Linux x86_64).
+#   - The publisher (`mcp-publisher` v1.7.8) uses GitHub OIDC token
+#     exchange — no static credentials.
+#   - `fileSha256` and the version placeholders are substituted at
+#     publish time from the actual release artifact, not committed.
+
+name: Publish MCP servers
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.2.0) to publish for."
+        required: true
+
+permissions:
+  contents: read
+  id-token: write   # OIDC token for mcp-publisher login
+
+env:
+  MCPB_TARGET: x86_64-unknown-linux-gnu
+  MCP_PUBLISHER_VERSION: "1.7.8"
+
+jobs:
+  resolve-tag:
+    name: Resolve target tag
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Resolve tag from event
+        id: resolve
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          WORKFLOW_RUN_HEAD: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [ -n "${INPUT_TAG:-}" ]; then
+            tag="$INPUT_TAG"
+          else
+            tag="$WORKFLOW_RUN_HEAD"
+          fi
+          if [ -z "$tag" ]; then
+            echo "ERROR: could not resolve a target tag"
+            exit 1
+          fi
+          version="${tag#v}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish ${{ matrix.entry.crate }} server.json
+    needs: resolve-tag
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        entry:
+          - crate: product-cli
+            asset_prefix: product
+            server_json: crates/product-cli/server.json
+          - crate: decision-cli
+            asset_prefix: dec
+            server_json: crates/decision-cli/server.json
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcp-publisher
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}/mcp-publisher_${MCP_PUBLISHER_VERSION}_linux_amd64.tar.gz" \
+            -o mcp-publisher.tar.gz
+          tar -xzf mcp-publisher.tar.gz mcp-publisher
+          chmod +x mcp-publisher
+          ./mcp-publisher --version
+
+      - name: Download release asset and compute SHA-256
+        id: asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.resolve-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          asset_name="${{ matrix.entry.asset_prefix }}-${MCPB_TARGET}.tar.xz"
+          echo "Fetching asset $asset_name from release $TAG..."
+          gh release download "$TAG" --pattern "$asset_name" --output "$asset_name"
+          sha256=$(sha256sum "$asset_name" | awk '{print $1}')
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+          echo "asset=$asset_name" >> "$GITHUB_OUTPUT"
+
+      - name: Substitute placeholders in server.json
+        env:
+          VERSION: ${{ needs.resolve-tag.outputs.version }}
+          SHA256: ${{ steps.asset.outputs.sha256 }}
+          SERVER_JSON: ${{ matrix.entry.server_json }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import json, os
+          path = os.environ["SERVER_JSON"]
+          version = os.environ["VERSION"]
+          sha = os.environ["SHA256"]
+          with open(path, "r", encoding="utf-8") as fh:
+              doc = json.load(fh)
+          doc["version"] = version
+          for pkg in doc.get("packages", []):
+              pkg["version"] = version
+              pkg["fileSha256"] = sha
+              if isinstance(pkg.get("identifier"), str):
+                  pkg["identifier"] = pkg["identifier"].replace("<PLACEHOLDER>", version)
+          with open(path, "w", encoding="utf-8") as fh:
+              json.dump(doc, fh, indent=2)
+              fh.write("\n")
+          print(f"Substituted version={version}, sha256={sha[:12]}…")
+          PYEOF
+          cat "$SERVER_JSON"
+
+      - name: Login to MCP registry via GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP registry
+        continue-on-error: true
+        env:
+          SERVER_JSON: ${{ matrix.entry.server_json }}
+        run: ./mcp-publisher publish --file "$SERVER_JSON"

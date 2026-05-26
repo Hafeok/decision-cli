@@ -2,12 +2,17 @@
 id: TC-181
 title: Both server.json files validate against the MCP registry schema on every PR
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-106
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-181-server-json-schema.sh
+runner-timeout: 60
+last-run: 2026-05-26T16:07:45.060367675+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.Hafeok/decision-cli",
+  "description": "Orchestration system for Decision-Driven Design — drives product-cli through the engineering process via LLM-backed role dispatch. Includes the absorbed product-cli surface; replaces io.github.Hafeok/product-cli for new installations.",
+  "repository": {
+    "url": "https://github.com/Hafeok/decision-cli",
+    "source": "github",
+    "id": "TBD-at-publish-time"
+  },
+  "version": "<PLACEHOLDER>",
+  "websiteUrl": "https://github.com/Hafeok/decision-cli",
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/Hafeok/decision-cli/releases/download/v<PLACEHOLDER>/dec-x86_64-unknown-linux-gnu.tar.xz?source=mcp-registry",
+      "version": "<PLACEHOLDER>",
+      "transport": {"type": "stdio"},
+      "fileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "runtimeArguments": [
+        {"type": "positional", "value": "mcp", "valueHint": "subcommand"}
+      ]
+    }
+  ]
+}

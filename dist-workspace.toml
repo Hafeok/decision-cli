@@ -1,0 +1,51 @@
+# cargo-dist workspace configuration for the absorbed decision-cli workspace.
+#
+# Authored by FT-106 / ADR-067. Source of truth for the GitHub Actions
+# `release.yml` workflow that builds per-platform archives on every tag
+# push. After editing this file, run `dist generate` to regenerate
+# `.github/workflows/release.yml`. See `CONTRIBUTING.md` for the
+# regeneration procedure.
+#
+# The members array names both binary-producing crates:
+#   - `crates/decision-cli` produces the `dec` binary (orchestration).
+#   - `crates/product-shim`  produces the `product` binary (deprecation
+#                             shim per FT-105 §Phase 5 / ADR-067).
+#
+# The `crates/product-cli/` crate is NOT a cargo-dist app: it is a
+# library re-exported by both `decision-cli` and `product-shim` and has
+# no `[[bin]]` target. Its version still tracks the lockstep group;
+# TC-182 §Scenario F asserts that drift across the three Cargo.toml
+# files fails CI before any tag push.
+#
+# Targets, installers, and hosting mirror the pre-absorption product-cli
+# configuration so existing download URLs and installer scripts continue
+# to resolve unchanged (FT-106 invariant: "No registry name change",
+# "Per-platform parity").
+
+[workspace]
+members = [
+    "cargo:crates/decision-cli",
+    "cargo:crates/product-shim",
+]
+
+[dist]
+# The preferred cargo-dist version to use in CI.
+cargo-dist-version = "0.31.0"
+# CI backends to support.
+ci = "github"
+# The installers to generate for each app.
+installers = ["shell", "powershell", "homebrew"]
+# Target platforms to build apps for (Rust target-triple).
+targets = [
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+]
+# Path that installers should place binaries in.
+install-path = "CARGO_HOME"
+# Whether to install an updater program.
+install-updater = false
+# Publish jobs to run in CI.
+pr-run-mode = "plan"

@@ -2,12 +2,17 @@
 id: TC-182
 title: Every release tag produces five target archives for both product and dec binaries, with lockstep version
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-106
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-182-release-artifact-parity.sh
+runner-timeout: 60
+last-run: 2026-05-26T16:07:45.060367675+00:00
+last-run-duration: 0.0s
 ---
 
 ## Claim

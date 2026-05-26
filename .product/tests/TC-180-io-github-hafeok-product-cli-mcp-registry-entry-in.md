@@ -2,12 +2,17 @@
 id: TC-180
 title: io.github.Hafeok/product-cli MCP registry entry installs a working product binary after FT-106 lands
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-106
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-180-mcp-registry-backwards-compat.sh
+runner-timeout: 120
+last-run: 2026-05-26T16:07:45.060367675+00:00
+last-run-duration: 0.1s
 ---
 
 ## Claim
