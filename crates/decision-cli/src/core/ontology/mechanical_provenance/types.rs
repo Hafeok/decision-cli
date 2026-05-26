@@ -1,4 +1,4 @@
-//! Universal mechanical-provenance value type and materialiser (FT-069).
+//! Universal mechanical-provenance materialiser plus its value type (FT-069).
 //!
 //! The harness's session-completion handler hands a `SessionAttribution`
 //! to GraphWriter, which calls [`materialise_quads`] to append the three

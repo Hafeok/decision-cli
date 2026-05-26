@@ -1,5 +1,5 @@
-//! Rust-side SHACL validators for `:BoundaryArtifactShape` and
-//! `:MigrationBackfillShape` (FT-071 / ADR-040 / ADR-042).
+//! Rust-side SHACL validators for the BoundaryArtifact shape family —
+//! `:BoundaryArtifactShape`, `:MigrationBackfillShape` (FT-071 / ADR-040 / ADR-042).
 //!
 //! Mirror the NodeShapes declared in `assets/shapes/boundary-artifact.ttl`:
 //!
@@ -153,7 +153,15 @@ fn check_is_migration_backfill(
             ),
         ));
     }
-    for (value, datatype) in &literals {
+    validate_is_migration_backfill_literals(subject, &literals, violations);
+}
+
+fn validate_is_migration_backfill_literals(
+    subject: &NamedNode,
+    literals: &[(String, String)],
+    violations: &mut Vec<BoundaryArtifactViolation>,
+) {
+    for (value, datatype) in literals {
         if datatype != IRI_XSD_BOOLEAN {
             violations.push(violation(
                 subject,

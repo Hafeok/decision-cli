@@ -22,6 +22,7 @@ pub mod capability;
 pub mod conformance_audit;
 pub mod coverage_waiver;
 mod helpers;
+mod invariants;
 pub mod mechanical_provenance;
 mod per_type_shapes;
 pub mod role_binding;
@@ -44,11 +45,10 @@ use oxigraph::sparql::QueryResults;
 use oxigraph::store::Store;
 use thiserror::Error;
 
-use helpers::{
-    extract_version_info, invariant_boundary_artifact_shapes_present,
-    invariant_mechanical_provenance_shapes_present, invariant_motivational_predicates_present,
-    invariant_ontology_classes_present, invariant_shapes_present, load_turtle_into_graph,
-    sha256_hex_of_assets,
+use helpers::{extract_version_info, load_turtle_into_graph, sha256_hex_of_assets};
+use invariants::{
+    invariant_boundary_artifact_shapes_present, invariant_mechanical_provenance_shapes_present,
+    invariant_motivational_predicates_present, invariant_ontology_classes_present, invariant_shapes_present,
 };
 use per_type_shapes::invariant_per_type_shape_files_present;
 

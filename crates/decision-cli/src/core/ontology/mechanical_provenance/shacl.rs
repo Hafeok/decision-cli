@@ -133,7 +133,15 @@ fn check_generated_at_time(
             ),
         ));
     }
-    for (value, datatype) in &literals {
+    validate_generated_at_time_literals(subject, &literals, violations);
+}
+
+fn validate_generated_at_time_literals(
+    subject: &NamedNode,
+    literals: &[(String, String)],
+    violations: &mut Vec<MechanicalProvenanceViolation>,
+) {
+    for (value, datatype) in literals {
         if datatype != IRI_XSD_DATE_TIME {
             violations.push(violation(
                 subject,
