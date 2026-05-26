@@ -147,74 +147,13 @@ fn parse_worker_image(
 ) -> Result<WorkerImage, WorkerImageReadError> {
     let subject = NamedNode::new(iri).map_err(|e| WorkerImageReadError::Store(e.to_string()))?;
     require_type(&subject, quads)?;
-    let id = take_one_str(iri, quads, &subject, IRI_DEC_WORKER_IMAGE_ID, "dec:worker_image_id")?;
-    let name = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_WORKER_IMAGE_NAME,
-        "dec:worker_image_name",
-    )?;
-    let version = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_WORKER_IMAGE_VERSION,
-        "dec:worker_image_version",
-    )?;
-    let registry_ref = take_one_str(iri, quads, &subject, IRI_DEC_REGISTRY_REF, "dec:registry_ref")?;
+    let (id, name, version, registry_ref) = parse_image_identity(iri, &subject, quads)?;
+    let (signed_by_subject, signed_by_issuer, sbom_ref) = parse_image_signing(iri, &subject, quads)?;
+    let (source_repo_uri, source_commit_hash, build_run_url) = parse_image_source(iri, &subject, quads)?;
+    let eligibility_status = parse_eligibility(iri, &subject, quads)?;
     let capability_tags = take_all_str(quads, &subject, IRI_DEC_CAPABILITY_TAG);
     let compatible_roles = take_all_iri(quads, &subject, IRI_DEC_COMPATIBLE_ROLE);
-    let signed_by_subject = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_SIGNED_BY_SUBJECT,
-        "dec:signed_by_subject",
-    )?;
-    let signed_by_issuer = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_SIGNED_BY_ISSUER,
-        "dec:signed_by_issuer",
-    )?;
-    let sbom_ref = take_one_str(iri, quads, &subject, IRI_DEC_SBOM_REF, "dec:sbom_ref")?;
     let conformance_audits = take_all_iri(quads, &subject, IRI_DEC_CONFORMANCE_AUDIT);
-    let status_raw = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_ELIGIBILITY_STATUS,
-        "dec:eligibility_status",
-    )?;
-    let eligibility_status = EligibilityStatus::try_from_str(&status_raw).ok_or_else(|| {
-        WorkerImageReadError::Malformed {
-            iri: iri.to_string(),
-            detail: format!("unknown dec:eligibility_status value {status_raw:?}"),
-        }
-    })?;
-    let source_repo_uri = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_SOURCE_REPO_URI,
-        "dec:source_repo_uri",
-    )?;
-    let source_commit_hash = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_SOURCE_COMMIT_HASH,
-        "dec:source_commit_hash",
-    )?;
-    let build_run_url = take_one_str(
-        iri,
-        quads,
-        &subject,
-        IRI_DEC_BUILD_RUN_URL,
-        "dec:build_run_url",
-    )?;
     Ok(WorkerImage {
         id,
         name,
@@ -230,6 +169,52 @@ fn parse_worker_image(
         source_repo_uri,
         source_commit_hash,
         build_run_url,
+    })
+}
+
+fn parse_image_identity(
+    iri: &str,
+    subject: &NamedNode,
+    quads: &[Quad],
+) -> Result<(String, String, String, String), WorkerImageReadError> {
+    let id = take_one_str(iri, quads, subject, IRI_DEC_WORKER_IMAGE_ID, "dec:worker_image_id")?;
+    let name = take_one_str(iri, quads, subject, IRI_DEC_WORKER_IMAGE_NAME, "dec:worker_image_name")?;
+    let version = take_one_str(iri, quads, subject, IRI_DEC_WORKER_IMAGE_VERSION, "dec:worker_image_version")?;
+    let registry_ref = take_one_str(iri, quads, subject, IRI_DEC_REGISTRY_REF, "dec:registry_ref")?;
+    Ok((id, name, version, registry_ref))
+}
+
+fn parse_image_signing(
+    iri: &str,
+    subject: &NamedNode,
+    quads: &[Quad],
+) -> Result<(String, String, String), WorkerImageReadError> {
+    let signed_by_subject = take_one_str(iri, quads, subject, IRI_DEC_SIGNED_BY_SUBJECT, "dec:signed_by_subject")?;
+    let signed_by_issuer = take_one_str(iri, quads, subject, IRI_DEC_SIGNED_BY_ISSUER, "dec:signed_by_issuer")?;
+    let sbom_ref = take_one_str(iri, quads, subject, IRI_DEC_SBOM_REF, "dec:sbom_ref")?;
+    Ok((signed_by_subject, signed_by_issuer, sbom_ref))
+}
+
+fn parse_image_source(
+    iri: &str,
+    subject: &NamedNode,
+    quads: &[Quad],
+) -> Result<(String, String, String), WorkerImageReadError> {
+    let source_repo_uri = take_one_str(iri, quads, subject, IRI_DEC_SOURCE_REPO_URI, "dec:source_repo_uri")?;
+    let source_commit_hash = take_one_str(iri, quads, subject, IRI_DEC_SOURCE_COMMIT_HASH, "dec:source_commit_hash")?;
+    let build_run_url = take_one_str(iri, quads, subject, IRI_DEC_BUILD_RUN_URL, "dec:build_run_url")?;
+    Ok((source_repo_uri, source_commit_hash, build_run_url))
+}
+
+fn parse_eligibility(
+    iri: &str,
+    subject: &NamedNode,
+    quads: &[Quad],
+) -> Result<EligibilityStatus, WorkerImageReadError> {
+    let status_raw = take_one_str(iri, quads, subject, IRI_DEC_ELIGIBILITY_STATUS, "dec:eligibility_status")?;
+    EligibilityStatus::try_from_str(&status_raw).ok_or_else(|| WorkerImageReadError::Malformed {
+        iri: iri.to_string(),
+        detail: format!("unknown dec:eligibility_status value {status_raw:?}"),
     })
 }
 

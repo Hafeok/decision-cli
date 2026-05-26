@@ -77,56 +77,44 @@ fn worker_image_subjects(quads: &[Quad]) -> Vec<NamedNode> {
 
 fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<WorkerImageViolation> {
     let mut v = Vec::new();
-    require_string_one(quads, subject, IRI_DEC_WORKER_IMAGE_ID, "dec:worker_image_id", &mut v);
-    require_string_one(
-        quads,
-        subject,
-        IRI_DEC_WORKER_IMAGE_NAME,
-        "dec:worker_image_name",
-        &mut v,
-    );
-    require_semver(quads, subject, &mut v);
-    require_registry_ref(quads, subject, &mut v);
-    require_eligibility(quads, subject, &mut v);
-    require_min_one_capability_tag(quads, subject, &mut v);
-    require_string_one(
-        quads,
-        subject,
-        IRI_DEC_SIGNED_BY_SUBJECT,
-        "dec:signed_by_subject",
-        &mut v,
-    );
-    require_string_one(
-        quads,
-        subject,
-        IRI_DEC_SIGNED_BY_ISSUER,
-        "dec:signed_by_issuer",
-        &mut v,
-    );
-    require_string_one(quads, subject, IRI_DEC_SBOM_REF, "dec:sbom_ref", &mut v);
-    require_sbom_referrer_shape(quads, subject, &mut v);
-    require_string_one(
-        quads,
-        subject,
-        IRI_DEC_SOURCE_REPO_URI,
-        "dec:source_repo_uri",
-        &mut v,
-    );
-    require_string_one(
-        quads,
-        subject,
-        IRI_DEC_SOURCE_COMMIT_HASH,
-        "dec:source_commit_hash",
-        &mut v,
-    );
-    require_string_one(
-        quads,
-        subject,
-        IRI_DEC_BUILD_RUN_URL,
-        "dec:build_run_url",
-        &mut v,
-    );
+    require_identity_fields(quads, subject, &mut v);
+    require_signing_fields(quads, subject, &mut v);
+    require_source_fields(quads, subject, &mut v);
     v
+}
+
+fn require_identity_fields(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<WorkerImageViolation>,
+) {
+    require_string_one(quads, subject, IRI_DEC_WORKER_IMAGE_ID, "dec:worker_image_id", v);
+    require_string_one(quads, subject, IRI_DEC_WORKER_IMAGE_NAME, "dec:worker_image_name", v);
+    require_semver(quads, subject, v);
+    require_registry_ref(quads, subject, v);
+    require_eligibility(quads, subject, v);
+    require_min_one_capability_tag(quads, subject, v);
+}
+
+fn require_signing_fields(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<WorkerImageViolation>,
+) {
+    require_string_one(quads, subject, IRI_DEC_SIGNED_BY_SUBJECT, "dec:signed_by_subject", v);
+    require_string_one(quads, subject, IRI_DEC_SIGNED_BY_ISSUER, "dec:signed_by_issuer", v);
+    require_string_one(quads, subject, IRI_DEC_SBOM_REF, "dec:sbom_ref", v);
+    require_sbom_referrer_shape(quads, subject, v);
+}
+
+fn require_source_fields(
+    quads: &[Quad],
+    subject: &NamedNode,
+    v: &mut Vec<WorkerImageViolation>,
+) {
+    require_string_one(quads, subject, IRI_DEC_SOURCE_REPO_URI, "dec:source_repo_uri", v);
+    require_string_one(quads, subject, IRI_DEC_SOURCE_COMMIT_HASH, "dec:source_commit_hash", v);
+    require_string_one(quads, subject, IRI_DEC_BUILD_RUN_URL, "dec:build_run_url", v);
 }
 
 fn require_string_one(
