@@ -1,0 +1,28 @@
+# Graph-accepted auto-dispatch subscription seed (FT-100).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs).
+# Fires on `dec:VerificationGraphCreated` events for newly committed
+# `dec:VerificationGraph` artifacts; the handler resolves the env set,
+# consults the dedup ledger, and emits one
+# `dec:VerifyGraphRunDispatchEvent` per `(graph, env)` tuple. The
+# orchestrator then invokes `core::verify::runner::run_graph`.
+#
+# - oxi:selectQuery   : matches VerificationGraph artifacts.
+# - oxi:mode "async"  : the runner is dispatched out-of-process; the
+#                       slice-2.5 verb path is the same handler.
+# - oxi:handler       : opaque tag the harness binds to the
+#                       graph_accepted delivery handler
+#                       (core::subscriptions::graph_accepted_dispatch).
+
+@prefix oxi:  <https://decision-cli.dev/oxi-events/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://decision-cli.dev/ns/subscription/graph-accepted-dispatch>
+    a oxi:Subscription ;
+    rdfs:label "verify-graph-runner auto-dispatch on VerificationGraph accept (FT-100)" ;
+    oxi:selectQuery """PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?graph WHERE {
+  ?graph a dec:VerificationGraph .
+}""" ;
+    oxi:mode "async" ;
+    oxi:handler "graph-accepted-dispatch" .

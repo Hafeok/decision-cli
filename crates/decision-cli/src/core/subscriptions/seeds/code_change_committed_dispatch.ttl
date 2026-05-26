@@ -1,0 +1,28 @@
+# Code-change-committed auto-dispatch subscription seed (FT-100).
+#
+# Seeded into the orchestration store by `dec init` (init/pipeline.rs).
+# Fires on `dec:CodeChangeCommitted` events emitted at the end of an
+# implementer run (FT-017). The handler enumerates every covering
+# `dec:VerificationGraph` for the targeted feature, schedules a per-
+# `(graph, env)` runner dispatch, composes the per-graph results through
+# FT-097's aggregation rule, and writes one aggregate session per
+# CodeChange.
+#
+# - oxi:selectQuery   : matches CodeChange artifacts.
+# - oxi:mode "async"  : the runner is dispatched out-of-process.
+# - oxi:handler       : opaque tag the harness binds to the
+#                       code_change_committed delivery handler
+#                       (core::subscriptions::code_change_committed_dispatch).
+
+@prefix oxi:  <https://decision-cli.dev/oxi-events/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://decision-cli.dev/ns/subscription/code-change-committed-dispatch>
+    a oxi:Subscription ;
+    rdfs:label "verify-graph-runner auto-dispatch on CodeChange commit (FT-100)" ;
+    oxi:selectQuery """PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?codeChange WHERE {
+  ?codeChange a dec:CodeChange .
+}""" ;
+    oxi:mode "async" ;
+    oxi:handler "code-change-committed-dispatch" .

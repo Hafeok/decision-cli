@@ -14,9 +14,10 @@ use super::{
     bootstrap_catalog, bootstrap_catalog::BootstrapCatalogArgs, check_goal,
     check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd, feedback,
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
-    mcp, mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, query,
-    query::QueryCmd, session, session::SessionCmd, sparql, sparql::SparqlArgs, status, verify,
-    verify::VerifyCmd, workers, workers::WorkersCmd,
+    internal_dispatch, internal_dispatch::InternalDispatchCmd, mcp, mcp::McpCmd, migrate,
+    migrate::MigrateCmd, preflight, preflight::PreflightArgs, query, query::QueryCmd, session,
+    session::SessionCmd, sparql, sparql::SparqlArgs, status, verify, verify::VerifyCmd, workers,
+    workers::WorkersCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -86,6 +87,9 @@ pub enum Command {
     /// Worker container lifecycle (FT-095 — slice 1: `run` only).
     #[command(subcommand)]
     Workers(WorkersCmd),
+    /// Hidden helper (FT-100 tests): drive subscription dispatch handlers.
+    #[command(name = "_dispatch", hide = true, subcommand)]
+    InternalDispatch(InternalDispatchCmd),
 }
 
 /// Route a parsed `Command` into the matching feature module. The
@@ -109,5 +113,6 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Migrate(cmd) => migrate::run(workdir, cmd),
         Command::Query(cmd) => query::run(workdir, cmd),
         Command::Workers(cmd) => workers::run(workdir, cmd),
+        Command::InternalDispatch(cmd) => internal_dispatch::run(workdir, cmd),
     }
 }

@@ -9,6 +9,7 @@ pub mod feedback;
 pub mod health;
 pub mod implement;
 pub mod init;
+pub mod internal_dispatch;
 pub mod mcp;
 pub mod migrate;
 pub mod preflight;

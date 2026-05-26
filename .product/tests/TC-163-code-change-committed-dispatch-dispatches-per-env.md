@@ -2,12 +2,17 @@
 id: TC-163
 title: code_change_committed_dispatch dispatches per env and writes an aggregate session with composed verdict
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-100
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-163-code-change-committed-dispatch.sh
+runner-timeout: 180
+last-run: 2026-05-26T14:37:12.345693727+00:00
+last-run-duration: 7.8s
 ---
 
 ## Claim

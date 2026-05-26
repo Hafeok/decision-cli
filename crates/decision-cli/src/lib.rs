@@ -17,6 +17,8 @@ pub mod features;
 pub use crate::core::bundle;
 pub use crate::core::bundled;
 pub use crate::core::scope;
+pub use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
+pub use crate::core::subscriptions;
 pub use crate::core::vocab;
 pub use crate::core::worker;
 pub use features::events;

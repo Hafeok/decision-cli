@@ -2,12 +2,17 @@
 id: TC-162
 title: graph_accepted_dispatch emits exactly one VerifyGraphRunDispatchEvent per accepted graph and opens one Session
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-100
   adrs: []
 phase: 1
+runner: bash
+runner-args: tests/scripts/tc-162-graph-accepted-dispatch.sh
+runner-timeout: 180
+last-run: 2026-05-26T14:37:12.345693727+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

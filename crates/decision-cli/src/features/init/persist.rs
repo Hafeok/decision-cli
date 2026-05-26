@@ -197,6 +197,11 @@ pub(super) fn seed_bootstrap_subscriptions(
     // dedup ledger, and emits one VerifyGraphAuthorDispatchEvent per
     // uncovered (feature, env) pair.
     quads.extend(crate::core::subscriptions::verify_graph_author_dispatch::seed_quads());
+    // FT-100: verify-graph-runner auto-dispatch subscriptions.
+    // graph_accepted_dispatch fires on dec:VerificationGraph create/update;
+    // code_change_committed_dispatch fires on dec:CodeChangeCommitted.
+    quads.extend(crate::core::subscriptions::graph_accepted_dispatch::seed_quads());
+    quads.extend(crate::core::subscriptions::code_change_committed_dispatch::seed_quads());
     store.transaction(|mut tx| {
         for q in &quads {
             tx.insert(q.as_ref())?;

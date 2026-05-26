@@ -23,13 +23,28 @@
 //! outbox (FT-003) and SSE transport (FT-004) deliver it to the verifier
 //! worker.
 
+pub mod code_change_committed_dispatch;
 pub mod feedback_resume;
+pub mod graph_accepted_dispatch;
 pub mod verifier_dispatch;
 pub mod verify_graph_author_dispatch;
 
+pub use code_change_committed_dispatch::{
+    dispatch_for_code_change, AggregateOutcome as CodeChangeAggregateOutcome,
+    CodeChangeCommittedDispatchConfig, CodeChangeDispatchError,
+    HANDLER as CODE_CHANGE_COMMITTED_DISPATCH_HANDLER,
+    SEED_TTL as CODE_CHANGE_COMMITTED_DISPATCH_SEED_TTL,
+    SUBSCRIPTION_IRI as CODE_CHANGE_COMMITTED_DISPATCH_SUBSCRIPTION_IRI,
+};
 pub use feedback_resume::{
     handle_pending as handle_feedback_resume, FeedbackResumeError, HandledGroup,
     FEEDBACK_RESUME_HANDLER, FEEDBACK_RESUME_SEED_TTL, FEEDBACK_RESUME_SUBSCRIPTION_IRI,
+};
+pub use graph_accepted_dispatch::{
+    dispatch_for_graph, DispatchOutcome as GraphAcceptedDispatchOutcome, DispatchedTuple,
+    GraphAcceptedDispatchConfig, GraphAcceptedDispatchError,
+    HANDLER as GRAPH_ACCEPTED_DISPATCH_HANDLER, SEED_TTL as GRAPH_ACCEPTED_DISPATCH_SEED_TTL,
+    SUBSCRIPTION_IRI as GRAPH_ACCEPTED_DISPATCH_SUBSCRIPTION_IRI,
 };
 pub use verifier_dispatch::{
     already_dispatched, dispatch_pending_groups, emit_verifier_dispatch_event,
