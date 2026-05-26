@@ -34,6 +34,7 @@ pub mod verify;
 pub mod vocab;
 pub mod worker;
 pub mod worker_curator;
+pub mod worker_manifest;
 
 pub use ontology::{OntologyError, OntologyHandle, ONTOLOGY_VERSION};
 pub use scope::{ActiveScope, ScopeError};

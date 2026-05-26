@@ -1,0 +1,16 @@
+# TC-135 fixture: canonical FT-093 worker manifest. Mirrors
+# `docs/templates/worker.toml` verbatim so a template-side drift
+# surfaces in the test diff.
+
+[worker]
+name = "implementer"
+sdk_version = "0.3.0"
+wire_protocol = "1.0"
+
+[capabilities]
+tags = ["code-writer", "frontier-reasoning"]
+compatible_roles = ["https://decision-cli.dev/ns/role/implementer"]
+
+[runtime]
+kind = "subscribed"
+entrypoint = "implementer.main:run"

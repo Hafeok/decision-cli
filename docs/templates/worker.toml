@@ -1,0 +1,40 @@
+# Canonical `worker.toml` manifest shape for the FT-093 reusable release
+# workflow. Every worker repo carries a `worker.toml` at the path passed
+# as `worker_manifest_path` to the workflow.
+#
+# Parsed by `core::worker_manifest::parse_worker_manifest`; the field
+# names + shape are pinned by `core::worker_manifest::types` so a typo
+# surfaces as a structured parse error rather than silent default.
+# TC-135 asserts this template parses cleanly and produces the same
+# capability-tag set / runtime kind / entrypoint when round-tripped
+# through the assembler.
+
+[worker]
+# Short identifier. Drives the path-filtered release trigger in monorepo
+# layouts (`workers/<name>/**`) and the scoped semver tag prefix
+# (`<name>-v<semver>`). MUST match the `worker_name` workflow input.
+name = "implementer"
+# Worker SDK version baked into the image. Surfaces as the
+# `ddd.sdk-version` OCI label per FT-088.
+sdk_version = "0.3.0"
+# SSE/POST wire-protocol version. Surfaces as the `ddd.wire-protocol`
+# OCI label per FT-088. Defaults to `"1.0"` when omitted.
+wire_protocol = "1.0"
+
+[capabilities]
+# Capability tag claims. Each tag becomes a separate
+# `ddd.capability-tag.<tag>=true` OCI label (ADR-057) and a
+# `dec:claimed_capability_tag` literal on the Submission.
+tags = ["code-writer", "frontier-reasoning"]
+# `dec:Role` identifiers the worker claims compatibility with. Empty is
+# permitted; the WorkerCurator decides bindings.
+compatible_roles = ["https://decision-cli.dev/ns/role/implementer"]
+
+[runtime]
+# Slice 1 supports only the long-running `subscribed` shape. `invoked`
+# is reserved for a future Dagger landing per ADR-065 and is refused at
+# assembly time.
+kind = "subscribed"
+# Module / function the container entrypoint invokes. Worker-language-
+# specific.
+entrypoint = "implementer.main:run"

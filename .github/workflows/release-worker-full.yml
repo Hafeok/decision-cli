@@ -1,0 +1,344 @@
+# Reusable end-to-end release workflow for decision-cli workers (FT-093 /
+# ADR-061 / ADR-044).
+#
+# This is the workflow each worker repo's `.github/workflows/release.yml`
+# calls on tag push. It owns the full slice-1 release flow:
+#
+#   1. Checkout the worker repo at the tagged ref and set up the build
+#      environment (QEMU + buildx for multi-arch builds).
+#   2. Read the worker's `worker.toml` manifest (capability tags,
+#      compatible roles, SDK + wire-protocol versions, runtime
+#      entrypoint) — the field shape is pinned by
+#      `core::worker_manifest` (FT-093) and validated by TC-135.
+#   3. Build the OCI image multi-arch via buildx, injecting the FT-088
+#      labels & annotations (`ddd.capability-tag.<tag>=true`,
+#      `ddd.sdk-version`, `ddd.wire-protocol`, plus the OCI source +
+#      revision annotations).
+#   4. Push the image to ghcr.io with the scoped semver tag
+#      (`<worker>-v<semver>`) and capture the resulting digest so every
+#      subsequent step pins by digest, not by mutable tag.
+#   5. Generate the CycloneDX SBOM (syft) and sign the image keyless
+#      (cosign + ambient GitHub OIDC) and attach the SBOM as an OCI
+#      referrer — delegated to the FT-089 / FT-091 signing primitive
+#      workflow at `.github/workflows/release-worker.yml`.
+#   6. POST a `WorkerImageSubmission` to pipeline-cli's `/submissions`
+#      endpoint (FT-094) carrying registry_ref, capability_tags,
+#      compatible_roles, sbom_ref, sigstore identity, and provenance.
+#      The payload field-mapping is fixed by
+#      `core::worker_manifest::assemble_submission_payload`; this
+#      workflow's curl command and the rust assembler agree by TC-135
+#      contract.
+#
+# Worker repos consume this workflow with a one-screen
+# `.github/workflows/release.yml` of their own:
+#
+#   name: release
+#   on:
+#     push:
+#       tags: ['implementer-v*.*.*']
+#   jobs:
+#     release:
+#       uses: Hafeok/decision-cli/.github/workflows/release-worker-full.yml@v1
+#       permissions:
+#         id-token: write    # cosign keyless OIDC
+#         contents: read     # checkout
+#         packages: write    # ghcr push
+#       with:
+#         worker_name: implementer
+#         worker_manifest_path: workers/implementer/worker.toml
+#         worker_dockerfile_path: workers/implementer/Dockerfile
+#         image_repo: ghcr.io/example/implementer
+#         submission_endpoint: https://pipeline-cli.example.dev/submissions
+#       secrets:
+#         submission_token: ${{ secrets.PIPELINE_SUBMISSION_TOKEN }}
+#
+# Pinning to `@v1` is the explicit-opt-in contract per ADR-061: revisions
+# to the reusable workflow are landed as new tags (`@v2`, `@v3`, ...) and
+# worker repos move at their own pace. ADR-013 keeps each step short and
+# single-purpose; ADR-016's slice-level SDP applies to the substrate this
+# workflow consumes (`core::worker_manifest`, `core::sbom_referrer`,
+# `core::oci_manifest`) — none of which depends on a sibling feature.
+
+name: release-worker-full (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      worker_name:
+        description: >
+          Short worker identifier. Drives the path-filtered release
+          trigger in monorepo layouts (`workers/<name>/**`) and the
+          scoped semver tag prefix (`<name>-v<semver>`). MUST match
+          `[worker].name` in the manifest.
+        required: true
+        type: string
+      worker_manifest_path:
+        description: >
+          Repo-relative path to the worker's `worker.toml` manifest.
+        required: true
+        type: string
+      worker_dockerfile_path:
+        description: >
+          Repo-relative path to the worker's Dockerfile. The base
+          image (`pipeline-worker-base:<version>`) is expected to be
+          declared in the Dockerfile per FT-088.
+        required: true
+        type: string
+      image_repo:
+        description: >
+          Registry repository to push to, e.g. `ghcr.io/example/implementer`.
+          The image tag is derived from the triggering ref.
+        required: true
+        type: string
+      submission_endpoint:
+        description: >
+          pipeline-cli's `POST /submissions` endpoint URL (FT-094).
+        required: true
+        type: string
+      platforms:
+        description: >
+          Comma-separated platforms passed to `docker buildx build
+          --platform`. Default is the FT-088 minimum
+          (`linux/amd64,linux/arm64`).
+        required: false
+        type: string
+        default: linux/amd64,linux/arm64
+      cosign_version:
+        description: cosign release tag.
+        required: false
+        type: string
+        default: v2.4.0
+      syft_version:
+        description: syft release tag.
+        required: false
+        type: string
+        default: v1.14.0
+    secrets:
+      submission_token:
+        description: >
+          Bearer token issued by pipeline-cli for this worker repo
+          (FT-094). Identity-scoped to the repo's source URL.
+        required: true
+    outputs:
+      registry_ref:
+        description: Digest-pinned OCI reference of the pushed image.
+        value: ${{ jobs.build_and_push.outputs.registry_ref }}
+      sbom_ref:
+        description: SBOM referrer descriptor URI.
+        value: ${{ jobs.sign.outputs.sbom_ref }}
+      signature_subject:
+        description: Sigstore Fulcio subject of the keyless signature.
+        value: ${{ jobs.sign.outputs.signature_subject }}
+      submission_id:
+        description: Submission id returned by `POST /submissions`.
+        value: ${{ jobs.submit.outputs.submission_id }}
+      dispatch_event_id:
+        description: WorkerCurator dispatch event id returned by `POST /submissions`.
+        value: ${{ jobs.submit.outputs.dispatch_event_id }}
+
+jobs:
+  build_and_push:
+    name: Build OCI multi-arch + push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      registry_ref: ${{ steps.push.outputs.registry_ref }}
+      image_tag: ${{ steps.derive.outputs.image_tag }}
+      capability_tag_labels: ${{ steps.manifest.outputs.capability_tag_labels }}
+      sdk_version: ${{ steps.manifest.outputs.sdk_version }}
+      wire_protocol: ${{ steps.manifest.outputs.wire_protocol }}
+      capability_tags_json: ${{ steps.manifest.outputs.capability_tags_json }}
+      compatible_roles_json: ${{ steps.manifest.outputs.compatible_roles_json }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image tag from triggering ref
+        id: derive
+        # Scoped semver tag per FT-093: a push to `implementer-v1.2.0`
+        # produces image tag `v1.2.0`. The `<name>-` prefix is stripped
+        # so the resulting tag is a clean semver consumable by registry
+        # browsers and downstream pinning.
+        run: |
+          set -euo pipefail
+          ref="${GITHUB_REF#refs/tags/}"
+          prefix="${{ inputs.worker_name }}-"
+          if [[ "$ref" != ${prefix}* ]]; then
+            echo "::error::Triggering tag $ref does not start with expected prefix '$prefix'"
+            exit 1
+          fi
+          tag="${ref#${prefix}}"
+          echo "image_tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "image: ${{ inputs.image_repo }}:${tag}"
+
+      - name: Read manifest (TOML → label flags + JSON capability lists)
+        id: manifest
+        # Hand-rolled parser for the FT-093 manifest shape, mirroring
+        # core::worker_manifest::parse. Emits:
+        #   - capability_tag_labels: a space-separated string of
+        #     `--label ddd.capability-tag.<tag>=true` for buildx.
+        #   - capability_tags_json / compatible_roles_json: JSON arrays
+        #     the `submit` job lifts into the Submission payload.
+        #   - sdk_version / wire_protocol: scalar fields for buildx
+        #     labels.
+        run: |
+          set -euo pipefail
+          path="${{ inputs.worker_manifest_path }}"
+          if [ ! -f "$path" ]; then
+            echo "::error::manifest not found at $path"
+            exit 1
+          fi
+
+          # Verify the manifest's [worker].name matches the workflow input
+          # so a misrouted release surfaces before the build kicks off.
+          declared_name=$(awk -F'=' '/^\s*name\s*=/{gsub(/[" ]/,"",$2); print $2; exit}' "$path")
+          if [ "$declared_name" != "${{ inputs.worker_name }}" ]; then
+            echo "::error::[worker].name=$declared_name does not match worker_name input ${{ inputs.worker_name }}"
+            exit 1
+          fi
+
+          sdk_version=$(awk -F'=' '/^\s*sdk_version\s*=/{gsub(/[" ]/,"",$2); print $2; exit}' "$path")
+          wire_protocol=$(awk -F'=' '/^\s*wire_protocol\s*=/{gsub(/[" ]/,"",$2); print $2; exit}' "$path")
+          : "${wire_protocol:=1.0}"
+
+          # Extract the bracketed array bodies for tags + compatible_roles.
+          tags_raw=$(awk '/^\s*tags\s*=/{print; exit}' "$path")
+          roles_raw=$(awk '/^\s*compatible_roles\s*=/{print; exit}' "$path")
+
+          # Convert ["a","b"] into JSON arrays and into capability label flags.
+          tags_json=$(printf '%s' "$tags_raw" | sed -E 's/^[^=]*=\s*//' | tr -d ' ')
+          roles_json=$(printf '%s' "$roles_raw" | sed -E 's/^[^=]*=\s*//' | tr -d ' ')
+          : "${tags_json:=[]}"
+          : "${roles_json:=[]}"
+
+          # Build the buildx label flags. One label per capability tag.
+          label_flags=""
+          for tag in $(printf '%s' "$tags_json" | tr -d '[]"' | tr ',' ' '); do
+            [ -z "$tag" ] && continue
+            label_flags="${label_flags} --label ddd.capability-tag.${tag}=true"
+          done
+
+          echo "sdk_version=${sdk_version}" >> "$GITHUB_OUTPUT"
+          echo "wire_protocol=${wire_protocol}" >> "$GITHUB_OUTPUT"
+          echo "capability_tag_labels=${label_flags}" >> "$GITHUB_OUTPUT"
+          echo "capability_tags_json=${tags_json}" >> "$GITHUB_OUTPUT"
+          echo "compatible_roles_json=${roles_json}" >> "$GITHUB_OUTPUT"
+
+      - name: Build + push multi-arch OCI image
+        id: push
+        # buildx builds for the declared platforms, injects every FT-088
+        # label and the OCI source/revision annotations, pushes, and
+        # captures the resulting digest. `metadata-action` would
+        # normally derive labels but we drive them manually so the
+        # field names line up exactly with `core::oci_manifest::labels`.
+        run: |
+          set -euo pipefail
+          image_ref="${{ inputs.image_repo }}:${{ steps.derive.outputs.image_tag }}"
+          docker buildx build \
+            --file "${{ inputs.worker_dockerfile_path }}" \
+            --platform "${{ inputs.platforms }}" \
+            --tag "${image_ref}" \
+            --label "ddd.sdk-version=${{ steps.manifest.outputs.sdk_version }}" \
+            --label "ddd.wire-protocol=${{ steps.manifest.outputs.wire_protocol }}" \
+            ${{ steps.manifest.outputs.capability_tag_labels }} \
+            --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
+            --push \
+            --metadata-file ./.buildx-meta.json \
+            .
+
+          digest=$(jq -r '."containerimage.digest"' ./.buildx-meta.json)
+          if [ -z "$digest" ] || [ "$digest" = "null" ]; then
+            echo "::error::buildx did not report an image digest"
+            exit 1
+          fi
+          registry_ref="${{ inputs.image_repo }}@${digest}"
+          echo "registry_ref=${registry_ref}" >> "$GITHUB_OUTPUT"
+          echo "pushed: ${registry_ref}"
+
+  sign:
+    name: Cosign keyless sign + attach SBOM
+    needs: build_and_push
+    # Delegate to the FT-089 / FT-091 signing primitive workflow which
+    # owns the cosign + syft + cosign-attach steps. Outputs flow back to
+    # the `submit` job, which combines them with the manifest claims
+    # and POSTs the WorkerImageSubmission.
+    uses: ./.github/workflows/release-worker.yml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      image_ref: ${{ needs.build_and_push.outputs.registry_ref }}
+
+  submit:
+    name: POST WorkerImageSubmission
+    needs: [build_and_push, sign]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      submission_id: ${{ steps.post.outputs.submission_id }}
+      dispatch_event_id: ${{ steps.post.outputs.dispatch_event_id }}
+    steps:
+      - name: POST /submissions
+        id: post
+        # Field mapping comes from
+        # core::worker_manifest::assemble_submission_payload; TC-135
+        # asserts this curl payload and the assembler's output share
+        # one JSON shape via serde round-trip.
+        run: |
+          set -euo pipefail
+          body=$(jq -n \
+            --arg ref          '${{ needs.build_and_push.outputs.registry_ref }}' \
+            --arg sbom         '${{ needs.sign.outputs.sbom_ref }}' \
+            --arg sig_subject  '${{ needs.sign.outputs.signature_subject }}' \
+            --arg sig_issuer   '${{ needs.sign.outputs.signature_issuer }}' \
+            --arg repo         '${{ github.server_url }}/${{ github.repository }}' \
+            --arg sha          '${{ github.sha }}' \
+            --arg run_url      '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+            --argjson tags     '${{ needs.build_and_push.outputs.capability_tags_json }}' \
+            --argjson roles    '${{ needs.build_and_push.outputs.compatible_roles_json }}' \
+            '{
+              candidate_registry_ref: $ref,
+              claimed_capability_tags: $tags,
+              claimed_compatible_roles: $roles,
+              claimed_sbom_ref: $sbom,
+              claimed_signature_subject: $sig_subject,
+              claimed_signature_issuer: $sig_issuer,
+              claimed_source_repo_uri: $repo,
+              claimed_source_commit_hash: $sha,
+              claimed_build_run_url: $run_url
+            }')
+
+          echo "Submitting to ${{ inputs.submission_endpoint }}"
+          response=$(curl -fsS \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.submission_token }}" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            "${{ inputs.submission_endpoint }}")
+
+          submission_id=$(printf '%s' "$response" | jq -r '.submission_id')
+          dispatch_event_id=$(printf '%s' "$response" | jq -r '.dispatch_event_id')
+          if [ -z "$submission_id" ] || [ "$submission_id" = "null" ]; then
+            echo "::error::POST /submissions returned no submission_id; body: $response"
+            exit 1
+          fi
+          echo "submission_id=${submission_id}" >> "$GITHUB_OUTPUT"
+          echo "dispatch_event_id=${dispatch_event_id}" >> "$GITHUB_OUTPUT"
+          echo "Submission accepted: ${submission_id} (dispatch event ${dispatch_event_id})"

@@ -1,0 +1,34 @@
+# Per-worker `.github/workflows/release.yml` template (FT-093 / ADR-061).
+#
+# Drop a copy into each worker repo (or under a monorepo's
+# `workers/<name>/.github/workflows/`) and edit only the `worker_name`,
+# `worker_manifest_path`, `worker_dockerfile_path`, and `image_repo`
+# inputs. The trigger filter pattern follows the scoped-semver
+# convention `<worker>-v<semver>`.
+#
+# Pinning `@v1` is the explicit-opt-in contract per ADR-061: revisions
+# to the reusable workflow land as new tags (`@v2`, `@v3`, ...) and
+# worker repos move at their own pace.
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'implementer-v*.*.*'   # adjust prefix to match [worker].name
+
+jobs:
+  release:
+    uses: Hafeok/decision-cli/.github/workflows/release-worker-full.yml@v1
+    permissions:
+      id-token: write           # cosign keyless OIDC (FT-089)
+      contents: read            # checkout
+      packages: write           # ghcr push
+    with:
+      worker_name: implementer
+      worker_manifest_path: workers/implementer/worker.toml
+      worker_dockerfile_path: workers/implementer/Dockerfile
+      image_repo: ghcr.io/example/implementer
+      submission_endpoint: https://pipeline-cli.example.dev/submissions
+    secrets:
+      submission_token: ${{ secrets.PIPELINE_SUBMISSION_TOKEN }}
