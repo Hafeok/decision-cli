@@ -44,6 +44,11 @@ clap = { version = "4", features = ["derive"] }
 # HTTP client (for subprocess + MCP wrappers in decision-cli)
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
+# HTTP test plumbing (decision-cli dev-dependency only — exercises the
+# axum router from inside-process tests via `tower::ServiceExt::oneshot`).
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+
 # Internal
 oxi-events = { path = "crates/oxi-events" }
 

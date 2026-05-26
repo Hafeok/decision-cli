@@ -29,5 +29,9 @@ clap = { workspace = true }
 reqwest = { workspace = true }
 sha2 = { workspace = true }
 
+[dev-dependencies]
+tower = { workspace = true }
+http-body-util = { workspace = true }
+
 [lints]
 workspace = true
