@@ -4,11 +4,7 @@ title: 'decision-cli: Mechanical-provenance SHACL fragment (PROV-O wasGeneratedB
 phase: 3
 status: complete
 depends-on: []
-adrs:
-- ADR-038
-- ADR-013
-- ADR-016
-- ADR-004
+adrs: []
 tests:
 - TC-119
 domains:

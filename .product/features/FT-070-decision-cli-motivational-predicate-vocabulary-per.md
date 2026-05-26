@@ -5,10 +5,7 @@ phase: 3
 status: complete
 depends-on: []
 adrs:
-- ADR-038
 - ADR-039
-- ADR-013
-- ADR-016
 tests:
 - TC-120
 domains:

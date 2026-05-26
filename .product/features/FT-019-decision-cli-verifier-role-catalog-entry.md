@@ -7,7 +7,6 @@ depends-on:
 - FT-006
 - FT-009
 adrs:
-- ADR-013
 - ADR-017
 - ADR-019
 - ADR-027

@@ -8,7 +8,6 @@ adrs:
 - ADR-067
 - ADR-009
 - ADR-029
-- ADR-016
 tests:
 - TC-176
 - TC-177

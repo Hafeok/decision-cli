@@ -11,8 +11,6 @@ depends-on:
 adrs:
 - ADR-051
 - ADR-048
-- ADR-013
-- ADR-016
 - ADR-047
 tests:
 - TC-145

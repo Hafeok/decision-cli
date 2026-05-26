@@ -10,8 +10,6 @@ depends-on:
 adrs:
 - ADR-049
 - ADR-050
-- ADR-013
-- ADR-016
 tests:
 - TC-143
 domains: []

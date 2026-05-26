@@ -6,8 +6,6 @@ status: complete
 depends-on: []
 adrs:
 - ADR-064
-- ADR-013
-- ADR-016
 - ADR-044
 - ADR-047
 - ADR-054

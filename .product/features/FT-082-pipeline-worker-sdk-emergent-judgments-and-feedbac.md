@@ -5,9 +5,7 @@ phase: 3
 status: complete
 depends-on:
 - FT-078
-adrs:
-- ADR-013
-- ADR-016
+adrs: []
 tests:
 - TC-147
 domains: []

@@ -4,9 +4,7 @@ title: 'pipeline-worker SDK: Driver abstraction for production and replay'
 phase: 3
 status: complete
 depends-on: []
-adrs:
-- ADR-013
-- ADR-016
+adrs: []
 tests:
 - TC-148
 domains: []

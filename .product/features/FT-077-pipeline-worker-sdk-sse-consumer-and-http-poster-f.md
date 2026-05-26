@@ -7,8 +7,6 @@ depends-on: []
 adrs:
 - ADR-045
 - ADR-046
-- ADR-013
-- ADR-016
 tests:
 - TC-142
 domains: []

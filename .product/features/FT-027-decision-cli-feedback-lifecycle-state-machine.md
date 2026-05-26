@@ -6,7 +6,6 @@ status: complete
 depends-on:
 - FT-026
 adrs:
-- ADR-002
 - ADR-024
 tests:
 - TC-035

@@ -11,7 +11,6 @@ adrs:
 - ADR-007
 - ADR-008
 - ADR-011
-- ADR-012
 - ADR-015
 tests:
 - TC-046

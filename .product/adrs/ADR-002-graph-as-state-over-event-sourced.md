@@ -12,7 +12,7 @@ features:
 supersedes: []
 superseded-by: []
 domains: []
-scope: cross-cutting
+scope: platform
 content-hash: sha256:cc6ee3b1268b64151c4aba59ef863317c6bcad153f76e75d1c492bfae6329a6a
 source-files:
 - scripts/checks/graph-as-state.sh

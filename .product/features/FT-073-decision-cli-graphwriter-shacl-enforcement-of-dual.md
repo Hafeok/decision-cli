@@ -5,11 +5,7 @@ phase: 3
 status: complete
 depends-on:
 - FT-072
-adrs:
-- ADR-041
-- ADR-013
-- ADR-016
-- ADR-038
+adrs: []
 tests:
 - TC-123
 domains:

@@ -5,8 +5,7 @@ type: invariant
 status: failing
 validates:
   features: []
-  adrs:
-  - ADR-013
+  adrs: []
 phase: 1
 runner: bash
 runner-args: scripts/checks/single-responsibility.sh

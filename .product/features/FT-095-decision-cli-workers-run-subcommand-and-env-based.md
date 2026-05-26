@@ -10,8 +10,6 @@ adrs:
 - ADR-062
 - ADR-063
 - ADR-065
-- ADR-013
-- ADR-016
 - ADR-044
 - ADR-054
 tests:

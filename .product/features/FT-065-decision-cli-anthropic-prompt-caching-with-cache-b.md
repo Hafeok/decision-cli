@@ -9,16 +9,8 @@ depends-on:
 - FT-061
 - FT-062
 adrs:
-- ADR-001
-- ADR-002
-- ADR-004
-- ADR-005
 - ADR-008
-- ADR-012
-- ADR-013
-- ADR-014
 - ADR-015
-- ADR-016
 - ADR-017
 - ADR-018
 - ADR-020

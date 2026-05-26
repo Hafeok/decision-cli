@@ -9,8 +9,6 @@ depends-on:
 - FT-071
 adrs:
 - ADR-043
-- ADR-013
-- ADR-016
 tests:
 - TC-125
 domains:

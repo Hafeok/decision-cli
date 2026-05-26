@@ -4,9 +4,7 @@ title: Use the Internal product-cli Graph as the Source of Truth for Code Qualit
 phase: 1
 status: complete
 depends-on: []
-adrs:
-- ADR-014
-- ADR-013
+adrs: []
 tests:
 - TC-016
 - TC-017

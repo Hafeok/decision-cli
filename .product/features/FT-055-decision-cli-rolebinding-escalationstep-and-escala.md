@@ -6,14 +6,6 @@ status: complete
 depends-on:
 - FT-054
 adrs:
-- ADR-001
-- ADR-002
-- ADR-004
-- ADR-005
-- ADR-012
-- ADR-013
-- ADR-014
-- ADR-016
 - ADR-017
 - ADR-018
 - ADR-021

@@ -7,8 +7,6 @@ depends-on: []
 adrs:
 - ADR-066
 - ADR-029
-- ADR-002
-- ADR-038
 - ADR-028
 tests:
 - TC-165

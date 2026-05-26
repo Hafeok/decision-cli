@@ -6,13 +6,8 @@ status: complete
 depends-on:
 - FT-001
 adrs:
-- ADR-001
 - ADR-003
-- ADR-002
-- ADR-004
 - ADR-008
-- ADR-005
-- ADR-012
 tests:
 - TC-009
 domains: []

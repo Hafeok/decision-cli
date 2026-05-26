@@ -9,8 +9,6 @@ depends-on:
 - FT-091
 adrs:
 - ADR-060
-- ADR-013
-- ADR-016
 - ADR-044
 - ADR-022
 - ADR-023
@@ -18,9 +16,7 @@ adrs:
 - ADR-025
 - ADR-027
 - ADR-035
-- ADR-038
 - ADR-039
-- ADR-041
 tests:
 - TC-134
 domains: []

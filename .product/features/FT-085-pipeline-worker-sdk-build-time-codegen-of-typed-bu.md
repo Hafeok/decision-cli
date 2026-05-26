@@ -6,8 +6,6 @@ status: complete
 depends-on: []
 adrs:
 - ADR-048
-- ADR-013
-- ADR-016
 tests:
 - TC-150
 domains: []

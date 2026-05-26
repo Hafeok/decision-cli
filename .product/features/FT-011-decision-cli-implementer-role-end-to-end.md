@@ -10,15 +10,10 @@ depends-on:
 - FT-010
 - FT-013
 adrs:
-- ADR-004
-- ADR-005
 - ADR-008
 - ADR-009
 - ADR-010
-- ADR-001
-- ADR-002
 - ADR-011
-- ADR-012
 tests:
 - TC-008
 - TC-010

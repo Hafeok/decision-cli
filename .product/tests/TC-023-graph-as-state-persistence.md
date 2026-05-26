@@ -5,8 +5,7 @@ type: invariant
 status: passing
 validates:
   features: []
-  adrs:
-  - ADR-002
+  adrs: []
 phase: 1
 runner: bash
 runner-args: scripts/checks/graph-as-state.sh

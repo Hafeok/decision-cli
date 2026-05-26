@@ -10,7 +10,6 @@ depends-on:
 adrs:
 - ADR-066
 - ADR-008
-- ADR-002
 - ADR-029
 - ADR-043
 - ADR-023

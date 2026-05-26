@@ -7,12 +7,7 @@ depends-on:
 - FT-008
 - FT-009
 adrs:
-- ADR-005
-- ADR-012
-- ADR-002
-- ADR-004
 - ADR-008
-- ADR-001
 tests:
 - TC-007
 - TC-014

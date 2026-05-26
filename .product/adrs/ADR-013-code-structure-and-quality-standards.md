@@ -8,7 +8,7 @@ features:
 supersedes: []
 superseded-by: []
 domains: []
-scope: cross-cutting
+scope: platform
 content-hash: sha256:dd5e42b86eef90e68bc5191849e46d3fbedae6054d6d9fb11551f95ee921f22c
 amendments:
 - date: 2026-05-21T11:38:45Z

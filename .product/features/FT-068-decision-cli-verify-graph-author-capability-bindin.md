@@ -12,8 +12,6 @@ adrs:
 - ADR-020
 - ADR-033
 - ADR-037
-- ADR-013
-- ADR-016
 tests:
 - TC-140
 domains: []

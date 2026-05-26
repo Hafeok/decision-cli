@@ -9,7 +9,6 @@ depends-on:
 - FT-021
 adrs:
 - ADR-003
-- ADR-005
 - ADR-017
 tests:
 - TC-027

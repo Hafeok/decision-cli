@@ -10,8 +10,6 @@ adrs:
 - ADR-047
 - ADR-052
 - ADR-053
-- ADR-013
-- ADR-016
 tests:
 - TC-146
 domains: []

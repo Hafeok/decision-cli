@@ -7,11 +7,7 @@ depends-on:
 - FT-069
 - FT-070
 - FT-071
-adrs:
-- ADR-041
-- ADR-013
-- ADR-016
-- ADR-038
+adrs: []
 tests:
 - TC-122
 domains:

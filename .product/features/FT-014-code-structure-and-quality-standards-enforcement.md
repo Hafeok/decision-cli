@@ -5,9 +5,7 @@ phase: 1
 status: complete
 depends-on:
 - FT-015
-adrs:
-- ADR-013
-- ADR-014
+adrs: []
 tests:
 - TC-042
 - TC-043

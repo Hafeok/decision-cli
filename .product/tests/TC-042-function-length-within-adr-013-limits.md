@@ -6,8 +6,7 @@ status: failing
 validates:
   features:
   - FT-051
-  adrs:
-  - ADR-013
+  adrs: []
 phase: 1
 runner: bash
 runner-args: scripts/checks/function-length.sh

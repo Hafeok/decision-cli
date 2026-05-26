@@ -8,8 +8,6 @@ depends-on:
 - FT-072
 adrs:
 - ADR-044
-- ADR-013
-- ADR-016
 tests:
 - TC-141
 domains: []

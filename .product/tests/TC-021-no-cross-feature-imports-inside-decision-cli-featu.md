@@ -5,8 +5,7 @@ type: invariant
 status: passing
 validates:
   features: []
-  adrs:
-  - ADR-016
+  adrs: []
 phase: 1
 runner: bash
 runner-args: scripts/checks/vertical-slice-imports.sh

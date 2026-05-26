@@ -7,11 +7,6 @@ depends-on: []
 adrs:
 - ADR-007
 - ADR-008
-- ADR-001
-- ADR-002
-- ADR-004
-- ADR-005
-- ADR-012
 tests:
 - TC-001
 - TC-003

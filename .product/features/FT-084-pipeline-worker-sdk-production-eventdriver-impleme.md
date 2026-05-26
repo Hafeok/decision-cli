@@ -7,9 +7,7 @@ depends-on:
 - FT-077
 - FT-078
 - FT-083
-adrs:
-- ADR-013
-- ADR-016
+adrs: []
 tests:
 - TC-149
 domains: []

@@ -6,9 +6,6 @@ status: complete
 depends-on: []
 adrs:
 - ADR-040
-- ADR-013
-- ADR-016
-- ADR-038
 tests:
 - TC-121
 domains:

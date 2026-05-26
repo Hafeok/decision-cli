@@ -4,11 +4,7 @@ title: 'decision-cli: Migrate to vertical-slice layout under SDP'
 phase: 1
 status: complete
 depends-on: []
-adrs:
-- ADR-016
-- ADR-001
-- ADR-013
-- ADR-014
+adrs: []
 tests:
 - TC-020
 - TC-021

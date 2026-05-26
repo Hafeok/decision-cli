@@ -6,13 +6,9 @@ status: complete
 depends-on: []
 adrs:
 - ADR-055
-- ADR-013
-- ADR-016
 - ADR-044
 - ADR-036
-- ADR-038
 - ADR-039
-- ADR-041
 - ADR-043
 - ADR-047
 tests:

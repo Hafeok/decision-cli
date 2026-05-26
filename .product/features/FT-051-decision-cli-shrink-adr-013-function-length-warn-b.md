@@ -4,8 +4,7 @@ title: 'decision-cli: shrink ADR-013 function-length warn-band offenders'
 phase: 2
 status: complete
 depends-on: []
-adrs:
-- ADR-013
+adrs: []
 tests:
 - TC-042
 - TC-043

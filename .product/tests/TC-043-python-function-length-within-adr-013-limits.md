@@ -6,8 +6,7 @@ status: passing
 validates:
   features:
   - FT-051
-  adrs:
-  - ADR-013
+  adrs: []
 phase: 1
 runner: bash
 runner-args: python3 scripts/checks/function-length.py

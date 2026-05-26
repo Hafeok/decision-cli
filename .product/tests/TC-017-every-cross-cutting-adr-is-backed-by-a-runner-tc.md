@@ -5,8 +5,7 @@ type: invariant
 status: failing
 validates:
   features: []
-  adrs:
-  - ADR-014
+  adrs: []
 phase: 1
 runner: bash
 runner-args: scripts/checks/cross-cutting-rules-have-checks.sh

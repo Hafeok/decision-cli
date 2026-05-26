@@ -10,8 +10,6 @@ depends-on:
 - FT-094
 adrs:
 - ADR-061
-- ADR-013
-- ADR-016
 - ADR-044
 tests:
 - TC-135

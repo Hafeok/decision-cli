@@ -11,7 +11,7 @@ superseded-by: []
 domains:
 - data-model
 - error-handling
-scope: cross-cutting
+scope: platform
 content-hash: sha256:886e1992c1692fa2c513edd7754b5921336b1edecc1e2f2ce064b917d5dad474
 ---
 
