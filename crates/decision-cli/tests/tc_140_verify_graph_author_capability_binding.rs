@@ -131,6 +131,7 @@ fn build_stub_new_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {
             environment: "ENV-001-ephemeral-cli".to_string(),
             steps,
             rationale: "TC-140 stub proposal".to_string(),
+            addressed_feedback_iris: Vec::new(),
         },
     )
 }
@@ -326,6 +327,7 @@ fn ac3_bundle_hash_covers_endpoint_and_model_id() {
         parameters: serde_json::json!({}),
         max_tokens: 32_000,
         enrichment: Default::default(),
+        defect_feedback: Vec::new(),
     };
 
     let h_baseline = canonical_hash(&baseline);

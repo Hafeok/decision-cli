@@ -167,6 +167,21 @@ pub enum Error {
         detail: String,
     },
 
+    /// FT-107 — the verify-graph-author was dispatched with a non-empty
+    /// `defect_feedback` bundle field (the orchestrator deliberately
+    /// bypassed the matcher to give the worker a re-authoring
+    /// opportunity), but the worker returned `kind = Match`. The accept
+    /// path refuses this proposal and emits a meta-feedback artifact
+    /// against the worker role itself.
+    #[error("worker ignored defect feedback: {detail}")]
+    WorkerIgnoredFeedback {
+        /// Feedback IRIs the worker failed to address (i.e. the entries
+        /// the bundle's `defect_feedback` array contained).
+        feedback_iris: Vec<String>,
+        /// Human-readable explanation including the remediation hint.
+        detail: String,
+    },
+
     /// Catch-all for IO / runtime / unexpected failures the handler
     /// surfaces as a generic error.
     #[error("internal error: {detail}")]
@@ -203,6 +218,7 @@ impl Error {
             Self::SafetyViolation(_) => "SafetyViolation",
             Self::UnknownOp { .. } => "UnknownOp",
             Self::ProposalStale { .. } => "ProposalStale",
+            Self::WorkerIgnoredFeedback { .. } => "WorkerIgnoredFeedback",
             Self::Internal { .. } => "Internal",
         }
     }

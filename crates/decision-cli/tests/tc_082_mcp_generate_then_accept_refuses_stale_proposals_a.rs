@@ -99,6 +99,7 @@ fn build_new_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {
             environment: "ENV-001-ephemeral-cli".to_string(),
             steps,
             rationale: "TC-082 mock proposal".to_string(),
+            addressed_feedback_iris: Vec::new(),
         },
     )
 }

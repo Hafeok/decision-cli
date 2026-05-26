@@ -101,6 +101,7 @@ fn build_three_step_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {
             environment: "ENV-001-ephemeral-cli".to_string(),
             steps,
             rationale: "TC-079 mock: each step covers one TC via providesEvidenceFor".to_string(),
+            addressed_feedback_iris: Vec::new(),
         },
     )
 }

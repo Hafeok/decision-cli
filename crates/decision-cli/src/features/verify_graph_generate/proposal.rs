@@ -52,6 +52,12 @@ pub struct NewProposal {
     pub steps: Vec<ProposedStep>,
     /// Why this step sequence covers the feature's TCs.
     pub rationale: String,
+    /// FT-107 — feedback IRIs the worker is claiming to address with
+    /// this proposal. The accept path uses this list to transition each
+    /// cited feedback from `produced` to `addressed`. Empty for any
+    /// proposal that was not generated from a defect-feedback bundle.
+    #[serde(default)]
+    pub addressed_feedback_iris: Vec<String>,
 }
 
 /// `gap` payload — worker cannot produce a covering graph.
@@ -174,6 +180,7 @@ mod tests {
                     provides_evidence_for: vec!["TC-A".to_string()],
                 }],
                 rationale: "step covers TC-A".to_string(),
+                addressed_feedback_iris: Vec::new(),
             },
         );
         let v = serde_json::to_value(&p).expect("ser");

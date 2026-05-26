@@ -67,6 +67,38 @@ class ExistingGraphRecord(BaseModel):
     )
 
 
+class DefectFeedbackRecord(BaseModel):
+    """FT-107 — one defect-feedback artifact the bundle assembler picked up
+    for the (feature, env) pair.
+
+    Non-empty `defect_feedback` on the input bundle is the orchestrator's
+    explicit signal that an existing covering graph produced failures at
+    runtime and the worker should re-author rather than return Match.
+    """
+
+    feedback_iri: str = Field(..., description="Stable urn:dec:feedback:<uuid>.")
+    class_: str = Field(
+        default="defect",
+        alias="class",
+        description="Controlled vocabulary tag; always 'defect' for entries this bundle carries.",
+    )
+    severity: str = Field(default="error", description="'error' | 'warning' | 'info'.")
+    evidence: str = Field(
+        default="",
+        description="Free-form evidence excerpt the runner wrote at emission time — read this to understand what failed.",
+    )
+    source_tc: str = Field(
+        default="",
+        description="TC IRI the feedback's dec:sourceArtifact points at.",
+    )
+    graph_id: str = Field(
+        default="",
+        description="Short id of the graph whose failing step covers source_tc (e.g. 'VG-007').",
+    )
+
+    model_config = {"populate_by_name": True}
+
+
 class StepKindRecord(BaseModel):
     """One available step kind in the worker's vocabulary."""
 
@@ -133,6 +165,12 @@ class VerifyGraphAuthorInput(BaseModel):
         "to the router untouched.",
     )
     max_tokens: int = Field(default=4096, ge=256, le=64_000)
+    defect_feedback: list[DefectFeedbackRecord] = Field(
+        default_factory=list,
+        description="FT-107: runtime defect feedback the existing covering graph(s) "
+        "produced for this (feature, env) pair. Non-empty means: re-author from "
+        "this evidence; do NOT return Match.",
+    )
 
     # `model_id` collides with pydantic v2's reserved `model_` prefix.
     model_config = {"protected_namespaces": ()}

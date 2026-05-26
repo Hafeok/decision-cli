@@ -98,6 +98,7 @@ fn sentinel_bundle() -> VerifyGraphAuthorInputJson {
         parameters: serde_json::json!({}),
         max_tokens: 4096,
         enrichment: Default::default(),
+        defect_feedback: Vec::new(),
     }
 }
 

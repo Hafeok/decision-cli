@@ -115,6 +115,7 @@ fn build_malformed_two_step_proposal(bundle_hash: &str) -> GraphProposal {
                 },
             ],
             rationale: "TC-081 mock: second step is malformed (missing query)".to_string(),
+            addressed_feedback_iris: Vec::new(),
         },
     )
 }

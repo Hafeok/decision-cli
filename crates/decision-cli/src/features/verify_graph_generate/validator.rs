@@ -519,6 +519,7 @@ mod tests {
                 environment: "ENV-x".to_string(),
                 steps,
                 rationale: "test".to_string(),
+                addressed_feedback_iris: Vec::new(),
             },
         )
     }

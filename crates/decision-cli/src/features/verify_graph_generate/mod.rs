@@ -16,8 +16,10 @@
 //! persist; only `Accept` does.
 
 pub mod bundle;
+pub mod defect_feedback;
 pub mod enrichment;
 pub mod feedback;
+pub mod feedback_close;
 mod finalize;
 mod internal;
 pub mod persist;
@@ -154,13 +156,22 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
     // 1. Compute the matcher report (no I/O beyond the orchestration store).
     let report = run_matcher(workdir, product_root, &req.feature_id, &req.environment_id)?;
 
-    // 2. Match-first dispatch — if a complete match exists, skip the
-    //    worker entirely (TC-080 AC #2).
+    // 2. Match-first dispatch — if a complete match exists AND no
+    //    actionable defect feedback exists for this (feature, env)
+    //    pair, skip the worker entirely (TC-080 AC #2).
+    //
+    //    FT-107: when defect feedback exists, fall through to worker
+    //    dispatch with the feedback in the bundle so the worker can
+    //    re-author from runtime evidence.
     if matches!(
         report.kind,
         MatchKind::CompleteSingle | MatchKind::CompleteMultiple
     ) {
-        return Ok(build_match_response(&report));
+        let defects =
+            defect_feedback::load_for(workdir, &req.feature_id, &req.environment_id);
+        if defects.is_empty() {
+            return Ok(build_match_response(&report));
+        }
     }
 
     // 3. Resolve the verify-graph-author capability (FT-068) before
@@ -181,6 +192,13 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
     let proposal = worker::invoke_worker(&bundle)?;
     verify_bundle_hash(&proposal, &bundle)?;
 
+    // FT-107 — if the bundle carried defect feedback (i.e. the
+    // orchestrator deliberately bypassed the matcher to give the worker
+    // a re-authoring opportunity), refuse a `kind = Match` proposal:
+    // the worker saw the runtime evidence and still chose to defer to
+    // the broken graph.
+    reject_match_when_feedback_present(&proposal, &bundle)?;
+
     // ADR-066 §Rule 4 — dispatch-time chokepoint validator runs after
     // the worker returns and before persistence. Non-empty violation
     // set ⇒ refuse to persist + emit gap feedback against the upstream
@@ -189,6 +207,33 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
 
     let preview = coverage_preview_from_report(&report);
     finalize_generate(req, workdir, &env_short, proposal, preview)
+}
+
+/// FT-107 — refuse `kind = Match` proposals when the bundle carried
+/// defect feedback (the orchestrator dispatched the worker specifically
+/// to re-author from runtime evidence; a Match response means the
+/// worker ignored the feedback).
+fn reject_match_when_feedback_present(
+    proposal: &GraphProposal,
+    bundle: &bundle::VerifyGraphAuthorInputJson,
+) -> Result<(), HandlerError> {
+    if matches!(proposal.kind, ProposalKind::Match) && !bundle.defect_feedback.is_empty() {
+        let iris: Vec<String> = bundle
+            .defect_feedback
+            .iter()
+            .map(|fb| fb.feedback_iri.clone())
+            .collect();
+        return Err(HandlerError::WorkerIgnoredFeedback {
+            feedback_iris: iris.clone(),
+            detail: format!(
+                "verify-graph-author returned kind=Match despite the bundle carrying \
+                 {n} defect-feedback entries ({iris:?}); the worker must respond with \
+                 kind=New (or Gap) and address the runtime evidence",
+                n = iris.len(),
+            ),
+        });
+    }
+    Ok(())
 }
 
 fn apply_chokepoint_validator(
@@ -273,9 +318,52 @@ pub fn run_accept(req: &AcceptRequest) -> Result<AcceptResponse, HandlerError> {
     // Persist (only `New` proposals reach this path).
     let env_short = env_iri_to_short(&report.environment);
     let persisted = persist_for_accept(req, workdir, &env_short)?;
+    // FT-107: transition any cited defect feedback to `addressed` with
+    // the new graph as the addressing artifact. Best-effort — failure
+    // logs but does not unwind the persisted proposal.
+    transition_addressed_feedback(workdir, &req.proposal, &persisted);
     // FT-100: graph is now whole and ready; fire the auto-dispatch.
     fire_graph_accepted_dispatch(workdir, &persisted.graph_id);
     Ok(AcceptResponse { persisted })
+}
+
+/// FT-107 — best-effort hook that walks `proposal.new.addressed_feedback_iris`
+/// and transitions each cited feedback to `addressed` with the freshly
+/// persisted graph as the addressing artifact. Used by both `run_accept`
+/// (MCP path) and the CLI `--accept` branch.
+pub(super) fn transition_addressed_feedback(
+    workdir: &Path,
+    proposal: &GraphProposal,
+    persisted: &PersistedSummary,
+) {
+    let Some(new_payload) = proposal.new.as_ref() else {
+        return;
+    };
+    if new_payload.addressed_feedback_iris.is_empty() {
+        return;
+    }
+    let graph_iri =
+        crate::core::ontology::verification_graph::types::graph_iri_for(&persisted.graph_id);
+    let session_iri = oxigraph::model::NamedNode::new_unchecked(format!(
+        "https://decision-cli.dev/ns/activity/verify-graph-generate/{graph}",
+        graph = persisted.graph_id
+    ));
+    let now = chrono::Utc::now().to_rfc3339();
+    if let Err(e) = feedback_close::mark_batch_addressed(
+        workdir,
+        &new_payload.addressed_feedback_iris,
+        &graph_iri,
+        "verify-graph-author",
+        &session_iri,
+        &now,
+    ) {
+        tracing::warn!(
+            target: "verify_graph_generate",
+            graph = %persisted.graph_id,
+            err = %e,
+            "feedback-close transition failed (best-effort)"
+        );
+    }
 }
 
 /// Best-effort FT-100 hook: invoke `graph_accepted_dispatch::dispatch_for_graph`

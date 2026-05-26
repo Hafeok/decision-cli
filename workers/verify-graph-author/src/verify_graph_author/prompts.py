@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from .bundle import (
+    DefectFeedbackRecord,
     EnvRecord,
     ExistingGraphRecord,
     StepKindRecord,
@@ -59,6 +60,13 @@ Hard constraints (any violation invalidates the proposal):
     identifiers — use the exact ids from the bundle.
   - `bundle_hash` in your output MUST be the exact `bundle_hash` from
     the input bundle. Do not invent, redact, or modify it.
+  - **If the bundle's `defect_feedback` array is non-empty (FT-107),**
+    an existing covering graph has been observed to fail at runtime.
+    You MUST NOT return `kind = match` in that case — read each entry's
+    `evidence` field and propose a `new` graph that addresses the
+    underlying problem. Cite each addressed feedback IRI in your
+    `addressed_feedback_iris` field on the `new` proposal so the
+    orchestrator can transition them to `addressed`.
 
 Output a single JSON object that matches the GraphProposal schema
 exactly: top-level keys `kind`, `bundle_hash`, and exactly one of
@@ -92,6 +100,7 @@ def build_user_prompt(bundle: VerifyGraphAuthorInput) -> str:
         "\n\n".join(_render_candidate(g) for g in bundle.candidate_graphs)
         or "(no candidate graphs in this environment)"
     )
+    defect_block = _render_defect_feedback(bundle.defect_feedback)
     return _USER_TEMPLATE.format(
         feature_id=bundle.feature_id,
         feature_spec=bundle.feature_spec,
@@ -99,6 +108,7 @@ def build_user_prompt(bundle: VerifyGraphAuthorInput) -> str:
         env=_render_env(bundle.target_environment),
         vocabulary=vocabulary,
         candidates=candidates,
+        defect_feedback=defect_block,
         bundle_hash=bundle.bundle_hash,
     )
 
@@ -151,6 +161,10 @@ return a `match` with its id and your rationale. Otherwise return a
 your rationale.
 
 {candidates}
+
+## Defect feedback (FT-107)
+
+{defect_feedback}
 
 ## Audit
 
@@ -222,6 +236,38 @@ def _render_fields_block(schema: dict) -> list[str]:
     # Final JSON dump kept as a fallback for models that prefer reading it.
     lines.append("- fields_schema (raw): " + json.dumps(schema, sort_keys=True))
     return lines
+
+
+def _render_defect_feedback(records: list[DefectFeedbackRecord]) -> str:
+    if not records:
+        return (
+            "(no defect feedback for this (feature, env) pair — there is no runtime "
+            "evidence forcing a re-author. Normal matcher / vocabulary rules apply.)"
+        )
+    lines = [
+        "An existing covering graph produced these failures at runtime. You MUST NOT "
+        "return `kind = match` against that graph — read each entry's `evidence` field "
+        "and propose a `new` graph that addresses the underlying problem. The most "
+        "common cause is an env-type mismatch: e.g. an `ephemeral-tempdir` env paired "
+        "with shell commands that need the repository to be present (`cargo build`, "
+        "`grep crates/...`). In that case, propose a `new` graph whose env is "
+        "`repo-path` (or whose steps populate the tempdir first).",
+        "",
+        "**Cite the `feedback_iri` of every entry you actually addressed in your "
+        "`addressed_feedback_iris` field on the `new` proposal — the orchestrator uses "
+        "that list to mark the feedback as resolved.**",
+        "",
+    ]
+    for rec in records:
+        lines.append(f"### {rec.feedback_iri}")
+        if rec.graph_id:
+            lines.append(f"- failing graph: {rec.graph_id}")
+        if rec.source_tc:
+            lines.append(f"- source TC: {rec.source_tc}")
+        lines.append(f"- severity: {rec.severity}")
+        lines.append(f"- evidence: {rec.evidence.strip() or '(empty)'}")
+        lines.append("")
+    return "\n".join(lines).rstrip()
 
 
 def _render_candidate(graph: ExistingGraphRecord) -> str:

@@ -81,6 +81,7 @@ fn proposal(steps: Vec<ProposedStep>) -> GraphProposal {
             environment: "ENV-001".to_string(),
             steps,
             rationale: "TC-169 fixture proposal".to_string(),
+            addressed_feedback_iris: Vec::new(),
         },
     )
 }

@@ -66,6 +66,13 @@ class NewProposal(BaseModel):
         min_length=1,
         description="Why this step sequence covers the feature's TCs.",
     )
+    addressed_feedback_iris: list[str] = Field(
+        default_factory=list,
+        description="FT-107: feedback IRIs (urn:dec:feedback:<uuid>) this proposal "
+        "claims to address. Cite every defect_feedback entry whose evidence drove a "
+        "design choice in your steps. The accept path uses this list to transition "
+        "each cited feedback from `produced` to `addressed`.",
+    )
 
 
 class GapProposal(BaseModel):

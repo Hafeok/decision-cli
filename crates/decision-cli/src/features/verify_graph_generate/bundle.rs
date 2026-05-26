@@ -78,6 +78,11 @@ pub struct VerifyGraphAuthorInputJson {
     /// `Default::default()` for legacy / pre-FT-102 paths.
     #[serde(default)]
     pub enrichment: EnrichmentFields,
+    /// FT-107 — runtime evidence the existing covering graph is broken.
+    /// Empty for the green path (matcher short-circuit); non-empty when
+    /// the orchestrator routes a re-authoring dispatch.
+    #[serde(default)]
+    pub defect_feedback: Vec<super::defect_feedback::DefectFeedbackRecord>,
 }
 
 /// One test-criterion record in the bundle.
@@ -191,6 +196,8 @@ pub fn assemble_bundle(
     let step_vocabulary = default_step_vocabulary();
     let max_tokens = clamp_max_tokens(capability.max_output);
     let enrichment = assemble_enrichment_for(workdir, env_struct.as_ref(), env_short)?;
+    let defect_feedback =
+        super::defect_feedback::load_for(workdir, feature_id, env_short);
     let mut bundle = VerifyGraphAuthorInputJson {
         feature_id: feature_id.to_string(),
         feature_spec,
@@ -204,6 +211,7 @@ pub fn assemble_bundle(
         parameters: serde_json::json!({}),
         max_tokens,
         enrichment,
+        defect_feedback,
     };
     bundle.bundle_hash = compute_bundle_hash(&bundle);
     Ok(bundle)
