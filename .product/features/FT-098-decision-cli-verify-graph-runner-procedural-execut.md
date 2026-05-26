@@ -2,7 +2,7 @@
 id: FT-098
 title: 'decision-cli: verify-graph-runner — procedural executor for VerificationGraph'
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-097
 adrs:

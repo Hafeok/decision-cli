@@ -2,12 +2,17 @@
 id: TC-157
 title: stopOnFail truncates execution but every step still has a trace entry equal to graph.steps length
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-098
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --test tc_157_stoponfail_truncates_execution_but_every_step_stil
+runner-timeout: 120
+last-run: 2026-05-26T13:38:44.856415896+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

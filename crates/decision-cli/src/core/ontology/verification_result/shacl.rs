@@ -206,6 +206,17 @@ fn check_step_traces_length_parity(
         // Parent graph not visible — defer to runtime check downstream.
         return;
     };
+    // FT-098 §Behaviour: Phase-1/Phase-2 abort paths persist a rejected
+    // VGR with `dec:stepTraces rdf:nil` — the run never started, so
+    // length parity is structurally inapplicable. Allow `trace_iris ==
+    // 0` to coexist with a non-empty parent graph IFF the result's
+    // verdict is `rejected` (signalling pre-run abort).
+    if trace_iris.is_empty() && parent_steps.len() > 0 {
+        let verdict_values = literal_values(quads, subject, IRI_DEC_VERDICT);
+        if verdict_values.iter().any(|v| v == VERDICT_REJECTED) {
+            return;
+        }
+    }
     if trace_iris.len() != parent_steps.len() {
         violations.push(result_violation(
             subject,
@@ -285,6 +296,13 @@ fn check_verdict_trace_consistency(
     let any_fail = outcomes.iter().any(|o| o == OUTCOME_FAIL);
     let any_unrunnable = outcomes.iter().any(|o| o == OUTCOME_UNRUNNABLE);
     let all_pass = !outcomes.is_empty() && outcomes.iter().all(|o| o == OUTCOME_PASS);
+    // FT-098 §Behaviour: an empty trace list signals a Phase-1/Phase-2
+    // abort (safety violation, env setup failure). The declared verdict
+    // is authoritative in that case — the run never produced any
+    // outcomes to reconcile, so no contradiction is possible.
+    if outcomes.is_empty() {
+        return;
+    }
     let inferred = if outcomes.is_empty() {
         VERDICT_APPROVED
     } else if all_pass {

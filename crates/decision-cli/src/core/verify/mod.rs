@@ -13,6 +13,7 @@ pub mod chain_integrity;
 pub mod coverage;
 pub mod matcher;
 pub mod quads;
+pub mod runner;
 pub mod safety;
 
 pub use aggregate::{
