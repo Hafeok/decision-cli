@@ -4,10 +4,13 @@ title: Capability-tag binding via catalog at dispatch time (workers never see mo
 status: accepted
 features:
 - FT-081
+- FT-061
+- FT-080
 supersedes: []
 superseded-by: []
-domains: []
-scope: cross-cutting
+domains:
+- api
+scope: domain
 content-hash: sha256:8441d0248ada479fa450ff849c8e66b75ea332b9966a8a3f26a1ec91d5cc4b7b
 ---
 

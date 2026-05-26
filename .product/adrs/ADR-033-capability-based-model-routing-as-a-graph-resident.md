@@ -10,13 +10,15 @@ features:
 - FT-061
 - FT-064
 - FT-065
+- FT-062
+- FT-063
 supersedes: []
 superseded-by: []
 domains:
 - api
 - data-model
 - observability
-scope: cross-cutting
+scope: domain
 content-hash: sha256:b4117bf950723c269f15e7eecf8ef51dd0518ddc4af4add4a6fb78ab88aceaab
 amendments:
 - date: 2026-05-22T18:46:11Z

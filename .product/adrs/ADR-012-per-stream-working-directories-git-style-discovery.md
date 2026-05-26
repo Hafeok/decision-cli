@@ -2,7 +2,9 @@
 id: ADR-012
 title: Per-stream working directories (git-style discovery)
 status: accepted
-features: []
+features:
+- FT-009
+- FT-016
 supersedes: []
 superseded-by: []
 domains: []

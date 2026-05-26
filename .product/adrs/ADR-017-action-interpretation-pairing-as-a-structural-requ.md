@@ -2,7 +2,8 @@
 id: ADR-017
 title: Action-interpretation pairing as a structural requirement
 status: accepted
-features: []
+features:
+- FT-021
 supersedes: []
 superseded-by: []
 domains: []

@@ -4,6 +4,8 @@ title: Chain-integrity invariant for worker dispatch
 status: accepted
 features:
 - FT-052
+- FT-098
+- FT-100
 supersedes: []
 superseded-by: []
 domains: []

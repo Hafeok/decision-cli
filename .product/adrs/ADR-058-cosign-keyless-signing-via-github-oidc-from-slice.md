@@ -4,6 +4,7 @@ title: Cosign keyless signing via GitHub OIDC from slice 1
 status: accepted
 features:
 - FT-089
+- FT-106
 supersedes: []
 superseded-by: []
 domains: []

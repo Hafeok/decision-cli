@@ -7,7 +7,7 @@ features:
 supersedes: []
 superseded-by: []
 domains: []
-scope: cross-cutting
+scope: feature-specific
 content-hash: sha256:7a8a24888df513abdb7e3bc6546aac0cc067e6ce7f17be4b706c2a9e785fe9db
 ---
 

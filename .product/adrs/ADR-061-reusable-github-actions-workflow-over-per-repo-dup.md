@@ -4,6 +4,7 @@ title: Reusable GitHub Actions workflow over per-repo duplication
 status: accepted
 features:
 - FT-093
+- FT-106
 supersedes: []
 superseded-by: []
 domains: []

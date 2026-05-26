@@ -2,7 +2,10 @@
 id: ADR-005
 title: Value stream as a graph-resident scope, enforced at command time
 status: accepted
-features: []
+features:
+- FT-007
+- FT-009
+- FT-010
 supersedes: []
 superseded-by: []
 domains: []

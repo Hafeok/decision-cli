@@ -11,7 +11,7 @@ superseded-by: []
 domains:
 - api
 - data-model
-scope: cross-cutting
+scope: feature-specific
 content-hash: sha256:0f32e9abca5e002fadd3cb639a44f59028fd18a82fcc2e75efad7974e0ac8d28
 ---
 

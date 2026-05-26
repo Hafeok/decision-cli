@@ -33,6 +33,7 @@ adrs:
 - ADR-035
 - ADR-036
 - ADR-037
+- ADR-047
 tests:
 - TC-107
 - TC-108

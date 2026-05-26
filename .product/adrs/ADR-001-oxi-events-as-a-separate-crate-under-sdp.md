@@ -2,7 +2,11 @@
 id: ADR-001
 title: oxi-events as a separate crate under SDP
 status: accepted
-features: []
+features:
+- FT-002
+- FT-003
+- FT-004
+- FT-005
 supersedes: []
 superseded-by: []
 domains: []

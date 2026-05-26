@@ -4,12 +4,13 @@ title: Full-chain traversal as a first-class QueryTemplate artifact
 status: accepted
 features:
 - FT-075
+- FT-102
 supersedes: []
 superseded-by: []
 domains:
 - api
 - data-model
-scope: cross-cutting
+scope: feature-specific
 content-hash: sha256:54349e806972afd39e9564a53ac154a56399868f54af970acaa5318ab458516c
 ---
 

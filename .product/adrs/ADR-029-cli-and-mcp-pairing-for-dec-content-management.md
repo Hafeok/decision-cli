@@ -2,7 +2,11 @@
 id: ADR-029
 title: CLI and MCP pairing for dec content management
 status: accepted
-features: []
+features:
+- FT-099
+- FT-101
+- FT-102
+- FT-105
 supersedes: []
 superseded-by: []
 domains: []

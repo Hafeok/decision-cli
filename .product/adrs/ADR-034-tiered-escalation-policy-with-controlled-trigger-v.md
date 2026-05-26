@@ -13,7 +13,7 @@ domains:
 - api
 - error-handling
 - observability
-scope: cross-cutting
+scope: feature-specific
 content-hash: sha256:3e9fe2c4c9b1bdcd8b6b2a656fc07ab91ed1406ff16b3a260fe2990a54670aa9
 ---
 

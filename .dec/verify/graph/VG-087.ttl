@@ -1,0 +1,49 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-087>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-099> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-087/0> <https://decision-cli.dev/ns/step/VG-087/1> <https://decision-cli.dev/ns/step/VG-087/2> <https://decision-cli.dev/ns/step/VG-087/3> <https://decision-cli.dev/ns/step/VG-087/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-087/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/store" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-087/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store/bundle.ttl" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-087/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-158> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-159> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-160> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-161> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decisionframework.org/dec#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?tc WHERE { ?vg dec:verifies <FT-099> . ?vg dec:steps/rdf:rest*/rdf:first/dec:providesEvidenceFor ?tc }" .
+
+<https://decision-cli.dev/ns/step/VG-087/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-158> ;
+    dec:command "dec verify graph run VG-001" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-087/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-159> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-160> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-161> ;
+    dec:command "dec verify feature FT-099" ;
+    dec:expectExitCode 0 .

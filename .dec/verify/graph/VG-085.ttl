@@ -1,0 +1,96 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-085>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-097> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-085/0> <https://decision-cli.dev/ns/step/VG-085/1> <https://decision-cli.dev/ns/step/VG-085/2> <https://decision-cli.dev/ns/step/VG-085/3> <https://decision-cli.dev/ns/step/VG-085/4> <https://decision-cli.dev/ns/step/VG-085/5> <https://decision-cli.dev/ns/step/VG-085/6> <https://decision-cli.dev/ns/step/VG-085/7> <https://decision-cli.dev/ns/step/VG-085/8> <https://decision-cli.dev/ns/step/VG-085/9> <https://decision-cli.dev/ns/step/VG-085/10> <https://decision-cli.dev/ns/step/VG-085/11> <https://decision-cli.dev/ns/step/VG-085/12> <https://decision-cli.dev/ns/step/VG-085/13> <https://decision-cli.dev/ns/step/VG-085/14> <https://decision-cli.dev/ns/step/VG-085/15> ) .
+
+<https://decision-cli.dev/ns/step/VG-085/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .dec/verify/result" .
+
+<https://decision-cli.dev/ns/step/VG-085/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "touch .dec/store" .
+
+<https://decision-cli.dev/ns/step/VG-085/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy graph content' > .dec/verify/graph.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy environment content' > .dec/verify/env.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy step content' > .dec/verify/step.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy activity content' > .dec/verify/activity.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy agent content' > .dec/verify/agent.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy tc content' > .dec/verify/tc.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy feature content' > .dec/verify/feature.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy verdict content' > .dec/verify/verdict.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/10>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy evidence content' > .dec/verify/evidence.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/11>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy result content' > .dec/verify/result/VGR-001.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/12>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "echo 'dummy trace content' > .dec/verify/result/VGR-001/step/0.ttl" .
+
+<https://decision-cli.dev/ns/step/VG-085/13>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-151> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s WHERE { ?s a dec:VerificationGraphResult . }" .
+
+<https://decision-cli.dev/ns/step/VG-085/14>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-152> ;
+    dec:target ".dec/store" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns/> SELECT ?s WHERE { ?s a dec:VerificationStepTrace . }" .
+
+<https://decision-cli.dev/ns/step/VG-085/15>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-153> ;
+    dec:path ".dec/verify/result/VGR-001.ttl" .

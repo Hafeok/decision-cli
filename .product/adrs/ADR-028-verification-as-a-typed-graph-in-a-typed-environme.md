@@ -4,6 +4,11 @@ title: Verification as a typed graph in a typed environment
 status: accepted
 features:
 - FT-053
+- FT-097
+- FT-098
+- FT-099
+- FT-100
+- FT-101
 supersedes: []
 superseded-by: []
 domains: []

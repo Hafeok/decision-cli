@@ -2,7 +2,9 @@
 id: ADR-016
 title: Vertical-slice architecture with compile-time SDP enforcement
 status: accepted
-features: []
+features:
+- FT-018
+- FT-105
 supersedes: []
 superseded-by: []
 domains: []

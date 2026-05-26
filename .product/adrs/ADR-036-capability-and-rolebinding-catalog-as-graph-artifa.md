@@ -5,12 +5,13 @@ status: accepted
 features:
 - FT-054
 - FT-058
+- FT-055
 supersedes: []
 superseded-by: []
 domains:
 - data-model
 - storage
-scope: cross-cutting
+scope: domain
 content-hash: sha256:9203a523074e14606d46d7f972dabbb32fc74c17439ecc8271b0544c6944d47e
 amendments:
 - date: 2026-05-22T18:47:09Z

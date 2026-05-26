@@ -2,7 +2,11 @@
 id: ADR-004
 title: PROV-O for events and sessions
 status: accepted
-features: []
+features:
+- FT-001
+- FT-009
+- FT-021
+- FT-069
 supersedes: []
 superseded-by: []
 domains: []

@@ -7,13 +7,14 @@ features:
 - FT-059
 - FT-065
 - FT-054
+- FT-060
 supersedes: []
 superseded-by: []
 domains:
 - api
 - networking
 - security
-scope: cross-cutting
+scope: domain
 content-hash: sha256:274614c9b4bcf56fe05af9b346978feeb698c9786072adc3b33d3bde73a3366e
 amendments:
 - date: 2026-05-22T18:48:18Z
