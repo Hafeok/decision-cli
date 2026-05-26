@@ -15,6 +15,7 @@ pub mod implement;
 pub mod init;
 pub mod mcp;
 pub mod preflight;
+pub mod product_cmd;
 pub mod session_inspect;
 pub mod submissions;
 pub mod telemetry;

@@ -31,6 +31,7 @@ pub use features::implement;
 pub use features::init;
 pub use features::mcp;
 pub use features::preflight;
+pub use features::product_cmd;
 pub use features::session_inspect;
 pub use features::submissions;
 pub use features::telemetry;

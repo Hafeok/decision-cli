@@ -2,12 +2,17 @@
 id: TC-176
 title: dec product verb produces byte-identical stdout to standalone product verb for representative reads
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-105
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_176_dec_product_verb_produces_byte_identical_stdout_to
+runner-timeout: 120
+last-run: 2026-05-26T16:00:06.723927890+00:00
+last-run-duration: 0.6s
 ---
 
 ## Claim

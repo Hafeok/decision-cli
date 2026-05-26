@@ -15,9 +15,9 @@ use super::{
     check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd, feedback,
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
     internal_dispatch, internal_dispatch::InternalDispatchCmd, mcp, mcp::McpCmd, migrate,
-    migrate::MigrateCmd, preflight, preflight::PreflightArgs, query, query::QueryCmd, session,
-    session::SessionCmd, sparql, sparql::SparqlArgs, status, verify, verify::VerifyCmd, workers,
-    workers::WorkersCmd,
+    migrate::MigrateCmd, preflight, preflight::PreflightArgs, product, product::ProductArgs, query,
+    query::QueryCmd, session, session::SessionCmd, sparql, sparql::SparqlArgs, status, verify,
+    verify::VerifyCmd, workers, workers::WorkersCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -81,6 +81,8 @@ pub enum Command {
     /// Provenance migration tooling (FT-074 / ADR-042).
     #[command(subcommand)]
     Migrate(MigrateCmd),
+    /// Absorbed product-cli surface (FT-105 / ADR-067).
+    Product(ProductArgs),
     /// QueryTemplate catalog inspection (FT-075 / ADR-043).
     #[command(subcommand)]
     Query(QueryCmd),
@@ -111,6 +113,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Mcp(cmd) => mcp::run(workdir, cmd),
         Command::Verify(cmd) => verify::run(workdir, cmd),
         Command::Migrate(cmd) => migrate::run(workdir, cmd),
+        Command::Product(args) => product::run(workdir, args),
         Command::Query(cmd) => query::run(workdir, cmd),
         Command::Workers(cmd) => workers::run(workdir, cmd),
         Command::InternalDispatch(cmd) => internal_dispatch::run(workdir, cmd),

@@ -2,12 +2,17 @@
 id: TC-179
 title: product-cli crate has no dependency on decision-cli or oxi-events (SDP fitness check)
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-105
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_179_product_cli_crate_has_no_dependency_on_decision_cl
+runner-timeout: 120
+last-run: 2026-05-26T16:00:06.723927890+00:00
+last-run-duration: 43.9s
 ---
 
 ## Claim

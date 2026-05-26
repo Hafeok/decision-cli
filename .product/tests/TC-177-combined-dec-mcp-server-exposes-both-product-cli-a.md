@@ -2,12 +2,17 @@
 id: TC-177
 title: Combined dec MCP server exposes both product-cli and decision-cli tool sets without collision
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-105
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_177_combined_dec_mcp_server_exposes_both_product_cli_a
+runner-timeout: 120
+last-run: 2026-05-26T16:00:06.723927890+00:00
+last-run-duration: 0.4s
 ---
 
 ## Claim

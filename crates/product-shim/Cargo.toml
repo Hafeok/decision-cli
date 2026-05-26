@@ -1,0 +1,19 @@
+[package]
+name = "product-shim"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Deprecation shim producing the standalone `product` binary; delegates to the absorbed product-cli crate. FT-105 Phase 5."
+
+[[bin]]
+name = "product"
+path = "src/main.rs"
+
+[dependencies]
+product-cli = { path = "../product-cli" }
+clap = { workspace = true }
+
+[lints]
+workspace = true

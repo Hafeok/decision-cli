@@ -2,12 +2,17 @@
 id: TC-178
 title: cargo build and cargo test --workspace pass with crates/product-cli/ as a workspace member
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-105
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: tc_178_cargo_build_and_cargo_test_workspace_pass_with_cra
+runner-timeout: 120
+last-run: 2026-05-26T16:00:06.723927890+00:00
+last-run-duration: 11.3s
 ---
 
 ## Claim

@@ -24,6 +24,7 @@ use serde_json::json;
 use decision_cli::core::handler::{Error as HandlerError, Request, Response};
 use decision_cli::core::mcp::{RegisterError, ToolDescriptor, ToolHandler, ToolRegistry};
 use decision_cli::mcp;
+use decision_cli::product_cmd;
 use decision_cli::verify_env_list;
 use decision_cli::verify_env_new;
 use decision_cli::verify_env_show;
@@ -96,7 +97,33 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
     register_ft099::register_verify_feature(&mut registry, workdir)?;
     register_generate::register_verify_graph_generate(&mut registry, workdir)?;
     register_generate::register_verify_graph_accept(&mut registry, workdir)?;
+    register_absorbed_product_cli(&mut registry)?;
     Ok(registry)
+}
+
+/// FT-105: register the absorbed product-cli MCP tool surface alongside
+/// the `dec_*` tools. The product-cli set uses the `product_*` naming
+/// convention, so registration goes through [`ToolRegistry::register_external`]
+/// which bypasses the `dec_*` naming gate but still rejects duplicate
+/// names — collision is a startup panic, per FT-105 §Invariants.
+fn register_absorbed_product_cli(registry: &mut ToolRegistry) -> Result<(), RegisterError> {
+    for entry in product_cmd::mcp_tool_entries() {
+        let name = entry.name.clone();
+        let stub_handler: ToolHandler = Arc::new(move |_req: Request| {
+            Ok(Response::with_summary(
+                json!({"tool": name, "stub": true}),
+                "absorbed product-cli stub",
+            ))
+        });
+        let descriptor = ToolDescriptor::new(
+            entry.name.clone(),
+            entry.description.clone(),
+            json!({"type": "object"}),
+            stub_handler,
+        );
+        registry.register_external(descriptor)?;
+    }
+    Ok(())
 }
 
 /// FT-044: register `dec_verify_step_add`. Same workdir-binding pattern

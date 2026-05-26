@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 oxi-events = { workspace = true }
+product-cli = { workspace = true }
 oxigraph = { workspace = true }
 tokio = { workspace = true }
 axum = { workspace = true }

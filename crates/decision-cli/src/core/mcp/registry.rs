@@ -130,6 +130,29 @@ impl ToolRegistry {
         Ok(name)
     }
 
+    /// Insert a descriptor from an absorbed external namespace (FT-105 /
+    /// ADR-067).
+    ///
+    /// Skips the `dec_*` naming gate so the combined registry can host
+    /// the absorbed product-cli `product_*` tool set without
+    /// renaming. Duplicate-name detection still runs, so a collision
+    /// between any dec_ tool and any product_ tool is rejected at
+    /// startup — TC-177's "no collision" invariant.
+    pub fn register_external(
+        &mut self,
+        descriptor: ToolDescriptor,
+    ) -> Result<String, RegisterError> {
+        if descriptor.name.is_empty() {
+            return Err(RegisterError::Naming(NamingError::Empty));
+        }
+        if self.tools.contains_key(&descriptor.name) {
+            return Err(RegisterError::Duplicate(descriptor.name));
+        }
+        let name = descriptor.name.clone();
+        self.tools.insert(name.clone(), descriptor);
+        Ok(name)
+    }
+
     /// Look up a tool by name.
     #[must_use]
     pub fn get(&self, name: &str) -> Option<&ToolDescriptor> {

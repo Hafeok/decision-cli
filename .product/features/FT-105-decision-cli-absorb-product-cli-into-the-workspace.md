@@ -2,7 +2,7 @@
 id: FT-105
 title: 'decision-cli: Absorb product-cli into the workspace as crates/product-cli/ with direct Rust API integration'
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-067

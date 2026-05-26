@@ -3,6 +3,8 @@ resolver = "2"
 members = [
     "crates/oxi-events",
     "crates/decision-cli",
+    "crates/product-cli",
+    "crates/product-shim",
 ]
 
 [workspace.package]
@@ -51,6 +53,7 @@ http-body-util = "0.1"
 
 # Internal
 oxi-events = { path = "crates/oxi-events" }
+product-cli = { path = "crates/product-cli" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
