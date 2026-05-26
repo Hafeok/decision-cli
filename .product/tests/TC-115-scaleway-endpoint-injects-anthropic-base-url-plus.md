@@ -1,7 +1,7 @@
 ---
 id: TC-115
 title: Scaleway endpoint injects ANTHROPIC_BASE_URL plus AUTH_TOKEN plus pinned model env vars on the claude-p subprocess
-type: scenario
+type: exit-criteria
 status: passing
 validates:
   features: []

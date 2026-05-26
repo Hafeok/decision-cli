@@ -1,7 +1,7 @@
 ---
 id: TC-163
 title: code_change_committed_dispatch dispatches per env and writes an aggregate session with composed verdict
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

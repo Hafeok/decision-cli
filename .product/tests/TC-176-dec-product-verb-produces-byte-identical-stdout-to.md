@@ -1,7 +1,7 @@
 ---
 id: TC-176
 title: dec product verb produces byte-identical stdout to standalone product verb for representative reads
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

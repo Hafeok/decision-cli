@@ -1,7 +1,7 @@
 ---
 id: TC-097
 title: dec verify env new accepts --fixture-source and persists the predicate
-type: scenario
+type: exit-criteria
 status: passing
 validates:
   features:

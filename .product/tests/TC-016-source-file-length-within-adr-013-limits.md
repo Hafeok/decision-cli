@@ -2,7 +2,7 @@
 id: TC-016
 title: source_file_length_within_adr_013_limits
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -10,9 +10,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/file-length.sh
 runner-timeout: 60
-last-run: 2026-05-25T23:43:40.429452005+00:00
-last-run-duration: 0.5s
-failure-message: ""
+last-run: 2026-05-26T12:43:53.880672904+00:00
+last-run-duration: 0.6s
 ---
 
 ## Purpose

@@ -1,7 +1,7 @@
 ---
 id: TC-153
 title: aggregate_verdict() composes multi-graph results per ADR-028 with rejection dominance and gap reporting
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

@@ -1,7 +1,7 @@
 ---
 id: TC-154
 title: run_graph executes the six seed step kinds end-to-end against a fixture VG in an ephemeral env
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

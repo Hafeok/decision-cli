@@ -1,7 +1,7 @@
 ---
 id: TC-173
 title: default-acknowledged-cross-cutting clears per-feature preflight gaps without requiring per-feature adrs link
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

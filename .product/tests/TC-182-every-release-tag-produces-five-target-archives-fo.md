@@ -1,7 +1,7 @@
 ---
 id: TC-182
 title: Every release tag produces five target archives for both product and dec binaries, with lockstep version
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

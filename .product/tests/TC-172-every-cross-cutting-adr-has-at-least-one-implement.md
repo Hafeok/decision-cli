@@ -1,7 +1,7 @@
 ---
 id: TC-172
 title: Every cross-cutting ADR has at least one implementing feature linked, modulo documented exclusions
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

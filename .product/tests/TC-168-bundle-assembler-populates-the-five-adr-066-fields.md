@@ -1,7 +1,7 @@
 ---
 id: TC-168
 title: Bundle assembler populates the five ADR-066 fields from catalog artifacts via SPARQL CONSTRUCT
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

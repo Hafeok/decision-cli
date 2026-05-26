@@ -1,7 +1,7 @@
 ---
 id: TC-159
 title: dec verify feature renders per-graph + per-TC + aggregate verdict and maps aggregate to exit code
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:

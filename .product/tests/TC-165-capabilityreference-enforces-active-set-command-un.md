@@ -1,7 +1,7 @@
 ---
 id: TC-165
 title: CapabilityReference enforces active-set command uniqueness; supersession is the only path to evolve
-type: scenario
+type: exit-criteria
 status: unimplemented
 validates:
   features:
