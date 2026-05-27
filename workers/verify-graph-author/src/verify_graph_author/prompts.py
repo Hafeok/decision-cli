@@ -134,6 +134,43 @@ name, not a namespace — the namespace is the same dec namespace).
 If the artifact you need to verify is in product-cli's graph
 (feature, ADR, TC), use the same pattern but point `target` at
 `.product/graph/index.ttl` instead.
+
+==========================================================
+ASK VS SELECT — `expect-rows` REQUIRES SELECT
+==========================================================
+
+A `sparql-assertion` step ASSERTS A ROW COUNT. The runner takes the
+declared `expect-rows: N` and compares it to the number of solution
+bindings the query returns. That comparison only works for SELECT
+queries — those are the SPARQL form that produces rows.
+
+  - `SELECT ?x WHERE { … }` → returns a sequence of rows. `expect-rows`
+    is the count you assert about that sequence. Use this for every
+    "the store should contain N artifacts matching …" assertion.
+  - `ASK WHERE { … }` → returns ONE boolean (true / false). It does
+    NOT produce rows. Pairing `ASK` with `expect-rows: 1` is a
+    semantic mismatch — the runner will record 0 rows (because there
+    is no row-shape projection at all) and the step will fail even
+    when the underlying pattern would have matched. NEVER write
+    `ASK WHERE …` inside a sparql-assertion step.
+  - `CONSTRUCT` / `DESCRIBE` → also wrong shape; produce graphs, not
+    rows. Don't use them in sparql-assertion steps either.
+
+If the TC's success criterion is "the artifact exists" (and you don't
+care about its other properties), write the SELECT form with the
+single variable you want to count, like:
+
+  "query": "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?role WHERE { ?role a dec:Role ; dec:identifier \"verifier\" . }",
+  "expect-rows": 1
+
+— not the ASK form. Read `expect-rows` aloud: "the SELECT returns
+this many rows." If that sentence doesn't apply to your query, the
+query is the wrong shape.
+
+If the TC asserts "at least N", set `expect-rows: N` and pick a
+SELECT whose binding count you expect to equal N. There is no
+greater-than-or-equal operator — design the query so the row count
+is exact.
 """
 
 

@@ -19,7 +19,7 @@ use oxigraph::model::NamedNode;
 use crate::core::feedback::artifact::{Feedback, Severity};
 use crate::core::feedback::class::FeedbackClass;
 use crate::core::ontology::verdict::Verdict;
-use crate::core::ontology::verification_graph::VerificationGraph;
+use crate::core::ontology::verification_graph::{StepKind, VerificationGraph};
 use crate::core::ontology::verification_result::StepOutcome;
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
@@ -100,7 +100,7 @@ fn collect_feedback_inputs(
             StepOutcome::Pass => continue,
         };
         let target_role =
-            target_role_for_step(class, verdict, trace.exit_code).to_string();
+            target_role_for_step(class, verdict, trace.exit_code, step.kind).to_string();
         let evidence = build_evidence_body(step.kind, trace, i);
         for tc in &step.provides_evidence_for {
             out.push(FeedbackInput {
@@ -116,25 +116,40 @@ fn collect_feedback_inputs(
 
 /// Per-step routing rule for FT-108 defect feedback.
 ///
-/// Combines two signals: the failing step's exit code (when present)
-/// and the graph-level verdict. A step whose exit code is in
-/// [`GRAPH_FAULT_EXIT_CODES`] (2 / 126 / 127) is itself a graph fault
-/// regardless of what other steps in the same graph did — route the
-/// defect to the verifier so the verify-graph-author can re-author
-/// the broken step. Steps with non-graph-fault exits fall back to the
-/// graph-verdict mapping (`rejected` → implementer; `amendment-required`
-/// → verifier). The `gap` class always falls back to the default
-/// target role for that class.
+/// Combines three signals: the failing step's exit code (when
+/// present), the step's kind, and the graph-level verdict. The
+/// hierarchy:
+///   1. Shell steps with exit code in [`GRAPH_FAULT_EXIT_CODES`]
+///      (2 / 126 / 127) — graph fault, route to `verifier`.
+///   2. Assertion-kind steps (`sparql-assertion`, `file-assertion`,
+///      `http-request`) that fail — the verifier authored both the
+///      assertion and its expected shape, so the most likely cause is
+///      a wrong query / path / response expectation. Route to
+///      `verifier`. If the underlying artifact actually is missing,
+///      the re-author dispatch can decide to emit a separate
+///      implementer-targeted feedback (or leave the assertion alone
+///      if it's correctly worded).
+///   3. Anything else falls back to the graph-verdict mapping
+///      (`rejected` → implementer; `amendment-required` → verifier).
+///   4. The `gap` class always falls back to the default target role
+///      for that class (spec-author).
 fn target_role_for_step(
     class: FeedbackClass,
     verdict: Verdict,
     exit_code: Option<i64>,
+    kind: StepKind,
 ) -> &'static str {
     if matches!(class, FeedbackClass::Defect) {
         if let Some(code) = exit_code {
             if GRAPH_FAULT_EXIT_CODES.contains(&code) {
                 return "verifier";
             }
+        }
+        if matches!(
+            kind,
+            StepKind::SparqlAssertion | StepKind::FileAssertion | StepKind::HttpRequest
+        ) {
+            return "verifier";
         }
     }
     match (class, verdict) {
