@@ -209,21 +209,34 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
     finalize_generate(req, workdir, &env_short, proposal, preview)
 }
 
-/// FT-107 — refuse `kind = Match` proposals when the bundle carried
-/// defect feedback (the orchestrator dispatched the worker specifically
-/// to re-author from runtime evidence; a Match response means the
-/// worker ignored the feedback).
+/// FT-107 — when the bundle carries defect feedback, refuse two
+/// degenerate worker responses:
+///
+/// 1. `kind = Match` against the broken graph: the worker saw the
+///    runtime evidence and chose to defer anyway.
+/// 2. `kind = New` with an empty `addressed_feedback_iris`: the worker
+///    produced a fresh graph but didn't cite which feedback drove its
+///    design. Without the citations the accept path has nothing to
+///    transition to `addressed`, so the broken-feedback loop never
+///    closes. Treat the omission as a contract violation rather than a
+///    soft warning — schema-level enforcement isn't expressible
+///    cross-payload in JSON Schema (the constraint depends on the
+///    *input* bundle), so we enforce it server-side at the same seam
+///    as the Match rejection.
 fn reject_match_when_feedback_present(
     proposal: &GraphProposal,
     bundle: &bundle::VerifyGraphAuthorInputJson,
 ) -> Result<(), HandlerError> {
-    if matches!(proposal.kind, ProposalKind::Match) && !bundle.defect_feedback.is_empty() {
-        let iris: Vec<String> = bundle
-            .defect_feedback
-            .iter()
-            .map(|fb| fb.feedback_iri.clone())
-            .collect();
-        return Err(HandlerError::WorkerIgnoredFeedback {
+    if bundle.defect_feedback.is_empty() {
+        return Ok(());
+    }
+    let iris: Vec<String> = bundle
+        .defect_feedback
+        .iter()
+        .map(|fb| fb.feedback_iri.clone())
+        .collect();
+    match proposal.kind {
+        ProposalKind::Match => Err(HandlerError::WorkerIgnoredFeedback {
             feedback_iris: iris.clone(),
             detail: format!(
                 "verify-graph-author returned kind=Match despite the bundle carrying \
@@ -231,9 +244,34 @@ fn reject_match_when_feedback_present(
                  kind=New (or Gap) and address the runtime evidence",
                 n = iris.len(),
             ),
-        });
+        }),
+        ProposalKind::New => {
+            let cited = proposal
+                .new
+                .as_ref()
+                .map(|n| n.addressed_feedback_iris.len())
+                .unwrap_or(0);
+            if cited == 0 {
+                Err(HandlerError::WorkerIgnoredFeedback {
+                    feedback_iris: iris.clone(),
+                    detail: format!(
+                        "verify-graph-author returned kind=New with an empty \
+                         addressed_feedback_iris despite the bundle carrying {n} \
+                         defect-feedback entries ({iris:?}); the worker must cite \
+                         at least one feedback IRI in addressed_feedback_iris so the \
+                         accept path can transition it from produced to addressed",
+                        n = iris.len(),
+                    ),
+                })
+            } else {
+                Ok(())
+            }
+        }
+        // `Gap` is acceptable: the worker is honestly saying it cannot
+        // address the feedback with the available vocabulary, which is
+        // a useful diagnostic rather than a contract violation.
+        ProposalKind::Gap => Ok(()),
     }
-    Ok(())
 }
 
 fn apply_chokepoint_validator(

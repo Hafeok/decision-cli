@@ -16,8 +16,9 @@ use super::{
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
     internal_dispatch, internal_dispatch::InternalDispatchCmd, mcp, mcp::McpCmd, migrate,
     migrate::MigrateCmd, preflight, preflight::PreflightArgs, product, product::ProductArgs, query,
-    query::QueryCmd, session, session::SessionCmd, sparql, sparql::SparqlArgs, status, verify,
-    verify::VerifyCmd, workers, workers::WorkersCmd,
+    query::QueryCmd, seed_ft101_catalog, seed_ft101_catalog::SeedFt101CatalogArgs, session,
+    session::SessionCmd, sparql, sparql::SparqlArgs, status, verify, verify::VerifyCmd, workers,
+    workers::WorkersCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -53,6 +54,11 @@ pub enum Command {
     /// point; this command is the Rust-side chokepoint it shells out to.
     #[command(name = "_bootstrap-catalog", hide = true)]
     BootstrapCatalog(BootstrapCatalogArgs),
+    /// Hidden helper (FT-107 follow-up): seed the FT-101 catalog
+    /// (CapabilityReference + OntologyDescription) so the
+    /// verify-graph-author bundle's enrichment fields are non-empty.
+    #[command(name = "_seed-ft101-catalog", hide = true)]
+    SeedFt101Catalog(SeedFt101CatalogArgs),
     /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
     /// Feature-coverage report sourced from the internal product-cli
@@ -103,6 +109,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Sparql(args) => sparql::run(workdir, args),
         Command::CheckGoal(args) => check_goal::run(workdir, args),
         Command::BootstrapCatalog(args) => bootstrap_catalog::run(workdir, args),
+        Command::SeedFt101Catalog(args) => seed_ft101_catalog::run(workdir, args),
         Command::Implement(args) => implement::run(workdir, args),
         Command::Preflight(args) => preflight::run(workdir, args),
         Command::Health => health::run(workdir),

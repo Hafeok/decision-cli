@@ -162,7 +162,10 @@ def _run_via_router(
         max_tokens=bundle.max_tokens,
         temperature=0.0,
         reasoning_effort=bundle.parameters.get("reasoning_effort"),
-        response_schema=build_proposal_response_schema(bundle.step_vocabulary),
+        response_schema=build_proposal_response_schema(
+            bundle.step_vocabulary,
+            defect_feedback_iris=[fb.feedback_iri for fb in bundle.defect_feedback],
+        ),
         exposes_reasoning_trace=bool(
             bundle.parameters.get("exposes_reasoning_trace", False)
         ),

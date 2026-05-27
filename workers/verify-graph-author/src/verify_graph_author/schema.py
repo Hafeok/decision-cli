@@ -28,10 +28,11 @@ from .output import GraphProposal
 
 def build_proposal_response_schema(
     step_vocabulary: list[StepKindRecord],
+    defect_feedback_iris: list[str] | None = None,
 ) -> dict[str, Any]:
     """Return a JSON Schema where ProposedStep is a per-kind oneOf union.
 
-    The base shape is ``GraphProposal.model_json_schema()`` with two
+    The base shape is ``GraphProposal.model_json_schema()`` with three
     transformations layered on top:
 
     1. ``$defs/ProposedStep`` is replaced with a ``oneOf`` over the kinds
@@ -40,12 +41,20 @@ def build_proposal_response_schema(
        ``fields_schema``. Without this, the model treats ``fields`` as
        freeform and emits ``fields: {}`` even when keys are REQUIRED.
 
-    2. The root object is replaced with a ``oneOf`` discriminated on
-       ``kind``: one branch per proposal kind, each requiring the matching
-       payload (``match`` / ``new`` / ``gap``) to be populated. Without
-       this the model emits ``kind: 'new'`` with ``match: null``,
-       ``new: null``, ``gap: null`` — the Pydantic root validator then
-       rejects it for having no populated payload.
+    2. ``$defs/NewProposal``'s ``addressed_feedback_iris`` is constrained
+       to be a non-empty array whose items are drawn from the bundle's
+       ``defect_feedback`` IRIs when ``defect_feedback_iris`` is non-empty
+       (FT-107). Without this the model treats the field as optional and
+       returns an empty list, which the server rejects with
+       ``WorkerIgnoredFeedback``. Pushing the constraint into the schema
+       removes that round-trip — the constrained decoder cannot emit a
+       proposal the server would reject.
+
+    3. The root object is replaced with a ``oneOf`` discriminated on
+       ``kind``. When ``defect_feedback_iris`` is non-empty the ``match``
+       branch is dropped from the union: a covering graph already exists
+       and produced the feedback we're re-authoring against, so a Match
+       response is a contract violation in that context.
     """
     schema = copy.deepcopy(GraphProposal.model_json_schema())
     defs = schema.setdefault("$defs", {})
@@ -60,21 +69,63 @@ def build_proposal_response_schema(
             ),
             "oneOf": branches,
         }
-    return _apply_top_level_discriminator(schema)
+    iris = defect_feedback_iris or []
+    if iris:
+        _constrain_new_proposal_to_address_feedback(defs, iris)
+    return _apply_top_level_discriminator(schema, allow_match=not iris)
 
 
-def _apply_top_level_discriminator(schema: dict[str, Any]) -> dict[str, Any]:
+def _constrain_new_proposal_to_address_feedback(
+    defs: dict[str, Any], defect_feedback_iris: list[str]
+) -> None:
+    """Force ``NewProposal.addressed_feedback_iris`` to be non-empty and
+    drawn from the bundle's defect-feedback IRIs (FT-107)."""
+    new_def = defs.get("NewProposal")
+    if not isinstance(new_def, dict):
+        return
+    props = new_def.setdefault("properties", {})
+    # Scaleway's structured-output grammar doesn't support `uniqueItems`;
+    # `minItems: 1` + the enum constraint already gives us the
+    # non-empty-and-known guarantee we need.
+    props["addressed_feedback_iris"] = {
+        "type": "array",
+        "minItems": 1,
+        "items": {"type": "string", "enum": list(defect_feedback_iris)},
+        "description": (
+            "FT-107: must cite at least one feedback IRI from the bundle's "
+            "`defect_feedback`. The accept path uses this list to transition "
+            "each cited feedback from `produced` to `addressed`."
+        ),
+    }
+    required = list(new_def.get("required", []))
+    if "addressed_feedback_iris" not in required:
+        required.append("addressed_feedback_iris")
+    new_def["required"] = required
+
+
+def _apply_top_level_discriminator(
+    schema: dict[str, Any], allow_match: bool = True
+) -> dict[str, Any]:
     """Replace the GraphProposal root with a kind-discriminated oneOf.
 
     Each branch sets the relevant payload (``match`` / ``new`` / ``gap``)
     as required and pins ``kind`` to a ``const`` so the model has to
     populate exactly one payload to satisfy the schema.
+
+    When ``allow_match`` is False (FT-107: the bundle carries defect
+    feedback), the ``match`` branch is omitted — a Match response would
+    just defer to the broken graph and is rejected server-side anyway.
     """
     bundle_hash_schema = {
         "type": "string",
         "minLength": 8,
         "description": "Echo of the input bundle_hash for protocol integrity.",
     }
+    branches: list[dict[str, Any]] = []
+    if allow_match:
+        branches.append(_root_branch("match", "MatchProposal", bundle_hash_schema))
+    branches.append(_root_branch("new", "NewProposal", bundle_hash_schema))
+    branches.append(_root_branch("gap", "GapProposal", bundle_hash_schema))
     return {
         "$defs": schema.get("$defs", {}),
         "title": schema.get("title", "GraphProposal"),
@@ -82,11 +133,7 @@ def _apply_top_level_discriminator(schema: dict[str, Any]) -> dict[str, Any]:
             "description",
             "Single artifact returned by the verify-graph-author worker.",
         ),
-        "oneOf": [
-            _root_branch("match", "MatchProposal", bundle_hash_schema),
-            _root_branch("new", "NewProposal", bundle_hash_schema),
-            _root_branch("gap", "GapProposal", bundle_hash_schema),
-        ],
+        "oneOf": branches,
     }
 
 

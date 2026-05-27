@@ -15,6 +15,7 @@ pub mod migrate;
 pub mod preflight;
 pub mod product;
 pub mod query;
+pub mod seed_ft101_catalog;
 pub mod session;
 pub mod sparql;
 pub mod status;

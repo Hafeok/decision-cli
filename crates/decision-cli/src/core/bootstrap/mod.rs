@@ -9,10 +9,12 @@
 
 pub mod catalog;
 pub mod diff;
+pub mod ft101_catalog;
 pub mod migrate;
 mod parse;
 mod plan;
 pub mod yaml;
 
 pub use catalog::{bootstrap_catalog, BootstrapError, BootstrapReport};
+pub use ft101_catalog::{seed_ft101_catalog, SeedError as Ft101SeedError, SeedReport as Ft101SeedReport};
 pub use migrate::{migrate_bundle_stakes, migrate_session_token_breakdown};
