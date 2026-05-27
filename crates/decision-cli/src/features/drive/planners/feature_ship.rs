@@ -10,6 +10,8 @@
 //! | `NeverRun` | `0` | `0` | `DispatchVerifier` |
 //! | `Rejected` / `Amendment` | `0` | `0` | `Stuck` |
 
+use std::cell::RefCell;
+
 use crate::core::drive::{Action, ArtifactKind, ArtifactRef, PlanContext, Planner};
 use crate::core::drive::planner::PlanError;
 
@@ -22,13 +24,34 @@ use super::super::inspect::{FeatureVerdict, GraphInspector};
 /// [`super::super::inspect::ProductionInspector`].
 pub struct FeatureShipPlanner<I: GraphInspector> {
     inspector: I,
+    /// Snapshot from the most recent `classify` call. Used to detect
+    /// non-convergence: if a dispatch round didn't reduce the
+    /// open-feedback count for the role we just dispatched, we are
+    /// stuck and should escalate rather than spin.
+    last_seen: RefCell<Option<LastSeen>>,
+}
+
+/// Snapshot of the planner's observed state from a prior classify
+/// call. The `intended_action` field records what the planner would
+/// have returned (i.e., the dispatch we expected the executor to run
+/// before the next iteration); the next classify call compares
+/// against it.
+#[derive(Debug, Clone)]
+struct LastSeen {
+    feature_id: String,
+    impl_open: usize,
+    vga_open: usize,
+    intended_action: Action,
 }
 
 impl<I: GraphInspector> FeatureShipPlanner<I> {
     /// Construct with an explicit inspector. Production callers use
     /// `ProductionInspector::new(ctx)`; tests pass a stub.
     pub fn new(inspector: I) -> Self {
-        Self { inspector }
+        Self {
+            inspector,
+            last_seen: RefCell::new(None),
+        }
     }
 
     /// Core classification — separated from the `Planner` trait impl
@@ -57,7 +80,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 detail: format!("{e}"),
             })?;
 
-        Ok(match (verdict, impl_open > 0, vga_open > 0) {
+        let intended = match (verdict, impl_open > 0, vga_open > 0) {
             (FeatureVerdict::Approved, _, _) => Action::Done,
             (_, true, _) => Action::DispatchImplementer {
                 feature_id: feature_id.to_string(),
@@ -79,7 +102,91 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                     ),
                 }
             }
-        })
+        };
+
+        let final_action =
+            match self.detect_no_progress(feature_id, impl_open, vga_open, &intended) {
+                Some(reason) => Action::Stuck { reason },
+                None => intended.clone(),
+            };
+
+        *self.last_seen.borrow_mut() = Some(LastSeen {
+            feature_id: feature_id.to_string(),
+            impl_open,
+            vga_open,
+            intended_action: intended,
+        });
+
+        Ok(final_action)
+    }
+
+    /// Compare the current observed state against the prior snapshot.
+    /// Returns `Some(reason)` when the most recent dispatch round
+    /// failed to reduce the open-defect count for the role that was
+    /// dispatched — meaning another dispatch of the same kind would
+    /// be unproductive.
+    ///
+    /// Implementer dispatches expect `impl_open` to drop; verifier
+    /// dispatches expect `vga_open` to drop. If a round didn't
+    /// reduce its corresponding count by at least one, the worker
+    /// either failed to emit `addressed_feedback_iris` (the
+    /// transition never fired) or genuinely couldn't address the
+    /// feedback — both are stuck-states for the planner.
+    fn detect_no_progress(
+        &self,
+        feature_id: &str,
+        impl_open: usize,
+        vga_open: usize,
+        intended: &Action,
+    ) -> Option<String> {
+        let prev = self.last_seen.borrow();
+        let prev = prev.as_ref()?;
+        if prev.feature_id != feature_id {
+            return None;
+        }
+        match (&prev.intended_action, intended) {
+            (
+                Action::DispatchImplementer { .. },
+                Action::DispatchImplementer { .. },
+            ) => {
+                if impl_open >= prev.impl_open {
+                    Some(format!(
+                        "implementer dispatch did not reduce open implementer-defect \
+                         count ({prev_n} → {new_n}) for feature {feature_id}. \
+                         Either the worker returned without addressing any feedback \
+                         (no addressed_feedback_iris in CodeChange output) or the \
+                         defects describe scope outside its capability. Escalate to \
+                         spec-author or inspect `dec loop show {feature_id}` for \
+                         the chain.",
+                        prev_n = prev.impl_open,
+                        new_n = impl_open,
+                    ))
+                } else {
+                    None
+                }
+            }
+            (
+                Action::DispatchVerifyGraphAuthor { .. },
+                Action::DispatchVerifyGraphAuthor { .. },
+            ) => {
+                if vga_open >= prev.vga_open {
+                    Some(format!(
+                        "verify-graph-author dispatch did not reduce open \
+                         verifier-defect count ({prev_n} → {new_n}) for feature \
+                         {feature_id}. The re-authored graph likely failed the same \
+                         way as before; the TC may describe scope that isn't yet \
+                         implemented (a real gap rather than a graph-design issue). \
+                         Escalate to spec-author or inspect `dec loop show \
+                         {feature_id}`.",
+                        prev_n = prev.vga_open,
+                        new_n = vga_open,
+                    ))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }
 
@@ -232,5 +339,127 @@ mod tests {
         };
         let err = planner.plan(&ctx, &artifact).unwrap_err();
         assert!(format!("{err}").contains("expected Feature"));
+    }
+
+    // -----------------------------------------------------------------
+    // Convergence-detection tests. Stateful planner: state evolves
+    // across consecutive classify() calls via interior mutability.
+    // The mutable stub lets us model the count-change a real
+    // dispatch would produce.
+    // -----------------------------------------------------------------
+
+    use std::cell::Cell;
+
+    struct MutableStubInspector {
+        verdict: Cell<FeatureVerdict>,
+        impl_count: Cell<usize>,
+        vga_count: Cell<usize>,
+    }
+
+    impl MutableStubInspector {
+        fn new(v: FeatureVerdict, i: usize, g: usize) -> Self {
+            Self {
+                verdict: Cell::new(v),
+                impl_count: Cell::new(i),
+                vga_count: Cell::new(g),
+            }
+        }
+    }
+
+    impl GraphInspector for MutableStubInspector {
+        fn aggregate_verdict_for_feature(
+            &self,
+            _: &str,
+        ) -> Result<FeatureVerdict, InspectError> {
+            Ok(self.verdict.get())
+        }
+        fn open_defect_feedback_count(
+            &self,
+            _: &str,
+            role_id: &str,
+        ) -> Result<usize, InspectError> {
+            Ok(match role_id {
+                "implementer" => self.impl_count.get(),
+                "verifier" => self.vga_count.get(),
+                _ => 0,
+            })
+        }
+    }
+
+    #[test]
+    fn implementer_repeated_with_no_progress_returns_stuck() {
+        // Round 1: 5 implementer-defects, dispatch implementer.
+        // Round 2: same 5 defects (worker no-op), expect Stuck.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 5, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchImplementer { .. }));
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a2 {
+            Action::Stuck { reason } => {
+                assert!(reason.contains("implementer"), "reason: {reason}");
+                assert!(reason.contains("5 → 5"), "reason: {reason}");
+            }
+            other => panic!("expected Stuck, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn implementer_repeated_with_progress_continues_dispatching() {
+        // Round 1: 5 defects, dispatch.
+        // Round 2: 3 defects (worker fixed 2), dispatch again.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 5, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchImplementer { .. }));
+        // Simulate dispatch result: 2 defects addressed.
+        planner.inspector.impl_count.set(3);
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a2, Action::DispatchImplementer { .. }));
+    }
+
+    #[test]
+    fn vga_repeated_with_no_progress_returns_stuck() {
+        // Round 1: 0 implementer, 3 verifier defects, dispatch vga.
+        // Round 2: same 3 defects, expect Stuck with vga-shaped reason.
+        let inspector = MutableStubInspector::new(FeatureVerdict::AmendmentRequired, 0, 3);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchVerifyGraphAuthor { .. }));
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a2 {
+            Action::Stuck { reason } => {
+                assert!(reason.contains("verify-graph-author"), "reason: {reason}");
+                assert!(reason.contains("3 → 3"), "reason: {reason}");
+            }
+            other => panic!("expected Stuck, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn vga_repeated_with_progress_continues_dispatching() {
+        let inspector = MutableStubInspector::new(FeatureVerdict::AmendmentRequired, 0, 4);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchVerifyGraphAuthor { .. }));
+        planner.inspector.vga_count.set(1);
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a2, Action::DispatchVerifyGraphAuthor { .. }));
+    }
+
+    #[test]
+    fn verifier_then_implementer_does_not_falsely_flag_stuck() {
+        // Round 1: never-run, dispatch verifier.
+        // Round 2: post-verify, 5 impl defects appear. Different
+        // dispatch shape — must NOT flag stuck even though counts
+        // diverged from the prior (which were 0).
+        let inspector = MutableStubInspector::new(FeatureVerdict::NeverRun, 0, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchVerifier { .. }));
+        planner.inspector.verdict.set(FeatureVerdict::Rejected);
+        planner.inspector.impl_count.set(5);
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a2, Action::DispatchImplementer { .. }));
     }
 }
