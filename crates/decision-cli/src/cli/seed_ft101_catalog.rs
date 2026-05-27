@@ -6,8 +6,8 @@
 use std::path::Path;
 use std::process::ExitCode;
 
-use decision_cli::core::bootstrap::ft101_catalog::deactivate_role_binding;
-use decision_cli::core::bootstrap::{seed_ft101_catalog, Ft101SeedReport};
+use decision_cli::core::bootstrap::ft101_catalog::{deactivate_role_binding, seed_ft101_catalog_with};
+use decision_cli::core::bootstrap::Ft101SeedReport;
 
 #[derive(Debug, clap::Args)]
 pub struct SeedFt101CatalogArgs {
@@ -18,6 +18,12 @@ pub struct SeedFt101CatalogArgs {
     /// uniqueness invariant.
     #[arg(long, value_name = "IRI")]
     pub deactivate_binding: Option<String>,
+    /// Overwrite existing CapabilityReference / OntologyDescription
+    /// artifacts in the catalog graph. Default is idempotent (skip
+    /// existing IRIs). Use after the baked-in CR bodies have been
+    /// corrected and the prior catalog content is stale.
+    #[arg(long)]
+    pub force: bool,
 }
 
 pub fn run(workdir: &Path, args: SeedFt101CatalogArgs) -> ExitCode {
@@ -32,7 +38,7 @@ pub fn run(workdir: &Path, args: SeedFt101CatalogArgs) -> ExitCode {
         }
         return ExitCode::SUCCESS;
     }
-    match seed_ft101_catalog(workdir) {
+    match seed_ft101_catalog_with(workdir, args.force) {
         Ok(report) => {
             print_success(&report);
             ExitCode::SUCCESS

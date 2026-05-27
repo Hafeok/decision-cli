@@ -184,11 +184,7 @@ pub fn assemble_bundle(
     })?;
     let relevant_tcs = tc_shorts
         .iter()
-        .map(|t| TcRecord {
-            id: t.clone(),
-            title: String::new(),
-            body: String::new(),
-        })
+        .map(|t| load_tc_record(product_root, t))
         .collect();
     let target_environment = load_env_record(workdir, env_short)?;
     let env_struct = load_env_struct(workdir, env_short)?;
@@ -301,6 +297,88 @@ fn read_feature_file(path: &Path) -> Result<String, HandlerError> {
     fs::read_to_string(path).map_err(|e| HandlerError::Internal {
         detail: format!("bundle: reading {p}: {e}", p = path.display()),
     })
+}
+
+/// FT-107.F — surface each TC's markdown body to the worker. Without
+/// this the worker only sees the TC short id, leaving it to guess the
+/// claim the graph must produce evidence for. The body includes the
+/// frontmatter (title, validates) and the Description / Scenarios /
+/// Boundary sections the spec author wrote.
+///
+/// Best-effort: if the TC file is missing the record returns id-only
+/// with empty title/body so the bundle still assembles. Lookup mirrors
+/// `load_feature_body`: exact match first, then prefix scan.
+fn load_tc_record(product_root: &Path, tc_id: &str) -> TcRecord {
+    let tests_dir = product_root.join(".product").join("tests");
+    if !tests_dir.is_dir() {
+        return TcRecord {
+            id: tc_id.to_string(),
+            title: String::new(),
+            body: String::new(),
+        };
+    }
+    let path = tests_dir.join(format!("{tc_id}.md"));
+    let path = if path.is_file() {
+        Some(path)
+    } else {
+        find_prefixed_tc_path(&tests_dir, tc_id)
+    };
+    let Some(path) = path else {
+        return TcRecord {
+            id: tc_id.to_string(),
+            title: String::new(),
+            body: String::new(),
+        };
+    };
+    let raw = match fs::read_to_string(&path) {
+        Ok(s) => s,
+        Err(_) => {
+            return TcRecord {
+                id: tc_id.to_string(),
+                title: String::new(),
+                body: String::new(),
+            };
+        }
+    };
+    let title = extract_frontmatter_title(&raw);
+    TcRecord {
+        id: tc_id.to_string(),
+        title,
+        body: raw,
+    }
+}
+
+fn find_prefixed_tc_path(tests_dir: &Path, tc_id: &str) -> Option<std::path::PathBuf> {
+    let prefix = format!("{tc_id}-");
+    let entries = fs::read_dir(tests_dir).ok()?;
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else { continue };
+        if name.starts_with(&prefix) && name.ends_with(".md") {
+            return Some(entry.path());
+        }
+    }
+    None
+}
+
+fn extract_frontmatter_title(body: &str) -> String {
+    let mut in_frontmatter = false;
+    for line in body.lines() {
+        if line.trim() == "---" {
+            if in_frontmatter {
+                return String::new();
+            }
+            in_frontmatter = true;
+            continue;
+        }
+        if !in_frontmatter {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("title:") {
+            return rest.trim().trim_matches(|c| c == '"' || c == '\'').to_string();
+        }
+    }
+    String::new()
 }
 
 fn find_prefixed_feature_path(

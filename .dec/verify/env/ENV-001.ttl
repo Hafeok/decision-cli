@@ -9,4 +9,9 @@
     dec:safetyClass "isolated" ;
     dec:allowedOps ( "shell" "filesystem" "sparql-local" ) ;
     dec:setup "mkdir -p \"$DEC_VERIFY_TMP\" && cd \"$DEC_VERIFY_TMP\"" ;
-    dec:teardown "rm -rf \"$DEC_VERIFY_TMP\"" .
+    dec:teardown "rm -rf \"$DEC_VERIFY_TMP\"" ;
+    dec:concreteCapabilities [
+        dec:binariesOnPath ( "bash" "dec" "cargo" "grep" "find" "ls" "cat" "mkdir" "touch" "echo" "sed" "awk" "head" "tail" "wc" "test" "cd" "rm" "cp" "mv" "diff" "jq" "curl" "git" "true" "false" ) ;
+        dec:writablePaths ( "$DEC_VERIFY_TMP" "./" ) ;
+        dec:environmentVariables ( "DEC_VERIFY_TMP" "DEC_WORKDIR" "TMPDIR" "PATH" "HOME" )
+    ] .

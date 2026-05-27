@@ -61,6 +61,15 @@ pub struct SeedReport {
 /// graph and skipped. The single canonical OntologyDescription is
 /// inserted only when no `dec:OntologyDescription` exists yet.
 pub fn seed_ft101_catalog(workdir: &Path) -> Result<SeedReport, SeedError> {
+    seed_ft101_catalog_with(workdir, false)
+}
+
+/// Variant of [`seed_ft101_catalog`] that overwrites existing artifacts
+/// when `force` is true (FT-107.D — used after baked-in CR bodies have
+/// been corrected to match the live `dec --help` ground truth).
+pub fn seed_ft101_catalog_with(workdir: &Path, force: bool) -> Result<SeedReport, SeedError> {
+    use oxigraph::model::Subject;
+
     let dump = orchestration_dump_path(workdir);
     let store = load_store_from_dump(&dump)
         .map_err(|e| SeedError::Store(format!("loading {}: {e:#}", dump.display())))?;
@@ -74,9 +83,29 @@ pub fn seed_ft101_catalog(workdir: &Path) -> Result<SeedReport, SeedError> {
     let mut report = SeedReport::default();
 
     for cr in capability_references() {
-        if iri_present(&store, &cr.iri()) {
+        let existed = iri_present(&store, &cr.iri());
+        if existed && !force {
             report.capabilities_skipped += 1;
             continue;
+        }
+        if existed {
+            let removes: Vec<oxigraph::model::Quad> = store
+                .quads_for_pattern(
+                    Some(Subject::NamedNode(cr.iri()).as_ref()),
+                    None,
+                    None,
+                    None,
+                )
+                .filter_map(Result::ok)
+                .collect();
+            if !removes.is_empty() {
+                writer
+                    .commit(Mutation {
+                        removes,
+                        ..Mutation::default()
+                    })
+                    .map_err(|e| SeedError::Commit(format!("CR {} retract: {e:#}", cr.id)))?;
+            }
         }
         let quads = cr.to_quads();
         writer
@@ -85,8 +114,28 @@ pub fn seed_ft101_catalog(workdir: &Path) -> Result<SeedReport, SeedError> {
         report.capabilities_written += 1;
     }
 
-    if !ontology_description_present(&store) {
-        let od = canonical_ontology_description();
+    let od = canonical_ontology_description();
+    let od_exists = iri_present(&store, &od.iri());
+    if od_exists && force {
+        let removes: Vec<oxigraph::model::Quad> = store
+            .quads_for_pattern(
+                Some(Subject::NamedNode(od.iri()).as_ref()),
+                None,
+                None,
+                None,
+            )
+            .filter_map(Result::ok)
+            .collect();
+        if !removes.is_empty() {
+            writer
+                .commit(Mutation {
+                    removes,
+                    ..Mutation::default()
+                })
+                .map_err(|e| SeedError::Commit(format!("OD {} retract: {e:#}", od.id)))?;
+        }
+    }
+    if !ontology_description_present(&store) || (od_exists && force) {
         let quads = od.to_quads();
         writer
             .commit(Mutation::insert(quads))
@@ -257,20 +306,28 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         body: r#"{
   "command": "dec init",
   "synopsis": "Initialise the orchestration store from a ValueStream definition.",
+  "required_flags_one_of": ["--from", "--template"],
   "flags": [
-    {"name": "--from", "value_kind": "path", "required": false, "description": "Path to a ValueStream TTL file."},
-    {"name": "--template", "value_kind": "string", "required": false, "description": "Bundled template id (e.g. 'engineering-development')."}
+    {"name": "--from", "value_kind": "path", "description": "Path to a ValueStream TTL file. Mutually exclusive with --template; ONE is required."},
+    {"name": "--template", "value_kind": "string", "description": "Bundled template id (e.g. 'engineering-development'). Mutually exclusive with --from; ONE is required."}
   ],
   "positionals": [],
   "exit_codes": [
     {"code": 0, "meaning": "store initialised"},
     {"code": 1, "meaning": "validation/IO failure"},
-    {"code": 2, "meaning": "wrong working dir or stream missing"}
+    {"code": 2, "meaning": "neither --from nor --template was supplied, OR the working directory is already initialised"}
   ],
   "observable_effects": [
-    {"kind": "directory_written", "path_pattern": ".dec/store/"},
-    {"kind": "file_written", "path_pattern": ".dec/store/orchestration.nq"}
-  ]
+    {"kind": "file_written", "path_pattern": ".dec/store/orchestration.nq"},
+    {"kind": "file_written", "path_pattern": ".dec/definition.ttl"},
+    {"kind": "file_written", "path_pattern": ".dec/init-metadata.json"},
+    {"kind": "file_written", "path_pattern": ".dec/verify/env/ENV-001-ephemeral-cli.ttl"}
+  ],
+  "common_invocations": [
+    "dec init --template engineering-development",
+    "dec init --from ./streams/decision-cli-development.ttl"
+  ],
+  "notes": "Does NOT create '.dec/config.toml'. Refuses to overwrite an existing '.dec/' tree (exits 2)."
 }"#,
     },
     BakedCapability {
@@ -280,6 +337,7 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
   "command": "dec status",
   "synopsis": "Report the active value stream's bootstrap provenance.",
   "flags": [],
+  "positionals": [],
   "exit_codes": [
     {"code": 0, "meaning": "active stream printed"},
     {"code": 2, "meaning": "no init found"}
@@ -291,9 +349,24 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         command: "dec health",
         body: r#"{
   "command": "dec health",
-  "synopsis": "Liveness check; works outside an initialised tree.",
+  "synopsis": "Liveness check. Runs outside an initialised working tree.",
   "flags": [],
+  "positionals": [],
   "exit_codes": [{"code": 0, "meaning": "healthy"}]
+}"#,
+    },
+    BakedCapability {
+        id: "CR-DOCTOR",
+        command: "dec doctor",
+        body: r#"{
+  "command": "dec doctor",
+  "synopsis": "Worker preflight audit; checks that every bound worker binary resolves on $PATH and reports its version.",
+  "flags": [],
+  "positionals": [],
+  "exit_codes": [
+    {"code": 0, "meaning": "all workers resolve"},
+    {"code": 1, "meaning": "one or more workers missing"}
+  ]
 }"#,
     },
     BakedCapability {
@@ -302,11 +375,13 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         body: r#"{
   "command": "dec verify graph new",
   "synopsis": "Author a new dec:VerificationGraph artifact.",
+  "required_flags": ["--verifies", "--environment"],
   "flags": [
     {"name": "--verifies", "value_kind": "string", "required": true, "description": "FT-NNN or TC-NNN id this graph verifies."},
     {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id (e.g. ENV-001-ephemeral-cli)."},
-    {"name": "--id", "value_kind": "string", "required": false, "description": "Optional explicit VG-NNN id."}
+    {"name": "--id", "value_kind": "string", "required": false, "description": "Caller-supplied VG-NNN id; omitted → mints the next free VG-NNN."}
   ],
+  "positionals": [],
   "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
@@ -315,13 +390,14 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         command: "dec verify step add",
         body: r#"{
   "command": "dec verify step add",
-  "synopsis": "Append a step to an existing VerificationGraph.",
+  "synopsis": "Append a typed step to an existing VerificationGraph.",
+  "required_flags": ["--type"],
   "flags": [
-    {"name": "--graph", "value_kind": "string", "required": true, "description": "VG-NNN id."},
-    {"name": "--kind", "value_kind": "string", "required": true, "description": "Step kind (shell-command | file-assertion | sparql-assertion | http-request | wait-for | capture)."},
-    {"name": "--field", "value_kind": "key=value", "required": false, "repeatable": true, "description": "One key=value per step field."},
-    {"name": "--provides-evidence-for", "value_kind": "string", "required": false, "repeatable": true, "description": "TC-NNN id covered by this step."}
+    {"name": "--type", "value_kind": "string", "required": true, "description": "Step kind: shell-command | sparql-assertion | file-assertion | http-request | wait-for | capture."},
+    {"name": "--field", "value_kind": "key=value", "required": false, "repeatable": true, "description": "Per-kind field, e.g. --field command='dec status'. Repeatable."},
+    {"name": "--provides-evidence-for", "value_kind": "string", "required": false, "repeatable": true, "description": "TC-NNN short id this step provides evidence for. Repeatable."}
   ],
+  "positionals": [{"name": "GRAPH_ID", "value_kind": "string", "required": true, "description": "VG-NNN id of the target graph (positional, not a --graph flag)."}],
   "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
@@ -331,12 +407,13 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         body: r#"{
   "command": "dec verify graph generate",
   "synopsis": "Propose a graph for a feature in an environment (worker-driven).",
+  "required_flags": ["--environment"],
   "flags": [
-    {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id."},
+    {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id (e.g. ENV-001-ephemeral-cli)."},
     {"name": "--accept", "value_kind": "boolean", "required": false, "description": "Persist without prompting."},
     {"name": "--print-only", "value_kind": "boolean", "required": false, "description": "Show the proposal, never persist."}
   ],
-  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "description": "FT-NNN id."}],
+  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "required": true, "description": "FT-NNN id (positional)."}],
   "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
@@ -351,7 +428,7 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
     {"name": "--no-feedback", "value_kind": "boolean", "required": false, "description": "Skip Feedback emission."},
     {"name": "--keep-tmp", "value_kind": "boolean", "required": false, "description": "Set DEC_KEEP_TMP=1 to preserve ephemeral env tempdirs."}
   ],
-  "positionals": [{"name": "GRAPH_ID", "value_kind": "string", "description": "VG-NNN id."}],
+  "positionals": [{"name": "GRAPH_ID", "value_kind": "string", "required": true, "description": "VG-NNN id (positional)."}],
   "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
@@ -361,7 +438,13 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         body: r#"{
   "command": "dec verify feature",
   "synopsis": "Verify a feature by running every covering VerificationGraph and aggregating verdicts.",
-  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "description": "FT-NNN id."}],
+  "flags": [
+    {"name": "--environment", "value_kind": "string", "required": false, "description": "Filter to one environment (ENV-NNN[-suffix])."},
+    {"name": "--no-feedback", "value_kind": "boolean", "required": false, "description": "Skip Feedback emission."},
+    {"name": "--include-stale", "value_kind": "boolean", "required": false, "description": "Consider VGRs older than the freshness window."},
+    {"name": "--dry-run", "value_kind": "boolean", "required": false, "description": "Enumerate which graphs would run; do not execute."}
+  ],
+  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "required": true, "description": "FT-NNN id (positional). Note: there is NO --feature-id flag."}],
   "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
@@ -371,12 +454,16 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         body: r#"{
   "command": "dec verify env new",
   "synopsis": "Author a new dec:VerificationEnvironment artifact.",
+  "required_flags": ["--type", "--safety-class", "--allowed-ops"],
   "flags": [
-    {"name": "--id", "value_kind": "string", "required": false, "description": "Optional explicit ENV-NNN id."},
     {"name": "--type", "value_kind": "string", "required": true, "description": "Env kind (e.g. ephemeral-tempdir | repo-path | remote-http)."},
     {"name": "--safety-class", "value_kind": "string", "required": true, "description": "isolated | shared-non-destructive | production-readonly."},
-    {"name": "--allowed-op", "value_kind": "string", "required": false, "repeatable": true, "description": "Allowed op token."}
+    {"name": "--allowed-ops", "value_kind": "csv", "required": true, "description": "Comma-separated operation tokens (e.g. 'shell,filesystem')."},
+    {"name": "--id", "value_kind": "string", "required": false, "description": "Caller-supplied ENV-NNN id."},
+    {"name": "--setup", "value_kind": "string", "required": false, "description": "Optional setup shell snippet."},
+    {"name": "--teardown", "value_kind": "string", "required": false, "description": "Optional teardown shell snippet."}
   ],
+  "positionals": [],
   "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
@@ -386,7 +473,12 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         body: r#"{
   "command": "dec feedback list",
   "synopsis": "List open feedback grouped by class and target role.",
-  "flags": [],
+  "flags": [
+    {"name": "--state", "value_kind": "string", "required": false, "description": "Restrict to a lifecycle state (produced | routed | received | addressed)."},
+    {"name": "--class", "value_kind": "string", "required": false, "description": "Restrict to a feedback class (gap | defect | contradiction | ...)."},
+    {"name": "--target", "value_kind": "string", "required": false, "description": "Restrict to a target role id."}
+  ],
+  "positionals": [],
   "exit_codes": [{"code": 0, "meaning": "ok"}]
 }"#,
     },
@@ -395,10 +487,11 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         command: "dec events tail",
         body: r#"{
   "command": "dec events tail",
-  "synopsis": "Subscribe to live events via SSE.",
+  "synopsis": "Stream events live from the SSE endpoint of a running `dec` daemon.",
   "flags": [
-    {"name": "--since", "value_kind": "integer", "required": false, "description": "Replay events from a sequence number."}
+    {"name": "--url", "value_kind": "url", "required": false, "description": "Override the SSE endpoint."}
   ],
+  "positionals": [],
   "exit_codes": [{"code": 0, "meaning": "ok"}]
 }"#,
     },
@@ -407,9 +500,9 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
         command: "dec preflight",
         body: r#"{
   "command": "dec preflight",
-  "synopsis": "Feature-coverage report sourced from the internal product-cli graph projection.",
+  "synopsis": "Feature-coverage report from the internal product-cli graph projection.",
   "flags": [],
-  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "description": "FT-NNN id."}],
+  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "required": true, "description": "FT-NNN id (positional)."}],
   "exit_codes": [{"code": 0, "meaning": "covered"}, {"code": 1, "meaning": "gaps surfaced"}]
 }"#,
     },
