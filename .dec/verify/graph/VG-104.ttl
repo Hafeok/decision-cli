@@ -1,0 +1,102 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-104>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-017> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-104/0> <https://decision-cli.dev/ns/step/VG-104/1> <https://decision-cli.dev/ns/step/VG-104/2> <https://decision-cli.dev/ns/step/VG-104/3> <https://decision-cli.dev/ns/step/VG-104/4> <https://decision-cli.dev/ns/step/VG-104/5> <https://decision-cli.dev/ns/step/VG-104/6> <https://decision-cli.dev/ns/step/VG-104/7> <https://decision-cli.dev/ns/step/VG-104/8> <https://decision-cli.dev/ns/step/VG-104/9> <https://decision-cli.dev/ns/step/VG-104/10> <https://decision-cli.dev/ns/step/VG-104/11> <https://decision-cli.dev/ns/step/VG-104/12> <https://decision-cli.dev/ns/step/VG-104/13> ) .
+
+<https://decision-cli.dev/ns/step/VG-104/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "dec implement FT-017" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-104/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "git status --porcelain" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-104/2>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "git_status_output" .
+
+<https://decision-cli.dev/ns/step/VG-104/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "test -z \"$git_status_output\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-104/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "git log -1 --format=%s" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-104/5>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "commit_subject" .
+
+<https://decision-cli.dev/ns/step/VG-104/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "echo \"$commit_subject\" | grep -E \"^\\[FT-017\\]\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-104/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "git log -1 --format=%B" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-104/8>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "commit_body" .
+
+<https://decision-cli.dev/ns/step/VG-104/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "echo \"$commit_body\" | grep -E \"Session:|Dispatch:|CodeChange:|Bundle: sha256:\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-104/10>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?session WHERE { ?session a dec:Session ; dec:status \"complete\" . }" ;
+    dec:expectRows 1 .
+
+<https://decision-cli.dev/ns/step/VG-104/11>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product feature show FT-017 --format json" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-104/12>
+    a dec:VerificationStep ;
+    dec:stepType "capture" ;
+    dec:bindAs "feature_status" .
+
+<https://decision-cli.dev/ns/step/VG-104/13>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "echo \"$feature_status\" | grep -E '\"status\": \"complete\"'" ;
+    dec:expectExitCode 0 .

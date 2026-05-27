@@ -1,0 +1,50 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-102>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-009> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-102/0> <https://decision-cli.dev/ns/step/VG-102/1> <https://decision-cli.dev/ns/step/VG-102/2> <https://decision-cli.dev/ns/step/VG-102/3> <https://decision-cli.dev/ns/step/VG-102/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-102/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-001> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-002> ;
+    dec:command "dec init --template engineering-development" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-102/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-002> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-001> ;
+    dec:path ".dec/store/orchestration.nq" .
+
+<https://decision-cli.dev/ns/step/VG-102/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-001> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?stream ?action WHERE { ?stream a dec:ValueStream ; dec:terminalValueAction ?action . ?action a dec:ValueAction . }" ;
+    dec:expectRows 1 .
+
+<https://decision-cli.dev/ns/step/VG-102/3>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-015> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> PREFIX prov: <http://www.w3.org/ns/prov#> ASK { <dec:session/init-001> a dec:Session . ?stream a dec:ValueStream ; prov:wasGeneratedBy <dec:session/init-001> . }" ;
+    dec:expectRows 1 .
+
+<https://decision-cli.dev/ns/step/VG-102/4>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-019> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?sub WHERE { GRAPH <https://decision-cli.dev/ns/subscriptions> { ?sub a dec:Subscription . } }" ;
+    dec:expectRows 2 .

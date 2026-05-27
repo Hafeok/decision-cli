@@ -1,0 +1,33 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-105>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-023> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-105/0> <https://decision-cli.dev/ns/step/VG-105/1> <https://decision-cli.dev/ns/step/VG-105/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-105/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-091> ;
+    dec:command "python -m verifier --bundle ./test-bundle.json" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-105/1>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-029> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> ASK WHERE { ?v a dec:VerificationVerdict ; dec:kind ?kind . FILTER (?kind = \"approved\" || ?kind = \"amendment-required\" || ?kind = \"rejected\") }" .
+
+<https://decision-cli.dev/ns/step/VG-105/2>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-030> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> ASK WHERE { ?v a dec:VerificationVerdict ; dec:kind \"rejected\" . FILTER NOT EXISTS { ?v dec:cites ?c . { ?c a dec:TC } UNION { ?c a dec:ADR } } }" .
