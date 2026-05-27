@@ -121,7 +121,15 @@ pub fn run(req: &LoopListRequest) -> Result<LoopListResponse, HandlerError> {
         } else {
             entry.closed += 1;
         }
-        let stamp = fb.routed_at.clone();
+        // FT-109 follow-up: prefer `dec:routedAt` when set (the
+        // canonical "when did this leave producer's hands"). Fall back
+        // to the unix-nanos suffix on the source-session activity IRI
+        // so feedback that's still `produced` (never routed to a
+        // worker) still shows a sensible emission timestamp instead of
+        // a bare `-`.
+        let stamp = fb.routed_at.clone().or_else(|| {
+            super::resolver::emitted_at_from_session_iri(fb.source_session.as_str())
+        });
         if let Some(s) = stamp {
             if entry.last_emitted.as_ref().is_none_or(|cur| *cur < s) {
                 entry.last_emitted = Some(s);

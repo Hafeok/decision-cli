@@ -42,6 +42,12 @@ pub struct LoopEntry {
     pub receiving_session_short: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub routed_at: Option<String>,
+    /// FT-109 follow-up: the timestamp the renderer should use as the
+    /// feedback's "when did this surface" stamp. Prefers `routed_at`,
+    /// falls back to parsing `ts-<unix-nanos>` out of the source
+    /// session IRI so still-`produced` entries get a non-empty value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub emitted_at: Option<String>,
 }
 
 /// Outcome of the show handler.
@@ -112,15 +118,29 @@ pub fn run(req: &LoopShowRequest) -> Result<LoopShowResponse, HandlerError> {
                 .receiving_session
                 .as_ref()
                 .map(|n| super::resolver::short_for_session(n.as_str())),
+            emitted_at: fb.routed_at.clone().or_else(|| {
+                super::resolver::emitted_at_from_session_iri(fb.source_session.as_str())
+            }),
             routed_at: fb.routed_at.clone(),
         });
     }
 
-    // 4. Sort chronologically — routed_at when set, else fall back to a
-    //    stable feedback-iri tiebreak so the order is deterministic.
+    // 4. Sort chronologically. Use `routed_at` when set; else fall
+    //    back to the unix-nanos suffix embedded in the source-session
+    //    activity IRI (feedback that's still `produced` carries no
+    //    routed_at literal but its source-session IRI has the runner's
+    //    end-of-run nanos). Tiebreak on feedback IRI for determinism.
     entries.sort_by(|a, b| {
-        let key_a = a.routed_at.clone().unwrap_or_default();
-        let key_b = b.routed_at.clone().unwrap_or_default();
+        let key_a = a
+            .routed_at
+            .clone()
+            .or_else(|| super::resolver::emitted_at_from_session_iri(&a.source_session))
+            .unwrap_or_default();
+        let key_b = b
+            .routed_at
+            .clone()
+            .or_else(|| super::resolver::emitted_at_from_session_iri(&b.source_session))
+            .unwrap_or_default();
         match key_a.cmp(&key_b) {
             std::cmp::Ordering::Equal => a.feedback_iri.cmp(&b.feedback_iri),
             other => other,

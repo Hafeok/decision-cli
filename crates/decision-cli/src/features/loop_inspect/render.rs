@@ -60,10 +60,14 @@ fn render_show_text(resp: &LoopShowResponse) -> String {
     out.push_str(&format!("Loop chain for {}:\n", resp.feature_id));
     for entry in &resp.entries {
         let glyph = state_glyph(&entry.state);
+        // FT-109 follow-up: emitted_at falls back to the source
+        // session's embedded unix-nanos when routed_at is unset, so
+        // even produced-only entries show a timestamp.
         let when = entry
-            .routed_at
+            .emitted_at
             .as_deref()
-            .unwrap_or("(not yet routed)");
+            .or(entry.routed_at.as_deref())
+            .unwrap_or("(no timestamp)");
         let evidence = entry.evidence.lines().next().unwrap_or("").trim();
         let evidence_excerpt = if evidence.len() > 200 {
             format!("{}…", &evidence[..200])
