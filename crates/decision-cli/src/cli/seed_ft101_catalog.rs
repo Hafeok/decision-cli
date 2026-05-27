@@ -6,12 +6,32 @@
 use std::path::Path;
 use std::process::ExitCode;
 
+use decision_cli::core::bootstrap::ft101_catalog::deactivate_role_binding;
 use decision_cli::core::bootstrap::{seed_ft101_catalog, Ft101SeedReport};
 
 #[derive(Debug, clap::Args)]
-pub struct SeedFt101CatalogArgs {}
+pub struct SeedFt101CatalogArgs {
+    /// Also deactivate a prior role-binding IRI by flipping its
+    /// `dec:active` literal to `"false"` through the writer. Use after
+    /// `dec _bootstrap-catalog` bumps a binding to a new version, since
+    /// the bootstrap leaves the prior version active and trips the
+    /// uniqueness invariant.
+    #[arg(long, value_name = "IRI")]
+    pub deactivate_binding: Option<String>,
+}
 
-pub fn run(workdir: &Path, _args: SeedFt101CatalogArgs) -> ExitCode {
+pub fn run(workdir: &Path, args: SeedFt101CatalogArgs) -> ExitCode {
+    if let Some(iri) = args.deactivate_binding.as_deref() {
+        match deactivate_role_binding(workdir, iri) {
+            Ok(true) => println!("deactivated binding {iri}"),
+            Ok(false) => println!("binding {iri} had no active=true quad; nothing to do"),
+            Err(err) => {
+                eprintln!("dec _seed-ft101-catalog: {err}");
+                return ExitCode::from(1);
+            }
+        }
+        return ExitCode::SUCCESS;
+    }
     match seed_ft101_catalog(workdir) {
         Ok(report) => {
             print_success(&report);

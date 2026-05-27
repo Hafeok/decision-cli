@@ -100,6 +100,81 @@ pub fn seed_ft101_catalog(workdir: &Path) -> Result<SeedReport, SeedError> {
     Ok(report)
 }
 
+/// FT-107 follow-up helper: flip `dec:active "true" → "false"` on a
+/// role-binding IRI through the StreamWriter chokepoint, persist the
+/// store, and return whether any quads were rewritten.
+///
+/// Use case: after `dec _bootstrap-catalog` lands a bumped role-binding
+/// (v2 alongside v1), the prior v1 is left active and the uniqueness
+/// invariant in `core::ontology::role_binding::read::active_for_role`
+/// trips with "N active role bindings share the same role_id". This
+/// helper deactivates the prior version.
+pub fn deactivate_role_binding(
+    workdir: &Path,
+    binding_iri: &str,
+) -> Result<bool, SeedError> {
+    use oxigraph::model::{Literal, NamedNodeRef, Quad, Subject, Term};
+
+    let dump = orchestration_dump_path(workdir);
+    let store = load_store_from_dump(&dump)
+        .map_err(|e| SeedError::Store(format!("loading {}: {e:#}", dump.display())))?;
+    let store = Arc::new(store);
+    let scope = ActiveScope::load(workdir).map_err(|e| SeedError::Scope(format!("{e}")))?;
+    let stream_iri = NamedNode::new(&scope.stream_iri)
+        .map_err(|e| SeedError::Scope(format!("active stream iri: {e}")))?;
+    let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
+        .map_err(|e| SeedError::Commit(format!("opening writer: {e:#}")))?;
+
+    let subject = NamedNode::new(binding_iri)
+        .map_err(|e| SeedError::Commit(format!("invalid binding iri: {e}")))?;
+    let active_pred = NamedNodeRef::new_unchecked(
+        crate::core::vocab::IRI_DEC_ROLE_BINDING_ACTIVE,
+    );
+
+    let removes: Vec<Quad> = store
+        .quads_for_pattern(
+            Some(Subject::NamedNode(subject.clone()).as_ref()),
+            Some(active_pred),
+            None,
+            None,
+        )
+        .filter_map(Result::ok)
+        .filter(|q| match &q.object {
+            Term::Literal(lit) => lit.value() == "true",
+            _ => false,
+        })
+        .collect();
+    if removes.is_empty() {
+        return Ok(false);
+    }
+
+    let xsd_boolean =
+        oxigraph::model::NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean");
+    let inserts: Vec<Quad> = removes
+        .iter()
+        .map(|q| {
+            Quad::new(
+                q.subject.clone(),
+                q.predicate.clone(),
+                Literal::new_typed_literal("false", xsd_boolean.as_ref()),
+                q.graph_name.clone(),
+            )
+        })
+        .collect();
+
+    let mutation = Mutation {
+        inserts,
+        removes,
+        ..Mutation::default()
+    };
+    writer
+        .commit(mutation)
+        .map_err(|e| SeedError::Commit(format!("deactivate {binding_iri}: {e:#}")))?;
+    persist_store(&store, &dump)
+        .map_err(|e| SeedError::Store(format!("persisting {}: {e:#}", dump.display())))?;
+    Ok(true)
+}
+
 fn iri_present(store: &oxigraph::store::Store, iri: &NamedNode) -> bool {
     use oxigraph::model::Subject;
     store

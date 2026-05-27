@@ -58,19 +58,19 @@ capabilities:
   # graph-proposal generation under tool calling.
   - capability_id: verify-graph-author
     endpoint: scaleway
-    model_identifier: qwen3-coder-30b-a3b-instruct
-    tier: 1
+    model_identifier: devstral-2-123b-instruct-2512
+    tier: 2
     context_window: 128000
-    max_output: 32000
+    max_output: 16000
     supports_vision: false
     supports_tool_calling: true
-    cost_input_per_m: "0.20"
-    cost_output_per_m: "0.80"
+    cost_input_per_m: "0.40"
+    cost_output_per_m: "2.00"
     cost_currency: EUR
     configurable_effort: false
     exposes_reasoning_trace: false
     status: active
-    version: 1
+    version: 6
 
   # --- Scaleway tier 2: heavy code (devstral) ------------------------------
   - capability_id: code-writer-heavy

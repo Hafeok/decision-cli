@@ -77,5 +77,5 @@ role_bindings:
   - role_id: verify-graph-author
     default_capability: verify-graph-author
     escalation_steps: []
-    version: 1
+    version: 6
     active: true
