@@ -19,7 +19,9 @@ use super::{
     mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, product,
     product::ProductArgs, query, query::QueryCmd, seed_ft101_catalog,
     seed_ft101_catalog::SeedFt101CatalogArgs, session, session::SessionCmd, sparql,
-    sparql::SparqlArgs, status, verify, verify::VerifyCmd, workers, workers::WorkersCmd,
+    sparql::SparqlArgs, status, supersede_misrouted,
+    supersede_misrouted::SupersedeMisroutedArgs, verify, verify::VerifyCmd, workers,
+    workers::WorkersCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -60,6 +62,12 @@ pub enum Command {
     /// verify-graph-author bundle's enrichment fields are non-empty.
     #[command(name = "_seed-ft101-catalog", hide = true)]
     SeedFt101Catalog(SeedFt101CatalogArgs),
+    /// Hidden helper (FT-110 follow-up): one-shot cleanup that
+    /// supersedes implementer-targeted defect feedback whose
+    /// evidence carries a graph-fault exit code (2 / 126 / 127),
+    /// minting a verifier-targeted twin for each. Idempotent.
+    #[command(name = "_supersede-misrouted-defects", hide = true)]
+    SupersedeMisroutedDefects(SupersedeMisroutedArgs),
     /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
     /// Feature-coverage report sourced from the internal product-cli
@@ -116,6 +124,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::CheckGoal(args) => check_goal::run(workdir, args),
         Command::BootstrapCatalog(args) => bootstrap_catalog::run(workdir, args),
         Command::SeedFt101Catalog(args) => seed_ft101_catalog::run(workdir, args),
+        Command::SupersedeMisroutedDefects(args) => supersede_misrouted::run(workdir, args),
         Command::Implement(args) => implement::run(workdir, args),
         Command::Preflight(args) => preflight::run(workdir, args),
         Command::Health => health::run(workdir),

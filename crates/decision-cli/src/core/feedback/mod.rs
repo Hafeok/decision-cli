@@ -21,6 +21,7 @@ mod lifecycle_shacl;
 pub mod read;
 pub mod routing;
 pub mod shacl;
+pub mod supersede_misrouted;
 pub mod transition;
 
 #[cfg(test)]
