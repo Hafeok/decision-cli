@@ -1,0 +1,125 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-053>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-046> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T17:38:38.356Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.365Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-053/step/0> <https://decision-cli.dev/ns/result/VGR-053/step/1> <https://decision-cli.dev/ns/result/VGR-053/step/2> <https://decision-cli.dev/ns/result/VGR-053/step/3> <https://decision-cli.dev/ns/result/VGR-053/step/4> <https://decision-cli.dev/ns/result/VGR-053/step/5> ) ;
+    dec:rationale "step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-107> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-053/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-108> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-053/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-107> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-053/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-108> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-053/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-108> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-053/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-107> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-053/step/5>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:38:38.365Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-053/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-046/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:38.356Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.359Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> .
+
+<https://decision-cli.dev/ns/result/VGR-053/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-046/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:38.359Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.362Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--store-path' found\n\n  tip: a similar argument exists: '--template'\n\nUsage: dec init --template <TEMPLATE>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> .
+
+<https://decision-cli.dev/ns/result/VGR-053/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-046/2> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:38.362Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.362Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317911-1779817118353853445/.dec/store: Is a directory (os error 21)" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> .
+
+<https://decision-cli.dev/ns/result/VGR-053/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-046/3> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:38.362Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.362Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317911-1779817118353853445/.dec/store: Is a directory (os error 21)" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> .
+
+<https://decision-cli.dev/ns/result/VGR-053/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-046/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:38.362Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.365Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'dispatch'\n\n  tip: a similar subcommand exists: '_dispatch'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> .
+
+<https://decision-cli.dev/ns/result/VGR-053/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-046/5> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:38.365Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:38.365Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317911-1779817118353853445/.dec/store/dispatch.log" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-046/ts-1779817118352880459> .

@@ -1,0 +1,86 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-110>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-014> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T18:06:01.330Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:01.340Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-110/step/0> <https://decision-cli.dev/ns/result/VGR-110/step/1> <https://decision-cli.dev/ns/result/VGR-110/step/2> <https://decision-cli.dev/ns/result/VGR-110/step/3> <https://decision-cli.dev/ns/result/VGR-110/step/4> ) ;
+    dec:rationale "step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-031> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-110/step/4>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-014/ts-1779818761327639565> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:01.340Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-110/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-014/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:01.330Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:01.332Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-014/ts-1779818761327639565> .
+
+<https://decision-cli.dev/ns/result/VGR-110/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-014/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:01.332Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:01.334Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--name' found\n\nUsage: dec init [OPTIONS]\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-014/ts-1779818761327639565> .
+
+<https://decision-cli.dev/ns/result/VGR-110/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-014/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:01.334Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:01.336Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'new'\n\nUsage: dec session [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-014/ts-1779818761327639565> .
+
+<https://decision-cli.dev/ns/result/VGR-110/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-014/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:01.336Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:01.338Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'new'\n\nUsage: dec session [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-014/ts-1779818761327639565> .
+
+<https://decision-cli.dev/ns/result/VGR-110/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-014/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:01.338Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:01.340Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec session show: reading /tmp/dec-verify/ENV-002-332889-1779818761328485271/test-workspace/.dec/store/orchestration.nq: No such file or directory (os error 2)\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-014/ts-1779818761327639565> .

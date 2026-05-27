@@ -1,0 +1,68 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-089>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-105> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-089/0> <https://decision-cli.dev/ns/step/VG-089/1> <https://decision-cli.dev/ns/step/VG-089/2> <https://decision-cli.dev/ns/step/VG-089/3> <https://decision-cli.dev/ns/step/VG-089/4> <https://decision-cli.dev/ns/step/VG-089/5> <https://decision-cli.dev/ns/step/VG-089/6> ) .
+
+<https://decision-cli.dev/ns/step/VG-089/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-176> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-177> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-178> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-179> ;
+    dec:command "cargo build --workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-089/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-179> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-178> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-177> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-176> ;
+    dec:path "crates/product-cli/Cargo.toml" .
+
+<https://decision-cli.dev/ns/step/VG-089/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-176> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-177> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-178> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-179> ;
+    dec:path "crates/product-shim/Cargo.toml" .
+
+<https://decision-cli.dev/ns/step/VG-089/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-179> ;
+    dec:command "grep -r \"decision-cli\" crates/product-cli/Cargo.toml || echo \"No dependency found\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-089/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-179> ;
+    dec:command "grep -r \"oxi-events\" crates/product-cli/Cargo.toml || echo \"No dependency found\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-089/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-177> ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-176> ;
+    dec:command "dec product --help" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-089/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-178> ;
+    dec:command "git log --oneline crates/product-cli/ | wc -l" ;
+    dec:expectExitCode 0 .

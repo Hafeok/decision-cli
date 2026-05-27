@@ -1,0 +1,67 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-095>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-018> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-095/0> <https://decision-cli.dev/ns/step/VG-095/1> <https://decision-cli.dev/ns/step/VG-095/2> <https://decision-cli.dev/ns/step/VG-095/3> <https://decision-cli.dev/ns/step/VG-095/4> <https://decision-cli.dev/ns/step/VG-095/5> <https://decision-cli.dev/ns/step/VG-095/6> <https://decision-cli.dev/ns/step/VG-095/7> <https://decision-cli.dev/ns/step/VG-095/8> ) .
+
+<https://decision-cli.dev/ns/step/VG-095/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find crates/decision-cli/src -name '*.rs' | grep -E '^(init|implement|health|events|session_inspect|finalize|scope|stream_writer|bundled|ontology|vocab)\\.rs$' | wc -l" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "test -d crates/decision-cli/src/core && test -d crates/decision-cli/src/features" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find crates/decision-cli/src/core -name '*.rs' | grep -E '^(ontology|vocab|bundled|scope|stream_writer|store|sparql)\\.rs$' | wc -l" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "find crates/decision-cli/src/features -name 'mod.rs' | grep -E '^(init|implement|health|events|session_inspect|finalize)$' | wc -l" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "wc -l crates/decision-cli/src/main.rs | awk '{print $1}' | grep -E '^[0-9]{1,3}$' | awk '{if ($1 <= 250) exit 0; else exit 1}'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cargo build --workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cargo test --workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-021> ;
+    dec:command "bash scripts/checks/vertical-slice-imports.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-095/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-020> ;
+    dec:command "bash scripts/checks/vertical-slice-layout.sh" ;
+    dec:expectExitCode 0 .

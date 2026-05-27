@@ -1,0 +1,148 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-155>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-059> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T18:06:38.960Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-155/step/0> <https://decision-cli.dev/ns/result/VGR-155/step/1> <https://decision-cli.dev/ns/result/VGR-155/step/2> <https://decision-cli.dev/ns/result/VGR-155/step/3> <https://decision-cli.dev/ns/result/VGR-155/step/4> <https://decision-cli.dev/ns/result/VGR-155/step/5> <https://decision-cli.dev/ns/result/VGR-155/step/6> <https://decision-cli.dev/ns/result/VGR-155/step/7> <https://decision-cli.dev/ns/result/VGR-155/step/8> ) ;
+    dec:rationale "step 6 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-121> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-155/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-121> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-155/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-121> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-155/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-121> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-155/step/7>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-121> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-155/step/8>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:38.968Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:38.960Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.963Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:38.963Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.965Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:38.965Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.967Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:38.967Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Loading boundary-artifact.ttl into ontology loader...\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/4> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/5> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/6> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333958-1779818798958248869/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/7> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333958-1779818798958248869/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .
+
+<https://decision-cli.dev/ns/result/VGR-155/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-059/8> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:38.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333958-1779818798958248869/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-059/ts-1779818798957240299> .

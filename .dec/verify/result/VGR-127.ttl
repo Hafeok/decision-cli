@@ -1,0 +1,55 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-127>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-031> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T18:06:12.657Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:12.658Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-127/step/0> <https://decision-cli.dev/ns/result/VGR-127/step/1> ) ;
+    dec:rationale "step 1 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-069> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-127/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-068> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-127/step/1>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-031/ts-1779818772653993861> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:12.658Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-127/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-031/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:12.657Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:12.658Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-031/ts-1779818772653993861> .
+
+<https://decision-cli.dev/ns/result/VGR-127/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-031/1> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T18:06:12.658Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:12.658Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-333301-1779818772654741857/.dec/store: Is a directory (os error 21)" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-031/ts-1779818772653993861> .

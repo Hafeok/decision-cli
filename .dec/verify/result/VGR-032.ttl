@@ -1,0 +1,93 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-032>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-025> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T17:38:25.351Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:25.364Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-032/step/0> <https://decision-cli.dev/ns/result/VGR-032/step/1> <https://decision-cli.dev/ns/result/VGR-032/step/2> <https://decision-cli.dev/ns/result/VGR-032/step/3> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-032/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-052> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-032/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-061> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-032/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-096> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-032/step/3>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-025/ts-1779817105348090696> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:38:25.364Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-032/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-025/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:25.351Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:25.353Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify env list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317473-1779817105348863503/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-025/ts-1779817105348090696> .
+
+<https://decision-cli.dev/ns/result/VGR-032/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-025/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:25.353Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:25.355Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify env list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317473-1779817105348863503/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-025/ts-1779817105348090696> .
+
+<https://decision-cli.dev/ns/result/VGR-032/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-025/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:25.355Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:25.359Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify env list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317473-1779817105348863503/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-025/ts-1779817105348090696> .
+
+<https://decision-cli.dev/ns/result/VGR-032/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-025/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:25.359Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:25.364Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify env list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317473-1779817105348863503/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-025/ts-1779817105348090696> .

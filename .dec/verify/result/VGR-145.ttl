@@ -1,0 +1,182 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-145>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-049> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T18:06:28.246Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.288Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-145/step/0> <https://decision-cli.dev/ns/result/VGR-145/step/1> <https://decision-cli.dev/ns/result/VGR-145/step/2> <https://decision-cli.dev/ns/result/VGR-145/step/3> <https://decision-cli.dev/ns/result/VGR-145/step/4> <https://decision-cli.dev/ns/result/VGR-145/step/5> <https://decision-cli.dev/ns/result/VGR-145/step/6> <https://decision-cli.dev/ns/result/VGR-145/step/7> <https://decision-cli.dev/ns/result/VGR-145/step/8> <https://decision-cli.dev/ns/result/VGR-145/step/9> <https://decision-cli.dev/ns/result/VGR-145/step/10> <https://decision-cli.dev/ns/result/VGR-145/step/11> ) ;
+    dec:rationale "step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-109> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-145/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-110> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-145/step/7>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-111> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-145/step/8>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:28.288Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:28.246Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.248Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.248Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.250Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--name' found\n\nUsage: dec init [OPTIONS]\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.250Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.252Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'graph'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.252Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.254Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'role'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.254Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.257Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'escalation-step'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/5> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.257Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.260Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'bundle'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.260Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.264Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'dispatch'\n\n  tip: a similar subcommand exists: '_dispatch'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.264Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.268Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/ENV-002-333616-1779818788243144947/test-workspace/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/8> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.268Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.274Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/ENV-002-333616-1779818788243144947/test-workspace/.dec/store/orchestration.nq — run `dec init` first\nerror: unexpected argument '--session-id' found\n\n  tip: to pass '--session-id' as a value, use '-- --session-id'\n\nUsage: dec session show [OPTIONS] <IRI>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/9>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/9> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.274Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.278Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'bundle'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/10>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/10> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.278Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.284Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'bundle'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\nerror: unrecognized subcommand 'bundle'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
+
+<https://decision-cli.dev/ns/result/VGR-145/step/11>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-049/11> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:28.284Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:28.288Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'sparql'\n\n  tip: a similar subcommand exists: '_sparql'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .

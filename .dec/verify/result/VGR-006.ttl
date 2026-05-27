@@ -1,0 +1,101 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-006>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-009> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T17:37:36.538Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.546Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-006/step/0> <https://decision-cli.dev/ns/result/VGR-006/step/1> <https://decision-cli.dev/ns/result/VGR-006/step/2> <https://decision-cli.dev/ns/result/VGR-006/step/3> <https://decision-cli.dev/ns/result/VGR-006/step/4> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-001; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-001> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-006/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-002> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-006/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-015> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-006/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-019> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-006/step/4>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-009/ts-1779817056534124252> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:37:36.546Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-006/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-009/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:37:36.538Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.542Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--no-git' found\n\nUsage: dec init [OPTIONS]\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-009/ts-1779817056534124252> .
+
+<https://decision-cli.dev/ns/result/VGR-006/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-009/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:37:36.542Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.544Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "{\"manifest_sha256\":\"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e47bdf0d9022cf6ef421e6e1ac\",\"summary\":{\"inactive\":0,\"missing\":0,\"ok\":2},\"workers\":[{\"diagnostics\":[],\"install_hints\":[],\"resolved_command\":[\"/home/hafeok/.local/bin/code-writer\"],\"resolved_via\":\"path\",\"role\":\"code-writer\",\"status\":\"ok\"},{\"diagnostics\":[],\"install_hints\":[],\"resolved_command\":[\"/home/hafeok/.local/bin/verify-graph-author\"],\"resolved_via\":\"path\",\"role\":\"verify-graph-author\",\"status\":\"ok\"}]}\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-009/ts-1779817056534124252> .
+
+<https://decision-cli.dev/ns/result/VGR-006/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-009/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:37:36.544Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.546Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "{\"manifest_sha256\":\"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e47bdf0d9022cf6ef421e6e1ac\",\"summary\":{\"inactive\":0,\"missing\":0,\"ok\":2},\"workers\":[{\"diagnostics\":[],\"install_hints\":[],\"resolved_command\":[\"/home/hafeok/.local/bin/code-writer\"],\"resolved_via\":\"path\",\"role\":\"code-writer\",\"status\":\"ok\"},{\"diagnostics\":[],\"install_hints\":[],\"resolved_command\":[\"/home/hafeok/.local/bin/verify-graph-author\"],\"resolved_via\":\"path\",\"role\":\"verify-graph-author\",\"status\":\"ok\"}]}\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-009/ts-1779817056534124252> .
+
+<https://decision-cli.dev/ns/result/VGR-006/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-009/3> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:37:36.546Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.546Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-316775-1779817056534784026/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-009/ts-1779817056534124252> .
+
+<https://decision-cli.dev/ns/result/VGR-006/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-009/4> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:37:36.546Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.546Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-316775-1779817056534784026/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-009/ts-1779817056534124252> .

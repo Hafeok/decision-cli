@@ -1,0 +1,138 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-084>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-077> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T17:38:58.680Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:59.171Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-084/step/0> <https://decision-cli.dev/ns/result/VGR-084/step/1> <https://decision-cli.dev/ns/result/VGR-084/step/2> <https://decision-cli.dev/ns/result/VGR-084/step/3> <https://decision-cli.dev/ns/result/VGR-084/step/4> <https://decision-cli.dev/ns/result/VGR-084/step/5> <https://decision-cli.dev/ns/result/VGR-084/step/6> <https://decision-cli.dev/ns/result/VGR-084/step/7> <https://decision-cli.dev/ns/result/VGR-084/step/8> <https://decision-cli.dev/ns/result/VGR-084/step/9> ) ;
+    dec:rationale "step 7 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-131> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-084/step/9>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:38:59.171Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.680Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.683Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.683Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.685Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.685Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.687Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.687Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.688Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/4> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.688Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.690Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/5> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.690Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.692Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/6> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:58.692Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:58.695Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:58.695Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:59.163Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: line 1: cosign: command not found\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/8> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:59.163Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:59.171Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .
+
+<https://decision-cli.dev/ns/result/VGR-084/step/9>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-077/9> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:59.171Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:59.171Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target /tmp/dec-verify/ENV-002-318730-1779817138677774962/.dec/store/trustlist.ttl did not parse as Turtle or N-Quads" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .

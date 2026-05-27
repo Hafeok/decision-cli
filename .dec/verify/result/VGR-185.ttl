@@ -1,0 +1,201 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-185>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-089> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T18:07:08.940Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.982Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-185/step/0> <https://decision-cli.dev/ns/result/VGR-185/step/1> <https://decision-cli.dev/ns/result/VGR-185/step/2> <https://decision-cli.dev/ns/result/VGR-185/step/3> <https://decision-cli.dev/ns/result/VGR-185/step/4> <https://decision-cli.dev/ns/result/VGR-185/step/5> <https://decision-cli.dev/ns/result/VGR-185/step/6> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-179, https://decision-cli.dev/ns/tc/TC-178, https://decision-cli.dev/ns/tc/TC-177, https://decision-cli.dev/ns/tc/TC-176; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-179> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-178> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-177> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-176> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-176> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-177> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-178> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-179> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-179> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-178> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-177> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-176> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-179> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-179> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-176> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-177> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-178> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-185/step/6>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:07:08.982Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:07:08.940Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-334591-1779818828937607841` or any parent directory\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-334591-1779818828937607841/crates/product-cli/Cargo.toml" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-334591-1779818828937607841/crates/product-shim/Cargo.toml" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.972Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "No dependency found\n" ;
+    dec:stderrExcerpt "grep: crates/product-cli/Cargo.toml: No such file or directory\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/4> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:08.972Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.975Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "No dependency found\n" ;
+    dec:stderrExcerpt "grep: crates/product-cli/Cargo.toml: No such file or directory\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/5> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:08.975Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.978Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Absorbed product-cli surface (FT-105 / ADR-067)\n\nUsage: dec product [OPTIONS] [ARGS]...\n\nArguments:\n  [ARGS]...  Subcommand and arguments forwarded to product-cli verbatim\n\nOptions:\n      --workdir <WORKDIR>  Override the working directory (defaults to CWD; ADR-012 walk-up not yet implemented)\n  -h, --help               Print help\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
+
+<https://decision-cli.dev/ns/result/VGR-185/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-089/6> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:08.978Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:08.982Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "0\n" ;
+    dec:stderrExcerpt "fatal: not a git repository (or any of the parent directories): .git\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .

@@ -10,13 +10,24 @@ import time
 from pathlib import Path
 from typing import Any
 
+import re
+
 from . import claude_runner as _entry  # late import for test-mock hook
 from ._runner_common import STUB_ENV_VAR, _make_code_change_iri, _safe_join
 from .env_routing import EndpointConfigError, claude_env_for
 from .models import (
-    CodeChange, DispatchPayload, FileWrite, ToolCall, WorkerError,
-    WorkerResponse, WorkerTelemetry,
+    CodeChange, DefectFeedbackRecord, DispatchPayload, FileWrite, ToolCall,
+    WorkerError, WorkerResponse, WorkerTelemetry,
 )
+
+
+# FT-108: agent must end its final result with a marker-delimited JSON
+# block whose `iris` field lists every feedback IRI from the bundle's
+# `defect_feedback` array that this code change addresses. The Rust
+# accept path uses this list to transition each cited feedback through
+# the ADR-024 lifecycle to `addressed`.
+ADDRESSED_FEEDBACK_BEGIN = "<<DEC_ADDRESSED_FEEDBACK>>"
+ADDRESSED_FEEDBACK_END = "<<END_DEC_ADDRESSED_FEEDBACK>>"
 
 
 def _parse_stream_json(
@@ -120,14 +131,104 @@ def _missing_binary_response(payload: DispatchPayload) -> WorkerResponse:
 
 
 def _write_bundle_prompt(payload: DispatchPayload) -> str:
-    """Persist the bundle as a temp `.md` file. Returns the file path."""
+    """Persist the bundle as a temp `.md` file. Returns the file path.
+
+    When the bundle carries defect feedback (FT-108), the prompt is
+    augmented with a `## Runtime defect feedback` section + an explicit
+    citation-block requirement so the agent's response can be parsed
+    server-side for `addressed_feedback_iris`. Without this, the FT-108
+    server-side guard rejects the dispatch with `WorkerIgnoredFeedback`.
+    """
+    prompt_body = payload.bundle_markdown
+    if payload.defect_feedback:
+        prompt_body = f"{prompt_body}\n\n{_render_defect_feedback_section(payload.defect_feedback)}"
     prompt_fd, prompt_path = tempfile.mkstemp(
         prefix=f"dec-bundle-{payload.feature_id}-",
         suffix=".md",
     )
     with os.fdopen(prompt_fd, "w", encoding="utf-8") as fh:
-        fh.write(payload.bundle_markdown)
+        fh.write(prompt_body)
     return prompt_path
+
+
+def _render_defect_feedback_section(records: list[DefectFeedbackRecord]) -> str:
+    """Render the FT-108 defect-feedback section for the agent prompt.
+
+    Includes the IRIs verbatim so the agent can copy them into the
+    citation block, plus an explicit terminator showing the exact
+    output format the server-side extractor expects."""
+    lines = [
+        "## Runtime defect feedback (FT-108)",
+        "",
+        "Prior verification runs found the following defects against tests this feature owns. ",
+        "Your code change MUST fix the underlying issues — read each entry's `evidence` for the runner diagnostic.",
+        "",
+    ]
+    for r in records:
+        lines.append(f"### {r.feedback_iri}")
+        if r.source_tc:
+            lines.append(f"- source TC: `{r.source_tc}`")
+        lines.append(f"- severity: {r.severity}")
+        lines.append(f"- evidence: {r.evidence.strip() or '(empty)'}")
+        lines.append("")
+    iris_json = json.dumps([r.feedback_iri for r in records], indent=2)
+    lines.extend([
+        "### REQUIRED — citation block",
+        "",
+        "After writing the code changes, your **final assistant message** MUST end with",
+        "a marker-delimited JSON block listing every feedback IRI you actually addressed.",
+        "The orchestrator parses this exactly; missing or malformed → dispatch is rejected.",
+        "",
+        "Format (substitute the IRIs YOU addressed — drop any you couldn't fix, but cite at least one):",
+        "",
+        "```",
+        ADDRESSED_FEEDBACK_BEGIN,
+        '{',
+        f'  "iris": {_indent_json(iris_json, 2)}',
+        '}',
+        ADDRESSED_FEEDBACK_END,
+        "```",
+        "",
+        "Use the EXACT marker strings above (no whitespace variation, no extra text inside the markers).",
+    ])
+    return "\n".join(lines)
+
+
+def _indent_json(blob: str, indent_spaces: int) -> str:
+    """Indent every line of a JSON blob past the first by `indent_spaces`."""
+    pad = " " * indent_spaces
+    lines = blob.splitlines()
+    if not lines:
+        return blob
+    return lines[0] + "\n" + "\n".join(pad + line for line in lines[1:])
+
+
+def _extract_addressed_feedback(blob: str) -> list[str]:
+    """Pull `addressed_feedback_iris` out of the agent's final-summary text.
+
+    Locates the most-recent `<<DEC_ADDRESSED_FEEDBACK>>...<<END>>` block
+    in `blob`, parses its JSON body, and returns the `iris` array. Any
+    parse failure / missing block → empty list (the Rust accept path
+    surfaces `WorkerIgnoredFeedback` for the operator).
+    """
+    if not blob:
+        return []
+    pattern = re.compile(
+        r"<<DEC_ADDRESSED_FEEDBACK>>\s*(\{.*?\})\s*<<END_DEC_ADDRESSED_FEEDBACK>>",
+        re.DOTALL,
+    )
+    matches = list(pattern.finditer(blob))
+    if not matches:
+        return []
+    raw = matches[-1].group(1)
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    iris = payload.get("iris") if isinstance(payload, dict) else None
+    if not isinstance(iris, list):
+        return []
+    return [str(i) for i in iris if isinstance(i, str)]
 
 
 def _build_claude_args(binary: str, prompt_path: str, payload: DispatchPayload) -> list[str]:
@@ -246,12 +347,18 @@ def _build_success_response(
     latency: float,
 ) -> WorkerResponse:
     """Assemble the `status="ok"` response from parsed stream-json output."""
+    # FT-108: parse the agent's citation block when the bundle asked for
+    # one. The Rust accept path's WorkerIgnoredFeedback guard catches an
+    # empty list when the bundle had defect feedback, so we don't have
+    # to enforce non-emptiness here — surface what the model produced.
+    addressed = _extract_addressed_feedback(final_summary) if payload.defect_feedback else []
     code_change = CodeChange(
         iri=_make_code_change_iri(payload.dispatch_id),
         feature_id=payload.feature_id,
         session_id=payload.session_id,
         files=confined,
         summary=final_summary,
+        addressed_feedback_iris=addressed,
     )
     telemetry = WorkerTelemetry(
         turn_count=len([tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]) or 1,

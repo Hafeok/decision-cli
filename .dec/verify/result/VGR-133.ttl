@@ -1,0 +1,175 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-133>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-037> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T18:06:16.741Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.756Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-133/step/0> <https://decision-cli.dev/ns/result/VGR-133/step/1> <https://decision-cli.dev/ns/result/VGR-133/step/2> <https://decision-cli.dev/ns/result/VGR-133/step/3> <https://decision-cli.dev/ns/result/VGR-133/step/4> <https://decision-cli.dev/ns/result/VGR-133/step/5> <https://decision-cli.dev/ns/result/VGR-133/step/6> ) ;
+    dec:rationale "step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-083, https://decision-cli.dev/ns/tc/TC-084, https://decision-cli.dev/ns/tc/TC-085; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-083> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-084> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-085> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-083> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-084> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-085> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-083> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-084> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-085> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-085> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-084> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-083> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-133/step/6>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:16.756Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:16.741Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.744Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:16.744Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.746Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'feature'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:16.746Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.749Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'feature'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:16.749Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.752Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'feature'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:16.752Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.754Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'feature'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/5> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:16.754Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.756Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--feature' found\n\n  tip: to pass '--feature' as a value, use '-- --feature'\n\nUsage: dec verify graph generate [OPTIONS] --environment <ENVIRONMENT> <FEATURE_ID>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .
+
+<https://decision-cli.dev/ns/result/VGR-133/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-037/6> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T18:06:16.756Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:16.756Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333404-1779818776738624150/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-037/ts-1779818776737703346> .

@@ -1,0 +1,70 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-172>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-076> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-26T18:06:57.007Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:57.012Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-172/step/0> <https://decision-cli.dev/ns/result/VGR-172/step/1> <https://decision-cli.dev/ns/result/VGR-172/step/2> <https://decision-cli.dev/ns/result/VGR-172/step/3> ) ;
+    dec:rationale "all 4 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-130> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-172/step/3>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-076/ts-1779818817004290790> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:57.012Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-172/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-076/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:57.007Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:57.010Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-076/ts-1779818817004290790> .
+
+<https://decision-cli.dev/ns/result/VGR-172/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-076/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:57.010Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:57.011Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-076/ts-1779818817004290790> .
+
+<https://decision-cli.dev/ns/result/VGR-172/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-076/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:57.011Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:57.012Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-076/ts-1779818817004290790> .
+
+<https://decision-cli.dev/ns/result/VGR-172/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-076/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:06:57.012Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:57.012Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-076/ts-1779818817004290790> .

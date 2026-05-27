@@ -15,18 +15,18 @@ tests:
 - TC-088
 domains: []
 domains-acknowledged:
-  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-019 does not author or modify a fitness-function artifact.
-  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-019 neither emits nor consumes verdicts.
-  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-019 reads/writes via the GraphWriter chokepoint and does not introduce event-sourced state.
-  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-019 has no feedback to gate.
-  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-019 produces no new Session or event type and inherits lineage from the harness.
-  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-019 neither emits nor routes feedback.
   ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-019 runs after the working directory is resolved and does not re-discover it.
-  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-019 produces no feedback artifacts.
-  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-019 produces no feedback artifacts.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-019 produces no action/interpretation pair.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-019's code is reorganised under that migration, not by this feature.
+  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-019 neither emits nor routes feedback.
+  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-019 reads/writes via the GraphWriter chokepoint and does not introduce event-sourced state.
+  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-019 does not author or modify a fitness-function artifact.
   ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-019 runs inside an already-scoped command and does not introduce a new scope check.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-019 produces no action/interpretation pair.
+  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-019 has no feedback to gate.
+  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-019 produces no feedback artifacts.
+  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-019 produces no feedback artifacts.
+  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-019 neither emits nor consumes verdicts.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-019's code is reorganised under that migration, not by this feature.
+  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-019 produces no new Session or event type and inherits lineage from the harness.
   ADR-001: ADR-001 governs the oxi-events crate boundary; FT-019 does not cross or alter that boundary.
 ---
 

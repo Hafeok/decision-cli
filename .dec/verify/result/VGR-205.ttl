@@ -1,0 +1,81 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-205>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-099> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-27T08:15:17.839Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:15:17.896Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-205/step/0> <https://decision-cli.dev/ns/result/VGR-205/step/1> <https://decision-cli.dev/ns/result/VGR-205/step/2> <https://decision-cli.dev/ns/result/VGR-205/step/3> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-020; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-020> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-205/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-021> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-205/step/1>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ts-1779869717832861536> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-27T08:15:17.896Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-205/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-099/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:15:17.839Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:15:17.842Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: scripts/checks/vertical-slice-layout.sh: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ts-1779869717832861536> .
+
+<https://decision-cli.dev/ns/result/VGR-205/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-099/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:15:17.842Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:15:17.846Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: scripts/checks/vertical-slice-imports.sh: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ts-1779869717832861536> .
+
+<https://decision-cli.dev/ns/result/VGR-205/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-099/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:15:17.846Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:15:17.872Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-21979-1779869717834355992` or any parent directory\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ts-1779869717832861536> .
+
+<https://decision-cli.dev/ns/result/VGR-205/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-099/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:15:17.872Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:15:17.896Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-21979-1779869717834355992` or any parent directory\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ts-1779869717832861536> .

@@ -1,0 +1,40 @@
+===== FT-019 =====
+dec verify graph generate: internal error: ProposalReferencesOutOfBundle: step 1: decsubcommand dec role list: not in cli_surface.dec_subcommands
+(rc=1)
+===== FT-003 =====
+Persisted VerificationGraph VG-094
+  Path: /home/hafeok/projects/decision-cli/.dec/verify/graph/VG-094.ttl
+  Coverage: complete
+(rc=0)
+===== FT-009 =====
+dec verify graph generate: internal error: ProposalReferencesOutOfBundle: step 4: sparqlnamespace https://decision-cli.dev/oxi-events/ns#: not in ontology_vocabulary.namespaces and not in W3C whitelist; step 6: sparqlnamespace https://decision-cli.dev/oxi-events/ns#: not in ontology_vocabulary.namespaces and not in W3C whitelist
+(rc=1)
+===== FT-017 =====
+dec verify graph generate: internal error: ProposalReferencesOutOfBundle: step 5: binary product: not in env_capabilities.binaries_on_path
+(rc=1)
+===== FT-018 =====
+Persisted VerificationGraph VG-095
+  Path: /home/hafeok/projects/decision-cli/.dec/verify/graph/VG-095.ttl
+  Coverage: complete
+(rc=0)
+===== FT-023 =====
+dec verify graph generate: internal error: ProposalReferencesOutOfBundle: step 0: binary python: not in env_capabilities.binaries_on_path
+(rc=1)
+===== FT-024 =====
+dec verify graph generate: internal error: ProposalReferencesOutOfBundle: step 1: decsubcommand dec metrics agreement: not in cli_surface.dec_subcommands
+(rc=1)
+===== FT-026 =====
+Persisted VerificationGraph VG-096
+  Path: /home/hafeok/projects/decision-cli/.dec/verify/graph/VG-096.ttl
+  Coverage: complete
+(rc=0)
+===== FT-020 =====
+Persisted VerificationGraph VG-097
+  Path: /home/hafeok/projects/decision-cli/.dec/verify/graph/VG-097.ttl
+  Coverage: complete
+(rc=0)
+===== FT-030 =====
+Persisted VerificationGraph VG-098
+  Path: /home/hafeok/projects/decision-cli/.dec/verify/graph/VG-098.ttl
+  Coverage: complete
+(rc=0)

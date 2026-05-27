@@ -1,0 +1,86 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-194>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-094> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-27T08:10:58.935Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:10:58.978Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-194/step/0> <https://decision-cli.dev/ns/result/VGR-194/step/1> <https://decision-cli.dev/ns/result/VGR-194/step/2> <https://decision-cli.dev/ns/result/VGR-194/step/3> ) ;
+    dec:rationale "step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-009; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-009> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-194/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-010> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-194/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-194/step/3>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-094/ENV-002/ts-1779869458930723427> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-27T08:10:58.978Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-194/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-094/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:10:58.935Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:10:58.951Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-20603-1779869458931142898/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-094/ENV-002/ts-1779869458930723427> .
+
+<https://decision-cli.dev/ns/result/VGR-194/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-094/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:10:58.951Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:10:58.973Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-20603-1779869458931142898` or any parent directory\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-094/ENV-002/ts-1779869458930723427> .
+
+<https://decision-cli.dev/ns/result/VGR-194/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-094/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:10:58.973Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:10:58.975Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: tests/scripts/tc-010-outbox-recovery.sh: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-094/ENV-002/ts-1779869458930723427> .
+
+<https://decision-cli.dev/ns/result/VGR-194/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-094/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:10:58.975Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:10:58.978Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: tests/scripts/tc-011-sse-latency.sh: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-094/ENV-002/ts-1779869458930723427> .

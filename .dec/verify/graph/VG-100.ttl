@@ -1,0 +1,120 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-100>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-018> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-REPO> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-100/0> <https://decision-cli.dev/ns/step/VG-100/1> <https://decision-cli.dev/ns/step/VG-100/2> <https://decision-cli.dev/ns/step/VG-100/3> <https://decision-cli.dev/ns/step/VG-100/4> <https://decision-cli.dev/ns/step/VG-100/5> <https://decision-cli.dev/ns/step/VG-100/6> <https://decision-cli.dev/ns/step/VG-100/7> <https://decision-cli.dev/ns/step/VG-100/8> <https://decision-cli.dev/ns/step/VG-100/9> <https://decision-cli.dev/ns/step/VG-100/10> <https://decision-cli.dev/ns/step/VG-100/11> <https://decision-cli.dev/ns/step/VG-100/12> <https://decision-cli.dev/ns/step/VG-100/13> <https://decision-cli.dev/ns/step/VG-100/14> <https://decision-cli.dev/ns/step/VG-100/15> <https://decision-cli.dev/ns/step/VG-100/16> <https://decision-cli.dev/ns/step/VG-100/17> <https://decision-cli.dev/ns/step/VG-100/18> <https://decision-cli.dev/ns/step/VG-100/19> <https://decision-cli.dev/ns/step/VG-100/20> ) .
+
+<https://decision-cli.dev/ns/step/VG-100/0>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/lib.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/1>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/main.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/2>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/3>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/ontology.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/4>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/vocab.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/5>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/bundled.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/6>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/scope.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/7>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/stream_writer.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/8>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/store.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/9>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/core/sparql.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/10>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/11>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/init/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/12>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/implement/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/13>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/health/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/14>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/events/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/15>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/session_inspect/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/16>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:path "crates/decision-cli/src/features/finalize/mod.rs" .
+
+<https://decision-cli.dev/ns/step/VG-100/17>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-020> ;
+    dec:command "bash scripts/checks/vertical-slice-layout.sh" .
+
+<https://decision-cli.dev/ns/step/VG-100/18>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-021> ;
+    dec:command "bash scripts/checks/vertical-slice-imports.sh" .
+
+<https://decision-cli.dev/ns/step/VG-100/19>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cargo build --workspace" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-100/20>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "cargo test --workspace" ;
+    dec:expectExitCode 0 .

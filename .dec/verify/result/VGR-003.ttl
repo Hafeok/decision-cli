@@ -1,0 +1,21 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-003>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-001> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T17:33:10.719Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:33:10.719Z"^^xsd:dateTime ;
+    dec:stepTraces () ;
+    dec:rationale "env setup failed before any step ran: mkdir: cannot create directory ‘’: No such file or directory\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-001/ts-1779816790711729040> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:33:10.719Z"^^xsd:dateTime .

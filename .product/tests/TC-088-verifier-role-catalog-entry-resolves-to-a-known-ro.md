@@ -12,8 +12,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test ft_019_verifier_role_catalog
 runner-timeout: 120
-last-run: 2026-05-25T23:43:40.429452005+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-27T11:52:50.527606431+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose

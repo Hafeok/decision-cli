@@ -1,0 +1,253 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-207>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-100> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-REPO> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:36.284Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-207/step/0> <https://decision-cli.dev/ns/result/VGR-207/step/1> <https://decision-cli.dev/ns/result/VGR-207/step/2> <https://decision-cli.dev/ns/result/VGR-207/step/3> <https://decision-cli.dev/ns/result/VGR-207/step/4> <https://decision-cli.dev/ns/result/VGR-207/step/5> <https://decision-cli.dev/ns/result/VGR-207/step/6> <https://decision-cli.dev/ns/result/VGR-207/step/7> <https://decision-cli.dev/ns/result/VGR-207/step/8> <https://decision-cli.dev/ns/result/VGR-207/step/9> <https://decision-cli.dev/ns/result/VGR-207/step/10> <https://decision-cli.dev/ns/result/VGR-207/step/11> <https://decision-cli.dev/ns/result/VGR-207/step/12> <https://decision-cli.dev/ns/result/VGR-207/step/13> <https://decision-cli.dev/ns/result/VGR-207/step/14> <https://decision-cli.dev/ns/result/VGR-207/step/15> <https://decision-cli.dev/ns/result/VGR-207/step/16> <https://decision-cli.dev/ns/result/VGR-207/step/17> <https://decision-cli.dev/ns/result/VGR-207/step/18> <https://decision-cli.dev/ns/result/VGR-207/step/19> <https://decision-cli.dev/ns/result/VGR-207/step/20> ) ;
+    dec:rationale "step 3 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-020> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-207/step/17>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-021> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-207/step/18>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-27T08:24:36.284Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /home/hafeok/projects/decision-cli/./crates/decision-cli/src/core/ontology.rs" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /home/hafeok/projects/decision-cli/./crates/decision-cli/src/core/vocab.rs" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/5> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /home/hafeok/projects/decision-cli/./crates/decision-cli/src/core/bundled.rs" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /home/hafeok/projects/decision-cli/./crates/decision-cli/src/core/scope.rs" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/7> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/8> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/9>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/9> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/10>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/10> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/11>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/11> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/12>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/12> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/13>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/13> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/14>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/14> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/15>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/15> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/16>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/16> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/17>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/17> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:24:30.206Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:32.382Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "warning: function `baked_capability_ids` is never used\n   --> crates/decision-cli/src/core/bootstrap/ft101_catalog.rs:709:15\n    |\n709 | pub(crate) fn baked_capability_ids() -> Vec<&'static str> {\n    |               ^^^^^^^^^^^^^^^^^^^^\n    |\n    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\nrunning 683 tests\n....................................................................................... 87/683\n....................................................................................... 174/683\n....................................................................................... 261/683\n....................................................................................... 348/683\n....................................................................................... 435/683\n....................................................................................... 522/683\n....................................................................................... 609/683\n..........................................................................\ntest result: ok. 683 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 8 tests\n........\ntest result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s\n\n\nrunning 29 tests\n.............................\ntest result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s\n\n\nrunning 11 tests\n...........\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n\nrunning 17 tests\n.................\ntest result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s\n\n\nrunning 4 tests\n....\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n\nrunning 4 tests\n....\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s\n\n\nrunning 3 tests\n...\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s\n\n\nrunning 4 tests\n....\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s\n\n\nrunning 9 tests\n.........\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s\n\n\nrunning 5 tests\n.....\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n\nrunning 9 tests\n.........\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s\n\n\nrunning 3 tests\n...\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s\n\n\nrunning 3 tests\n. 1/3\ndec_implement_emits_verifier_dispatch_event_after_action_completes --- FAILED\ndelivery_handler_is_idempotent --- FAILED\n\nfailures:\n\n---- dec_implement_emits_verifier_dispatch_event_after_action_completes stdout ----\n\nthread 'dec_implement_emits_verifier_dispatch_event_after_action_completes' (35319) panicked at crates/decision-cli/tests/ft_022_verifier_dispatch_subscription.rs:112:36:\ndec implement (stub): Error::ChainIntegrity: feature https://decision-cli.dev/ns/feature/FT-013 has uncovered TCs and no waiver.\n\nUncovered TCs (3):\n  - TC-008\n  - TC-011\n  - TC-013\n\nNext actions:\n  * Author a verification graph that covers these TCs:\n      dec verify graph generate https://decision-cli.dev/ns/feature/FT-013 --environment ENV-NNN\n\nEscape hatch (records a CoverageWaiver artifact):\n      dec implement https://decision-cli.dev/ns/feature/FT-013 --waive-coverage \"<reason ≥ 16 non-whitespace chars>\"\n\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n---- delivery_handler_is_idempotent stdout ----\n\nthread 'delivery_handler_is_idempotent' (35321) panicked at crates/decision-cli/tests/ft_022_verifier_dispatch_subscription.rs:190:36:\ndec implement (stub): Error::ChainIntegrity: feature https://decision-cli.dev/ns/feature/FT-013 has uncovered TCs and no waiver.\n\nUncovered" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/18>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/18> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:32.382Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:33.359Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "OK: features tree contains no cross-feature imports\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/19>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/19> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T08:24:33.359Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:33.614Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .
+
+<https://decision-cli.dev/ns/result/VGR-207/step/20>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-100/20> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T08:24:33.614Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T08:24:36.284Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "\nrunning 683 tests\ntest core::bundle::default_ladder::tests::capability_focal_is_foundational ... ok\ntest core::bundle::default_ladder::tests::cross_cutting_adr_is_elevated ... ok\ntest core::bundle::default_ladder::tests::feature_spec_with_one_cross_cutting_adr_is_routine ... ok\ntest core::bundle::default_ladder::tests::feature_spec_with_zero_cross_cutting_adrs_is_routine ... ok\ntest core::bundle::default_ladder::tests::feature_spec_with_two_cross_cutting_adrs_is_elevated ... ok\ntest core::bundle::default_ladder::tests::new_artifact_type_is_foundational ... ok\ntest core::bundle::default_ladder::tests::ladder_is_deterministic ... ok\ntest core::bundle::default_ladder::tests::ontology_change_is_foundational ... ok\ntest core::bundle::default_ladder::tests::role_binding_focal_is_foundational ... ok\ntest core::bundle::default_ladder::tests::unrecognised_class_falls_through_to_routine ... ok\ntest core::bundle::types::tests::builder_default_yields_routine_bundle ... ok\ntest core::bundle::types::tests::builder_with_stakes_overrides ... ok\ntest core::bundle::types::tests::default_is_routine ... ok\ntest core::bundle::shacl::tests::no_bundle_subjects_means_no_violations ... ok\ntest core::bundle::types::tests::parse_rejects_unknown_value ... ok\ntest core::bundle::shacl::tests::bundle_with_missing_stakes_fails ... ok\ntest core::bundle::shacl::tests::bundle_with_unknown_stakes_value_fails ... ok\ntest core::bundle::shacl::tests::bundle_with_two_stakes_literals_fails ... ok\ntest core::bundle::types::tests::as_str_round_trips ... ok\ntest core::bundle::shacl::tests::well_formed_bundle_passes_for_each_stakes_value ... ok\ntest core::bundle::types::tests::dispatch_metadata_markdown_includes_stakes ... ok\ntest core::bundled::tests::unknown_template_is_none ... ok\ntest core::bundled::tests::shipped_feature_is_bundled ... ok\ntest core::bundled::tests::engineering_development_template_is_bundled ... ok\ntest core::bundled::tests::unknown_value_action_is_none ... ok\ntest core::cosign_trust::tests::empty_trust_list_rejects_every_candidate ... ok\ntest core::cosign_trust::tests::admits_local_key_identity_when_subject_matches_exactly ... ok\ntest core::cosign_trust::tests::parses_well_formed_branch_subject ... ok\ntest core::cosign_trust::tests::parses_well_formed_tag_subject ... ok\ntest core::cosign_trust::tests::note_is_propagated_into_match_outcome ... ok\ntest core::cosign_trust::tests::admits_matching_github_actions_identity ... ok\ntest core::cosign_trust::tests::matcher_short_circuits_on_first_matching_entry ... ok\ntest core::cosign_trust::tests::rejects_entry_with_empty_issuer ... ok\ntest core::cosign_trust::tests::rejects_branch_ref_when_entry_requires_tag_pattern ... ok\ntest core::cosign_trust::tests::rejects_entry_with_malformed_repo ... ok\ntest core::cosign_trust::tests::rejects_identity_from_wrong_repo ... ok\ntest core::cosign_trust::tests::rejects_local_key_entry_with_empty_subject ... ok\ntest core::cosign_trust::tests::rejects_identity_with_non_matching_tag_pattern ... ok\ntest core::cosign_trust::tests::rejects_local_key_identity_with_different_subject ... ok\ntest core::cosign_trust::tests::rejects_subject_missing_at_separator ... ok\ntest core::cosign_trust::tests::rejects_identity_with_wrong_issuer ... ok\ntest core::cosign_trust::tests::rejects_identity_from_wrong_workflow_path ... ok\ntest core::cosign_trust::tests::rejects_subject_missing_workflow_path ... ok\ntest core::cosign_trust::tests::rejects_subject_without_github_prefix ... ok\ntest core::cosign_trust::tests::rejects_subject_with_empty_ref ... ok\ntest core::cosign_trust::tests::rekor_rejects_non_hex_uuid ... ok\ntest core::cosign_trust::tests::rekor_default_is_sigstore_public_instance ... ok\ntest core::cosign_trust::tests::tag_pattern_empty_rejected ... ok\ntest core::cosign_trust::tests::rekor_rejects_short_uuid ... ok\ntest core::cosign_trust::tests::rekor_rejects_insecure_url ... ok\ntest core::cosign_trust::tests::rekor_rejects_uppercase_uuid ... ok\ntest core::cosign_trust::tests::tag_pattern_literal_matches_only_exact_tag ... ok\ntest core::cosign_trust::tests::tag_pattern_wildcard_" ;
+    dec:stderrExcerpt "warning: function `baked_capability_ids` is never used\n   --> crates/decision-cli/src/core/bootstrap/ft101_catalog.rs:709:15\n    |\n709 | pub(crate) fn baked_capability_ids() -> Vec<&'static str> {\n    |               ^^^^^^^^^^^^^^^^^^^^\n    |\n    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: `decision-cli` (lib test) generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.27s\n     Running unittests src/lib.rs (target/debug/deps/decision_cli-f485d1d1d273c73f)\n     Running unittests src/main.rs (target/debug/deps/dec-a280a767b40d6d8e)\n     Running tests/anthropic_cache_breakpoint.rs (target/debug/deps/anthropic_cache_breakpoint-973f3bf4aad35962)\n     Running tests/bundle_stakes.rs (target/debug/deps/bundle_stakes-269a8c73b41bc8db)\n     Running tests/capability_resolver.rs (target/debug/deps/capability_resolver-67dab6a545611d7b)\n     Running tests/capability_shape.rs (target/debug/deps/capability_shape-d4d324ae2323c2cb)\n     Running tests/dispatch_no_escalation.rs (target/debug/deps/dispatch_no_escalation-3597da970d278b1c)\n     Running tests/escalate_confidence_07.rs (target/debug/deps/escalate_confidence_07-e2ea420848667ca6)\n     Running tests/escalate_foundational_chain.rs (target/debug/deps/escalate_foundational_chain-94159728db9eb675)\n     Running tests/escalate_unimplementable_critical.rs (target/debug/deps/escalate_unimplementable_critical-f88c2d0c7dc85da3)\n     Running tests/feedback_class_vocab.rs (target/debug/deps/feedback_class_vocab-36beaea3bb466714)\n     Running tests/feedback_closed_provo.rs (target/debug/deps/feedback_closed_provo-d6f2ef11364cb599)\n     Running tests/feedback_lifecycle.rs (target/debug/deps/feedback_lifecycle-db33aa4a1d24d483)\n     Running tests/ft_019_verifier_role_catalog.rs (target/debug/deps/ft_019_verifier_role_catalog-3a4de1514d487fad)\n     Running tests/ft_022_verifier_dispatch_subscription.rs (target/debug/deps/ft_022_verifier_dispatch_subscription-514917d982aad336)\nerror: test failed, to rerun pass `-p decision-cli --test ft_022_verifier_dispatch_subscription`\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815> .

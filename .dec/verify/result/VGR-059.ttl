@@ -1,0 +1,78 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-059>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-052> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T17:38:40.300Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:40.310Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-059/step/0> <https://decision-cli.dev/ns/result/VGR-059/step/1> <https://decision-cli.dev/ns/result/VGR-059/step/2> <https://decision-cli.dev/ns/result/VGR-059/step/3> ) ;
+    dec:rationale "step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-046> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-059/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-046> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-059/step/3>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-052/ts-1779817120298005285> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:38:40.310Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-059/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-052/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:40.300Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:40.304Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-052/ts-1779817120298005285> .
+
+<https://decision-cli.dev/ns/result/VGR-059/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-052/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:40.304Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:40.307Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--reseed' found\n\nUsage: dec init [OPTIONS]\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-052/ts-1779817120298005285> .
+
+<https://decision-cli.dev/ns/result/VGR-059/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-052/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:40.307Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:40.310Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected argument '--feature-id' found\n\n  tip: to pass '--feature-id' as a value, use '-- --feature-id'\n\nUsage: dec verify graph generate [OPTIONS] --environment <ENVIRONMENT> <FEATURE_ID>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-052/ts-1779817120298005285> .
+
+<https://decision-cli.dev/ns/result/VGR-059/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-052/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:40.310Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:40.310Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-052/ts-1779817120298005285> .

@@ -1,0 +1,139 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-090>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-083> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T17:39:04.966Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.980Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-090/step/0> <https://decision-cli.dev/ns/result/VGR-090/step/1> <https://decision-cli.dev/ns/result/VGR-090/step/2> <https://decision-cli.dev/ns/result/VGR-090/step/3> <https://decision-cli.dev/ns/result/VGR-090/step/4> <https://decision-cli.dev/ns/result/VGR-090/step/5> <https://decision-cli.dev/ns/result/VGR-090/step/6> <https://decision-cli.dev/ns/result/VGR-090/step/7> ) ;
+    dec:rationale "step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-137; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-137> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-090/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-137> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-090/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-137> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-090/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-137> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-090/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-137> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-090/step/7>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:39:04.980Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:39:04.966Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.968Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:39:04.968Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.970Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:39:04.970Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.970Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318931-1779817144963756417/~/.pipeline-cli/workers.env" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:39:04.970Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.972Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Testing successful run with qualified image\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/4> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:39:04.972Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.973Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Testing error case: missing PIPELINE_ENDPOINT\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/5> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:39:04.973Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.977Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:39:04.977Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.977Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318931-1779817144963756417/~/.pipeline-cli/workers.env" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .
+
+<https://decision-cli.dev/ns/result/VGR-090/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-083/7> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:39:04.977Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:39:04.980Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Testing error case: non-qualified image ID\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-083/ts-1779817144962986280> .

@@ -1,0 +1,96 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-117>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-021> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T18:06:05.724Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-117/step/0> <https://decision-cli.dev/ns/result/VGR-117/step/1> <https://decision-cli.dev/ns/result/VGR-117/step/2> <https://decision-cli.dev/ns/result/VGR-117/step/3> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-054; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-054> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-117/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-054> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-117/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-055> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-117/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-055> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-117/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-054> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-117/step/3>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779818765721789992> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:06:05.728Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-117/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-021/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:05.725Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec init: a definition reference is required.\n  Try: dec init --template engineering-development\n  Or:  dec init --from ./streams/decision-cli-development.ttl\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779818765721789992> .
+
+<https://decision-cli.dev/ns/result/VGR-117/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-021/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333119-1779818765722562209/.dec/verify/env/ENV-001-ephemeral-cli.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779818765721789992> .
+
+<https://decision-cli.dev/ns/result/VGR-117/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-021/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333119-1779818765722562209/.dec/verify/env/ENV-001-ephemeral-cli.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779818765721789992> .
+
+<https://decision-cli.dev/ns/result/VGR-117/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-021/3> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:06:05.728Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333119-1779818765722562209/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779818765721789992> .

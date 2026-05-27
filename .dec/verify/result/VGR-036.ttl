@@ -1,0 +1,229 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-036>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-029> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T17:38:27.051Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-036/step/0> <https://decision-cli.dev/ns/result/VGR-036/step/1> <https://decision-cli.dev/ns/result/VGR-036/step/2> <https://decision-cli.dev/ns/result/VGR-036/step/3> <https://decision-cli.dev/ns/result/VGR-036/step/4> <https://decision-cli.dev/ns/result/VGR-036/step/5> <https://decision-cli.dev/ns/result/VGR-036/step/6> <https://decision-cli.dev/ns/result/VGR-036/step/7> <https://decision-cli.dev/ns/result/VGR-036/step/8> <https://decision-cli.dev/ns/result/VGR-036/step/9> <https://decision-cli.dev/ns/result/VGR-036/step/10> <https://decision-cli.dev/ns/result/VGR-036/step/11> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-052> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-052> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-052> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-063> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-063> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/7>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-063> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/8>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-095> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/9>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-095> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/10>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-095> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-036/step/11>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:38:27.062Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.051Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph new: dangling reference: verifies ref \"TC-051\" does not resolve\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/2> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph new: dangling reference: verifies ref \"TC-052\" does not resolve\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/5> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph new: dangling reference: verifies ref \"TC-063\" does not resolve\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/8> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/9>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/9> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph new: dangling reference: verifies ref \"TC-095\" does not resolve\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/10>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/10> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
+
+<https://decision-cli.dev/ns/result/VGR-036/step/11>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-029/11> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .

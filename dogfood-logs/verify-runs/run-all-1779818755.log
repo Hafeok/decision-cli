@@ -1,0 +1,1417 @@
+===== VG-001 =====
+Running https://decision-cli.dev/ns/graph/VG-001 in https://decision-cli.dev/ns/env/ENV-001
+  [0] shell-command        pass           25 ms    Initialised orchestration store in /tmp/dec-verify/ENV-001-3…
+  [1] file-assertion       unrunnable      0 ms    read failed: Is a directory (os error 21)
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-001-332608-177981875509632…
+
+Verdict: amendment-required
+Rationale: step 2 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-097
+===== VG-002 =====
+Running https://decision-cli.dev/ns/graph/VG-002 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass           13 ms    Initialised orchestration store in /tmp/dec-verify/ENV-002-3…
+  [1] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-332621-1779818…
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-332621-1779818…
+
+Verdict: amendment-required
+Rationale: step 1 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-098
+===== VG-003 =====
+Running https://decision-cli.dev/ns/graph/VG-003 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass           16 ms    Initialised orchestration store in /tmp/dec-verify/ENV-002-3…
+  [1] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-332634-1779818…
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-332634-1779818…
+
+Verdict: amendment-required
+Rationale: step 1 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-099
+===== VG-004 =====
+Running https://decision-cli.dev/ns/graph/VG-004 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass           18 ms    Initialised orchestration store in /tmp/dec-verify/ENV-002-3…
+  [1] file-assertion       unrunnable      0 ms    read failed: Is a directory (os error 21)
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-332647-177981875604108…
+  [3] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-332647-1779818…
+
+Verdict: amendment-required
+Rationale: step 2 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-100
+===== VG-005 =====
+Running https://decision-cli.dev/ns/graph/VG-005 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass           23 ms    Initialised orchestration store in /tmp/dec-verify/ENV-002-3…
+  [1] shell-command        pass            4 ms    {"manifest_sha256":"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e4…
+
+Verdict: approved
+Rationale: all 2 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-101
+===== VG-006 =====
+Running https://decision-cli.dev/ns/graph/VG-006 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            4 ms    expected exit 0, got 2
+  [1] sparql-assertion     unrunnable      0 ms    could not load target /tmp/test-workspace/.dec/store: Is a d…
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/test-workspace/.dec/store: Is a d…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-088, https://decision-cli.dev/ns/tc/TC-027; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-102
+Feedback:
+  urn:dec:feedback:6c285fc6-0d06-4460-b4c8-2a9d8013dc41
+  urn:dec:feedback:2926ee55-2d31-4a78-b5b5-39d52dc98881
+  urn:dec:feedback:224bf085-3deb-4d57-a5b4-5936e6ae3444
+  urn:dec:feedback:d7a3eeb3-b31f-4928-aa50-255dd7926843
+===== VG-007 =====
+Running https://decision-cli.dev/ns/graph/VG-007 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail           19 ms    expected exit 0, got 101
+  [1] shell-command        fail           18 ms    expected exit 0, got 101
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-332694-1779818757201…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-009; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-103
+Feedback:
+  urn:dec:feedback:933de56f-c627-4502-9e55-78ce132c7000
+  urn:dec:feedback:c73b0f1c-edc2-4ef8-bbe7-3f9f182fc402
+  urn:dec:feedback:d8a492cb-ea83-41f1-bcbb-e6433b6b5528
+===== VG-008 =====
+Running https://decision-cli.dev/ns/graph/VG-008 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            1 ms    SSE delivery transport verification requires HTTP capabiliti…
+
+Verdict: approved
+Rationale: all 1 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-104
+===== VG-009 =====
+Running https://decision-cli.dev/ns/graph/VG-009 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            4 ms    expected exit 0, got 2
+  [1] shell-command        pass            4 ms    {"manifest_sha256":"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e4…
+  [2] shell-command        pass            3 ms    {"manifest_sha256":"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e4…
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-332741-1779818758048…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-332741-1779818758048…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-001; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-105
+Feedback:
+  urn:dec:feedback:00cb04aa-f095-4d0f-b94b-9ef8db8ef001
+  urn:dec:feedback:695c4698-1ed9-4ad2-b678-ad558556dbd0
+  urn:dec:feedback:08ce1571-a287-42dd-8744-f28f1b323598
+===== VG-010 =====
+Running https://decision-cli.dev/ns/graph/VG-010 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            2 ms    expected exit 0, got 128
+  [1] capture              pass            0 ms    
+  [2] shell-command        pass            2 ms    no working-tree changes â skipping commit
+  [3] shell-command        fail            2 ms    expected exit 0, got 128
+  [4] capture              pass            0 ms    
+  [5] shell-command        fail           11 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-018; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-106
+Feedback:
+  urn:dec:feedback:db1ee3a4-4b19-4e9f-83fd-43ecaa3525b4
+  urn:dec:feedback:87fc38ec-d27d-4cc6-862a-858e419d4d15
+  urn:dec:feedback:ae39688e-2bca-4a3b-9796-c69d6e57af58
+===== VG-011 =====
+Running https://decision-cli.dev/ns/graph/VG-011 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            1 ms    expected exit 0, got 1
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-332818-177981875910931…
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-332818-177981875910931…
+  [3] shell-command        fail            1 ms    expected exit 0, got 1
+  [4] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-332818-177981875910931…
+  [5] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-332818-177981875910931…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-021; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-107
+Feedback:
+  urn:dec:feedback:efebe347-2a42-4ca1-b2a9-cc41a2c4e035
+  urn:dec:feedback:6ad5257d-f677-405c-af67-fe9663cd9d38
+  urn:dec:feedback:106d1bea-6207-488c-b758-100402c51ae4
+  urn:dec:feedback:e32b9ec0-0a13-4408-bd75-28c40d984bd8
+  urn:dec:feedback:3a93aab1-9fd5-4e6c-9205-fa55eabf19e0
+  urn:dec:feedback:9646b90d-b69f-494f-a4dc-4ccfa8426aa6
+===== VG-012 =====
+Running https://decision-cli.dev/ns/graph/VG-012 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            5 ms    
+  [1] shell-command        fail          554 ms    expected exit 0, got 127
+  [2] file-assertion       pass            8 ms    
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-029, https://decision-cli.dev/ns/tc/TC-030, https://decision-cli.dev/ns/tc/TC-091; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-108
+Feedback:
+  urn:dec:feedback:12893f72-c193-40d4-a5d0-abcc7326970e
+  urn:dec:feedback:3a9f49c5-84d2-4c1f-a0d0-02fbb35d6a30
+  urn:dec:feedback:39ecc6e1-8ef7-4e03-83cf-bb7d7e1224a9
+===== VG-013 =====
+Running https://decision-cli.dev/ns/graph/VG-013 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            3 ms    
+  [2] sparql-assertion     pass            0 ms    
+  [3] shell-command        fail           25 ms    expected exit 0, got 101
+  [4] file-assertion       fail            1 ms    file missing: /tmp/dec-verify/ENV-002-332864-177981876080986…
+
+Verdict: rejected
+Rationale: step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-032; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-109
+Feedback:
+  urn:dec:feedback:6df6f14e-d6f3-45e3-acb9-90cef0e06474
+  urn:dec:feedback:fce4710f-dba1-4f7f-8003-62347a8dabff
+===== VG-014 =====
+Running https://decision-cli.dev/ns/graph/VG-014 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] shell-command        fail            2 ms    expected exit 0, got 2
+  [3] shell-command        fail            2 ms    expected exit 0, got 2
+  [4] shell-command        fail            2 ms    expected exit 0, got 1
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-110
+Feedback:
+  urn:dec:feedback:0b0c660d-cc6d-4212-8750-f2791358f5da
+===== VG-015 =====
+Running https://decision-cli.dev/ns/graph/VG-015 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            4 ms    
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-332906-177981876185903…
+  [2] shell-command        fail           19 ms    expected exit 0, got 101
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-332906-1779818761859…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-332906-1779818761859…
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-040; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-111
+Feedback:
+  urn:dec:feedback:70e6ad33-8c32-4afb-a085-b8109f0f4d4b
+  urn:dec:feedback:d2ae051d-5e37-47f2-b0ad-2bf417547990
+  urn:dec:feedback:69d9874b-d6a1-4ced-a0e9-b7258bb1263a
+  urn:dec:feedback:79e0bbed-9c8e-4dba-9def-15d3c9ecc152
+===== VG-016 =====
+Running https://decision-cli.dev/ns/graph/VG-016 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass          630 ms    
+  [2] shell-command        pass            3 ms    
+  [3] shell-command        pass            4 ms    
+  [4] shell-command        fail           30 ms    expected exit 0, got 101
+  [5] shell-command        pass            2 ms    
+  [6] shell-command        fail           33 ms    expected exit 0, got 101
+  [7] shell-command        fail           29 ms    expected exit 0, got 101
+  [8] shell-command        pass            5 ms    
+  [9] shell-command        fail            2 ms    expected exit 0, got 2
+  [10] shell-command        fail            2 ms    expected exit 0, got 1
+  [11] shell-command        fail            3 ms    expected exit 0, got 2
+  [12] shell-command        fail            2 ms    expected exit 0, got 2
+  [13] shell-command        fail            2 ms    expected exit 0, got 2
+  [14] shell-command        fail            3 ms    expected exit 0, got 2
+  [15] shell-command        fail            2 ms    expected exit 0, got 2
+  [16] shell-command        fail            4 ms    expected exit 0, got 2
+  [17] shell-command        fail            2 ms    expected exit 0, got 2
+  [18] shell-command        fail            3 ms    expected exit 0, got 2
+  [19] shell-command        fail            3 ms    expected exit 0, got 2
+  [20] shell-command        pass            3 ms    
+  [21] shell-command        pass            2 ms    
+
+Verdict: rejected
+Rationale: step 4 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-029; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-112
+Feedback:
+  urn:dec:feedback:10ab56e4-bca5-45c9-aaca-73bbf1137d33
+  urn:dec:feedback:70074d5c-3a98-412c-8de6-c9c0cce61fc8
+  urn:dec:feedback:3873edf0-b3d2-4d48-acc3-d8e7d372f7ab
+===== VG-017 =====
+Running https://decision-cli.dev/ns/graph/VG-017 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    decision-cli — orchestration system for Decision-Driven De…
+  [1] shell-command        pass            2 ms    Run the MCP server over stdio
+
+Verdict: approved
+Rationale: all 2 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-113
+===== VG-018 =====
+Running https://decision-cli.dev/ns/graph/VG-018 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333039-1779818…
+  [3] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333039-1779818…
+  [4] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333039-177981876402402…
+  [5] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333039-177981876402402…
+  [6] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333039-1779818…
+  [7] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333039-1779818…
+  [8] shell-command        fail           17 ms    expected exit 0, got 101
+  [9] shell-command        fail           25 ms    expected exit 0, got 101
+
+Verdict: rejected
+Rationale: step 4 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-041; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-114
+Feedback:
+  urn:dec:feedback:becd2c0f-dd23-48db-a9cb-d35b623d9983
+  urn:dec:feedback:69e21960-661c-4bfa-b0e7-f9296fa0a307
+  urn:dec:feedback:fdec6d7a-2735-4029-ab23-6bcd8e2c5d36
+  urn:dec:feedback:e31bcab0-e837-4d54-bc3f-b92b478616ba
+  urn:dec:feedback:c7c85100-e89d-4a15-9c9c-efaf53a2b313
+  urn:dec:feedback:f214054c-8b8f-48bb-863f-297ee42a5bdd
+  urn:dec:feedback:81f384e7-e943-4a17-b7ca-e07a6402adf3
+  urn:dec:feedback:fbb91dfa-c881-4664-a16f-7596f346b6e9
+===== VG-019 =====
+Running https://decision-cli.dev/ns/graph/VG-019 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail           18 ms    expected exit 0, got 101
+  [1] shell-command        fail           34 ms    expected exit 0, got 101
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333073-1779818764576…
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333073-1779818764576…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333073-1779818764576…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-036; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-115
+Feedback:
+  urn:dec:feedback:df26050e-79a9-4f9c-956c-7c5607b47a88
+  urn:dec:feedback:3b9a123a-6d9b-4bf4-a2e9-3d4b1435b4f6
+  urn:dec:feedback:d7d7f159-c018-4b27-a776-6581404edfc4
+  urn:dec:feedback:40f2464a-ddf9-43df-8f81-667ecaeb9d08
+  urn:dec:feedback:572e06b8-df35-4d15-9d03-cd98ee5d5f07
+===== VG-020 =====
+Running https://decision-cli.dev/ns/graph/VG-020 in https://decision-cli.dev/ns/env/ENV-002
+  [0] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333105-177981876515547…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-057, https://decision-cli.dev/ns/tc/TC-056; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-116
+Feedback:
+  urn:dec:feedback:bd26a35e-a59a-47a9-8aee-405a746b264b
+  urn:dec:feedback:9592e875-4c79-4b7e-bc57-6cd04985fc4a
+===== VG-021 =====
+Running https://decision-cli.dev/ns/graph/VG-021 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            3 ms    expected exit 0, got 2
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333119-177981876572256…
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333119-177981876572256…
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333119-1779818765722…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-054; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-117
+Feedback:
+  urn:dec:feedback:e8454355-5d18-47fd-9170-5c342d4f9bc0
+  urn:dec:feedback:12bb3050-ce27-472c-8c0d-2dc0b8799da5
+  urn:dec:feedback:410642fe-288d-43a4-8836-b364b1714d36
+  urn:dec:feedback:ff337c35-cd81-4d47-a701-d51deb755633
+  urn:dec:feedback:1f8f2dc5-e776-4a81-bf9b-c860680d3788
+===== VG-022 =====
+Running https://decision-cli.dev/ns/graph/VG-022 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            3 ms    
+  [2] shell-command        pass            1 ms    
+  [3] shell-command        fail          239 ms    expected exit 0, got 1
+  [4] shell-command        pass            3 ms    
+  [5] shell-command        pass            1 ms    
+  [6] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333135-1779818…
+
+Verdict: rejected
+Rationale: step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-041; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-118
+Feedback:
+  urn:dec:feedback:0bc06a94-2723-4a41-a32f-690b0a3bf932
+  urn:dec:feedback:e809991b-09f2-4aed-834b-218e03e896ad
+===== VG-023 =====
+Running https://decision-cli.dev/ns/graph/VG-023 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    test
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333158-177981876711149…
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333158-1779818767111…
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-059; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-119
+Feedback:
+  urn:dec:feedback:a1824ccc-645b-44d2-b95f-ae532e577319
+===== VG-024 =====
+Running https://decision-cli.dev/ns/graph/VG-024 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            3 ms    expected exit 0, got 1
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333173-177981876765219…
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333173-1779818767652…
+  [3] shell-command        fail            3 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051, https://decision-cli.dev/ns/tc/TC-052, https://decision-cli.dev/ns/tc/TC-060; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-120
+Feedback:
+  urn:dec:feedback:e977ef40-b36b-4655-84aa-97ef6384626f
+  urn:dec:feedback:94967a8b-4b64-42d3-bebb-d40e563303f1
+  urn:dec:feedback:212bebca-44b5-4915-ad44-f6878ed0eddd
+  urn:dec:feedback:475cf833-61c2-46bf-8962-4bc5538db20a
+  urn:dec:feedback:5773fd7c-40de-4b57-89bc-72c06c02cdd2
+  urn:dec:feedback:b6df768f-f999-4901-92da-10b7fcf8aa71
+  urn:dec:feedback:b11d0a6b-f8d2-4483-8de1-c4d0934e6173
+===== VG-025 =====
+Running https://decision-cli.dev/ns/graph/VG-025 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            2 ms    expected exit 0, got 1
+  [1] shell-command        fail            3 ms    expected exit 0, got 1
+  [2] shell-command        fail            2 ms    expected exit 0, got 1
+  [3] shell-command        fail            3 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-121
+Feedback:
+  urn:dec:feedback:b2ebfe29-83b0-44dd-b32f-ddb0d394eebf
+  urn:dec:feedback:ddf7d0a8-9528-4adc-9859-5544b56f4741
+  urn:dec:feedback:a51b7c41-8d4c-4a08-8834-f0fa49ecd833
+  urn:dec:feedback:b8040498-c814-4e49-a8ef-0f121ebd5551
+===== VG-026 =====
+Running https://decision-cli.dev/ns/graph/VG-026 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            3 ms    expected exit 0, got 1
+  [1] shell-command        fail            2 ms    expected exit 0, got 1
+  [2] shell-command        fail          845 ms    expected exit 0, got 127
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333207-1779818768740…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-122
+Feedback:
+  urn:dec:feedback:722bccca-5c94-44ef-a499-108331592d14
+  urn:dec:feedback:be467e1d-926f-4415-aa4f-5e21b63597b7
+  urn:dec:feedback:95006c9e-c80c-411c-8f3b-fe0ecb04bcc3
+  urn:dec:feedback:b42f4447-e3e6-435d-9bbb-5656ac20e0c3
+  urn:dec:feedback:d628b4d6-e564-4272-8517-244fe306f860
+  urn:dec:feedback:3b75917b-f422-4e96-bca5-e51f4a81479c
+===== VG-027 =====
+Running https://decision-cli.dev/ns/graph/VG-027 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            3 ms    expected exit 0, got 1
+  [1] shell-command        fail            2 ms    expected exit 0, got 1
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333224-177981877012106…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-123
+Feedback:
+  urn:dec:feedback:f09db52e-b1d4-46f1-937b-9e0347c62560
+  urn:dec:feedback:092f03ba-b3ba-4e70-a409-bf3bdb67651f
+  urn:dec:feedback:87ae10d4-cb5a-4c92-98a3-710550b3400c
+===== VG-028 =====
+Running https://decision-cli.dev/ns/graph/VG-028 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail            3 ms    expected exit 0, got 2
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+  [3] shell-command        fail            3 ms    expected exit 0, got 2
+  [4] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333240-1779818…
+  [5] shell-command        fail            3 ms    expected exit 0, got 1
+  [6] shell-command        fail            3 ms    expected exit 0, got 1
+  [7] shell-command        fail            3 ms    expected exit 0, got 1
+  [8] shell-command        fail            3 ms    expected exit 0, got 1
+  [9] shell-command        fail            2 ms    expected exit 0, got 1
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-124
+Feedback:
+  urn:dec:feedback:41cee1c6-c228-4bad-9ed1-6ee49bb1b120
+  urn:dec:feedback:89f36fde-795d-4d3c-a571-23f1fa0506dd
+  urn:dec:feedback:67c8eea2-a645-4bf4-a391-e1c8940f0b8f
+  urn:dec:feedback:afd88980-890d-4c95-944b-0f24d8aa4544
+  urn:dec:feedback:2f125c66-3c75-4f72-b536-1113c7dcfa5c
+  urn:dec:feedback:9e6bcb38-33e7-44ac-bad0-44d0ffbf8926
+===== VG-029 =====
+Running https://decision-cli.dev/ns/graph/VG-029 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            3 ms    expected exit 0, got 1
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333261-177981877145636…
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333261-1779818771456…
+  [3] shell-command        fail            2 ms    expected exit 0, got 1
+  [4] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333261-177981877145636…
+  [5] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333261-1779818771456…
+  [6] shell-command        fail            3 ms    expected exit 0, got 1
+  [7] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333261-177981877145636…
+  [8] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333261-1779818771456…
+  [9] shell-command        fail            2 ms    expected exit 0, got 1
+  [10] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333261-177981877145636…
+  [11] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333261-1779818771456…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-125
+Feedback:
+  urn:dec:feedback:15df6b27-e9ce-4fc3-b3a4-ed688ad74b9f
+  urn:dec:feedback:813b7d25-cce9-46d7-9dbf-45f8bf116f41
+  urn:dec:feedback:40d545d2-d3bd-48b3-b8ae-82d291a88f00
+  urn:dec:feedback:6e188275-bc63-436e-991c-bcaf1d0353eb
+  urn:dec:feedback:fa612adb-9a30-4c5e-9e94-38cc3e0fe02a
+  urn:dec:feedback:b78942c5-fc8a-438c-a82c-b52f1ad97eeb
+  urn:dec:feedback:e4a1ecb0-d77c-4fc7-811c-3c2d4c7d5764
+  urn:dec:feedback:d0ac79df-531f-43e4-b43b-ca31dddff5fb
+  urn:dec:feedback:751881dd-2d2d-45ac-9b40-b570a5a608ed
+  urn:dec:feedback:391b0b27-d1d7-4616-b316-fb5bdf0f6959
+  urn:dec:feedback:feb1862d-5e13-4651-ae78-53c150f70281
+  urn:dec:feedback:00d56dbc-ce77-4cbd-bcdf-874a386d9289
+===== VG-030 =====
+Running https://decision-cli.dev/ns/graph/VG-030 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] shell-command        fail            3 ms    expected exit 0, got 1
+  [3] shell-command        fail            2 ms    expected exit 0, got 1
+  [4] shell-command        fail            3 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-051; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-126
+Feedback:
+  urn:dec:feedback:fc76023f-3c68-4a7a-8244-d953ddfa6820
+  urn:dec:feedback:84e7357b-bce2-4054-94e2-4a88f45a12e3
+  urn:dec:feedback:f32d89e9-cb19-4063-9a85-f717a8396a38
+  urn:dec:feedback:1d67bdfd-2578-4aa6-a12f-05b41007a4c9
+===== VG-031 =====
+Running https://decision-cli.dev/ns/graph/VG-031 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            1 ms    
+  [1] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333301-1779818…
+
+Verdict: amendment-required
+Rationale: step 1 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-127
+Feedback:
+  urn:dec:feedback:1a7c3ca8-4601-40c7-bd3f-e3ef6a3d753a
+  urn:dec:feedback:b07f1dcb-9976-449d-9820-21f2578fe588
+===== VG-032 =====
+Running https://decision-cli.dev/ns/graph/VG-032 in https://decision-cli.dev/ns/env/ENV-002
+  [0] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333314-1779818773177…
+  [1] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333314-1779818773177…
+  [2] shell-command        pass            5 ms    {"manifest_sha256":"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e4…
+  [3] shell-command        fail            3 ms    expected exit 0, got 2
+  [4] shell-command        pass            2 ms    decision-cli — orchestration system for Decision-Driven De…
+
+Verdict: rejected
+Rationale: step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-071; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-128
+Feedback:
+  urn:dec:feedback:b5859c6e-64fb-4952-8008-6bcd54d26d37
+===== VG-033 =====
+Running https://decision-cli.dev/ns/graph/VG-033 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    total 8
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333331-177981877376784…
+  [2] shell-command        fail          702 ms    expected exit 0, got 127
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-076, https://decision-cli.dev/ns/tc/TC-077, https://decision-cli.dev/ns/tc/TC-078; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-129
+Feedback:
+  urn:dec:feedback:2b1a2d31-b14e-4603-bc61-8219ca856fa8
+  urn:dec:feedback:63a37321-24f5-4100-8bf9-071c011a8402
+  urn:dec:feedback:888a7a46-08b2-4aaa-a90b-c72890f659f0
+===== VG-034 =====
+Running https://decision-cli.dev/ns/graph/VG-034 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            3 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-082, https://decision-cli.dev/ns/tc/TC-081, https://decision-cli.dev/ns/tc/TC-080, https://decision-cli.dev/ns/tc/TC-079; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-130
+Feedback:
+  urn:dec:feedback:d314b175-dc7e-43e3-b71c-d967bdb15067
+  urn:dec:feedback:18245145-c885-4047-8407-144906373b74
+  urn:dec:feedback:111bf862-2fa3-46d0-80ee-fe970f54dba9
+  urn:dec:feedback:1aade804-d1b0-460f-8ef2-3a273151d742
+===== VG-035 =====
+Running https://decision-cli.dev/ns/graph/VG-035 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+  [3] shell-command        fail            2 ms    expected exit 1, got 2
+  [4] shell-command        fail            4 ms    expected exit 0, got 2
+  [5] shell-command        pass            5 ms    
+  [6] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333362-1779818775591…
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-131
+Feedback:
+  urn:dec:feedback:4169c88c-713b-4f0f-93f7-fd6073a95ca3
+  urn:dec:feedback:37d171c0-8be0-41a4-8e07-fce27e342ace
+  urn:dec:feedback:31284350-6d0f-4f1b-8a23-5b1758dc9960
+  urn:dec:feedback:d8c6619e-5ab3-484f-89a5-95328cde6e91
+  urn:dec:feedback:4e96e840-5e20-458c-a712-1568aa51cbb6
+  urn:dec:feedback:f92d9687-efad-4264-a7ae-97b1db759e33
+===== VG-036 =====
+Running https://decision-cli.dev/ns/graph/VG-036 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            4 ms    expected exit 0, got 2
+  [1] shell-command        fail            2 ms    expected exit 0, got 1
+  [2] capture              pass            0 ms    
+  [3] shell-command        fail            4 ms    expected exit 0, got 1
+  [4] capture              pass            0 ms    
+  [5] shell-command        pass            4 ms    
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-087; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-132
+Feedback:
+  urn:dec:feedback:e2e9b1e5-3e55-4756-bbd4-6f4f07b44f15
+  urn:dec:feedback:b6dae7c0-323e-4e90-8f06-5477c8fc965f
+  urn:dec:feedback:905ebf1a-9106-4979-9028-262a640f2d70
+===== VG-037 =====
+Running https://decision-cli.dev/ns/graph/VG-037 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+  [3] shell-command        fail            3 ms    expected exit 0, got 2
+  [4] shell-command        fail            2 ms    expected exit 0, got 2
+  [5] shell-command        fail            2 ms    expected exit 0, got 2
+  [6] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333404-1779818776738…
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-083, https://decision-cli.dev/ns/tc/TC-084, https://decision-cli.dev/ns/tc/TC-085; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-133
+Feedback:
+  urn:dec:feedback:1bc91353-089b-48d8-92cf-75ad97943b30
+  urn:dec:feedback:efb9de5e-8fe3-47c1-aae0-41aa1a93625b
+  urn:dec:feedback:7a642860-6bfd-44f3-b3b1-c5ea901448f4
+  urn:dec:feedback:e7303f5e-4707-433e-8bea-61bcc19d231f
+  urn:dec:feedback:393f5a4d-5402-4c4e-9e64-eb95495cf74a
+  urn:dec:feedback:2d4d7169-c3fd-4160-ac66-9ca1ad00762d
+  urn:dec:feedback:7df8974c-e216-4bb8-b9df-e2a9d3b0f394
+  urn:dec:feedback:f5b5b2f6-ab6c-46a4-881f-3e3c777a8604
+  urn:dec:feedback:e1724cca-b570-44d7-a214-bd130601e8ff
+  urn:dec:feedback:c36ecc9e-8665-4fa2-9c80-ec0245e8b03b
+  urn:dec:feedback:159d522d-94fb-4f5d-aa43-259f2bd3899f
+  urn:dec:feedback:2851d60d-7e6e-40d5-90b3-bbe29db29226
+===== VG-038 =====
+Running https://decision-cli.dev/ns/graph/VG-038 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        fail            3 ms    expected exit 0, got 2
+  [2] shell-command        fail            4 ms    expected exit 0, got 2
+  [3] shell-command        fail            4 ms    expected exit 0, got 1
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333425-1779818777391…
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-097; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-134
+Feedback:
+  urn:dec:feedback:45e4f5af-2510-496e-95ce-2a5cb9eada35
+  urn:dec:feedback:b885a647-7a02-4fbe-a913-00e67d1c6794
+  urn:dec:feedback:b207b981-613a-4d90-b3ef-6a925cc4e93a
+  urn:dec:feedback:e39ba757-3a20-479b-bab1-d1afa688cad6
+===== VG-039 =====
+Running https://decision-cli.dev/ns/graph/VG-039 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333443-177981877795641…
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333443-177981877795641…
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333443-1779818777956…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333443-1779818777956…
+  [5] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333443-1779818777956…
+  [6] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333443-1779818777956…
+  [7] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333443-1779818777956…
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-100; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-135
+Feedback:
+  urn:dec:feedback:37621f87-d17b-4c74-ab74-4580ee2636f2
+  urn:dec:feedback:6ec13860-287f-4e7d-afbd-978c0f016f80
+  urn:dec:feedback:cf6f7b7a-4a51-4eeb-8ec9-45ca8398bde9
+  urn:dec:feedback:06351a9a-325e-4abe-9f4c-c2ad62e06515
+  urn:dec:feedback:a2ad35ff-d8de-4d7a-a4ef-ae6c1ef8608e
+  urn:dec:feedback:decd3e64-99a9-4e03-8a39-c2bf7975a92d
+  urn:dec:feedback:83f85c1e-2fe2-4f30-9d8d-dbae645dec65
+===== VG-040 =====
+Running https://decision-cli.dev/ns/graph/VG-040 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail           18 ms    expected exit 0, got 101
+  [1] shell-command        pass            3 ms    {"manifest_sha256":"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e4…
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333460-1779818778567…
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333460-1779818778567…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333460-1779818778567…
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-136
+Feedback:
+  urn:dec:feedback:989b155a-360c-4443-a8a7-4cdfda0424b4
+  urn:dec:feedback:be17bb75-9778-4596-91e9-e7a89824e04a
+  urn:dec:feedback:316073b3-8f78-463a-bd90-22f45aa3918c
+===== VG-041 =====
+Running https://decision-cli.dev/ns/graph/VG-041 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        fail            3 ms    expected exit 0, got 2
+  [2] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333482-1779818779198…
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333482-1779818779198…
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-137
+Feedback:
+  urn:dec:feedback:d6d176ac-b5ca-455d-b299-a5fce578c4ac
+  urn:dec:feedback:2e06fdc3-d784-4540-bfc0-e06f579a0865
+===== VG-042 =====
+Running https://decision-cli.dev/ns/graph/VG-042 in https://decision-cli.dev/ns/env/ENV-002
+  [0] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333497-177981877979620…
+  [1] shell-command        fail          770 ms    expected exit 0, got 127
+  [2] shell-command        fail          602 ms    expected exit 0, got 127
+  [3] shell-command        fail          571 ms    expected exit 0, got 127
+  [4] shell-command        fail          350 ms    expected exit 0, got 127
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-105; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-138
+Feedback:
+  urn:dec:feedback:260db852-9014-41ac-b145-38ccd05922ac
+  urn:dec:feedback:1f6c48a8-3d2d-4b98-a288-e9a626c0bdb6
+  urn:dec:feedback:8fb59905-a3a7-4724-8594-609af55a5d45
+  urn:dec:feedback:2393a59c-27e2-4b02-b079-f5b4389e23ed
+  urn:dec:feedback:941a3b9f-3937-42a2-8088-72b398444fee
+===== VG-043 =====
+Running https://decision-cli.dev/ns/graph/VG-043 in https://decision-cli.dev/ns/env/ENV-002
+  [0] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333517-177981878285214…
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333517-177981878285214…
+  [2] shell-command        fail          622 ms    expected exit 0, got 127
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333517-1779818782852…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333517-1779818782852…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-104; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-139
+Feedback:
+  urn:dec:feedback:b5062e9d-6878-445b-b917-13ff24978be7
+  urn:dec:feedback:28a2eabc-ba9f-4742-9866-5cb3b0db30c5
+  urn:dec:feedback:7f4e9dad-64c1-4a71-8609-8a09dd15a947
+  urn:dec:feedback:58e07520-343a-4c58-8f06-121d929a27df
+  urn:dec:feedback:ec5aeacf-7e16-4692-9014-30c0245662ff
+===== VG-044 =====
+Running https://decision-cli.dev/ns/graph/VG-044 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            1 ms    
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333532-1779818…
+  [3] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333532-1779818…
+  [4] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333532-1779818…
+  [5] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333532-1779818…
+  [6] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333532-1779818…
+  [7] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333532-1779818…
+
+Verdict: amendment-required
+Rationale: step 2 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-140
+Feedback:
+  urn:dec:feedback:bb135293-3493-44d0-b44f-fa13eee3b7b5
+  urn:dec:feedback:06fbda43-046d-456a-9eb5-556f0c2a26a8
+  urn:dec:feedback:9cebf952-0268-4dc9-8649-f2906e59cf14
+  urn:dec:feedback:5ebe4172-8cb3-4e72-9803-c292680665a5
+  urn:dec:feedback:90672c2f-d190-425c-b2af-bac1a859ec6f
+  urn:dec:feedback:161edcd1-5c6b-4b2f-aa31-49c39741a88d
+===== VG-045 =====
+Running https://decision-cli.dev/ns/graph/VG-045 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333546-177981878468309…
+  [3] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333546-177981878468309…
+  [4] shell-command        fail          683 ms    expected exit 0, got 127
+  [5] shell-command        fail          682 ms    expected exit 0, got 127
+
+Verdict: rejected
+Rationale: step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-106; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-141
+Feedback:
+  urn:dec:feedback:7e5321ad-9e10-4981-b5b9-aae822cc0cab
+  urn:dec:feedback:81ac9f88-1a0d-4b17-b873-10384356c155
+  urn:dec:feedback:214c2e03-1bf1-43f9-b4f3-fc1e4d66b5a1
+  urn:dec:feedback:22037288-6c68-4d57-965e-8aa53c3c517c
+===== VG-046 =====
+Running https://decision-cli.dev/ns/graph/VG-046 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            5 ms    
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333564-1779818…
+  [3] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-333564-1779818…
+  [4] shell-command        fail            5 ms    expected exit 0, got 2
+  [5] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333564-177981878668580…
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-142
+Feedback:
+  urn:dec:feedback:cdd6394b-de68-4fe4-9390-c83cb3837d50
+  urn:dec:feedback:0a9b3d12-03bd-4c3f-9753-07551a4e1bd2
+  urn:dec:feedback:b6e12974-e8c3-488f-ab14-da64644429e9
+  urn:dec:feedback:29858e11-3b3d-4d20-bf97-e1bed8a7e217
+  urn:dec:feedback:61923f7d-d4d0-4eb7-9379-676ab1c7b313
+  urn:dec:feedback:fdc8eb68-3575-4df3-90d9-28f6f363a530
+===== VG-047 =====
+Running https://decision-cli.dev/ns/graph/VG-047 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        fail            3 ms    expected exit 0, got 2
+  [2] shell-command        pass            1 ms    
+  [3] shell-command        fail            2 ms    expected exit 0, got 2
+  [4] shell-command        pass            4 ms    total 12
+  [5] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333579-1779818787319…
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-143
+Feedback:
+  urn:dec:feedback:73842fe1-cbac-4d5d-ac6c-cceb5d458f0d
+  urn:dec:feedback:0d682aa2-e8c4-47f7-9832-3599d4712a08
+===== VG-048 =====
+Running https://decision-cli.dev/ns/graph/VG-048 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            3 ms    
+
+Verdict: approved
+Rationale: all 3 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-144
+===== VG-049 =====
+Running https://decision-cli.dev/ns/graph/VG-049 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] shell-command        fail            2 ms    expected exit 0, got 2
+  [3] shell-command        fail            2 ms    expected exit 0, got 2
+  [4] shell-command        fail            3 ms    expected exit 0, got 2
+  [5] shell-command        fail            3 ms    expected exit 0, got 2
+  [6] shell-command        fail            4 ms    expected exit 0, got 2
+  [7] shell-command        fail            4 ms    expected exit 0, got 1
+  [8] shell-command        fail            6 ms    expected exit 0, got 2
+  [9] shell-command        fail            4 ms    expected exit 0, got 2
+  [10] shell-command        fail            6 ms    expected exit 0, got 2
+  [11] shell-command        fail            4 ms    expected exit 0, got 2
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-145
+Feedback:
+  urn:dec:feedback:aee23e46-78a6-4c23-8662-466873442a48
+  urn:dec:feedback:aacf7708-57ec-4305-a0ad-f53db5288d4a
+  urn:dec:feedback:21a4769d-0759-4467-8f48-98c36e490c1f
+===== VG-050 =====
+Running https://decision-cli.dev/ns/graph/VG-050 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            1 ms    expected exit 0, got 1
+  [1] capture              pass            0 ms    
+  [2] shell-command        pass            3 ms    Not found
+  [3] shell-command        pass            2 ms    {"manifest_sha256":"a900eb6b1e4bdd09efc072e8fcabe00ac5e5d3e4…
+  [4] shell-command        fail            5 ms    expected exit 0, got 1
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-146
+===== VG-051 =====
+Running https://decision-cli.dev/ns/graph/VG-051 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            1 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        fail            2 ms    expected exit 0, got 2
+  [3] shell-command        fail            3 ms    expected exit 0, got 2
+  [4] shell-command        fail            2 ms    expected exit 0, got 2
+  [5] shell-command        fail            2 ms    expected exit 0, got 2
+  [6] shell-command        fail            6 ms    expected exit 0, got 2
+  [7] shell-command        fail            2 ms    expected exit 0, got 2
+  [8] shell-command        fail            3 ms    expected exit 0, got 2
+  [9] sparql-assertion     pass            0 ms    
+
+Verdict: rejected
+Rationale: step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-114; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-147
+Feedback:
+  urn:dec:feedback:6b2b2251-db41-4a20-a8c1-122e4603974e
+  urn:dec:feedback:61959c3f-3b6d-4474-8b40-c730f3ccfc2c
+  urn:dec:feedback:dda4bb6c-f29e-439b-8d07-5058993e9837
+  urn:dec:feedback:363c5708-24f2-41e8-8e85-14857d34a04a
+  urn:dec:feedback:5bd4a4d6-ea05-4c15-8238-48ac34d8e5f7
+  urn:dec:feedback:b9d529d6-b9b7-4cbc-8a74-83d15cf2c7fc
+  urn:dec:feedback:4ea67648-06a0-48f2-8b1e-100d91f7b948
+===== VG-052 =====
+Running https://decision-cli.dev/ns/graph/VG-052 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail            4 ms    expected exit 0, got 2
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+  [3] sparql-assertion     pass            1 ms    
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-148
+Feedback:
+  urn:dec:feedback:16a0d547-df05-4e91-a699-d3f00d275dc5
+===== VG-053 =====
+Running https://decision-cli.dev/ns/graph/VG-053 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            4 ms    
+  [1] shell-command        pass           27 ms    
+  [2] shell-command        pass            1 ms    
+  [3] shell-command        pass           31 ms    
+  [4] shell-command        pass            3 ms    
+  [5] shell-command        fail          118 ms    expected exit 1, got 0
+  [6] shell-command        pass            5 ms    
+  [7] shell-command        pass            4 ms    
+  [8] shell-command        pass            3 ms    
+  [9] shell-command        pass            2 ms    total 312
+
+Verdict: rejected
+Rationale: step 5 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-117; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-149
+Feedback:
+  urn:dec:feedback:345a8c00-d96e-4c9e-b687-5f096c7da034
+===== VG-054 =====
+Running https://decision-cli.dev/ns/graph/VG-054 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail         4324 ms    expected exit 0, got 1
+  [2] file-assertion       fail            0 ms    file missing: /tmp/test-workspace/test-file.py
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-008, https://decision-cli.dev/ns/tc/TC-011, https://decision-cli.dev/ns/tc/TC-013; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-150
+Feedback:
+  urn:dec:feedback:5d8bb47f-f030-48c9-8284-a6468d5008fb
+  urn:dec:feedback:8f3bbb8f-7d13-4aa7-973f-873ddecc8559
+  urn:dec:feedback:500364ea-27e9-444a-af26-720665cdf29a
+  urn:dec:feedback:6350b967-2e10-4165-83ba-3be34be21bbb
+  urn:dec:feedback:35152aea-93d8-4a4b-b24b-4b3d1af69b63
+  urn:dec:feedback:0bb068b5-1205-44f4-943c-52730749d83b
+===== VG-055 =====
+Running https://decision-cli.dev/ns/graph/VG-055 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            4 ms    
+  [3] shell-command        fail            3 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-139; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-151
+Feedback:
+  urn:dec:feedback:42e20307-0e43-4777-b66d-7a4eec65571f
+===== VG-056 =====
+Running https://decision-cli.dev/ns/graph/VG-056 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            2 ms    expected exit 0, got 2
+  [1] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333914-1779818796908…
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-152
+Feedback:
+  urn:dec:feedback:37c91ebb-5999-4fd4-afcf-9c2d5d6270e3
+  urn:dec:feedback:3524b2fa-146a-4906-9360-1b18995c2a25
+===== VG-057 =====
+Running https://decision-cli.dev/ns/graph/VG-057 in https://decision-cli.dev/ns/env/ENV-002
+  [0] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333928-177981879753829…
+  [1] shell-command        fail            1 ms    expected exit 0, got 1
+  [2] shell-command        fail            2 ms    expected exit 0, got 2
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/test-workdir/.dec/store
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-119; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-153
+Feedback:
+  urn:dec:feedback:dcb618a3-2f2e-4e78-ab07-e1db6356a491
+  urn:dec:feedback:a43621af-10ed-4f81-b899-f8193e6c557d
+  urn:dec:feedback:eaf67820-c20e-4a72-a41e-75bfc7eef644
+  urn:dec:feedback:cca96cb6-d578-4d90-bfd2-93a14425adca
+===== VG-058 =====
+Running https://decision-cli.dev/ns/graph/VG-058 in https://decision-cli.dev/ns/env/ENV-002
+  [0] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333944-177981879826417…
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333944-177981879826417…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-120; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-154
+Feedback:
+  urn:dec:feedback:4a081997-baf5-4f0e-9318-da1cbadec036
+  urn:dec:feedback:87d79f16-81c5-452c-93c4-4d3f38235dd6
+===== VG-059 =====
+Running https://decision-cli.dev/ns/graph/VG-059 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            2 ms    
+  [3] shell-command        pass            1 ms    Loading boundary-artifact.ttl into ontology loader...
+  [4] file-assertion       pass            0 ms    
+  [5] file-assertion       pass            0 ms    
+  [6] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333958-1779818798958…
+  [7] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333958-1779818798958…
+  [8] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333958-1779818798958…
+
+Verdict: amendment-required
+Rationale: step 6 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-155
+Feedback:
+  urn:dec:feedback:f39e46cd-5e5b-4a67-a927-e1033abe9781
+  urn:dec:feedback:b19c5459-a544-4309-8659-eefdf1d6cccd
+  urn:dec:feedback:8b1604f3-357a-41eb-ad5e-6c8fe0d44d87
+===== VG-060 =====
+Running https://decision-cli.dev/ns/graph/VG-060 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail           27 ms    expected exit 0, got 101
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [3] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [4] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [5] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [6] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [7] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [8] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [9] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [10] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [11] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [12] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [13] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [14] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [15] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [16] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [17] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [18] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [19] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [20] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+  [21] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-333976-177981879966295…
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-156
+Feedback:
+  urn:dec:feedback:bd544a45-20cc-4187-8fab-fba486b31954
+  urn:dec:feedback:a70693ad-9243-4eeb-8014-d1dcc66a6b09
+  urn:dec:feedback:87e852c7-356f-4966-9997-ba0ede7c5ff2
+  urn:dec:feedback:e48f7cd6-375b-400c-9597-4a2882471b41
+  urn:dec:feedback:c2d39f0c-2d5b-4a54-a75b-a81244bcfdfe
+  urn:dec:feedback:9edbb73c-946e-4543-9074-96c8eb73a702
+  urn:dec:feedback:e2856f12-f3e5-44e8-b4f6-3cce4acac908
+  urn:dec:feedback:099f956e-5196-452f-8bdf-8f117fa374ac
+  urn:dec:feedback:17e98abd-3ceb-4b51-88d7-7236fd0441d8
+  urn:dec:feedback:5257b5b5-d1b5-431c-a8cf-a36b6aa101cc
+  urn:dec:feedback:096a72a2-f65d-4d8e-a090-69e4669bb859
+  urn:dec:feedback:f8a64c7c-9da5-4309-9b47-58230bfe93e9
+  urn:dec:feedback:0c245054-ce1a-4307-930e-f198ebb9da6c
+  urn:dec:feedback:b2bfab79-db3c-434c-a960-9666a27b1fca
+  urn:dec:feedback:1b999e1f-db94-4d69-86f4-37cd11cb3da4
+  urn:dec:feedback:cdf2d9f9-fef4-4603-98aa-bd2bebe05d10
+  urn:dec:feedback:0c54fe4a-d6c0-4502-a17f-2b5e8a2d4b87
+  urn:dec:feedback:02dca321-a1f2-4a01-8cd2-fa4312f16338
+  urn:dec:feedback:eefe83d8-c277-47fa-8d7f-961b018cca30
+  urn:dec:feedback:8a5fde2a-731f-4681-9df5-15277242d727
+  urn:dec:feedback:9fb1e976-218c-41bc-8de7-f029b5129882
+===== VG-061 =====
+Running https://decision-cli.dev/ns/graph/VG-061 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            4 ms    expected exit 0, got 2
+  [1] shell-command        fail            2 ms    expected exit 0, got 2
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+  [3] shell-command        pass            2 ms    
+  [4] shell-command        fail            2 ms    expected exit 0, got 2
+  [5] shell-command        fail            3 ms    expected exit 1, got 2
+  [6] shell-command        fail            2 ms    expected exit 0, got 1
+  [7] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-333998-1779818800371…
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-157
+Feedback:
+  urn:dec:feedback:157207bd-7b2b-4a3b-a2ce-0ebc7360e1fd
+  urn:dec:feedback:c2714fce-5145-480e-97fd-7c400326cca7
+  urn:dec:feedback:463f550b-59de-43af-9ed6-d5ae6b65f666
+  urn:dec:feedback:6a5bd233-b651-40b7-a36e-901d56fd47c4
+===== VG-062 =====
+Running https://decision-cli.dev/ns/graph/VG-062 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            3 ms    
+  [2] shell-command        fail            6 ms    expected exit 0, got 1
+  [3] shell-command        pass            4 ms    total 8
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334018-1779818801043…
+  [5] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334018-177981880104310…
+
+Verdict: rejected
+Rationale: step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-124; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-158
+Feedback:
+  urn:dec:feedback:d3f2ce6b-716e-4718-9e2c-0d3dee9de373
+  urn:dec:feedback:c1531f26-230c-48fe-99d7-84fb1317fe15
+  urn:dec:feedback:c36c3d04-541a-45a8-86d4-8670d564c9d2
+===== VG-063 =====
+Running https://decision-cli.dev/ns/graph/VG-063 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            1 ms    
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334038-177981880169719…
+  [3] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334038-177981880169719…
+  [4] sparql-assertion     unrunnable      1 ms    query parse / evaluate error: error at 15:52: expected one o…
+
+Verdict: rejected
+Rationale: step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-125; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-159
+Feedback:
+  urn:dec:feedback:25afe043-c4fe-4bb4-a745-8a8374ac103c
+  urn:dec:feedback:246ba11a-6e69-4fb2-ade3-f39fe6539d9a
+  urn:dec:feedback:62f4b4dd-c334-43c7-8c76-255b14a2ac47
+===== VG-064 =====
+Running https://decision-cli.dev/ns/graph/VG-064 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            1 ms    
+  [3] shell-command        pass            1 ms    
+  [4] shell-command        pass            2 ms    
+  [5] shell-command        pass            1 ms    
+  [6] shell-command        fail            3 ms    expected exit 0, got 2
+  [7] shell-command        fail            3 ms    expected exit 0, got 2
+  [8] shell-command        fail            4 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 6 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-141; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-160
+Feedback:
+  urn:dec:feedback:922a6f12-1c76-4f9f-bb7d-221a8adf10bf
+  urn:dec:feedback:124399fe-f52c-4d08-9746-697d15a7ae0b
+  urn:dec:feedback:848836f3-e13e-476f-9907-dec43a3953de
+===== VG-065 =====
+Running https://decision-cli.dev/ns/graph/VG-065 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            4 ms    
+  [2] shell-command        pass            2 ms    
+  [3] shell-command        pass            3 ms    
+  [4] shell-command        pass            2 ms    
+  [5] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334077-1779818…
+  [6] file-assertion       pass            0 ms    
+  [7] file-assertion       pass            0 ms    
+  [8] file-assertion       pass            0 ms    
+
+Verdict: amendment-required
+Rationale: step 5 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-161
+Feedback:
+  urn:dec:feedback:9494a211-aa7e-4a05-b281-6c4b9e66d51c
+===== VG-066 =====
+Running https://decision-cli.dev/ns/graph/VG-066 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            1 ms    expected exit 0, got 1
+  [1] shell-command        fail            1 ms    expected exit 0, got 1
+  [2] shell-command        fail            1 ms    expected exit 0, got 1
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334094-1779818803751…
+  [4] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334094-177981880375118…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-143; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-162
+Feedback:
+  urn:dec:feedback:ff113ce1-5be8-4a69-8035-b2ef25f2612f
+  urn:dec:feedback:1f3a2f61-fd0b-40f3-b637-ced7bb442302
+  urn:dec:feedback:d36d4084-7baf-41bb-9d83-06f83f2a1495
+  urn:dec:feedback:46d73770-6f89-42d4-b845-d13abc13a19b
+  urn:dec:feedback:40b0a146-ba69-42b1-8f9b-fd0a6d9c2f13
+===== VG-067 =====
+Running https://decision-cli.dev/ns/graph/VG-067 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            3 ms    
+  [2] sparql-assertion     pass            0 ms    
+
+Verdict: approved
+Rationale: all 3 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-163
+===== VG-068 =====
+Running https://decision-cli.dev/ns/graph/VG-068 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            1 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-145; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-164
+Feedback:
+  urn:dec:feedback:3fae43c7-0e39-4ede-8a68-7066e52b2a70
+===== VG-069 =====
+Running https://decision-cli.dev/ns/graph/VG-069 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail          774 ms    expected exit 0, got 127
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-165
+===== VG-070 =====
+Running https://decision-cli.dev/ns/graph/VG-070 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail           24 ms    expected exit 0, got 101
+  [1] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334157-1779818806636…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-147; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-166
+Feedback:
+  urn:dec:feedback:fd0bd9d3-3eb7-45ab-a17e-a7e2fbde1332
+  urn:dec:feedback:6abec554-240f-4399-b37e-65e2a3a8e353
+===== VG-071 =====
+Running https://decision-cli.dev/ns/graph/VG-071 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail          805 ms    expected exit 0, got 127
+  [1] shell-command        fail          848 ms    expected exit 0, got 127
+  [2] shell-command        fail          820 ms    expected exit 0, got 127
+  [3] shell-command        fail          712 ms    expected exit 0, got 127
+  [4] shell-command        pass            6 ms    
+  [5] shell-command        fail          676 ms    expected exit 0, got 127
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-148; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-167
+Feedback:
+  urn:dec:feedback:48753015-e636-4468-a468-b00ebba5cfe3
+  urn:dec:feedback:ed175703-f2a0-4612-9e84-39bd1e590361
+  urn:dec:feedback:a2629305-69f9-4732-b512-8be4b57ffc01
+  urn:dec:feedback:1b8a05fc-92c1-4ab7-b875-01dc99da8426
+  urn:dec:feedback:e1f07a98-bb0c-4f35-b1ef-0d7f0145f506
+===== VG-072 =====
+Running https://decision-cli.dev/ns/graph/VG-072 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail          703 ms    expected exit 0, got 127
+  [1] shell-command        pass         1011 ms    
+  [2] shell-command        fail          695 ms    expected exit 0, got 127
+  [3] shell-command        pass            8 ms    
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334205-1779818811966…
+
+Verdict: amendment-required
+Rationale: step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-168
+Feedback:
+  urn:dec:feedback:0ad00222-4285-4d2f-ad46-0d8b5d5bf3ee
+  urn:dec:feedback:3532d34f-44b3-4e48-89ea-c83c2105cf40
+===== VG-073 =====
+Running https://decision-cli.dev/ns/graph/VG-073 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail            1 ms    expected exit 0, got 1
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334223-177981881519463…
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334223-177981881519463…
+  [3] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334223-177981881519463…
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-150; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-169
+Feedback:
+  urn:dec:feedback:df372656-2887-4b3b-b0c4-b462b4f6196a
+  urn:dec:feedback:ae59b59a-0d3a-4891-92f8-e22aad06d419
+  urn:dec:feedback:76c0f599-8d03-4dd8-ab61-fe7960d1aef4
+  urn:dec:feedback:bf2ebd6d-f2ba-49d1-ab10-8d06f9bd72d0
+===== VG-074 =====
+Running https://decision-cli.dev/ns/graph/VG-074 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            1 ms    
+  [2] sparql-assertion     pass            1 ms    
+
+Verdict: approved
+Rationale: all 3 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-170
+===== VG-075 =====
+Running https://decision-cli.dev/ns/graph/VG-075 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            4 ms    
+  [1] shell-command        pass            3 ms    
+  [2] shell-command        fail            3 ms    expected exit 0, got 2
+  [3] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334254-1779818816318…
+  [4] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334254-1779818816318…
+  [5] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334254-1779818816318…
+
+Verdict: rejected
+Rationale: step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-129; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-171
+Feedback:
+  urn:dec:feedback:378c4c68-592c-4c53-bfe5-15f8c2033823
+  urn:dec:feedback:fd5d74ea-0887-40b0-bbc7-4c41e64740f2
+  urn:dec:feedback:d74f22fd-9381-4938-818c-f7f735ba91b4
+  urn:dec:feedback:952cc0f6-5b07-46ad-953d-1928511c042d
+===== VG-076 =====
+Running https://decision-cli.dev/ns/graph/VG-076 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            1 ms    
+  [2] shell-command        pass            1 ms    
+  [3] file-assertion       pass            0 ms    
+
+Verdict: approved
+Rationale: all 4 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-172
+===== VG-077 =====
+Running https://decision-cli.dev/ns/graph/VG-077 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            4 ms    
+  [1] shell-command        pass            4 ms    
+  [2] shell-command        pass            2 ms    
+  [3] shell-command        pass            3 ms    
+  [4] shell-command        pass            2 ms    
+  [5] shell-command        pass            2 ms    
+  [6] shell-command        pass            2 ms    
+  [7] shell-command        fail          773 ms    expected exit 0, got 127
+  [8] shell-command        pass           10 ms    
+  [9] sparql-assertion     unrunnable      0 ms    target /tmp/dec-verify/ENV-002-334292-1779818817360978635/.d…
+
+Verdict: amendment-required
+Rationale: step 7 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-173
+Feedback:
+  urn:dec:feedback:d753d436-b5ec-4300-8bd2-06b9c7ce37f4
+===== VG-078 =====
+Running https://decision-cli.dev/ns/graph/VG-078 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            1 ms    
+  [3] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334319-1779818…
+
+Verdict: amendment-required
+Rationale: step 3 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-174
+Feedback:
+  urn:dec:feedback:e353221b-bf14-4ec1-9fba-9c71d7636270
+===== VG-079 =====
+Running https://decision-cli.dev/ns/graph/VG-079 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            4 ms    
+  [1] shell-command        fail          943 ms    expected exit 0, got 1
+  [2] shell-command        pass            4 ms    
+  [3] shell-command        pass            2 ms    mock cosign attach sbom command
+  [4] shell-command        pass            3 ms    -rw-r--r-- 1 hafeok hafeok 37 May 26 20:07 /tmp/sbom.json
+  [5] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334334-1779818819575…
+
+Verdict: amendment-required
+Rationale: step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-175
+Feedback:
+  urn:dec:feedback:59024f7f-9a62-4aa1-a60f-d283eef8417f
+===== VG-080 =====
+Running https://decision-cli.dev/ns/graph/VG-080 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            5 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            3 ms    
+  [3] shell-command        pass            2 ms    
+  [4] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334413-1779818…
+  [5] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334413-1779818…
+  [6] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334413-1779818…
+  [7] shell-command        pass            2 ms    
+  [8] shell-command        pass            2 ms    
+  [9] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334413-1779818…
+  [10] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-002-334413-1779818…
+
+Verdict: amendment-required
+Rationale: step 4 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-176
+Feedback:
+  urn:dec:feedback:f8d28561-e9c2-40f0-aeb8-e05119d9a7c0
+  urn:dec:feedback:fce1adae-7b0b-41e0-9de4-5b14da6ee4b4
+  urn:dec:feedback:e5b91030-6bdf-4326-82a6-86dcd467e221
+  urn:dec:feedback:93510ed9-a5cc-4358-ba6d-4b3f0a3ea6d8
+  urn:dec:feedback:8db6dbb9-e8a0-4fd4-a755-318726ddc300
+===== VG-081 =====
+Running https://decision-cli.dev/ns/graph/VG-081 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            2 ms    
+  [2] shell-command        pass            1 ms    
+  [3] shell-command        pass            2 ms    
+  [4] shell-command        pass            1 ms    
+  [5] file-assertion       pass            0 ms    
+  [6] file-assertion       pass            0 ms    
+  [7] file-assertion       pass            0 ms    
+  [8] file-assertion       pass            0 ms    
+  [9] sparql-assertion     pass            1 ms    
+
+Verdict: approved
+Rationale: all 10 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-177
+===== VG-082 =====
+Running https://decision-cli.dev/ns/graph/VG-082 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            4 ms    
+  [1] shell-command        pass            4 ms    
+  [2] shell-command        pass         2003 ms    
+  [3] shell-command        fail           85 ms    expected exit 0, got 7
+  [4] shell-command        fail            5 ms    expected exit 0, got 2
+  [5] sparql-assertion     pass            1 ms    
+
+Verdict: rejected
+Rationale: step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-136; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-178
+Feedback:
+  urn:dec:feedback:37ce02eb-e777-4630-b37f-5c0f159f946a
+  urn:dec:feedback:e45b851a-6262-4392-a50c-b3c5629ca751
+===== VG-083 =====
+Running https://decision-cli.dev/ns/graph/VG-083 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334473-177981882527151…
+  [3] shell-command        pass            3 ms    Testing successful run with qualified image
+  [4] shell-command        pass            1 ms    Testing error case: missing PIPELINE_ENDPOINT
+  [5] shell-command        pass            3 ms    
+  [6] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334473-177981882527151…
+  [7] shell-command        pass            3 ms    Testing error case: non-qualified image ID
+
+Verdict: rejected
+Rationale: step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-137; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-179
+Feedback:
+  urn:dec:feedback:cd77204c-1bcc-4a47-acc1-2e92c67c4867
+  urn:dec:feedback:686fbfb0-678e-4806-b5db-ebef2d242fba
+===== VG-084 =====
+Running https://decision-cli.dev/ns/graph/VG-084 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        pass            5 ms    
+  [1] file-assertion       pass            0 ms    
+  [2] shell-command        pass            3 ms    
+  [3] file-assertion       pass            0 ms    
+  [4] shell-command        pass            2 ms    
+  [5] file-assertion       pass            0 ms    
+  [6] shell-command        pass            1 ms    
+  [7] sparql-assertion     unrunnable      0 ms    target missing: /tmp/dec-verify/ENV-002-334494-1779818825942…
+
+Verdict: amendment-required
+Rationale: step 7 was unrunnable (timeout, missing target, or runtime safety violation); the run produced no decisive evidence
+Result:    https://decision-cli.dev/ns/result/VGR-180
+Feedback:
+  urn:dec:feedback:7b6383ec-e2e5-408b-88ce-0e56472f8e5b
+===== VG-085 =====
+Running https://decision-cli.dev/ns/graph/VG-085 in https://decision-cli.dev/ns/env/ENV-001
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            1 ms    
+  [2] shell-command        pass            2 ms    
+  [3] shell-command        pass            1 ms    
+  [4] shell-command        pass            1 ms    
+  [5] shell-command        pass            2 ms    
+  [6] shell-command        pass            1 ms    
+  [7] shell-command        pass            3 ms    
+  [8] shell-command        pass            2 ms    
+  [9] shell-command        pass            1 ms    
+  [10] shell-command        pass            2 ms    
+  [11] shell-command        pass            1 ms    
+  [12] shell-command        fail            2 ms    expected exit 0, got 1
+  [13] sparql-assertion     pass            0 ms    
+  [14] sparql-assertion     pass            1 ms    
+  [15] file-assertion       pass            0 ms    
+
+Verdict: amendment-required
+Rationale: step 12 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code
+Result:    https://decision-cli.dev/ns/result/VGR-181
+===== VG-086 =====
+Running https://decision-cli.dev/ns/graph/VG-086 in https://decision-cli.dev/ns/env/ENV-001
+  [0] shell-command        pass            2 ms    
+  [1] shell-command        pass            2 ms    
+  [2] sparql-assertion     pass            0 ms    
+  [3] file-assertion       pass            0 ms    
+  [4] capture              pass            0 ms    
+
+Verdict: approved
+Rationale: all 5 steps passed; the run produced approved evidence for every linked TC
+Result:    https://decision-cli.dev/ns/result/VGR-182
+===== VG-087 =====
+Running https://decision-cli.dev/ns/graph/VG-087 in https://decision-cli.dev/ns/env/ENV-001
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        pass            2 ms    
+  [2] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-001-334554-1779818…
+  [3] shell-command        fail            3 ms    expected exit 0, got 1
+  [4] shell-command        fail            2 ms    expected exit 0, got 1
+
+Verdict: rejected
+Rationale: step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-158; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-183
+Feedback:
+  urn:dec:feedback:beecd157-17bf-450d-bb34-c9ea1a790e42
+  urn:dec:feedback:562b7f63-b415-4df3-ae36-40962c411509
+  urn:dec:feedback:b102fa21-cb9e-4eac-9e5e-37715c269e1e
+  urn:dec:feedback:96779767-322e-46d3-a131-4a7a3ae2e16f
+  urn:dec:feedback:0d52d8b0-6681-48d9-b510-65df3cc4dee6
+  urn:dec:feedback:5b87a687-b1ae-4952-9447-078786ef186a
+  urn:dec:feedback:265550fb-0a1d-4a16-9b9f-80742f387805
+  urn:dec:feedback:5bcc1681-aba7-4739-8889-121cb2b06144
+===== VG-088 =====
+Running https://decision-cli.dev/ns/graph/VG-088 in https://decision-cli.dev/ns/env/ENV-001
+  [0] shell-command        pass            3 ms    
+  [1] shell-command        fail            3 ms    expected exit 0, got 2
+  [2] shell-command        fail            2 ms    expected exit 0, got 2
+  [3] shell-command        fail            2 ms    expected exit 0, got 1
+  [4] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-001-334572-1779818…
+  [5] sparql-assertion     unrunnable      0 ms    could not load target /tmp/dec-verify/ENV-001-334572-1779818…
+
+Verdict: rejected
+Rationale: step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-162; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-184
+Feedback:
+  urn:dec:feedback:6d55b25f-d980-4567-9db9-91bdb69a25be
+  urn:dec:feedback:910fe08a-53e1-4c22-a4bd-0383c9f5a615
+  urn:dec:feedback:974cebc2-50ac-4ac2-b358-c1eb86819d53
+  urn:dec:feedback:d73defd4-b090-4e35-9e4c-aa925fc1d1b4
+  urn:dec:feedback:73517e32-a514-4347-901d-013de373abb6
+===== VG-089 =====
+Running https://decision-cli.dev/ns/graph/VG-089 in https://decision-cli.dev/ns/env/ENV-002
+  [0] shell-command        fail           28 ms    expected exit 0, got 101
+  [1] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334591-177981882893760…
+  [2] file-assertion       fail            0 ms    file missing: /tmp/dec-verify/ENV-002-334591-177981882893760…
+  [3] shell-command        pass            4 ms    No dependency found
+  [4] shell-command        pass            3 ms    No dependency found
+  [5] shell-command        pass            3 ms    Absorbed product-cli surface (FT-105 / ADR-067)
+  [6] shell-command        pass            4 ms    0
+
+Verdict: rejected
+Rationale: step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-179, https://decision-cli.dev/ns/tc/TC-178, https://decision-cli.dev/ns/tc/TC-177, https://decision-cli.dev/ns/tc/TC-176; the run is rejected
+Result:    https://decision-cli.dev/ns/result/VGR-185
+Feedback:
+  urn:dec:feedback:b1ee8c6f-7264-4a8c-9919-29b3d39ccf7c
+  urn:dec:feedback:f2f8a93f-ad8f-458f-b98d-ec2f3bc87936
+  urn:dec:feedback:61a4c2cf-827d-4f90-8cd5-ec5dd0402960
+  urn:dec:feedback:f2bce0fa-d7df-417f-b34d-b55dc2dc1ffb
+  urn:dec:feedback:ea8d102e-9af3-452a-86cc-517f97b316bf
+  urn:dec:feedback:07528097-6f04-4278-8413-6d2f4e24c441
+  urn:dec:feedback:1ca14c86-bf5c-4b26-9576-bb5a23e62b3b
+  urn:dec:feedback:37510364-ccda-429f-94f0-cc96388de1ee
+  urn:dec:feedback:41761793-8509-4f9c-9896-26e8be0dcb37
+  urn:dec:feedback:a11df232-ab3f-4b62-843e-b6e6c717985d
+  urn:dec:feedback:c1ce722f-ca8c-44bc-a824-a8a0bcee28fb
+  urn:dec:feedback:00288c7e-0354-4c4b-ae66-bbee63dc951c

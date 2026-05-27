@@ -1,0 +1,54 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-005>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-001> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T17:37:36.378Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.396Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-005/step/0> <https://decision-cli.dev/ns/result/VGR-005/step/1> <https://decision-cli.dev/ns/result/VGR-005/step/2> ) ;
+    dec:rationale "step 2 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-001/ts-1779817056373432088> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:37:36.396Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-005/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-001/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:37:36.378Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.396Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-001-316775-1779817056374059343/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-001/ts-1779817056373432088> .
+
+<https://decision-cli.dev/ns/result/VGR-005/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-001/1> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:37:36.396Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.396Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "read failed: Is a directory (os error 21)" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-001/ts-1779817056373432088> .
+
+<https://decision-cli.dev/ns/result/VGR-005/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-001/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:37:36.396Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:37:36.396Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-001-316775-1779817056374059343/.dec/config.toml" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-008/VG-001/ts-1779817056373432088> .

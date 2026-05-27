@@ -1,0 +1,106 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-178>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-082> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-26T18:07:02.342Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:04.444Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-178/step/0> <https://decision-cli.dev/ns/result/VGR-178/step/1> <https://decision-cli.dev/ns/result/VGR-178/step/2> <https://decision-cli.dev/ns/result/VGR-178/step/3> <https://decision-cli.dev/ns/result/VGR-178/step/4> <https://decision-cli.dev/ns/result/VGR-178/step/5> ) ;
+    dec:rationale "step 3 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-136; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-136> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-178/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-136> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-178/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-136> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-178/step/5>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T18:07:04.444Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-178/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-082/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:02.342Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:02.346Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> .
+
+<https://decision-cli.dev/ns/result/VGR-178/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-082/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:02.346Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:02.350Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'pipeline-cli'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> .
+
+<https://decision-cli.dev/ns/result/VGR-178/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-082/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:02.350Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:04.353Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> .
+
+<https://decision-cli.dev/ns/result/VGR-178/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-082/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:07:04.353Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:04.438Z"^^xsd:dateTime ;
+    dec:exitCode 7 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\ncurl: (7) Failed to connect to localhost port 8080 after 2 ms: Couldn't connect to server\n" ;
+    dec:errorMessage "expected exit 0, got 7" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> .
+
+<https://decision-cli.dev/ns/result/VGR-178/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-082/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T18:07:04.438Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:04.443Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'graph'\n\nUsage: dec [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> .
+
+<https://decision-cli.dev/ns/result/VGR-178/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-082/5> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T18:07:04.443Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T18:07:04.444Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-082/ts-1779818822337091788> .

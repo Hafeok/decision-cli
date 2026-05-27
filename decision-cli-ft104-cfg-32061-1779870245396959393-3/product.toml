@@ -1,0 +1,2 @@
+[features]
+default-acknowledged-cross-cutting = ["ADR-001", "ADR-013"]

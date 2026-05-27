@@ -1,0 +1,175 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-035>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-028> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-26T17:38:26.710Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.739Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-035/step/0> <https://decision-cli.dev/ns/result/VGR-035/step/1> <https://decision-cli.dev/ns/result/VGR-035/step/2> <https://decision-cli.dev/ns/result/VGR-035/step/3> <https://decision-cli.dev/ns/result/VGR-035/step/4> <https://decision-cli.dev/ns/result/VGR-035/step/5> <https://decision-cli.dev/ns/result/VGR-035/step/6> <https://decision-cli.dev/ns/result/VGR-035/step/7> <https://decision-cli.dev/ns/result/VGR-035/step/8> <https://decision-cli.dev/ns/result/VGR-035/step/9> ) ;
+    dec:rationale "step 1 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-035/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-052> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-035/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-064> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-035/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-035/step/7>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-052> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-035/step/8>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-064> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-035/step/9>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-26T17:38:26.739Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-26T17:38:26.710Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.713Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.713Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.717Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'create'\n\nUsage: dec verify graph [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.717Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.720Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'create'\n\nUsage: dec verify graph [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.720Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.724Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unrecognized subcommand 'create'\n\nUsage: dec verify graph [OPTIONS] <COMMAND>\n\nFor more information, try '--help'.\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/4> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-26T17:38:26.724Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.724Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317534-1779817106708471985/.dec/store: Is a directory (os error 21)" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/5> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.724Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.728Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317534-1779817106708471985/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.728Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.731Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317534-1779817106708471985/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.731Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.733Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317534-1779817106708471985/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/8> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.733Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.736Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317534-1779817106708471985/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
+
+<https://decision-cli.dev/ns/result/VGR-035/step/9>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-028/9> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-26T17:38:26.736Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-26T17:38:26.739Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-317534-1779817106708471985/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779817106707607957> .
