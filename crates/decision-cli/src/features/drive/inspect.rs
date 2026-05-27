@@ -43,6 +43,14 @@ pub trait GraphInspector {
         feature_id: &str,
         role_id: &str,
     ) -> Result<usize, InspectError>;
+
+    /// `true` if at least one VerificationGraph exists for the named
+    /// feature in the current store. Used to distinguish "no verify
+    /// run on record because the graphs haven't been run" from "no
+    /// verify run on record because no graphs even exist yet" — the
+    /// former wants a verifier dispatch, the latter wants a
+    /// verify-graph-author dispatch to author one first.
+    fn graphs_exist_for_feature(&self, feature_id: &str) -> Result<bool, InspectError>;
 }
 
 /// Inspector errors. Kept generic so planners can propagate
@@ -166,6 +174,30 @@ SELECT ?verdict WHERE {{
             return Ok(FeatureVerdict::NeverRun);
         }
         Ok(worst)
+    }
+
+    fn graphs_exist_for_feature(&self, feature_id: &str) -> Result<bool, InspectError> {
+        use crate::core::store::{load_store_from_dump, orchestration_dump_path};
+        use oxigraph::sparql::QueryResults;
+
+        let feature_iri = format!("https://decision-cli.dev/ns/feature/{feature_id}");
+        let dump = orchestration_dump_path(self.workdir());
+        let store = load_store_from_dump(&dump).map_err(|e| InspectError::Store {
+            detail: format!("opening store at {p}: {e:#}", p = dump.display()),
+        })?;
+        let q = format!(
+            r#"PREFIX dec: <https://decision-cli.dev/ns#>
+ASK WHERE {{ GRAPH ?g {{ ?graph dec:verifies <{feature_iri}> . }} }}"#
+        );
+        match store.query(&q) {
+            Ok(QueryResults::Boolean(b)) => Ok(b),
+            Ok(_) => Err(InspectError::Store {
+                detail: "graphs-exist query returned non-boolean shape".to_string(),
+            }),
+            Err(e) => Err(InspectError::Store {
+                detail: format!("graphs-exist query failed: {e}"),
+            }),
+        }
     }
 
     fn open_defect_feedback_count(

@@ -39,6 +39,7 @@ pub struct FeatureShipPlanner<I: GraphInspector> {
 #[derive(Debug, Clone)]
 struct LastSeen {
     feature_id: String,
+    verdict: FeatureVerdict,
     impl_open: usize,
     vga_open: usize,
     intended_action: Action,
@@ -80,6 +81,20 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 detail: format!("{e}"),
             })?;
 
+        // NeverRun branches on whether any VerificationGraph exists:
+        // with zero graphs the verifier has nothing to run (dispatch
+        // would be a no-op and the loop would spin until max_iter), so
+        // we have to author one first.
+        let graphs_exist = if matches!(verdict, FeatureVerdict::NeverRun) {
+            self.inspector
+                .graphs_exist_for_feature(feature_id)
+                .map_err(|e| PlanError::Store {
+                    detail: format!("{e}"),
+                })?
+        } else {
+            true
+        };
+
         let intended = match (verdict, impl_open > 0, vga_open > 0) {
             (FeatureVerdict::Approved, _, _) => Action::Done,
             (_, true, _) => Action::DispatchImplementer {
@@ -89,6 +104,12 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 feature_id: feature_id.to_string(),
                 env_id: default_env_id.to_string(),
             },
+            (FeatureVerdict::NeverRun, false, false) if !graphs_exist => {
+                Action::DispatchVerifyGraphAuthor {
+                    feature_id: feature_id.to_string(),
+                    env_id: default_env_id.to_string(),
+                }
+            }
             (FeatureVerdict::NeverRun, false, false) => Action::DispatchVerifier {
                 feature_id: feature_id.to_string(),
                 env_id: default_env_id.to_string(),
@@ -104,14 +125,16 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             }
         };
 
-        let final_action =
-            match self.detect_no_progress(feature_id, impl_open, vga_open, &intended) {
-                Some(reason) => Action::Stuck { reason },
-                None => intended.clone(),
-            };
+        let final_action = match self
+            .detect_no_progress(feature_id, verdict, impl_open, vga_open, &intended)
+        {
+            Some(reason) => Action::Stuck { reason },
+            None => intended.clone(),
+        };
 
         *self.last_seen.borrow_mut() = Some(LastSeen {
             feature_id: feature_id.to_string(),
+            verdict,
             impl_open,
             vga_open,
             intended_action: intended,
@@ -135,6 +158,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
     fn detect_no_progress(
         &self,
         feature_id: &str,
+        verdict: FeatureVerdict,
         impl_open: usize,
         vga_open: usize,
         intended: &Action,
@@ -149,7 +173,12 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 Action::DispatchImplementer { .. },
                 Action::DispatchImplementer { .. },
             ) => {
-                if impl_open >= prev.impl_open {
+                // Only flag stuck when the previous round HAD defects
+                // to fix and the new round has just as many or more.
+                // prev_count == 0 means the prior dispatch wasn't a
+                // "fix" round (probably bootstrap evidence-production),
+                // so a count going up is expected.
+                if prev.impl_open > 0 && impl_open >= prev.impl_open {
                     Some(format!(
                         "implementer dispatch did not reduce open implementer-defect \
                          count ({prev_n} → {new_n}) for feature {feature_id}. \
@@ -169,7 +198,11 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 Action::DispatchVerifyGraphAuthor { .. },
                 Action::DispatchVerifyGraphAuthor { .. },
             ) => {
-                if vga_open >= prev.vga_open {
+                // Same logic: prev_count == 0 means the prior dispatch
+                // was a bootstrap (authoring graphs from scratch on a
+                // never-verified feature), so freshly-emitted defects
+                // are evidence-production, not regression.
+                if prev.vga_open > 0 && vga_open >= prev.vga_open {
                     Some(format!(
                         "verify-graph-author dispatch did not reduce open \
                          verifier-defect count ({prev_n} → {new_n}) for feature \
@@ -180,6 +213,36 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                          {feature_id}`.",
                         prev_n = prev.vga_open,
                         new_n = vga_open,
+                    ))
+                } else {
+                    None
+                }
+            }
+            (
+                Action::DispatchVerifier { .. },
+                Action::DispatchVerifier { .. },
+            ) => {
+                // Verifier dispatch's job is to produce verdict
+                // (turning NeverRun into Approved / Rejected /
+                // AmendmentRequired) and emit defect feedback when
+                // graphs fail. If verdict didn't change and no new
+                // feedback appeared, the dispatch was a no-op —
+                // most commonly because no graphs cover the feature
+                // yet (the verify-graph-author branch handles that
+                // case ahead of us, so this fallback fires only on
+                // unexpected wiring issues like the verifier handler
+                // silently failing).
+                if verdict == prev.verdict
+                    && impl_open == prev.impl_open
+                    && vga_open == prev.vga_open
+                {
+                    Some(format!(
+                        "verifier dispatch did not change state (verdict={verdict:?}, \
+                         impl_open={impl_open}, vga_open={vga_open}) for feature \
+                         {feature_id}. The verifier likely had no covering graphs to \
+                         run, or the run did not emit feedback. Inspect `dec verify \
+                         feature {feature_id}` and `dec loop show {feature_id}` to \
+                         diagnose.",
                     ))
                 } else {
                     None
@@ -238,6 +301,11 @@ mod tests {
                 "verifier" => self.vga_count,
                 _ => 0,
             })
+        }
+        fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
+            // Existing tests assume covering graphs exist — only the new
+            // graphs-do-not-exist test overrides this via the mutable stub.
+            Ok(true)
         }
     }
 
@@ -354,6 +422,7 @@ mod tests {
         verdict: Cell<FeatureVerdict>,
         impl_count: Cell<usize>,
         vga_count: Cell<usize>,
+        graphs_exist: Cell<bool>,
     }
 
     impl MutableStubInspector {
@@ -362,6 +431,7 @@ mod tests {
                 verdict: Cell::new(v),
                 impl_count: Cell::new(i),
                 vga_count: Cell::new(g),
+                graphs_exist: Cell::new(true),
             }
         }
     }
@@ -383,6 +453,9 @@ mod tests {
                 "verifier" => self.vga_count.get(),
                 _ => 0,
             })
+        }
+        fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
+            Ok(self.graphs_exist.get())
         }
     }
 
@@ -445,6 +518,68 @@ mod tests {
         planner.inspector.vga_count.set(1);
         let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
         assert!(matches!(a2, Action::DispatchVerifyGraphAuthor { .. }));
+    }
+
+    #[test]
+    fn vga_bootstrap_count_increase_is_not_stuck() {
+        // FT-104 regression: first VGA dispatch on a no-graph feature
+        // bootstraps the verify suite by authoring + running the
+        // graph. The new run emits defects, so vga_open goes 0 → N.
+        // That's evidence-production, not regression — must NOT
+        // trigger the no-progress stuck branch.
+        let inspector = MutableStubInspector::new(FeatureVerdict::NeverRun, 0, 0);
+        inspector.graphs_exist.set(false);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-104", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchVerifyGraphAuthor { .. }));
+        // Simulate the bootstrap result: graphs now exist, the auto-run
+        // emitted 3 verifier-defects.
+        planner.inspector.graphs_exist.set(true);
+        planner.inspector.verdict.set(FeatureVerdict::AmendmentRequired);
+        planner.inspector.vga_count.set(3);
+        let a2 = planner.classify("FT-104", "ENV-002").unwrap();
+        assert!(
+            matches!(a2, Action::DispatchVerifyGraphAuthor { .. }),
+            "got {a2:?}"
+        );
+    }
+
+    #[test]
+    fn never_run_without_graphs_dispatches_verify_graph_author() {
+        // FT-104 regression: no covering graphs ⇒ DispatchVerifier
+        // would be a no-op (nothing to run) and the loop would spin
+        // until max_iter. Planner must author a graph first.
+        let inspector = MutableStubInspector::new(FeatureVerdict::NeverRun, 0, 0);
+        inspector.graphs_exist.set(false);
+        let planner = FeatureShipPlanner::new(inspector);
+        let action = planner.classify("FT-104", "ENV-002").unwrap();
+        match action {
+            Action::DispatchVerifyGraphAuthor { feature_id, env_id } => {
+                assert_eq!(feature_id, "FT-104");
+                assert_eq!(env_id, "ENV-002");
+            }
+            other => panic!("expected DispatchVerifyGraphAuthor, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn verifier_repeated_with_no_state_change_returns_stuck() {
+        // FT-104 regression backstop: if for some reason the planner
+        // dispatches verifier twice in a row and nothing changes,
+        // we must not spin to max_iter — the detector now catches
+        // it with a verifier-specific reason.
+        let inspector = MutableStubInspector::new(FeatureVerdict::NeverRun, 0, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchVerifier { .. }));
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a2 {
+            Action::Stuck { reason } => {
+                assert!(reason.contains("verifier"), "reason: {reason}");
+                assert!(reason.contains("did not change state"), "reason: {reason}");
+            }
+            other => panic!("expected Stuck, got {other:?}"),
+        }
     }
 
     #[test]
