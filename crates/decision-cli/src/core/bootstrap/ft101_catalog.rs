@@ -22,7 +22,9 @@ use anyhow::{Context, Result};
 use oxigraph::model::NamedNode;
 use thiserror::Error;
 
-use crate::core::ontology::catalog::{CapabilityReference, OntologyDescription};
+use crate::core::ontology::catalog::{
+    CapabilityReference, ExemplarGraph, OntologyDescription, SafetyClassTag,
+};
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use crate::core::stream_writer::StreamWriter;
@@ -53,6 +55,10 @@ pub struct SeedReport {
     /// Whether the canonical OntologyDescription was new (true) or
     /// already present (false).
     pub ontology_written: bool,
+    /// Count of `dec:ExemplarGraph` artifacts inserted in this run.
+    pub exemplars_written: usize,
+    /// Count of exemplars skipped because their IRI already existed.
+    pub exemplars_skipped: usize,
 }
 
 /// Seed the FT-101 catalog in `workdir`'s orchestration store.
@@ -141,6 +147,39 @@ pub fn seed_ft101_catalog_with(workdir: &Path, force: bool) -> Result<SeedReport
             .commit(Mutation::insert(quads))
             .map_err(|e| SeedError::Commit(format!("OD {}: {e:#}", od.id)))?;
         report.ontology_written = true;
+    }
+
+    // Exemplar graphs: pattern-templates the worker may copy from.
+    for ex in exemplar_graphs() {
+        let existed = iri_present(&store, &ex.iri());
+        if existed && !force {
+            report.exemplars_skipped += 1;
+            continue;
+        }
+        if existed {
+            let removes: Vec<oxigraph::model::Quad> = store
+                .quads_for_pattern(
+                    Some(Subject::NamedNode(ex.iri()).as_ref()),
+                    None,
+                    None,
+                    None,
+                )
+                .filter_map(Result::ok)
+                .collect();
+            if !removes.is_empty() {
+                writer
+                    .commit(Mutation {
+                        removes,
+                        ..Mutation::default()
+                    })
+                    .map_err(|e| SeedError::Commit(format!("EX {} retract: {e:#}", ex.id)))?;
+            }
+        }
+        let quads = ex.to_quads();
+        writer
+            .commit(Mutation::insert(quads))
+            .map_err(|e| SeedError::Commit(format!("EX {}: {e:#}", ex.id)))?;
+        report.exemplars_written += 1;
     }
 
     persist_store(&store, &dump)
@@ -290,6 +329,75 @@ struct BakedCapability {
     id: &'static str,
     command: &'static str,
     body: &'static str,
+}
+
+/// Hand-curated exemplar graphs pulled from VGs that produced an
+/// approved VerificationGraphResult. FT-101 §"3-5 per env type"; we
+/// seed three patterns each for the isolated safety class. The worker
+/// pattern-matches against these instead of inventing structures from
+/// scratch.
+fn exemplar_graphs() -> Vec<ExemplarGraph> {
+    use oxigraph::model::NamedNode;
+    vec![
+        ExemplarGraph {
+            id: "EX-INIT-DOCTOR".to_string(),
+            exemplar_of: NamedNode::new_unchecked(
+                "https://decision-cli.dev/ns/graph/VG-005",
+            ),
+            applies_to_safety_class: SafetyClassTag::Isolated,
+            pattern_name: "init-then-introspect".to_string(),
+            rationale:
+                "Canonical opening for any verification graph that needs an initialised \
+                 orchestration store. Step 0 runs `dec init --template engineering-development` \
+                 (the only way `dec init` succeeds without a Turtle definition file in scope); \
+                 Step 1 then introspects via a stable subcommand like `dec doctor --format json`. \
+                 Use this pattern whenever a TC requires verifying anything about the post-init \
+                 store state."
+                    .to_string(),
+            based_on_approved_result: NamedNode::new_unchecked(
+                "https://decision-cli.dev/ns/result/VGR-012",
+            ),
+            supersedes: None,
+        },
+        ExemplarGraph {
+            id: "EX-CLI-INSPECT".to_string(),
+            exemplar_of: NamedNode::new_unchecked(
+                "https://decision-cli.dev/ns/graph/VG-017",
+            ),
+            applies_to_safety_class: SafetyClassTag::Isolated,
+            pattern_name: "cli-help-inspection".to_string(),
+            rationale:
+                "Pattern for verifying that a CLI surface exposes the expected subcommand or \
+                 flag. Each step runs `dec <subcmd> --help` and asserts exit 0. Cheap, fast, \
+                 and the right tool when the TC's claim is about command availability rather \
+                 than runtime behaviour. Don't use for behavioural verification — for that, run \
+                 the subcommand and assert observable effects."
+                    .to_string(),
+            based_on_approved_result: NamedNode::new_unchecked(
+                "https://decision-cli.dev/ns/result/VGR-024",
+            ),
+            supersedes: None,
+        },
+        ExemplarGraph {
+            id: "EX-FILESYSTEM-GREP".to_string(),
+            exemplar_of: NamedNode::new_unchecked(
+                "https://decision-cli.dev/ns/graph/VG-008",
+            ),
+            applies_to_safety_class: SafetyClassTag::Isolated,
+            pattern_name: "filesystem-negative-grep".to_string(),
+            rationale:
+                "Pattern for asserting absence: search the repo for a forbidden symbol and \
+                 assert exit 1 (no matches). Form: `find <dir> -name '*.py' -exec grep -l \
+                 '<symbol>' {} \\;` with `dec:expectExitCode 1`. Use when the TC claims a \
+                 cleanup/removal happened (e.g. \"no hardcoded model names remain in \
+                 workers/\")."
+                    .to_string(),
+            based_on_approved_result: NamedNode::new_unchecked(
+                "https://decision-cli.dev/ns/result/VGR-015",
+            ),
+            supersedes: None,
+        },
+    ]
 }
 
 /// Hand-curated capability references for the dec subcommands the
@@ -493,6 +601,23 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
   ],
   "positionals": [],
   "exit_codes": [{"code": 0, "meaning": "ok"}]
+}"#,
+    },
+    BakedCapability {
+        id: "CR-IMPLEMENT",
+        command: "dec implement",
+        body: r#"{
+  "command": "dec implement",
+  "synopsis": "Implement a feature end-to-end via the code-writer worker.",
+  "flags": [
+    {"name": "--workspace", "value_kind": "path", "required": false, "description": "Workspace dir the worker writes into."},
+    {"name": "--product-root", "value_kind": "path", "required": false, "description": "Override .product/ root."},
+    {"name": "--worker", "value_kind": "string", "required": false, "description": "Override the worker command (default `code-writer`)."},
+    {"name": "--bundle-depth", "value_kind": "integer", "required": false, "description": "Depth passed to `product context`."},
+    {"name": "--waive-coverage", "value_kind": "string", "required": false, "description": "Override the chain-integrity gate with a rationale (>= 16 chars)."}
+  ],
+  "positionals": [{"name": "FEATURE_ID", "value_kind": "string", "required": true, "description": "FT-NNN id (positional)."}],
+  "exit_codes": [{"code": 0, "meaning": "ok"}, {"code": 1, "meaning": "error"}]
 }"#,
     },
     BakedCapability {

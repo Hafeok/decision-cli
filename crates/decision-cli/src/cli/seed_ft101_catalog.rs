@@ -52,13 +52,15 @@ pub fn run(workdir: &Path, args: SeedFt101CatalogArgs) -> ExitCode {
 
 fn print_success(report: &Ft101SeedReport) {
     println!(
-        "catalog: {written} capability references written, {skipped} skipped (already present); ontology: {ont}",
-        written = report.capabilities_written,
-        skipped = report.capabilities_skipped,
+        "catalog: {cr_written} CRs written, {cr_skipped} skipped; ontology: {ont}; {ex_written} exemplars written, {ex_skipped} skipped",
+        cr_written = report.capabilities_written,
+        cr_skipped = report.capabilities_skipped,
         ont = if report.ontology_written {
             "written"
         } else {
             "already present"
         },
+        ex_written = report.exemplars_written,
+        ex_skipped = report.exemplars_skipped,
     );
 }
