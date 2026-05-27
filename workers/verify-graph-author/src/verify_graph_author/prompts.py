@@ -94,6 +94,46 @@ with the REQUIRED keys for the step's kind):
     },
     "provides_evidence_for": ["TC-046"]
   }
+
+==========================================================
+SHELL VS SPARQL — THE MOST COMMON HALLUCINATION TO AVOID
+==========================================================
+
+When a TC asks you to verify that an artifact exists in the orchestration
+store (a Role, a Capability, a feature, a TC, an ADR, an event-class
+seed, etc.), the WRONG pattern is to write a shell pipeline like
+`dec role list | grep <id>` or `dec catalog list | grep ...`. There is
+no `dec role list`, no `dec catalog list`, no `dec metrics`, no
+`dec sparql` subcommand outside the hidden test-helper. The
+`cli_surface.dec_subcommands` block in the bundle lists every dec
+command that actually exists — anything outside that list will be
+rejected by the validator.
+
+The RIGHT pattern is a `sparql-assertion` step against the on-disk
+orchestration store. The store is at `.dec/store/orchestration.nq`
+after `dec init` runs (see the EX-INIT-DOCTOR exemplar for the
+init-first scaffold). Here's the canonical shape:
+
+  {
+    "step_type": "sparql-assertion",
+    "fields": {
+      "target": ".dec/store/orchestration.nq",
+      "query": "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?role WHERE { ?role a dec:Role ; dec:roleId \"verifier\" . }",
+      "expect-rows": 1
+    },
+    "provides_evidence_for": ["TC-027"]
+  }
+
+Substitute the predicate, value, and expected row-count for what the
+TC actually claims. Use the EXACT namespace string from
+`ontology_vocabulary.namespace` in the `PREFIX dec:` declaration —
+not `<https://decision-cli.dev/ns/>` (trailing slash) and not
+`<https://decision-cli.dev/oxi-events/ns#>` (oxi-events is a crate
+name, not a namespace — the namespace is the same dec namespace).
+
+If the artifact you need to verify is in product-cli's graph
+(feature, ADR, TC), use the same pattern but point `target` at
+`.product/graph/index.ttl` instead.
 """
 
 
@@ -112,7 +152,9 @@ def build_user_prompt(bundle: VerifyGraphAuthorInput) -> str:
     )
     defect_block = _render_defect_feedback(bundle.defect_feedback)
     enrichment_block = _render_enrichment(bundle.enrichment)
+    retry_block = _render_retry_warnings(bundle.enrichment)
     return _USER_TEMPLATE.format(
+        retry_warnings=retry_block,
         feature_id=bundle.feature_id,
         feature_spec=bundle.feature_spec,
         tcs=tcs,
@@ -123,6 +165,34 @@ def build_user_prompt(bundle: VerifyGraphAuthorInput) -> str:
         enrichment=enrichment_block,
         bundle_hash=bundle.bundle_hash,
     )
+
+
+def _render_retry_warnings(enrichment) -> str:
+    """Surface any `RETRY:`-prefixed entries in
+    `enrichment.bundle_metadata.warnings` at the very top of the user
+    prompt so the model can't miss them. FT-110 worker-quality
+    follow-up: the orchestrator pushes the previous-attempt
+    validator-error into warnings on retry; rendering it prominently
+    is the difference between the model correcting and the model
+    re-emitting the same hallucination."""
+    retries = [w for w in enrichment.bundle_metadata.warnings if w.startswith("RETRY:")]
+    if not retries:
+        return ""
+    lines = [
+        "## ⚠ Previous-attempt validator violations — READ THIS FIRST",
+        "",
+        "Your previous response was rejected by the dispatch-time validator. The errors are below.",
+        "Re-author the proposal, addressing every cited violation. Out-of-bundle references",
+        "(unknown dec subcommands, unknown SPARQL namespaces, unknown binaries) CANNOT be persisted",
+        "and will be rejected again. Use only commands listed under `cli_surface.dec_subcommands`,",
+        "namespaces listed under `ontology_vocabulary.namespaces`, and binaries listed under",
+        "`env_capabilities.binaries_on_path`.",
+        "",
+    ]
+    for w in retries:
+        lines.append(f"- {w}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def build_retry_prompt(schema_error: str) -> str:
@@ -140,7 +210,7 @@ def build_retry_prompt(schema_error: str) -> str:
 
 
 _USER_TEMPLATE = """\
-## Goal
+{retry_warnings}## Goal
 
 Propose a verification graph that produces evidence for each of the
 following TCs in the given environment.

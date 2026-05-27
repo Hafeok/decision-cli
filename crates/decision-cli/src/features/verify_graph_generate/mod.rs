@@ -179,7 +179,12 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
     //    on every dispatch (ADR-033 / ADR-037).
     let capability = resolve_verify_graph_author_capability(workdir)?;
 
-    // 4. Assemble the bundle and invoke the worker.
+    // 4. Assemble the bundle and invoke the worker, with a single
+    //    validator-retry pass: when the FT-102 chokepoint or the FT-107
+    //    feedback-rejection guard fails on the first call, append the
+    //    diagnostic messages to the bundle's metadata.warnings and
+    //    re-call the worker once. The model sees its own violations on
+    //    the retry and almost always corrects.
     let env_short = env_iri_to_short(&report.environment);
     let bundle = assemble_bundle(
         workdir,
@@ -189,24 +194,73 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
         &report,
         &capability,
     )?;
-    let proposal = worker::invoke_worker(&bundle)?;
-    verify_bundle_hash(&proposal, &bundle)?;
-
-    // FT-107 — if the bundle carried defect feedback (i.e. the
-    // orchestrator deliberately bypassed the matcher to give the worker
-    // a re-authoring opportunity), refuse a `kind = Match` proposal:
-    // the worker saw the runtime evidence and still chose to defer to
-    // the broken graph.
-    reject_match_when_feedback_present(&proposal, &bundle)?;
-
-    // ADR-066 §Rule 4 — dispatch-time chokepoint validator runs after
-    // the worker returns and before persistence. Non-empty violation
-    // set ⇒ refuse to persist + emit gap feedback against the upstream
-    // catalog category.
-    apply_chokepoint_validator(&proposal, &bundle.enrichment)?;
+    let proposal = invoke_with_validator_retry(bundle, /* max_retries = */ 1)?;
 
     let preview = coverage_preview_from_report(&report);
     finalize_generate(req, workdir, &env_short, proposal, preview)
+}
+
+/// FT-110 worker-quality follow-up: wrap the worker call + validators
+/// in a bounded retry loop. On the first attempt, run the worker and
+/// the two validators normally. On a validator failure, build a retry
+/// bundle whose `enrichment.bundle_metadata.warnings` carries the
+/// violation messages — the worker's prompt renders that block, so the
+/// model sees its previous output's diagnostic on the next pass.
+///
+/// Returns the first proposal that passes both validators, or the last
+/// validator error after `max_retries` retries.
+fn invoke_with_validator_retry(
+    initial_bundle: bundle::VerifyGraphAuthorInputJson,
+    max_retries: usize,
+) -> Result<proposal::GraphProposal, HandlerError> {
+    let mut bundle = initial_bundle;
+    let mut attempt: usize = 0;
+    loop {
+        let proposal = worker::invoke_worker(&bundle)?;
+        verify_bundle_hash(&proposal, &bundle)?;
+        let validate_result = run_post_worker_validators(&proposal, &bundle);
+        match validate_result {
+            Ok(()) => return Ok(proposal),
+            Err(err) => {
+                if attempt >= max_retries {
+                    return Err(err);
+                }
+                attempt += 1;
+                bundle = retry_bundle_with_violation(bundle, &err);
+            }
+        }
+    }
+}
+
+/// Run both post-worker validators in order. Returns the first error
+/// encountered, or `Ok(())` if both pass.
+fn run_post_worker_validators(
+    proposal: &proposal::GraphProposal,
+    bundle: &bundle::VerifyGraphAuthorInputJson,
+) -> Result<(), HandlerError> {
+    reject_match_when_feedback_present(proposal, bundle)?;
+    apply_chokepoint_validator(proposal, &bundle.enrichment)?;
+    Ok(())
+}
+
+/// Build the retry bundle: same shape as `bundle`, but with the
+/// previous attempt's violation message appended to
+/// `enrichment.bundle_metadata.warnings`. The worker prompt renders
+/// warnings prominently (ADR-066 / FT-102), so the model sees its
+/// own error on the next call. Bundle hash recomputes after the
+/// mutation so the worker's echo passes.
+fn retry_bundle_with_violation(
+    mut bundle: bundle::VerifyGraphAuthorInputJson,
+    err: &HandlerError,
+) -> bundle::VerifyGraphAuthorInputJson {
+    let hint = format!(
+        "RETRY: your previous proposal was rejected by the dispatch-time validator. \
+         {err}. Address every cited violation before responding — out-of-bundle \
+         references CANNOT be persisted."
+    );
+    bundle.enrichment.bundle_metadata.warnings.push(hint);
+    bundle.bundle_hash = bundle::compute_bundle_hash_pub(&bundle);
+    bundle
 }
 
 /// FT-107 — when the bundle carries defect feedback, refuse two

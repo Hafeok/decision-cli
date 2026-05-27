@@ -454,6 +454,13 @@ fn candidate_records_from_report(report: &MatchReport) -> Vec<ExistingGraphRecor
         .collect()
 }
 
+/// FT-110 worker-quality follow-up: public re-export of the bundle-hash
+/// computation so the validator-retry path can recompute after mutating
+/// `enrichment.bundle_metadata.warnings`. Mirrors the private signature.
+pub fn compute_bundle_hash_pub(bundle: &VerifyGraphAuthorInputJson) -> String {
+    compute_bundle_hash(bundle)
+}
+
 fn compute_bundle_hash(bundle: &VerifyGraphAuthorInputJson) -> String {
     let mut to_hash = bundle.clone();
     to_hash.bundle_hash = String::new();
