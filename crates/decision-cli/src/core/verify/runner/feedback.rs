@@ -23,6 +23,7 @@ use crate::core::ontology::verification_graph::VerificationGraph;
 use crate::core::ontology::verification_result::StepOutcome;
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
+use crate::core::verify::GRAPH_FAULT_EXIT_CODES;
 use crate::core::vocab::orchestration_graph;
 use crate::core::StreamWriter;
 
@@ -98,7 +99,8 @@ fn collect_feedback_inputs(
             StepOutcome::Unrunnable => FeedbackClass::Gap,
             StepOutcome::Pass => continue,
         };
-        let target_role = target_role_for(class, verdict).to_string();
+        let target_role =
+            target_role_for_step(class, verdict, trace.exit_code).to_string();
         let evidence = build_evidence_body(step.kind, trace, i);
         for tc in &step.provides_evidence_for {
             out.push(FeedbackInput {
@@ -112,12 +114,29 @@ fn collect_feedback_inputs(
     out
 }
 
-/// FT-108 routing rule: defect feedback's target role depends on the
-/// per-graph verdict. `rejected` (code regression) → `"implementer"`;
-/// `amendment-required` (graph at fault) → `"verifier"`. Anything else
-/// (including the `gap` class for `unrunnable` steps) falls back to the
-/// class's default target role.
-fn target_role_for(class: FeedbackClass, verdict: Verdict) -> &'static str {
+/// Per-step routing rule for FT-108 defect feedback.
+///
+/// Combines two signals: the failing step's exit code (when present)
+/// and the graph-level verdict. A step whose exit code is in
+/// [`GRAPH_FAULT_EXIT_CODES`] (2 / 126 / 127) is itself a graph fault
+/// regardless of what other steps in the same graph did — route the
+/// defect to the verifier so the verify-graph-author can re-author
+/// the broken step. Steps with non-graph-fault exits fall back to the
+/// graph-verdict mapping (`rejected` → implementer; `amendment-required`
+/// → verifier). The `gap` class always falls back to the default
+/// target role for that class.
+fn target_role_for_step(
+    class: FeedbackClass,
+    verdict: Verdict,
+    exit_code: Option<i64>,
+) -> &'static str {
+    if matches!(class, FeedbackClass::Defect) {
+        if let Some(code) = exit_code {
+            if GRAPH_FAULT_EXIT_CODES.contains(&code) {
+                return "verifier";
+            }
+        }
+    }
     match (class, verdict) {
         (FeedbackClass::Defect, Verdict::Rejected) => "implementer",
         (FeedbackClass::Defect, Verdict::AmendmentRequired) => "verifier",
