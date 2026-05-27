@@ -118,11 +118,33 @@ init-first scaffold). Here's the canonical shape:
     "step_type": "sparql-assertion",
     "fields": {
       "target": ".dec/store/orchestration.nq",
-      "query": "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?role WHERE { ?role a dec:Role ; dec:roleId \"verifier\" . }",
+      "query": "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?role WHERE { GRAPH ?g { ?role a dec:Role ; dec:roleId \"verifier\" . } }",
       "expect-rows": 1
     },
     "provides_evidence_for": ["TC-027"]
   }
+
+==========================================================
+SPARQL — ALWAYS WRAP WITH `GRAPH ?g { ... }`
+==========================================================
+
+The `.dec/store/orchestration.nq` file uses RDF NAMED GRAPHS for
+stream scoping — every artifact is in a named graph
+(`https://decision-cli.dev/ns/streams/<stream>`), NOT in the default
+graph. A SPARQL pattern that doesn't explicitly mention a graph
+queries only the default graph, which is empty in this store.
+That's why a query like
+
+  SELECT ?role WHERE { ?role a dec:Role . }
+
+returns 0 rows against a perfectly-populated store. You MUST wrap
+your triple patterns with `GRAPH ?g { … }`:
+
+  SELECT ?role WHERE { GRAPH ?g { ?role a dec:Role . } }
+
+The same wrapping applies when asserting against `.product/graph/index.ttl`
+— that file is also nq-shaped, with feature / TC / ADR artifacts in
+their own named graphs. When in doubt, wrap.
 
 Substitute the predicate, value, and expected row-count for what the
 TC actually claims. Use the EXACT namespace string from
@@ -160,7 +182,7 @@ If the TC's success criterion is "the artifact exists" (and you don't
 care about its other properties), write the SELECT form with the
 single variable you want to count, like:
 
-  "query": "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?role WHERE { ?role a dec:Role ; dec:identifier \"verifier\" . }",
+  "query": "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?role WHERE { GRAPH ?g { ?role a dec:Role ; dec:roleId \"verifier\" . } }",
   "expect-rows": 1
 
 — not the ASK form. Read `expect-rows` aloud: "the SELECT returns
