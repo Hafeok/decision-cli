@@ -134,14 +134,21 @@ def _write_bundle_prompt(payload: DispatchPayload) -> str:
     """Persist the bundle as a temp `.md` file. Returns the file path.
 
     When the bundle carries defect feedback (FT-108), the prompt is
-    augmented with a `## Runtime defect feedback` section + an explicit
-    citation-block requirement so the agent's response can be parsed
-    server-side for `addressed_feedback_iris`. Without this, the FT-108
-    server-side guard rejects the dispatch with `WorkerIgnoredFeedback`.
+    PREFIXED (not suffixed) with the feedback section + citation block
+    requirement. Prefixing matters: bundles can be 100K+ tokens, and
+    Claude reads top-down — instructions placed after the bundle get
+    lost in implementation thinking before they're reached. The
+    server-side extractor rejects the dispatch with
+    `WorkerIgnoredFeedback` if the citation block is missing, so the
+    prompt has to make the requirement impossible to overlook.
     """
     prompt_body = payload.bundle_markdown
     if payload.defect_feedback:
-        prompt_body = f"{prompt_body}\n\n{_render_defect_feedback_section(payload.defect_feedback)}"
+        prompt_body = (
+            f"{_render_defect_feedback_section(payload.defect_feedback)}\n\n"
+            f"---\n\n"
+            f"{prompt_body}"
+        )
     prompt_fd, prompt_path = tempfile.mkstemp(
         prefix=f"dec-bundle-{payload.feature_id}-",
         suffix=".md",
@@ -154,32 +161,29 @@ def _write_bundle_prompt(payload: DispatchPayload) -> str:
 def _render_defect_feedback_section(records: list[DefectFeedbackRecord]) -> str:
     """Render the FT-108 defect-feedback section for the agent prompt.
 
-    Includes the IRIs verbatim so the agent can copy them into the
-    citation block, plus an explicit terminator showing the exact
-    output format the server-side extractor expects."""
-    lines = [
-        "## Runtime defect feedback (FT-108)",
-        "",
-        "Prior verification runs found the following defects against tests this feature owns. ",
-        "Your code change MUST fix the underlying issues — read each entry's `evidence` for the runner diagnostic.",
-        "",
-    ]
-    for r in records:
-        lines.append(f"### {r.feedback_iri}")
-        if r.source_tc:
-            lines.append(f"- source TC: `{r.source_tc}`")
-        lines.append(f"- severity: {r.severity}")
-        lines.append(f"- evidence: {r.evidence.strip() or '(empty)'}")
-        lines.append("")
+    Renders an "outcome contract" first (read-this-first heading + the
+    exact citation block format the server-side extractor expects),
+    then the individual feedback entries. The intent is that even if
+    the model only reads the first few hundred tokens of the prompt
+    before deciding what to do, it sees the citation requirement and
+    the format — not the bundle's table of contents."""
     iris_json = json.dumps([r.feedback_iri for r in records], indent=2)
-    lines.extend([
-        "### REQUIRED — citation block",
+    empty_block = ADDRESSED_FEEDBACK_BEGIN + '\n{ "iris": [] }\n' + ADDRESSED_FEEDBACK_END
+    lines = [
+        "# ⚠ READ FIRST — Runtime defect feedback (FT-108)",
         "",
-        "After writing the code changes, your **final assistant message** MUST end with",
-        "a marker-delimited JSON block listing every feedback IRI you actually addressed.",
-        "The orchestrator parses this exactly; missing or malformed → dispatch is rejected.",
+        f"This dispatch carries {len(records)} runtime defect(s) the prior verifier",
+        "produced against this feature's tests. **The orchestrator REQUIRES** that",
+        "your final assistant message end with a citation block listing every",
+        "feedback IRI your code change actually addressed. Without it the dispatch",
+        "is rejected and the feedback stays open — which makes the driver loop",
+        "report no-progress and escalate.",
         "",
-        "Format (substitute the IRIs YOU addressed — drop any you couldn't fix, but cite at least one):",
+        "## The citation block — EXACT format",
+        "",
+        "Your final assistant message must contain this verbatim block, with the",
+        "marker strings EXACTLY as shown (no whitespace variation, no commentary",
+        "inside the markers):",
         "",
         "```",
         ADDRESSED_FEEDBACK_BEGIN,
@@ -189,8 +193,44 @@ def _render_defect_feedback_section(records: list[DefectFeedbackRecord]) -> str:
         ADDRESSED_FEEDBACK_END,
         "```",
         "",
-        "Use the EXACT marker strings above (no whitespace variation, no extra text inside the markers).",
-    ])
+        "The `iris` array lists every IRI you fixed. Drop any you couldn't fix.",
+        "",
+        "## What counts as \"addressed\"",
+        "",
+        "An IRI is addressed when the code change you produced would make the",
+        "evidence go away on a fresh verify run. Renaming an unrelated function,",
+        "adding a test stub that doesn't run, or writing a comment near the broken",
+        "code does NOT count as addressed. Cite ONLY the IRIs whose underlying",
+        "issue your diff actually fixes.",
+        "",
+        "## If you can't address any of them",
+        "",
+        "If after inspecting the bundle and the defects you conclude that NONE of",
+        "the defects describe a real code issue (e.g., they're all spec gaps, or",
+        "describe behaviour outside this feature's scope, or the underlying tests",
+        "are themselves wrong), emit the citation block with an EMPTY array and",
+        "explain in plain text BEFORE the block which defects you couldn't",
+        "address and why. The driver loop reads the empty array as an explicit",
+        "no-op signal and escalates to spec-author — this is far better than a",
+        "missing citation block, which the server treats as a malformed",
+        "dispatch.",
+        "",
+        "Empty-array form:",
+        "",
+        "```",
+        empty_block,
+        "```",
+        "",
+        "## The defects",
+        "",
+    ]
+    for r in records:
+        lines.append(f"### {r.feedback_iri}")
+        if r.source_tc:
+            lines.append(f"- source TC: `{r.source_tc}`")
+        lines.append(f"- severity: {r.severity}")
+        lines.append(f"- evidence: {r.evidence.strip() or '(empty)'}")
+        lines.append("")
     return "\n".join(lines)
 
 

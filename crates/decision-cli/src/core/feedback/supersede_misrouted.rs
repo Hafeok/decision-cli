@@ -104,17 +104,39 @@ pub fn supersede_misrouted_implementer_defects(
     Ok(report)
 }
 
-/// Returns `true` if `evidence` carries one of the three graph-fault
-/// exit-code signatures TC-199 / FT-110.X recognises.
+/// Returns `true` if `evidence` carries one of the graph-fault
+/// signatures the per-step routing (FT-110.X) now catches at
+/// emission time. Each pattern below corresponds to a step-kind
+/// failure mode the new emission-time rule routes to the verifier:
+///
+///   * `expected exit 0, got {2|126|127}` — shell graph-fault exit
+///     codes (the original supersede-script scope).
+///   * `expected N rows, got M` — sparql-assertion row-count
+///     mismatch. The verify-graph-author authored both the query
+///     and the expected count, so a mismatch is almost always a
+///     graph-design issue (ASK-vs-SELECT, missing GRAPH wrapping,
+///     wrong predicate name).
+///   * `file missing:` — file-assertion path mismatch. Same logic:
+///     the verifier picked the path, a mismatch is graph-side.
+///
+/// The patterns are tail-matched (substring containment) so the
+/// surrounding `"step N produced outcome fail; …"` framing is fine.
 fn evidence_signals_graph_fault(evidence: &str) -> bool {
-    // Look for the shell-step trace shape the runner writes:
-    //   "step N produced outcome fail; expected exit 0, got <code>"
-    // Match the tail substring so we're robust to step-number text.
     for code in [2_i64, 126, 127] {
         let needle = format!("expected exit 0, got {code}");
         if evidence.contains(&needle) {
             return true;
         }
+    }
+    // sparql-assertion row-count mismatch — verifier-authored, so
+    // the wrong-shape query (ASK with expect-rows, missing GRAPH
+    // wrapping, wrong predicate) is the most likely cause.
+    if evidence.contains(" rows, got ") {
+        return true;
+    }
+    // file-assertion path mismatch.
+    if evidence.contains("file missing:") {
+        return true;
     }
     false
 }
