@@ -12,8 +12,8 @@ phase: 2
 runner: cargo-test
 runner-args: -p decision-cli --test verdict_shacl
 runner-timeout: 120
-last-run: 2026-05-27T13:44:12.255848478+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-27T13:50:40.420087058+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
