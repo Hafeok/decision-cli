@@ -11,8 +11,8 @@ phase: 3
 runner: cargo-test
 runner-args: tc_195_artifact_parser_prefix_map
 runner-timeout: 60
-last-run: 2026-05-27T11:30:56.738500042+00:00
-last-run-duration: 79.7s
+last-run: 2026-05-27T12:28:34.594881822+00:00
+last-run-duration: 95.1s
 ---
 
 ## Claim

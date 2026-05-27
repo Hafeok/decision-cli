@@ -11,8 +11,8 @@ phase: 3
 runner: cargo-test
 runner-args: tc_197_driver_max_iter_and_stuck
 runner-timeout: 60
-last-run: 2026-05-27T11:30:56.738500042+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-27T12:28:34.594881822+00:00
+last-run-duration: 0.7s
 ---
 
 ## Claim

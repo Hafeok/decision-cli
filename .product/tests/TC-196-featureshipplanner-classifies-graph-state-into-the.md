@@ -11,8 +11,8 @@ phase: 3
 runner: cargo-test
 runner-args: tc_196_feature_ship_planner_state_table
 runner-timeout: 60
-last-run: 2026-05-27T11:30:56.738500042+00:00
-last-run-duration: 0.9s
+last-run: 2026-05-27T12:28:34.594881822+00:00
+last-run-duration: 1.2s
 ---
 
 ## Claim

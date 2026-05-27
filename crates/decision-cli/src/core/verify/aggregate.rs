@@ -56,18 +56,62 @@ pub struct AggregateVerdict {
     pub coverage_gaps: Vec<String>,
 }
 
-/// Derive the per-graph verdict (FT-097 §Per-graph verdict derivation).
+/// Exit codes that signal a graph-design fault rather than a code
+/// regression, per FT-110.X. When a failing evidence-bearing step
+/// returns one of these, the verdict aggregator demotes the verdict
+/// from `Rejected` to `AmendmentRequired` so the FT-108 routing rule
+/// sends the feedback to the verify-graph-author (graph re-author),
+/// not the implementer (code-writer).
 ///
-/// Inputs are aligned by index — `traces[i]` describes the run of
-/// `steps[i]`. The caller (FT-098 runner) is responsible for ensuring
-/// alignment; misalignment is a SHACL violation enforced separately.
+/// - `2`   — typical clap / argparse / CLI argument validation failure;
+///           the graph called the binary with a flag set the binary
+///           doesn't accept. The code under test wasn't even exercised.
+/// - `126` — POSIX "found but not executable"; the graph names a
+///           binary the env can't run.
+/// - `127` — POSIX "command not found"; the graph references a binary
+///           the env doesn't have.
 ///
-/// Returns `(verdict, rationale)`. The rationale is guaranteed to be
-/// ≥ 20 chars per ADR-018 / FT-097 §Behaviour.
+/// Larger exit codes the verdict aggregator deliberately ignores (101
+/// Rust panic, 1 generic-failure, 124 timeout) since those can be
+/// legitimate code-side regressions worth routing to the implementer.
+pub const GRAPH_FAULT_EXIT_CODES: &[i64] = &[2, 126, 127];
+
+/// Back-compat wrapper around [`single_graph_verdict_with_exit_codes`]
+/// — preserves the pre-FT-110.X two-argument shape for callers that
+/// haven't been migrated yet. Equivalent to calling the new function
+/// with an empty `exit_codes` slice, which means the FT-110.X
+/// graph-fault demotion never fires.
 #[must_use]
 pub fn single_graph_verdict(
     traces: &[StepOutcome],
     provides_evidence_for: &[Vec<String>],
+) -> (Verdict, String) {
+    single_graph_verdict_with_exit_codes(traces, provides_evidence_for, &[])
+}
+
+/// Derive the per-graph verdict (FT-097 §Per-graph verdict derivation +
+/// FT-110.X exit-code-aware demotion).
+///
+/// Inputs are aligned by index — `traces[i]` describes the run of
+/// `steps[i]`. `exit_codes[i]` is the matching shell exit when the
+/// step kind produces one (`None` for `file-assertion`,
+/// `sparql-assertion`, etc.). Misalignment is a SHACL violation
+/// enforced separately by the runner.
+///
+/// Returns `(verdict, rationale)`. The rationale is guaranteed to be
+/// ≥ 20 chars per ADR-018 / FT-097 §Behaviour.
+///
+/// FT-110.X — when a failing evidence-bearing step's exit code is in
+/// [`GRAPH_FAULT_EXIT_CODES`], the verdict is demoted from `Rejected`
+/// to `AmendmentRequired`: the code wasn't really exercised because
+/// the binary rejected the invocation up front, so feedback should
+/// route to the graph author (verify-graph-author), not the
+/// implementer.
+#[must_use]
+pub fn single_graph_verdict_with_exit_codes(
+    traces: &[StepOutcome],
+    provides_evidence_for: &[Vec<String>],
+    exit_codes: &[Option<i64>],
 ) -> (Verdict, String) {
     if traces.is_empty() {
         return (
@@ -91,6 +135,24 @@ pub fn single_graph_verdict(
         let empty = Vec::new();
         let linked = provides_evidence_for.get(idx).unwrap_or(&empty);
         if !linked.is_empty() {
+            // FT-110.X — graph-fault exit codes demote to AmendmentRequired
+            // even on evidence-bearing steps. The binary refused the
+            // invocation before the code under test ran; the failure
+            // is in the graph's command spec, not in the code.
+            let exit = exit_codes.get(idx).copied().flatten();
+            if let Some(code) = exit {
+                if GRAPH_FAULT_EXIT_CODES.contains(&code) {
+                    let tcs = linked.join(", ");
+                    return (
+                        Verdict::AmendmentRequired,
+                        format!(
+                            "step {idx} failed with exit {code} (binary refused the invocation \
+                             before the code ran) on TCs: {tcs}; this is a graph-design fault, \
+                             not a code regression — the graph needs editing",
+                        ),
+                    );
+                }
+            }
             let tcs = linked.join(", ");
             return (
                 Verdict::Rejected,
@@ -362,6 +424,10 @@ fn result_covers_tc(result: &VerificationGraphResult, tc_iri: &str) -> bool {
 /// Convenience wrapper that resolves the single-graph verdict from a
 /// `VerificationGraphResult`'s step traces. Useful for tests and the
 /// SHACL consistency check.
+///
+/// FT-110.X: reads `exit_code` off each persisted step trace and feeds
+/// it through so a re-verdict from disk matches the live verdict the
+/// runner computed at execution time.
 #[must_use]
 pub fn verdict_from_result(
     result: &VerificationGraphResult,
@@ -372,6 +438,11 @@ pub fn verdict_from_result(
         .iter()
         .map(|t| t.outcome)
         .collect();
+    let exit_codes: Vec<Option<i64>> = result
+        .step_traces
+        .iter()
+        .map(|t| t.exit_code)
+        .collect();
     let evidence: Vec<Vec<String>> = steps
         .iter()
         .map(|s| {
@@ -381,6 +452,6 @@ pub fn verdict_from_result(
                 .collect()
         })
         .collect();
-    single_graph_verdict(&outcomes, &evidence)
+    single_graph_verdict_with_exit_codes(&outcomes, &evidence, &exit_codes)
 }
 

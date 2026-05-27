@@ -251,9 +251,17 @@ fn run_setup(script: &str, workdir: &Path) -> Result<(), String> {
 }
 
 /// FT-097 per-graph verdict derivation, applied at runtime.
+///
+/// FT-110.X: threads per-step exit codes through to the aggregator so
+/// graph-fault exit codes (clap arg errors, command-not-found) demote
+/// from `Rejected` to `AmendmentRequired` even on evidence-bearing
+/// steps. The FT-108 routing then sends the feedback to the
+/// verify-graph-author instead of pinning a code-writer dispatch on
+/// what's really a graph-design fault.
 fn derive_verdict(graph: &VerificationGraph, traces: &[StepRunTrace]) -> (Verdict, String) {
-    use crate::core::verify::aggregate::single_graph_verdict;
+    use crate::core::verify::aggregate::single_graph_verdict_with_exit_codes;
     let outcomes: Vec<StepOutcome> = traces.iter().map(|t| t.outcome).collect();
+    let exit_codes: Vec<Option<i64>> = traces.iter().map(|t| t.exit_code).collect();
     let evidence: Vec<Vec<String>> = graph
         .steps
         .iter()
@@ -264,7 +272,7 @@ fn derive_verdict(graph: &VerificationGraph, traces: &[StepRunTrace]) -> (Verdic
                 .collect()
         })
         .collect();
-    single_graph_verdict(&outcomes, &evidence)
+    single_graph_verdict_with_exit_codes(&outcomes, &evidence, &exit_codes)
 }
 
 /// Persist a rejected VGR with empty step traces for Phase-1 abort

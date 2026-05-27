@@ -17,8 +17,8 @@ pub mod runner;
 pub mod safety;
 
 pub use aggregate::{
-    aggregate_verdict, single_graph_verdict, verdict_from_result, AggregateVerdict,
-    AggregationTarget,
+    aggregate_verdict, single_graph_verdict, single_graph_verdict_with_exit_codes,
+    verdict_from_result, AggregateVerdict, AggregationTarget, GRAPH_FAULT_EXIT_CODES,
 };
 pub use chain_integrity::{
     persist_waiver, run_chain_integrity_gate, validate_waiver_reason, ChainIntegrityError,
