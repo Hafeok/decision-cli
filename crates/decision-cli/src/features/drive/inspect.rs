@@ -57,16 +57,31 @@ pub enum InspectError {
     },
 }
 
-/// Map a real verify-feature response to a `FeatureVerdict`.
-fn verdict_from(resp: &crate::features::verify_feature::FeatureVerifyResponse) -> FeatureVerdict {
-    let Some(block) = resp.aggregate.as_ref() else {
-        return FeatureVerdict::NeverRun;
-    };
-    match block.verdict.as_str() {
+/// Map a verdict string to a `FeatureVerdict`.
+fn parse_verdict(s: &str) -> FeatureVerdict {
+    match s {
         "approved" => FeatureVerdict::Approved,
         "amendment-required" => FeatureVerdict::AmendmentRequired,
         "rejected" => FeatureVerdict::Rejected,
         _ => FeatureVerdict::NeverRun,
+    }
+}
+
+/// Reduce two per-graph verdicts to the worse one, matching the
+/// FT-097 aggregate rule (Rejected > AmendmentRequired > Approved).
+fn combine_worst(a: FeatureVerdict, b: FeatureVerdict) -> FeatureVerdict {
+    fn rank(v: FeatureVerdict) -> u8 {
+        match v {
+            FeatureVerdict::Approved => 0,
+            FeatureVerdict::NeverRun => 1,
+            FeatureVerdict::AmendmentRequired => 2,
+            FeatureVerdict::Rejected => 3,
+        }
+    }
+    if rank(b) > rank(a) {
+        b
+    } else {
+        a
     }
 }
 
@@ -98,36 +113,59 @@ impl<'a> GraphInspector for ProductionInspector<'a> {
         &self,
         feature_id: &str,
     ) -> Result<FeatureVerdict, InspectError> {
-        use crate::features::verify_feature::{run as run_verify_feature, FeatureVerifyRequest};
-        let req = FeatureVerifyRequest {
-            feature_id: feature_id.to_string(),
-            environment_id: self.ctx.env_override.clone(),
-            no_feedback: true,
-            include_stale: false,
-            dry_run: true,
-            workdir: Some(self.workdir().to_path_buf()),
-        };
-        let outcome = run_verify_feature(&req).map_err(|e| InspectError::Store {
-            detail: format!("verify-feature dry-run read: {e}"),
+        // Cheap read: aggregate verdict from already-persisted VGRs.
+        // Avoids re-running graphs on every planner iteration; the
+        // planner only needs the *current* state, not a fresh verify
+        // pass.
+        use crate::core::store::{load_store_from_dump, orchestration_dump_path};
+        use oxigraph::sparql::QueryResults;
+
+        let feature_iri = format!("https://decision-cli.dev/ns/feature/{feature_id}");
+        let dump = orchestration_dump_path(self.workdir());
+        let store = load_store_from_dump(&dump).map_err(|e| InspectError::Store {
+            detail: format!("opening store at {p}: {e:#}", p = dump.display()),
         })?;
-        // Dry-run mode doesn't actually execute; we use it as a cheap
-        // shape probe. The aggregate verdict comes from a non-dry-run
-        // pass, so we run a second time without dry-run when we need
-        // the real verdict.
-        if outcome.dry_run {
-            // Fall through to a real verify pass — limited to one
-            // environment when the operator pinned one so the read is
-            // bounded.
-            let real_req = FeatureVerifyRequest {
-                dry_run: false,
-                ..req
-            };
-            let real = run_verify_feature(&real_req).map_err(|e| InspectError::Store {
-                detail: format!("verify-feature aggregate read: {e}"),
+        let q = format!(
+            r#"PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?verdict WHERE {{
+  ?graph dec:verifies <{feature_iri}> .
+  ?vgr dec:resultOf ?graph ;
+       dec:verdict ?verdict .
+}}"#
+        );
+        let solutions = match store.query(&q) {
+            Ok(QueryResults::Solutions(s)) => s,
+            Ok(_) => {
+                return Err(InspectError::Store {
+                    detail: "verdict query returned non-solution shape".to_string(),
+                });
+            }
+            Err(e) => {
+                return Err(InspectError::Store {
+                    detail: format!("verdict query failed: {e}"),
+                });
+            }
+        };
+        let mut any = false;
+        let mut worst = FeatureVerdict::Approved;
+        for sol in solutions {
+            let sol = sol.map_err(|e| InspectError::Store {
+                detail: format!("verdict solution iteration: {e}"),
             })?;
-            return Ok(verdict_from(&real));
+            let verdict_str = sol
+                .get("verdict")
+                .and_then(|t| match t {
+                    oxigraph::model::Term::Literal(l) => Some(l.value().to_string()),
+                    _ => None,
+                })
+                .unwrap_or_default();
+            any = true;
+            worst = combine_worst(worst, parse_verdict(&verdict_str));
         }
-        Ok(verdict_from(&outcome))
+        if !any {
+            return Ok(FeatureVerdict::NeverRun);
+        }
+        Ok(worst)
     }
 
     fn open_defect_feedback_count(
