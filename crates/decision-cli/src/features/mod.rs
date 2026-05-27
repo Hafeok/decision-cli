@@ -5,6 +5,7 @@
 //! imports.sh`) enforces this structurally at build time, on top of
 //! Rust's module visibility rules.
 
+pub mod drive;
 pub mod events;
 pub mod feedback;
 pub mod finalize;

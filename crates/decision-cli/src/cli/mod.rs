@@ -4,6 +4,7 @@ pub mod args;
 pub mod bootstrap_catalog;
 pub mod check_goal;
 pub mod doctor;
+pub mod drive;
 pub mod events;
 pub mod feedback;
 pub mod health;

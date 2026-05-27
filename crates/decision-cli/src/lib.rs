@@ -21,6 +21,7 @@ pub use crate::core::store::{load_store_from_dump, orchestration_dump_path, pers
 pub use crate::core::subscriptions;
 pub use crate::core::vocab;
 pub use crate::core::worker;
+pub use features::drive;
 pub use features::events;
 pub use features::feedback;
 pub use features::finalize;

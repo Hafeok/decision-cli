@@ -14,7 +14,8 @@ use super::{
     bootstrap_catalog, bootstrap_catalog::BootstrapCatalogArgs, check_goal,
     check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd, feedback,
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
-    internal_dispatch, internal_dispatch::InternalDispatchCmd, loop_cmd, loop_cmd::LoopCmd, mcp,
+    drive, drive::DriveArgs, internal_dispatch, internal_dispatch::InternalDispatchCmd, loop_cmd,
+    loop_cmd::LoopCmd, mcp,
     mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, product,
     product::ProductArgs, query, query::QueryCmd, seed_ft101_catalog,
     seed_ft101_catalog::SeedFt101CatalogArgs, session, session::SessionCmd, sparql,
@@ -95,6 +96,8 @@ pub enum Command {
     /// Audit-trail views over the verify → re-fix loop (FT-109).
     #[command(subcommand)]
     Loop(LoopCmd),
+    /// Pluggable artifact+goal orchestrator (FT-110).
+    Drive(DriveArgs),
     /// Worker container lifecycle (FT-095 — slice 1: `run` only).
     #[command(subcommand)]
     Workers(WorkersCmd),
@@ -126,6 +129,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Product(args) => product::run(workdir, args),
         Command::Query(cmd) => query::run(workdir, cmd),
         Command::Loop(cmd) => loop_cmd::run(workdir, cmd),
+        Command::Drive(args) => drive::run(workdir, args),
         Command::Workers(cmd) => workers::run(workdir, cmd),
         Command::InternalDispatch(cmd) => internal_dispatch::run(workdir, cmd),
     }
