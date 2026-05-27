@@ -29,6 +29,7 @@ pub use features::ft_104_default_ack as default_ack;
 pub use features::health;
 pub use features::implement;
 pub use features::init;
+pub use features::loop_inspect;
 pub use features::mcp;
 pub use features::preflight;
 pub use features::product_cmd;

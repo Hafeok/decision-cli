@@ -10,6 +10,7 @@ pub mod health;
 pub mod implement;
 pub mod init;
 pub mod internal_dispatch;
+pub mod loop_cmd;
 pub mod mcp;
 pub mod migrate;
 pub mod preflight;

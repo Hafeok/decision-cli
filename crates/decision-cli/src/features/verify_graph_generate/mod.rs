@@ -387,6 +387,31 @@ pub(super) fn transition_addressed_feedback(
         graph = persisted.graph_id
     ));
     let now = chrono::Utc::now().to_rfc3339();
+    // FT-109.C: materialise the dispatch session BEFORE we transition
+    // feedback through it. The transition writes `dec:receivingSession`
+    // pointing at this IRI; without the typing quads `dec session list`
+    // never sees it. The helper is idempotent — a second call against
+    // the same VG-NNN is a no-op.
+    if let Err(e) = crate::core::dispatch_session::materialize(
+        workdir,
+        &session_iri,
+        "verify-graph-author",
+        // The dispatch was scoped to the proposal's feature; the
+        // persisted summary doesn't carry the feature_id but the
+        // proposal IRI naming carries the VG short id — use that as a
+        // proxy when the feature isn't available.
+        &persisted.graph_id,
+        &now,
+        &now,
+        crate::core::dispatch_session::DispatchStatus::Completed,
+    ) {
+        tracing::warn!(
+            target: "verify_graph_generate",
+            graph = %persisted.graph_id,
+            err = %e,
+            "dispatch-session materialise failed (best-effort)"
+        );
+    }
     if let Err(e) = feedback_close::mark_batch_addressed(
         workdir,
         &new_payload.addressed_feedback_iris,

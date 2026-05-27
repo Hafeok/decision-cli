@@ -13,6 +13,7 @@ pub mod bundle;
 pub mod bundled;
 pub mod cosign_trust;
 pub mod dispatch;
+pub mod dispatch_session;
 pub mod feedback;
 pub mod graph;
 pub mod handler;

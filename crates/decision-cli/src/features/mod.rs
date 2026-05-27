@@ -13,6 +13,7 @@ pub mod ft_104_default_ack;
 pub mod health;
 pub mod implement;
 pub mod init;
+pub mod loop_inspect;
 pub mod mcp;
 pub mod preflight;
 pub mod product_cmd;
