@@ -36,6 +36,18 @@ pub enum Action {
         /// Env short id.
         env_id: String,
     },
+    /// Escalation: the verify-graph-author can't fix the open defects
+    /// (typically because the underlying commands the graph invokes
+    /// fail with general errors — exit 1 — that signal a missing or
+    /// broken *implementation*, not a graph-design issue). The
+    /// executor re-routes the feature's open verifier-targeted
+    /// defects to the implementer via the ADR-024 lifecycle and then
+    /// dispatches the implementer with the rerouted feedback in its
+    /// bundle.
+    EscalateVgaToImplementer {
+        /// Feature short id.
+        feature_id: String,
+    },
     /// Terminal — no path forward. Driver returns `DriveError::Stuck`.
     /// The `reason` is rendered verbatim so the operator sees the
     /// planner's diagnosis.
@@ -61,6 +73,7 @@ impl Action {
             Self::DispatchVerifier { .. } => "dispatch:verifier",
             Self::DispatchImplementer { .. } => "dispatch:implementer",
             Self::DispatchVerifyGraphAuthor { .. } => "dispatch:verify-graph-author",
+            Self::EscalateVgaToImplementer { .. } => "escalate:vga-to-implementer",
             Self::Stuck { .. } => "stuck",
         }
     }

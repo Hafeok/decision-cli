@@ -2,17 +2,18 @@
 id: TC-174
 title: adrs-rejected re-introduces the gap with severity intentional and carries the reason through to the preflight report
 type: scenario
-status: passing
+status: failing
 validates:
   features:
   - FT-104
   adrs: []
 phase: 1
-runner: cargo-test
-runner-args: tc_174_adrs_rejected_re_introduces_the_gap_with_severity
+runner: pytest
+runner-args: tests/test_ft104_simple.py::test_tc174_rejection
 runner-timeout: 120
-last-run: 2026-05-26T15:45:08.466211219+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-27T19:10:11.830867265+00:00
+failure-message: "ERROR: file or directory not found: tests/test_ft104_simple.py::test_tc174_rejection\n\n"
+last-run-duration: 0.3s
 ---
 
 ## Claim

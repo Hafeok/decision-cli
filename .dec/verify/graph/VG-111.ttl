@@ -1,0 +1,79 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-111>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-104> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-111/0> <https://decision-cli.dev/ns/step/VG-111/1> <https://decision-cli.dev/ns/step/VG-111/2> <https://decision-cli.dev/ns/step/VG-111/3> <https://decision-cli.dev/ns/step/VG-111/4> <https://decision-cli.dev/ns/step/VG-111/5> <https://decision-cli.dev/ns/step/VG-111/6> <https://decision-cli.dev/ns/step/VG-111/7> <https://decision-cli.dev/ns/step/VG-111/8> <https://decision-cli.dev/ns/step/VG-111/9> ) .
+
+<https://decision-cli.dev/ns/step/VG-111/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product init" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-111/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product adr new --id ADR-CC --title \"Test Cross-Cutting ADR\" --scope cross-cutting" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-111/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product feature new --id FT-LINKED --title \"Feature with ADR-CC linked\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-111/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product feature new --id FT-UNLINKED --title \"Feature without ADR-CC linked\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-111/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product feature edit --id FT-LINKED --adrs ADR-CC" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-111/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-173> ;
+    dec:command "product preflight FT-LINKED --format json" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-111/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-173> ;
+    dec:command "product preflight FT-UNLINKED --format json" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-111/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product feature edit --id FT-UNLINKED --adrs-rejected ADR-CC --reason \"This feature uses an alternative pattern.\"" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-111/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-174> ;
+    dec:command "product preflight FT-UNLINKED --format json" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .
+
+<https://decision-cli.dev/ns/step/VG-111/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-175> ;
+    dec:command "product graph check" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .

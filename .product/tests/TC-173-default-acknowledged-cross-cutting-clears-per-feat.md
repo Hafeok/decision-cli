@@ -2,17 +2,18 @@
 id: TC-173
 title: default-acknowledged-cross-cutting clears per-feature preflight gaps without requiring per-feature adrs link
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features:
   - FT-104
   adrs: []
 phase: 1
-runner: cargo-test
-runner-args: tc_173_default_acknowledged_cross_cutting_clears_per_feat
+runner: pytest
+runner-args: tests/test_ft104_simple.py::test_tc173_basic
 runner-timeout: 120
-last-run: 2026-05-26T15:45:08.466211219+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-27T19:10:11.830867265+00:00
+failure-message: "ERROR: file or directory not found: tests/test_ft104_simple.py::test_tc173_basic\n\n"
+last-run-duration: 0.3s
 ---
 
 ## Claim

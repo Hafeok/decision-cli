@@ -128,7 +128,10 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         let final_action = match self
             .detect_no_progress(feature_id, verdict, impl_open, vga_open, &intended)
         {
-            Some(reason) => Action::Stuck { reason },
+            Some(NoProgress::Stuck { reason }) => Action::Stuck { reason },
+            Some(NoProgress::EscalateVgaToImplementer) => Action::EscalateVgaToImplementer {
+                feature_id: feature_id.to_string(),
+            },
             None => intended.clone(),
         };
 
@@ -162,7 +165,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         impl_open: usize,
         vga_open: usize,
         intended: &Action,
-    ) -> Option<String> {
+    ) -> Option<NoProgress> {
         let prev = self.last_seen.borrow();
         let prev = prev.as_ref()?;
         if prev.feature_id != feature_id {
@@ -179,17 +182,20 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 // "fix" round (probably bootstrap evidence-production),
                 // so a count going up is expected.
                 if prev.impl_open > 0 && impl_open >= prev.impl_open {
-                    Some(format!(
-                        "implementer dispatch did not reduce open implementer-defect \
-                         count ({prev_n} → {new_n}) for feature {feature_id}. \
-                         Either the worker returned without addressing any feedback \
-                         (no addressed_feedback_iris in CodeChange output) or the \
-                         defects describe scope outside its capability. Escalate to \
-                         spec-author or inspect `dec loop show {feature_id}` for \
-                         the chain.",
-                        prev_n = prev.impl_open,
-                        new_n = impl_open,
-                    ))
+                    Some(NoProgress::Stuck {
+                        reason: format!(
+                            "implementer dispatch did not reduce open \
+                             implementer-defect count ({prev_n} → {new_n}) for \
+                             feature {feature_id}. Either the worker returned \
+                             without addressing any feedback (no \
+                             addressed_feedback_iris in CodeChange output) or the \
+                             defects describe scope outside its capability. \
+                             Escalate to spec-author or inspect `dec loop show \
+                             {feature_id}` for the chain.",
+                            prev_n = prev.impl_open,
+                            new_n = impl_open,
+                        ),
+                    })
                 } else {
                     None
                 }
@@ -202,18 +208,17 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 // was a bootstrap (authoring graphs from scratch on a
                 // never-verified feature), so freshly-emitted defects
                 // are evidence-production, not regression.
+                //
+                // When the verifier IS stuck (count didn't drop), the
+                // most useful next move is to ask the implementer to
+                // fix what the verifier was complaining about — the
+                // failure is almost always "the underlying command
+                // isn't implemented yet" rather than "the graph
+                // design is wrong." The driver wires this via the
+                // EscalateVgaToImplementer action which re-routes the
+                // open verifier-defects through ADR-024 supersession.
                 if prev.vga_open > 0 && vga_open >= prev.vga_open {
-                    Some(format!(
-                        "verify-graph-author dispatch did not reduce open \
-                         verifier-defect count ({prev_n} → {new_n}) for feature \
-                         {feature_id}. The re-authored graph likely failed the same \
-                         way as before; the TC may describe scope that isn't yet \
-                         implemented (a real gap rather than a graph-design issue). \
-                         Escalate to spec-author or inspect `dec loop show \
-                         {feature_id}`.",
-                        prev_n = prev.vga_open,
-                        new_n = vga_open,
-                    ))
+                    Some(NoProgress::EscalateVgaToImplementer)
                 } else {
                     None
                 }
@@ -236,14 +241,17 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                     && impl_open == prev.impl_open
                     && vga_open == prev.vga_open
                 {
-                    Some(format!(
-                        "verifier dispatch did not change state (verdict={verdict:?}, \
-                         impl_open={impl_open}, vga_open={vga_open}) for feature \
-                         {feature_id}. The verifier likely had no covering graphs to \
-                         run, or the run did not emit feedback. Inspect `dec verify \
-                         feature {feature_id}` and `dec loop show {feature_id}` to \
-                         diagnose.",
-                    ))
+                    Some(NoProgress::Stuck {
+                        reason: format!(
+                            "verifier dispatch did not change state \
+                             (verdict={verdict:?}, impl_open={impl_open}, \
+                             vga_open={vga_open}) for feature {feature_id}. The \
+                             verifier likely had no covering graphs to run, or \
+                             the run did not emit feedback. Inspect `dec verify \
+                             feature {feature_id}` and `dec loop show \
+                             {feature_id}` to diagnose.",
+                        ),
+                    })
                 } else {
                     None
                 }
@@ -251,6 +259,16 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             _ => None,
         }
     }
+}
+
+/// What `detect_no_progress` decided the planner should do next.
+/// Distinguishes the terminal `Stuck` (driver returns DriveError::Stuck)
+/// from `EscalateVgaToImplementer` (driver routes the verifier-targeted
+/// open defects to the implementer and tries one more round).
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum NoProgress {
+    Stuck { reason: String },
+    EscalateVgaToImplementer,
 }
 
 impl<I: GraphInspector> Planner for FeatureShipPlanner<I> {
@@ -492,20 +510,21 @@ mod tests {
     }
 
     #[test]
-    fn vga_repeated_with_no_progress_returns_stuck() {
+    fn vga_repeated_with_no_progress_escalates_to_implementer() {
         // Round 1: 0 implementer, 3 verifier defects, dispatch vga.
-        // Round 2: same 3 defects, expect Stuck with vga-shaped reason.
+        // Round 2: same 3 defects, expect EscalateVgaToImplementer
+        // (verifier can't fix → ask implementer to fix the underlying
+        // gap).
         let inspector = MutableStubInspector::new(FeatureVerdict::AmendmentRequired, 0, 3);
         let planner = FeatureShipPlanner::new(inspector);
         let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
         assert!(matches!(a1, Action::DispatchVerifyGraphAuthor { .. }));
         let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
         match a2 {
-            Action::Stuck { reason } => {
-                assert!(reason.contains("verify-graph-author"), "reason: {reason}");
-                assert!(reason.contains("3 → 3"), "reason: {reason}");
+            Action::EscalateVgaToImplementer { feature_id } => {
+                assert_eq!(feature_id, "FT-TEST");
             }
-            other => panic!("expected Stuck, got {other:?}"),
+            other => panic!("expected EscalateVgaToImplementer, got {other:?}"),
         }
     }
 

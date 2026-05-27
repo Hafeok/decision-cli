@@ -141,18 +141,93 @@ fn evidence_signals_graph_fault(evidence: &str) -> bool {
     false
 }
 
-/// Mint the corrected twin + transition the original. Both writes go
-/// through a single `StreamWriter` so failures (SHACL violation, bad
-/// IRI) propagate before any partial state lands.
+/// Escalate every open `targetRole = "verifier"` defect feedback whose
+/// `dec:sourceArtifact` is one of `tc_iris` by superseding it with a
+/// twin that has `targetRole = "implementer"`. Used by the FT-110
+/// planner's `EscalateVgaToImplementer` path — when the
+/// verify-graph-author can't make progress, the next thing to try is
+/// "ask the implementer to fix what the verifier was complaining
+/// about." Returns the number of feedbacks successfully escalated.
+///
+/// `tc_iris` should be the full IRI form
+/// (`https://decision-cli.dev/ns/tc/TC-NNN`); the caller derives them
+/// via `resolve_feature_tcs_short` + `tc_iri_for`.
+///
+/// Idempotent: feedbacks already in a terminal state are skipped.
+pub fn escalate_verifier_defects_to_implementer(
+    workdir: &std::path::Path,
+    tc_iris: &[String],
+) -> Result<usize> {
+    if tc_iris.is_empty() {
+        return Ok(0);
+    }
+    let dump = orchestration_dump_path(workdir);
+    let store = load_store_from_dump(&dump)
+        .with_context(|| format!("loading orchestration store at {}", dump.display()))?;
+    let store = Arc::new(store);
+    let scope = ActiveScope::load(workdir).context("loading active scope")?;
+    let stream_iri = NamedNode::new(&scope.stream_iri).context("active stream iri")?;
+    let writer = StreamWriter::open(Arc::clone(&store), stream_iri.clone())
+        .context("opening writer for escalation")?;
+
+    let tc_set: std::collections::HashSet<&str> =
+        tc_iris.iter().map(String::as_str).collect();
+
+    let defects = list_by_class(&store, "defect")
+        .map_err(|e| anyhow::anyhow!("listing defect feedback: {e}"))?;
+    let mut escalated = 0_usize;
+    for fb in defects {
+        if fb.target_role != "verifier" {
+            continue;
+        }
+        if !matches!(
+            fb.lifecycle_state.as_str(),
+            "produced" | "routed" | "received"
+        ) {
+            continue;
+        }
+        let Some(source) = fb.source_artifact.as_ref() else {
+            continue;
+        };
+        if !tc_set.contains(source.as_str()) {
+            continue;
+        }
+        if supersede_with_role_twin(&store, &writer, &fb, &stream_iri, "implementer").is_ok() {
+            escalated += 1;
+        }
+    }
+    if escalated > 0 {
+        persist_store(&store, &dump)
+            .context("persisting store after escalation")?;
+    }
+    Ok(escalated)
+}
+
+/// Original sweep call — supersedes with a `verifier`-targeted twin.
+/// Thin wrapper over the role-parameterised version below.
 fn supersede_one(
     store: &oxigraph::store::Store,
     writer: &StreamWriter,
     old: &Feedback,
     stream_iri: &NamedNode,
 ) -> Result<()> {
+    supersede_with_role_twin(store, writer, old, stream_iri, "verifier")
+}
+
+/// Mint a twin with the supplied `new_target_role` + transition the
+/// original to `superseded` per ADR-024. Both writes go through a
+/// single `StreamWriter` so failures (SHACL violation, bad IRI)
+/// propagate before any partial state lands.
+fn supersede_with_role_twin(
+    store: &oxigraph::store::Store,
+    writer: &StreamWriter,
+    old: &Feedback,
+    stream_iri: &NamedNode,
+    new_target_role: &str,
+) -> Result<()> {
     // Step 1: mint the corrected twin. Same source artifact + evidence
-    // + source session, but `targetRole = "verifier"` so the dispatch
-    // gate routes it to verify-graph-author next iteration.
+    // + source session, but `targetRole` is replaced so the dispatch
+    // gate routes the twin to the new worker next iteration.
     let twin_iri = NamedNode::new_unchecked(format!(
         "urn:dec:feedback:{}",
         Uuid::new_v4()
@@ -161,7 +236,7 @@ fn supersede_one(
         iri: twin_iri.clone(),
         class: old.class.clone(),
         severity: Severity::Error,
-        target_role: "verifier".to_string(),
+        target_role: new_target_role.to_string(),
         evidence: old.evidence.clone(),
         recommendation: old.recommendation.clone(),
         lifecycle_state: LifecycleState::Produced.as_str().to_string(),
