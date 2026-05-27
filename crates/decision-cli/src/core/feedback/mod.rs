@@ -12,8 +12,10 @@
 //! (FT-027), routing (FT-029) — are owned by later features and layer
 //! on top of the contract defined here.
 
+pub mod address_walk;
 pub mod artifact;
 pub mod class;
+pub mod defect_record;
 pub mod lifecycle;
 mod lifecycle_shacl;
 pub mod read;
@@ -26,6 +28,7 @@ mod tests;
 
 pub use artifact::{Feedback, Severity};
 pub use class::{Disposition, FeedbackClass};
+pub use defect_record::DefectFeedbackRecord;
 pub use lifecycle::{next_states, validate_transition, LifecycleState, TransitionError};
 pub use read::{get, list_by_class, list_by_target, list_open, FeedbackReadError};
 pub use shacl::{validate_quads, FeedbackShaclError, FeedbackViolation};

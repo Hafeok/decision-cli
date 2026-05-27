@@ -23,6 +23,7 @@
 
 mod bundle;
 mod codechange;
+pub mod defect_feedback;
 mod feedback_handling;
 mod lifecycle;
 mod prepare;
@@ -48,6 +49,11 @@ use crate::core::StreamWriter;
 
 pub use bundle::resolve_product_root;
 pub use session_show::session_show;
+// FT-108 test seam: expose the worker mock surface so integration tests
+// can intercept code-writer dispatches without subprocesses.
+pub use worker::{
+    install_mock, CodeChangeJson, DispatchPayloadJson, MockGuard, WorkerResponseJson, WorkerRun,
+};
 
 use bundle::persist_store;
 use lifecycle::{
@@ -185,8 +191,18 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         return Err(anyhow!("code-writer worker reported failure: {detail}"));
     }
     let code_change = extract_code_change(&response)?;
+    // FT-108: when the bundle carried defect feedback the worker MUST
+    // cite at least one IRI on the CodeChange's `addressed_feedback_iris`.
+    // An empty list means the worker ignored the runtime evidence and
+    // produced a code change unrelated to the failures the bundle
+    // documented — refuse to persist and surface the contract violation.
+    reject_if_feedback_ignored(&dispatch_payload, code_change)?;
     let codechange_path = persist_code_change(&ctx, args, code_change)?;
     commit_session_completion(&ctx, code_change)?;
+    // FT-108: transition every cited feedback to `addressed` with the
+    // freshly persisted CodeChange as the addressing artifact. Best-
+    // effort — failure logs but does not unwind the persisted change.
+    transition_addressed_feedback(workdir, &ctx, code_change);
     // FT-021 / ADR-017: action terminated with a produced artifact.
     // Transition the DispatchGroup to `awaiting-interpretation`. The
     // verifier dispatch itself is FT-022 / FT-023; from FT-021's point
@@ -206,6 +222,72 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
         codechange_path,
         finalize_outcome,
     ))
+}
+
+/// FT-108: if the dispatch bundle carried defect feedback, the worker
+/// MUST cite at least one IRI on the CodeChange's
+/// `addressed_feedback_iris`. Empty list ⇒ `WorkerIgnoredFeedback`.
+/// `kind = Gap` style refusal (worker emits no CodeChange at all) is
+/// handled upstream by the feedback-handling path; this guard only
+/// fires when a CodeChange *was* produced but ignored the evidence.
+fn reject_if_feedback_ignored(
+    payload: &worker::DispatchPayloadJson,
+    code_change: &worker::CodeChangeJson,
+) -> Result<()> {
+    if payload.defect_feedback.is_empty() {
+        return Ok(());
+    }
+    if !code_change.addressed_feedback_iris.is_empty() {
+        return Ok(());
+    }
+    let iris: Vec<String> = payload
+        .defect_feedback
+        .iter()
+        .map(|fb| fb.feedback_iri.clone())
+        .collect();
+    Err(anyhow!(
+        "code-writer returned a CodeChange with empty addressed_feedback_iris despite the \
+         bundle carrying {n} defect-feedback entries ({iris:?}); the worker must cite at \
+         least one feedback IRI so the accept path can transition it from produced to \
+         addressed",
+        n = iris.len(),
+    ))
+}
+
+/// FT-108: walk every IRI cited in `code_change.addressed_feedback_iris`
+/// through the ADR-024 lifecycle to `addressed` with the new CodeChange
+/// as the addressing artifact. Best-effort: a failed transition logs
+/// but does not unwind the persisted CodeChange.
+fn transition_addressed_feedback(
+    workdir: &Path,
+    ctx: &DispatchContext,
+    code_change: &worker::CodeChangeJson,
+) {
+    if code_change.addressed_feedback_iris.is_empty() {
+        return;
+    }
+    let Ok(code_change_iri) = NamedNode::new(&code_change.iri) else {
+        tracing::warn!(
+            target: "dec::implement::ft108",
+            iri = %code_change.iri,
+            "code-change IRI failed to parse; skipping feedback transition"
+        );
+        return;
+    };
+    let now = chrono::Utc::now().to_rfc3339();
+    if let Err(e) = crate::core::feedback::address_walk::mark_batch_addressed(
+        workdir,
+        &code_change.addressed_feedback_iris,
+        &code_change_iri,
+        &ctx.session_iri,
+        &now,
+    ) {
+        tracing::warn!(
+            target: "dec::implement::ft108",
+            err = %e,
+            "feedback-address-walk failed (best-effort)"
+        );
+    }
 }
 
 /// Advance the DispatchGroup after the action session has terminated

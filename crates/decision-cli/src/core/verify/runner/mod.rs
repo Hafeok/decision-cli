@@ -155,8 +155,13 @@ pub fn run_graph(req: &RunGraphRequest) -> Result<RunGraphResponse, RunnerError>
         started_at,
         ended_at,
     )?;
-    let emitted_feedback =
-        feedback::emit_feedback_for_failures(&req.workdir, &graph, &traces, &req.run_activity);
+    let emitted_feedback = feedback::emit_feedback_for_failures(
+        &req.workdir,
+        &graph,
+        &traces,
+        verdict,
+        &req.run_activity,
+    );
 
     let step_outcomes: Vec<StepOutcomeSummary> = traces
         .iter()

@@ -17,7 +17,7 @@ use crate::core::worker::{
 };
 
 #[derive(Debug, Clone, Serialize)]
-pub(super) struct DispatchPayloadJson {
+pub struct DispatchPayloadJson {
     pub dispatch_id: String,
     pub session_id: String,
     pub feature_id: String,
@@ -34,11 +34,16 @@ pub(super) struct DispatchPayloadJson {
     /// orchestration store predates FT-030 (legacy slice-1 stores).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authority: Option<AuthorityJson>,
+    /// FT-108: runtime defect feedback the implementer should address.
+    /// Empty for fresh-feature dispatch; non-empty when a prior verify
+    /// run produced `rejected` evidence and routed it to the implementer.
+    #[serde(default)]
+    pub defect_feedback: Vec<crate::core::feedback::DefectFeedbackRecord>,
 }
 
 /// Serialisable view of a `dec:Authority` for the worker bundle (FT-030).
 #[derive(Debug, Clone, Serialize)]
-pub(super) struct AuthorityJson {
+pub struct AuthorityJson {
     pub iri: String,
     pub may_decide: Vec<String>,
     pub must_escalate: Vec<String>,
@@ -48,14 +53,14 @@ pub(super) struct AuthorityJson {
 
 /// One entry of `escalate_via` — mirrors `core::role_catalog::EscalationHint`.
 #[derive(Debug, Clone, Serialize)]
-pub(super) struct EscalationHintJson {
+pub struct EscalationHintJson {
     pub category: String,
     pub class: String,
     pub target_role: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub(super) struct WorkerResponseJson {
+pub struct WorkerResponseJson {
     #[allow(dead_code)]
     pub dispatch_id: String,
     #[allow(dead_code)]
@@ -69,7 +74,7 @@ pub(super) struct WorkerResponseJson {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub(super) struct CodeChangeJson {
+pub struct CodeChangeJson {
     pub iri: String,
     #[allow(dead_code)]
     pub feature_id: String,
@@ -79,10 +84,15 @@ pub(super) struct CodeChangeJson {
     pub files: Vec<FileWriteJson>,
     #[serde(default)]
     pub summary: String,
+    /// FT-108: feedback IRIs (urn:dec:feedback:<uuid>) this code change
+    /// claims to address. The accept path uses this list to transition
+    /// each cited feedback from `produced` to `addressed`.
+    #[serde(default)]
+    pub addressed_feedback_iris: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub(super) struct FileWriteJson {
+pub struct FileWriteJson {
     pub path: String,
     #[serde(default)]
     pub summary: String,
@@ -91,7 +101,7 @@ pub(super) struct FileWriteJson {
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
-pub(super) struct TelemetryJson {
+pub struct TelemetryJson {
     #[serde(default)]
     pub turn_count: u64,
     #[serde(default)]
@@ -99,7 +109,7 @@ pub(super) struct TelemetryJson {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub(super) struct ErrorJson {
+pub struct ErrorJson {
     pub category: String,
     pub message: String,
     #[serde(default)]
@@ -109,7 +119,7 @@ pub(super) struct ErrorJson {
 /// Look up the implementer role and run the shared resolution chain.
 /// Returns a fully-built `argv` on success, or a renderable report on
 /// missing-worker so `dec implement` can abort pre-session (TC-049).
-pub(super) fn preflight_implementer(
+pub fn preflight_implementer(
     workdir: &Path,
     override_command: Option<&str>,
 ) -> Result<Vec<String>, WorkerPreflightFailure> {
@@ -149,7 +159,7 @@ pub(super) fn preflight_implementer(
 /// Carrier for a missing-worker diagnostic. `Display` is the
 /// install-hint block; `dec implement` writes it to stderr.
 #[derive(Debug)]
-pub(super) struct WorkerPreflightFailure {
+pub struct WorkerPreflightFailure {
     pub rendered: String,
     pub _report: WorkerReport,
 }
@@ -167,12 +177,15 @@ impl std::error::Error for WorkerPreflightFailure {}
 /// scanner is invoked by `super::run` so the `paused-for-feedback`
 /// branch can fire before the action artifact is persisted — FT-032).
 #[derive(Debug, Clone)]
-pub(super) struct WorkerRun {
+pub struct WorkerRun {
     pub response: WorkerResponseJson,
     pub raw_stdout: String,
 }
 
-pub(super) fn run_worker(argv: &[String], payload: &DispatchPayloadJson) -> Result<WorkerRun> {
+pub fn run_worker(argv: &[String], payload: &DispatchPayloadJson) -> Result<WorkerRun> {
+    if let Some(mock_result) = try_invoke_mock(payload) {
+        return mock_result;
+    }
     let mut cmd = build_command_from_argv(argv)?;
     cmd.stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -238,7 +251,7 @@ fn parse_worker_response(stdout_bytes: &[u8]) -> Result<WorkerResponseJson> {
 
 /// Build the failure detail string surfaced when a worker reports
 /// ``status != "ok"``.
-pub(super) fn format_worker_failure(error: Option<&ErrorJson>) -> String {
+pub fn format_worker_failure(error: Option<&ErrorJson>) -> String {
     error
         .map(|e| {
             if e.detail.is_empty() {
@@ -251,4 +264,58 @@ pub(super) fn format_worker_failure(error: Option<&ErrorJson>) -> String {
             }
         })
         .unwrap_or_else(|| "(no error detail)".into())
+}
+
+// ---------------------------------------------------------------------
+// FT-108 test seam: install_mock lets integration tests intercept
+// `run_worker` without spawning a subprocess. Modelled after the
+// verify-graph-generate worker's mock harness.
+// ---------------------------------------------------------------------
+
+use std::cell::RefCell;
+
+type MockFn = Box<dyn Fn(&DispatchPayloadJson) -> Result<WorkerRun> + 'static>;
+
+thread_local! {
+    static MOCK_WORKER: RefCell<Option<MockFn>> = const { RefCell::new(None) };
+}
+
+/// Install a thread-local mock for the code-writer worker. While the
+/// returned guard is alive, [`run_worker`] consults the mock instead of
+/// spawning the subprocess. Drop the guard to restore real behaviour.
+#[must_use]
+pub fn install_mock(
+    mock: impl Fn(&DispatchPayloadJson) -> Result<WorkerRun> + 'static,
+) -> MockGuard {
+    MOCK_WORKER.with(|cell| {
+        *cell.borrow_mut() = Some(Box::new(mock));
+    });
+    MockGuard(())
+}
+
+/// RAII guard that clears the thread-local mock on drop.
+pub struct MockGuard(());
+
+impl Drop for MockGuard {
+    fn drop(&mut self) {
+        MOCK_WORKER.with(|cell| {
+            *cell.borrow_mut() = None;
+        });
+    }
+}
+
+fn try_invoke_mock(payload: &DispatchPayloadJson) -> Option<Result<WorkerRun>> {
+    MOCK_WORKER.with(|cell| {
+        cell.borrow()
+            .as_ref()
+            .map(|mock| (mock)(payload))
+    })
+}
+
+/// FT-108 test helper: surface the `DispatchPayloadJson` shape so
+/// integration tests can construct expected payloads. Re-exported via
+/// the public crate root only inside `cfg(test)`.
+#[cfg(test)]
+pub(crate) fn payload_defect_feedback_len(payload: &DispatchPayloadJson) -> usize {
+    payload.defect_feedback.len()
 }

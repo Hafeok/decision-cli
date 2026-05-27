@@ -33,6 +33,7 @@ pub(super) fn build_dispatch_payload(
         .to_string_lossy()
         .into_owned();
     let authority = lookup_role_authority(&ctx.store, IMPLEMENTER_ROLE);
+    let defect_feedback = load_defect_feedback_for_feature(ctx, &args.feature_id);
     DispatchPayloadJson {
         dispatch_id: ctx.dispatch_iri.as_str().to_string(),
         session_id: ctx.session_iri.as_str().to_string(),
@@ -47,7 +48,38 @@ pub(super) fn build_dispatch_payload(
         endpoint: "anthropic".to_string(),
         timeout_seconds: 1800,
         authority,
+        defect_feedback,
     }
+}
+
+/// FT-108: resolve the feature's TC short ids → IRIs and load any
+/// `produced`-state, `class=defect`, `targetRole=implementer` feedback
+/// targeting them. Best-effort: a missing product-root or resolve
+/// failure degrades to an empty list rather than aborting the dispatch.
+fn load_defect_feedback_for_feature(
+    ctx: &DispatchContext,
+    feature_id: &str,
+) -> Vec<crate::core::feedback::DefectFeedbackRecord> {
+    use crate::core::verify::coverage::feature_resolver::{resolve_feature_tcs_short, tc_iri_for};
+    let tc_shorts = match resolve_feature_tcs_short(&ctx.product_root, feature_id) {
+        Ok(v) => v,
+        Err(_) => return Vec::new(),
+    };
+    if tc_shorts.is_empty() {
+        return Vec::new();
+    }
+    let tc_iris: Vec<String> = tc_shorts.iter().map(|t| tc_iri_for(t)).collect();
+    // The dump path is <workdir>/.dec/store/orchestration.nq; the
+    // loader wants <workdir>, so peel off three parents.
+    let workdir = ctx
+        .dump_path
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent());
+    let Some(workdir) = workdir else {
+        return Vec::new();
+    };
+    super::defect_feedback::load_for_implementer(workdir, &tc_iris)
 }
 
 /// FT-030: look up `role_id` in the orchestration store and project its

@@ -16,28 +16,14 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
-
 use crate::core::feedback::read::list_by_class;
 use crate::core::ontology::verification_graph::{from_turtle, VerificationGraph};
 
-/// One defect-feedback entry surfaced to the verify-graph-author bundle.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct DefectFeedbackRecord {
-    /// Stable feedback IRI (`urn:dec:feedback:<uuid>`).
-    pub feedback_iri: String,
-    /// Always `"defect"` for records this loader returns.
-    pub class: String,
-    /// `"error"` | `"warning"` | `"info"`.
-    pub severity: String,
-    /// Free-form evidence excerpt the runner wrote at emission time.
-    pub evidence: String,
-    /// TC IRI the feedback's `dec:sourceArtifact` points at.
-    pub source_tc: String,
-    /// Short id of the graph whose failing step covers `source_tc`
-    /// (`VG-007`). Empty if the join didn't find a unique graph.
-    pub graph_id: String,
-}
+// `DefectFeedbackRecord` moved to `core::feedback::defect_record` in
+// FT-108 so both this loader and the implementer-side loader share the
+// same wire shape. Re-export here for backward compatibility with the
+// FT-107 import path used by the bundle module + tests.
+pub use crate::core::feedback::DefectFeedbackRecord;
 
 /// Load every defect feedback whose addressing chain ties it to the
 /// `(feature_short, env_short)` pair.

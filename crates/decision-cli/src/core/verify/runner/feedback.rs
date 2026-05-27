@@ -18,6 +18,7 @@ use oxigraph::model::NamedNode;
 
 use crate::core::feedback::artifact::{Feedback, Severity};
 use crate::core::feedback::class::FeedbackClass;
+use crate::core::ontology::verdict::Verdict;
 use crate::core::ontology::verification_graph::VerificationGraph;
 use crate::core::ontology::verification_result::StepOutcome;
 use crate::core::scope::ActiveScope;
@@ -30,14 +31,20 @@ use super::kinds::StepRunTrace;
 /// Emit one `dec:Feedback` per linked TC for every step with
 /// `outcome ∈ {fail, unrunnable}`. Returns the IRIs of every artifact
 /// successfully committed.
+///
+/// FT-108: defect feedback routes by the graph's verdict:
+///   - `rejected` (evidence regression on a TC) → `targetRole = "implementer"`
+///   - `amendment-required` (graph-side failure) → `targetRole = "verifier"`
+/// Unrunnable steps still emit `class = gap` to `spec-author` regardless.
 pub(crate) fn emit_feedback_for_failures(
     workdir: &Path,
     graph: &VerificationGraph,
     traces: &[StepRunTrace],
+    verdict: Verdict,
     run_activity: &NamedNode,
 ) -> Vec<NamedNode> {
     let mut emitted: Vec<NamedNode> = Vec::new();
-    let to_emit = collect_feedback_inputs(graph, traces);
+    let to_emit = collect_feedback_inputs(graph, traces, verdict);
     if to_emit.is_empty() {
         return emitted;
     }
@@ -71,12 +78,14 @@ pub(crate) fn emit_feedback_for_failures(
 struct FeedbackInput {
     tc: String,
     class: FeedbackClass,
+    target_role: String,
     evidence: String,
 }
 
 fn collect_feedback_inputs(
     graph: &VerificationGraph,
     traces: &[StepRunTrace],
+    verdict: Verdict,
 ) -> Vec<FeedbackInput> {
     let mut out: Vec<FeedbackInput> = Vec::new();
     for (i, step) in graph.steps.iter().enumerate() {
@@ -89,16 +98,31 @@ fn collect_feedback_inputs(
             StepOutcome::Unrunnable => FeedbackClass::Gap,
             StepOutcome::Pass => continue,
         };
+        let target_role = target_role_for(class, verdict).to_string();
         let evidence = build_evidence_body(step.kind, trace, i);
         for tc in &step.provides_evidence_for {
             out.push(FeedbackInput {
                 tc: tc.as_str().to_string(),
                 class,
+                target_role: target_role.clone(),
                 evidence: evidence.clone(),
             });
         }
     }
     out
+}
+
+/// FT-108 routing rule: defect feedback's target role depends on the
+/// per-graph verdict. `rejected` (code regression) → `"implementer"`;
+/// `amendment-required` (graph at fault) → `"verifier"`. Anything else
+/// (including the `gap` class for `unrunnable` steps) falls back to the
+/// class's default target role.
+fn target_role_for(class: FeedbackClass, verdict: Verdict) -> &'static str {
+    match (class, verdict) {
+        (FeedbackClass::Defect, Verdict::Rejected) => "implementer",
+        (FeedbackClass::Defect, Verdict::AmendmentRequired) => "verifier",
+        _ => class.default_target_role(),
+    }
 }
 
 fn build_evidence_body(
@@ -135,7 +159,7 @@ fn write_one_feedback(
         iri: iri.clone(),
         class: input.class.as_iri_value().to_string(),
         severity: Severity::Error,
-        target_role: input.class.default_target_role().to_string(),
+        target_role: input.target_role.clone(),
         evidence: input.evidence.clone(),
         recommendation: None,
         lifecycle_state: "produced".to_string(),
