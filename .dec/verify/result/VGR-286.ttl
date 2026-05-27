@@ -1,0 +1,73 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-286>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-105> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-27T13:40:44.528Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:44.691Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-286/step/0> <https://decision-cli.dev/ns/result/VGR-286/step/1> <https://decision-cli.dev/ns/result/VGR-286/step/2> ) ;
+    dec:rationale "step 0 failed with exit 127 (binary refused the invocation before the code ran) on TCs: https://decision-cli.dev/ns/tc/TC-091; this is a graph-design fault, not a code regression — the graph needs editing" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-091> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-286/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-029> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-286/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-030> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-286/step/2>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-105/ts-1779889244525047136> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-27T13:40:44.691Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-286/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-105/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:44.528Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:44.690Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: line 1: python: command not found\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-105/ts-1779889244525047136> .
+
+<https://decision-cli.dev/ns/result/VGR-286/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-105/1> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-27T13:40:44.690Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:44.691Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-308686-1779889244525534256/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-105/ts-1779889244525047136> .
+
+<https://decision-cli.dev/ns/result/VGR-286/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-105/2> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-27T13:40:44.691Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:44.691Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-308686-1779889244525534256/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-105/ts-1779889244525047136> .

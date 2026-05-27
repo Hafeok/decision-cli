@@ -1,0 +1,307 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-284>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-016> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-27T13:40:42.324Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.644Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-284/step/0> <https://decision-cli.dev/ns/result/VGR-284/step/1> <https://decision-cli.dev/ns/result/VGR-284/step/2> <https://decision-cli.dev/ns/result/VGR-284/step/3> <https://decision-cli.dev/ns/result/VGR-284/step/4> <https://decision-cli.dev/ns/result/VGR-284/step/5> <https://decision-cli.dev/ns/result/VGR-284/step/6> <https://decision-cli.dev/ns/result/VGR-284/step/7> <https://decision-cli.dev/ns/result/VGR-284/step/8> <https://decision-cli.dev/ns/result/VGR-284/step/9> <https://decision-cli.dev/ns/result/VGR-284/step/10> <https://decision-cli.dev/ns/result/VGR-284/step/11> <https://decision-cli.dev/ns/result/VGR-284/step/12> <https://decision-cli.dev/ns/result/VGR-284/step/13> <https://decision-cli.dev/ns/result/VGR-284/step/14> <https://decision-cli.dev/ns/result/VGR-284/step/15> <https://decision-cli.dev/ns/result/VGR-284/step/16> <https://decision-cli.dev/ns/result/VGR-284/step/17> <https://decision-cli.dev/ns/result/VGR-284/step/18> <https://decision-cli.dev/ns/result/VGR-284/step/19> <https://decision-cli.dev/ns/result/VGR-284/step/20> <https://decision-cli.dev/ns/result/VGR-284/step/21> ) ;
+    dec:rationale "step 4 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-029; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-029> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-284/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-029> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-284/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-030> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-284/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-030> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-284/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-089> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-284/step/7>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-27T13:40:42.644Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.324Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.327Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.327Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.528Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "    Creating library package\nwarning: file `src/main.rs` seems to be a binary (application) file\nnote: see more `Cargo.toml` keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.528Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.530Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.530Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.532Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.532Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.558Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected key or value, expected newline, `#`\n  --> Cargo.toml:10:15\n   |\n10 | [dependencies]\\ndec = { path = \"../dec\" }\n   |               ^\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/5> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.558Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.560Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.560Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.578Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected key or value, expected newline, `#`\n  --> Cargo.toml:10:15\n   |\n10 | [dependencies]\\ndec = { path = \"../dec\" }\n   |               ^\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.578Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.603Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: unexpected key or value, expected newline, `#`\n  --> Cargo.toml:10:15\n   |\n10 | [dependencies]\\ndec = { path = \"../dec\" }\n   |               ^\n" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/8>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/8> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.603Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.606Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/9>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/9> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.606Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.609Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "ls: cannot access '.dec/store': No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/10>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/10> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.609Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.611Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "cat: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/11>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/11> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.611Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.613Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/12>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/12> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.613Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.616Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/13>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/13> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.616Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.620Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/14>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/14> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.620Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.623Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/15>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/15> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.623Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.627Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/16>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/16> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.627Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.630Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/17>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/17> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.630Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.633Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/18>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/18> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.633Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.636Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/19>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/19> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-27T13:40:42.636Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.640Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "grep: .dec/store/ontology.ttl: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/20>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/20> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.640Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.642Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
+
+<https://decision-cli.dev/ns/result/VGR-284/step/21>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-016/21> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-27T13:40:42.642Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-27T13:40:42.644Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-020/VG-016/ts-1779889242319892195> .
