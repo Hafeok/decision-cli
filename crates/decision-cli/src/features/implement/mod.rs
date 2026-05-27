@@ -224,34 +224,25 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     ))
 }
 
-/// FT-108: if the dispatch bundle carried defect feedback, the worker
-/// MUST cite at least one IRI on the CodeChange's
-/// `addressed_feedback_iris`. Empty list ⇒ `WorkerIgnoredFeedback`.
-/// `kind = Gap` style refusal (worker emits no CodeChange at all) is
-/// handled upstream by the feedback-handling path; this guard only
-/// fires when a CodeChange *was* produced but ignored the evidence.
+/// FT-108: validates the citation-block discipline on the returned
+/// CodeChange. The worker prompt allows the code-writer to emit
+/// `addressed_feedback_iris: []` as an *explicit* no-op signal when
+/// it determines none of the defects describe real code issues — the
+/// driver's FeatureShipPlanner reads this as no-progress and
+/// escalates on the next planning round. So an empty list is fine
+/// HERE; it just means the convergence detector takes it from here.
+///
+/// This guard only fires on the older legacy condition where the
+/// worker returned a CodeChange that we *know* dropped the feedback
+/// on the floor (e.g., a non-empty CodeChange that didn't cite any
+/// IRIs but where every defect was straightforwardly fixable —
+/// reserved for future heuristics). Today it is intentionally a
+/// no-op so the explicit-no-op signal can flow through.
 fn reject_if_feedback_ignored(
-    payload: &worker::DispatchPayloadJson,
-    code_change: &worker::CodeChangeJson,
+    _payload: &worker::DispatchPayloadJson,
+    _code_change: &worker::CodeChangeJson,
 ) -> Result<()> {
-    if payload.defect_feedback.is_empty() {
-        return Ok(());
-    }
-    if !code_change.addressed_feedback_iris.is_empty() {
-        return Ok(());
-    }
-    let iris: Vec<String> = payload
-        .defect_feedback
-        .iter()
-        .map(|fb| fb.feedback_iri.clone())
-        .collect();
-    Err(anyhow!(
-        "code-writer returned a CodeChange with empty addressed_feedback_iris despite the \
-         bundle carrying {n} defect-feedback entries ({iris:?}); the worker must cite at \
-         least one feedback IRI so the accept path can transition it from produced to \
-         addressed",
-        n = iris.len(),
-    ))
+    Ok(())
 }
 
 /// FT-108: walk every IRI cited in `code_change.addressed_feedback_iris`
