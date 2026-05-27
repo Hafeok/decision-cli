@@ -6,6 +6,7 @@ import json
 
 from .bundle import (
     DefectFeedbackRecord,
+    EnrichmentFieldsRecord,
     EnvRecord,
     ExistingGraphRecord,
     StepKindRecord,
@@ -60,6 +61,15 @@ Hard constraints (any violation invalidates the proposal):
     identifiers — use the exact ids from the bundle.
   - `bundle_hash` in your output MUST be the exact `bundle_hash` from
     the input bundle. Do not invent, redact, or modify it.
+  - **The user message includes a "Bundle ground truth" section (ADR-066
+    / FT-102) that defines the closed universe of dec commands,
+    namespaces, binaries, and writable paths your proposal may
+    reference. Any out-of-bundle reference (a command not in
+    `cli_surface`, a namespace not in `ontology_vocabulary`, a binary
+    not in `env_capabilities.binaries_on_path`) is rejected by the
+    dispatch-time validator before persistence. In particular: use the
+    EXACT `dec:` namespace string from `ontology_vocabulary.namespace`;
+    do not substitute alternate forms.**
   - **If the bundle's `defect_feedback` array is non-empty (FT-107),**
     an existing covering graph has been observed to fail at runtime.
     You MUST NOT return `kind = match` in that case — read each entry's
@@ -101,6 +111,7 @@ def build_user_prompt(bundle: VerifyGraphAuthorInput) -> str:
         or "(no candidate graphs in this environment)"
     )
     defect_block = _render_defect_feedback(bundle.defect_feedback)
+    enrichment_block = _render_enrichment(bundle.enrichment)
     return _USER_TEMPLATE.format(
         feature_id=bundle.feature_id,
         feature_spec=bundle.feature_spec,
@@ -109,6 +120,7 @@ def build_user_prompt(bundle: VerifyGraphAuthorInput) -> str:
         vocabulary=vocabulary,
         candidates=candidates,
         defect_feedback=defect_block,
+        enrichment=enrichment_block,
         bundle_hash=bundle.bundle_hash,
     )
 
@@ -144,6 +156,16 @@ following TCs in the given environment.
 ## Target environment
 
 {env}
+
+## Bundle ground truth (ADR-066 / FT-102)
+
+This section defines the **closed universe of values** your proposal
+may reference. Anything outside these lists is rejected by the
+dispatch-time validator before persistence. Treat each list as
+authoritative; do not invent commands, namespaces, or binaries that
+aren't here.
+
+{enrichment}
 
 ## Step vocabulary
 
@@ -236,6 +258,109 @@ def _render_fields_block(schema: dict) -> list[str]:
     # Final JSON dump kept as a fallback for models that prefer reading it.
     lines.append("- fields_schema (raw): " + json.dumps(schema, sort_keys=True))
     return lines
+
+
+def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
+    """Render the FT-102 bundle-completeness fields as authoritative ground
+    truth. Each subsection is a closed universe of values the worker may
+    reference; out-of-bundle references are rejected at dispatch time."""
+    lines: list[str] = []
+
+    cli = enrichment.cli_surface
+    lines.append("### Available `dec` commands (cli_surface)")
+    if cli.dec_subcommands:
+        lines.append(
+            "Use ONLY the following commands as the head of a `shell-command` step. Do "
+            "NOT invent flags or subcommands beyond what's listed."
+        )
+        for cmd in cli.dec_subcommands:
+            lines.append(f"- `{cmd}`")
+    else:
+        lines.append("(empty — no dec commands are catalog-registered for this version)")
+    lines.append("")
+
+    ont = enrichment.ontology_vocabulary
+    lines.append("### Ontology vocabulary (ontology_vocabulary)")
+    if ont.namespace:
+        lines.append(
+            f"**Canonical dec namespace (USE THIS EXACT STRING in `sparql-assertion` "
+            f"PREFIX declarations):**"
+        )
+        lines.append("```")
+        lines.append(f"PREFIX {ont.prefix or 'dec'}: <{ont.namespace}>")
+        lines.append("```")
+        lines.append(
+            "Do NOT substitute `https://decision-cli.dev/ns/` (trailing slash) or any "
+            "other variant — the validator rejects them as out-of-bundle."
+        )
+    else:
+        lines.append("(no active OntologyDescription in the catalog)")
+    if ont.namespaces:
+        lines.append("Allowed namespaces (anything outside this list is rejected):")
+        for ns in ont.namespaces:
+            lines.append(f"- `{ns}`")
+    if ont.classes:
+        lines.append("Declared dec classes (local names):")
+        lines.append("  " + ", ".join(ont.classes))
+    lines.append("")
+
+    sq = enrichment.store_query_surface
+    lines.append("### Store query surface (store_query_surface)")
+    if sq.kind or sq.query_command:
+        lines.append(f"- kind: `{sq.kind or '(unset)'}`")
+        if sq.query_command:
+            lines.append(f"- query_command: `{sq.query_command}`")
+        if sq.endpoint:
+            lines.append(f"- endpoint: `{sq.endpoint}`")
+    else:
+        lines.append("(default — use the env's local store)")
+    lines.append("")
+
+    env_caps = enrichment.env_capabilities
+    lines.append("### Environment capabilities (env_capabilities)")
+    if env_caps.binaries_on_path:
+        lines.append(
+            "Binaries you may use as the head of a `shell-command`. Anything else is "
+            "rejected (e.g. `mkdir`, `touch`, `curl` are NOT free unless listed):"
+        )
+        lines.append("  " + ", ".join(f"`{b}`" for b in env_caps.binaries_on_path))
+    else:
+        lines.append("(no binaries declared — fall back to the dec subcommands above)")
+    if env_caps.writable_paths:
+        lines.append("Writable path prefixes (steps must stay within these):")
+        for p in env_caps.writable_paths:
+            lines.append(f"- `{p}`")
+    if env_caps.allowed_hosts:
+        lines.append("HTTP hosts allowed in `http-request` steps:")
+        for h in env_caps.allowed_hosts:
+            lines.append(f"- `{h}`")
+    if env_caps.environment_variables:
+        lines.append("Env-vars you may reference in `capture` steps:")
+        lines.append("  " + ", ".join(f"`${v}`" for v in env_caps.environment_variables))
+    lines.append("")
+
+    if enrichment.exemplar_graphs:
+        lines.append("### Exemplar graphs (exemplar_graphs)")
+        lines.append(
+            "Curated, known-good `VerificationGraph` patterns for this env's safety "
+            "class. Use them as templates."
+        )
+        for ex in enrichment.exemplar_graphs:
+            head = f"- {ex.id}"
+            if ex.pattern_name:
+                head += f" — `{ex.pattern_name}`"
+            lines.append(head)
+            if ex.rationale:
+                lines.append(f"  · {ex.rationale}")
+
+    md = enrichment.bundle_metadata
+    if md.warnings:
+        lines.append("")
+        lines.append("### Bundle warnings (bundle_metadata.warnings)")
+        for w in md.warnings:
+            lines.append(f"- {w}")
+
+    return "\n".join(lines).rstrip()
 
 
 def _render_defect_feedback(records: list[DefectFeedbackRecord]) -> str:

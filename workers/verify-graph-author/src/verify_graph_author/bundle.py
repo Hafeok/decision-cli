@@ -67,6 +67,114 @@ class ExistingGraphRecord(BaseModel):
     )
 
 
+class CliCommandRecord(BaseModel):
+    """One structured `dec:CapabilityReference` row in the bundle."""
+
+    command: str = Field(..., description="Canonical command string, e.g. 'dec verify graph new'.")
+    capability_version: str = Field(default="", description="Capability version, e.g. '0.3.0'.")
+    source_cr: str = Field(default="", description="Source CR id (e.g. 'CR-INIT').")
+
+
+class CliSurfaceRecord(BaseModel):
+    """ADR-066 / FT-102 — every dec subcommand the worker may invoke."""
+
+    commands: list[CliCommandRecord] = Field(default_factory=list)
+    dec_subcommands: list[str] = Field(
+        default_factory=list,
+        description="Flat list of `dec <subcommand>` strings for cheap lookup.",
+    )
+    capability_version: str = Field(default="", description="dec version this surface was resolved against.")
+
+
+class OntologyVocabularyRecord(BaseModel):
+    """ADR-066 / FT-102 — the canonical dec namespace + class vocabulary."""
+
+    namespace: str = Field(
+        default="",
+        description=(
+            "Canonical dec namespace IRI (e.g. 'https://decision-cli.dev/ns#'). USE THIS "
+            "EXACT STRING as the `dec:` PREFIX value in every `sparql-assertion` step; any "
+            "deviation (trailing slash vs hash, alternate origins) is rejected by the "
+            "dispatch-time validator."
+        ),
+    )
+    prefix: str = Field(default="dec", description="Prefix alias for the namespace.")
+    namespaces: list[str] = Field(
+        default_factory=list,
+        description="All namespaces the worker may reference; anything outside this list is rejected.",
+    )
+    classes: list[str] = Field(default_factory=list, description="Class local names from the active OntologyDescription.")
+    source_od: str = Field(default="", description="Source OD id (e.g. 'OD-001').")
+
+
+class StoreQuerySurfaceRecord(BaseModel):
+    """How to address the orchestration store from inside a step."""
+
+    kind: str = Field(default="", description="Surface kind: 'local-oxigraph' or 'remote-http'.")
+    query_command: str = Field(default="", description="Literal command or template to query the store.")
+    endpoint: str | None = Field(default=None, description="Optional endpoint URL.")
+
+
+class EnvCapabilitiesRecord(BaseModel):
+    """Concrete env capabilities the worker may rely on at runtime."""
+
+    binaries_on_path: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Binaries the worker may use as the head of a `shell-command`. Anything not "
+            "in this list is rejected by the dispatch validator."
+        ),
+    )
+    writable_paths: list[str] = Field(
+        default_factory=list,
+        description="File-path prefixes the worker may write to (steps must stay within these).",
+    )
+    allowed_hosts: list[str] = Field(default_factory=list, description="HTTP hosts allowed in `http-request`.")
+    environment_variables: list[str] = Field(
+        default_factory=list,
+        description="Env-var names the worker may reference in `capture`.",
+    )
+    pre_seeded_artifacts: list[str] = Field(default_factory=list, description="Artifacts visible in the env.")
+
+
+class ExemplarRecord(BaseModel):
+    """One curated exemplar VerificationGraph the worker may pattern-match against."""
+
+    id: str = Field(..., description="EX-NNN id.")
+    exemplar_of: str = Field(default="", description="IRI of the underlying VG.")
+    pattern_name: str = Field(default="", description="Short pattern slug.")
+    rationale: str = Field(default="", description="Long-form rationale.")
+    safety_class: str = Field(default="", description="Safety class this exemplar applies to.")
+
+
+class CatalogHashEntry(BaseModel):
+    id: str = Field(..., description="Short artifact id (CR-NNN | OD-NNN | EX-NNN).")
+    content_hash: str = Field(default="", description="SHA-256 hex of the canonical serialisation.")
+
+
+class BundleMetadataRecord(BaseModel):
+    catalog_hashes: list[CatalogHashEntry] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class EnrichmentFieldsRecord(BaseModel):
+    """ADR-066 / FT-102 — the five bundle-completeness fields the
+    verify-graph-author worker reads as ground truth for its proposal.
+
+    The Rust bundle assembler populates these by SPARQL-querying the
+    orchestration store's catalog graph. The dispatch-time validator
+    rejects any proposal that references commands / namespaces / paths /
+    binaries outside the bundle, so the worker must treat each field as
+    the closed universe of values it may reference."""
+
+    cli_surface: CliSurfaceRecord = Field(default_factory=CliSurfaceRecord)
+    ontology_vocabulary: OntologyVocabularyRecord = Field(default_factory=OntologyVocabularyRecord)
+    store_query_surface: StoreQuerySurfaceRecord = Field(default_factory=StoreQuerySurfaceRecord)
+    env_capabilities: EnvCapabilitiesRecord = Field(default_factory=EnvCapabilitiesRecord)
+    exemplar_graphs: list[ExemplarRecord] = Field(default_factory=list)
+    bundle_metadata: BundleMetadataRecord = Field(default_factory=BundleMetadataRecord)
+
+
 class DefectFeedbackRecord(BaseModel):
     """FT-107 — one defect-feedback artifact the bundle assembler picked up
     for the (feature, env) pair.
@@ -165,6 +273,14 @@ class VerifyGraphAuthorInput(BaseModel):
         "to the router untouched.",
     )
     max_tokens: int = Field(default=4096, ge=256, le=64_000)
+    enrichment: EnrichmentFieldsRecord = Field(
+        default_factory=EnrichmentFieldsRecord,
+        description=(
+            "ADR-066 / FT-102 — the five catalog-derived fields that define the closed "
+            "universe of commands / namespaces / paths / binaries this proposal may "
+            "reference. The dispatch-time validator rejects any out-of-bundle reference."
+        ),
+    )
     defect_feedback: list[DefectFeedbackRecord] = Field(
         default_factory=list,
         description="FT-107: runtime defect feedback the existing covering graph(s) "
