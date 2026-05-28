@@ -21,6 +21,7 @@ pub mod seed_ft101_catalog;
 pub mod session;
 pub mod sparql;
 pub mod status;
+pub mod supersede_graph;
 pub mod supersede_misrouted;
 pub mod verify;
 pub mod workers;

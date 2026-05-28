@@ -139,6 +139,7 @@ SELECT ?verdict WHERE {{
   ?graph dec:verifies <{feature_iri}> .
   ?vgr dec:resultOf ?graph ;
        dec:verdict ?verdict .
+  FILTER NOT EXISTS {{ ?graph dec:supersededBy ?_succ }}
 }}"#
         );
         let solutions = match store.query(&q) {
@@ -187,7 +188,10 @@ SELECT ?verdict WHERE {{
         })?;
         let q = format!(
             r#"PREFIX dec: <https://decision-cli.dev/ns#>
-ASK WHERE {{ GRAPH ?g {{ ?graph dec:verifies <{feature_iri}> . }} }}"#
+ASK WHERE {{ GRAPH ?g {{
+  ?graph dec:verifies <{feature_iri}> .
+  FILTER NOT EXISTS {{ ?graph dec:supersededBy ?_succ }}
+}} }}"#
         );
         match store.query(&q) {
             Ok(QueryResults::Boolean(b)) => Ok(b),

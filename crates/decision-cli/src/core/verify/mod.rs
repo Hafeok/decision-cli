@@ -15,6 +15,7 @@ pub mod matcher;
 pub mod quads;
 pub mod runner;
 pub mod safety;
+pub mod supersede;
 
 pub use aggregate::{
     aggregate_verdict, single_graph_verdict, single_graph_verdict_with_exit_codes,
