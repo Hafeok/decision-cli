@@ -1,0 +1,120 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-363>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-115> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-05-28T11:27:49.540Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.557Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-363/step/0> <https://decision-cli.dev/ns/result/VGR-363/step/1> <https://decision-cli.dev/ns/result/VGR-363/step/2> <https://decision-cli.dev/ns/result/VGR-363/step/3> <https://decision-cli.dev/ns/result/VGR-363/step/4> <https://decision-cli.dev/ns/result/VGR-363/step/5> ) ;
+    dec:rationale "step 0 failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-006> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-363/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-007> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-363/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-363/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-363/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-363/step/5>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T11:27:49.557Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-363/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-115/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T11:27:49.540Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.549Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec init failed: unknown bundled template 'decision-cli-development'; available: engineering-development\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> .
+
+<https://decision-cli.dev/ns/result/VGR-363/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-115/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T11:27:49.549Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.553Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec status: not inside an initialised decision-cli working dir.\n  Run `dec init --template engineering-development` first.\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> .
+
+<https://decision-cli.dev/ns/result/VGR-363/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-115/2> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-28T11:27:49.553Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.553Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-109352-1779967669536633121/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> .
+
+<https://decision-cli.dev/ns/result/VGR-363/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-115/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T11:27:49.553Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.557Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-109352-1779967669536633121/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> .
+
+<https://decision-cli.dev/ns/result/VGR-363/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-115/4> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-28T11:27:49.557Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.557Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-109352-1779967669536633121/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> .
+
+<https://decision-cli.dev/ns/result/VGR-363/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-115/5> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-28T11:27:49.557Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T11:27:49.557Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-109352-1779967669536633121/.product/graph/index.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ts-1779967669535878591> .
