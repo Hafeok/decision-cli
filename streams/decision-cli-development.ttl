@@ -1,0 +1,19 @@
+# ValueStream definition for decision-cli development.
+#
+# Used by TC-002, TC-006, TC-007, TC-008 to test `dec init --from <path>`.
+# Similar to the bundled `engineering-development` template but with a
+# distinct IRI so tests can verify custom stream handling per ADR-006.
+#
+# The stream's authorized goals must intersect the referenced ValueAction's
+# `dec:compatibleGoals`; here both sides agree on `ship` and `land`.
+
+@prefix dec:    <https://decision-cli.dev/ns#> .
+@prefix va:     <https://decision-cli.dev/ns/value-actions/> .
+@prefix stream: <https://decision-cli.dev/ns/streams/> .
+
+stream:decision-cli-development a dec:ValueStream ;
+    dec:name                "decision-cli-development" ;
+    dec:title               "Decision CLI Development" ;
+    dec:description         "Value stream for decision-cli's own development — terminates in shipped-feature." ;
+    dec:terminalValueAction va:shipped-feature ;
+    dec:authorizedGoals     "ship" , "land" .
