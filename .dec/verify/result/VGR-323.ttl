@@ -1,0 +1,91 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-323>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-054> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-28T07:50:33.186Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T07:50:42.514Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-323/step/0> <https://decision-cli.dev/ns/result/VGR-323/step/1> <https://decision-cli.dev/ns/result/VGR-323/step/2> ) ;
+    dec:rationale "step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-008, https://decision-cli.dev/ns/tc/TC-011, https://decision-cli.dev/ns/tc/TC-013; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-323/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-323/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-013> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-323/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-013> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-323/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-323/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-323/step/2>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779954633173424741> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T07:50:42.514Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-323/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T07:50:33.186Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T07:50:33.200Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779954633173424741> .
+
+<https://decision-cli.dev/ns/result/VGR-323/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T07:50:33.200Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T07:50:42.514Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "Error: Input must be provided either through stdin or as a prompt argument when using --print\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779954633173424741> .
+
+<https://decision-cli.dev/ns/result/VGR-323/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T07:50:42.514Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T07:50:42.514Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/test-workspace/test-file.py" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779954633173424741> .
