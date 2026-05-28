@@ -117,12 +117,21 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 env_id: default_env_id.to_string(),
             },
             (FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false) => {
-                Action::Stuck {
-                    reason: format!(
-                        "feature {feature_id}: verify still failing but all defect feedback \
-                         has been addressed; the worker is not converging — inspect \
-                         `dec loop show {feature_id}` for the chain",
-                    ),
+                // Verdict is failing but no defect feedback is open
+                // — either everything was previously addressed
+                // (lifecycle transitions ate the evidence) or the
+                // open defects were emitted by graphs that have
+                // since been superseded (filtered out by the
+                // inspector). Re-dispatch the verifier to refresh
+                // evidence; if its run also produces no new
+                // feedback the (Verifier, Verifier) no-state-change
+                // detector will return terminal Stuck on the next
+                // iteration. This gives the loop a chance to
+                // continue automatically instead of bailing on a
+                // stale snapshot.
+                Action::DispatchVerifier {
+                    feature_id: feature_id.to_string(),
+                    env_id: default_env_id.to_string(),
                 }
             }
         };
@@ -423,20 +432,21 @@ mod tests {
     }
 
     #[test]
-    fn rejected_with_no_open_feedback_is_stuck() {
+    fn rejected_with_no_open_feedback_redispatches_verifier() {
+        // Verdict-failing-but-no-feedback means the prior verifier
+        // ran, all the feedback got addressed (or filtered as
+        // superseded), and we now need a fresh verifier run to
+        // re-emit evidence. Loop should NOT immediately stuck; the
+        // (Verifier, Verifier) no-state-change detector handles the
+        // case where the re-run also produces nothing.
         let action = run_case(FeatureVerdict::Rejected, 0, 0);
-        match action {
-            Action::Stuck { reason } => {
-                assert!(reason.contains("worker is not converging"), "reason: {reason}");
-            }
-            other => panic!("expected Stuck, got {other:?}"),
-        }
+        assert!(matches!(action, Action::DispatchVerifier { .. }), "got {action:?}");
     }
 
     #[test]
-    fn amendment_required_with_no_open_feedback_is_stuck() {
+    fn amendment_required_with_no_open_feedback_redispatches_verifier() {
         let action = run_case(FeatureVerdict::AmendmentRequired, 0, 0);
-        assert!(matches!(action, Action::Stuck { .. }));
+        assert!(matches!(action, Action::DispatchVerifier { .. }), "got {action:?}");
     }
 
     #[test]
