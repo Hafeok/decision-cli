@@ -1,0 +1,90 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-333>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-054> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-28T08:52:41.080Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:56:36.331Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-333/step/0> <https://decision-cli.dev/ns/result/VGR-333/step/1> <https://decision-cli.dev/ns/result/VGR-333/step/2> ) ;
+    dec:rationale "step 1 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-008, https://decision-cli.dev/ns/tc/TC-011, https://decision-cli.dev/ns/tc/TC-013; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-333/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-333/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-013> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-333/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-013> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-333/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-333/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-333/step/2>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-054/ts-1779958361068531366> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T08:56:36.331Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-333/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T08:52:41.080Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:52:41.087Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-054/ts-1779958361068531366> .
+
+<https://decision-cli.dev/ns/result/VGR-333/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T08:52:41.087Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:56:36.331Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "{\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/tmp/test-workspace\",\"session_id\":\"f1d410b4-2717-4bf5-92cb-d6b7fa786fac\",\"tools\":[\"Task\",\"AskUserQuestion\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\",\"Edit\",\"EnterPlanMode\",\"EnterWorktree\",\"ExitPlanMode\",\"ExitWorktree\",\"Glob\",\"Grep\",\"ListMcpResourcesTool\",\"LSP\",\"Monitor\",\"NotebookEdit\",\"PushNotification\",\"Read\",\"ReadMcpResourceTool\",\"RemoteTrigger\",\"ScheduleWakeup\",\"Skill\",\"TaskOutput\",\"TaskStop\",\"TodoWrite\",\"ToolSearch\",\"WebFetch\",\"WebSearch\",\"Write\",\"mcp__claude_ai_Cloudflare_Developer_Platform__authenticate\",\"mcp__claude_ai_Cloudflare_Developer_Platform__complete_authentication\",\"mcp__claude_ai_Gmail__authenticate\",\"mcp__claude_ai_Gmail__complete_authentication\",\"mcp__claude_ai_Google_Calendar__authenticate\",\"mcp__claude_ai_Google_Calendar__complete_authentication\",\"mcp__claude_ai_Google_Drive__copy_file\",\"mcp__claude_ai_Google_Drive__create_file\",\"mcp__claude_ai_Google_Drive__download_file_content\",\"mcp__claude_ai_Google_Drive__get_file_metadata\",\"mcp__claude_ai_Google_Drive__get_file_permissions\",\"mcp__claude_ai_Google_Drive__list_recent_files\",\"mcp__claude_ai_Google_Drive__read_file_content\",\"mcp__claude_ai_Google_Drive__search_files\",\"mcp__claude_ai_MicrosoftDocs__microsoft_code_sample_search\",\"mcp__claude_ai_MicrosoftDocs__microsoft_docs_fetch\",\"mcp__claude_ai_MicrosoftDocs__microsoft_docs_search\"],\"mcp_servers\":[{\"name\":\"claude.ai Gmail\",\"status\":\"needs-auth\"},{\"name\":\"claude.ai Google Calendar\",\"status\":\"needs-auth\"},{\"name\":\"claude.ai Google Drive\",\"status\":\"connected\"},{\"name\":\"claude.ai Cloudflare Developer Platform\",\"status\":\"needs-auth\"},{\"name\":\"claude.ai MicrosoftDocs\",\"status\":\"connected\"}],\"model\":\"claude-opus-4-7[1m]\",\"permissionMode\":\"bypassPermissions\",\"slash_commands\":[\"factory-azure-test\",\"factory-prd-updater\",\"factory-local-test\",\"factory-implement\",\"picloud-implement\",\"picloud-e2e\",\"update-config\",\"debug\",\"simplify\",\"batch\",\"fewer-permission-prompts\",\"loop\",\"schedule\",\"claude-api\",\"clear\",\"compact\",\"context\",\"heapdump\",\"init\",\"review\",\"security-review\",\"extra-usage\",\"usage\",\"insights\",\"team-onboarding\"],\"apiKeySource\":\"none\",\"claude_code_version\":\"2.1.131\",\"output_style\":\"default\",\"agents\":[\"claude\",\"Explore\",\"general-purpose\",\"Plan\",\"statusline-setup\"],\"skills\":[\"factory-azure-test\",\"factory-prd-updater\",\"factory-local-test\",\"factory-implement\",\"picloud-implement\",\"picloud-e2e\",\"update-config\",\"debug\",\"simplify\",\"batch\",\"fewer-permission-prompts\",\"loop\",\"schedule\",\"claude-api\"],\"plugins\":[{\"name\":\"csharp-lsp\",\"path\":\"/home/hafeok/.claude/plugins/cache/claude-plugins-official/csharp-lsp/1.0.0\",\"source\":\"csharp-lsp@claude-plugins-official\"}],\"analytics_disabled\":false,\"uuid\":\"170f9019-9d4c-4a5f-8635-3c5a9da92c4f\",\"memory_paths\":{\"auto\":\"/home/hafeok/.claude/projects/-tmp-test-workspace/memory/\"},\"fast_mode_state\":\"off\"}\n{\"type\":\"rate_limit_event\",\"rate_limit_info\":{\"status\":\"allowed\",\"resetsAt\":1779969600,\"rateLimitType\":\"five_hour\",\"overageStatus\":\"rejected\",\"overageDisabledReason\":\"org_level_disabled\",\"isUsingOverage\":false},\"uuid\":\"13a1c7a6-99af-470e-b3af-009cc2afded4\",\"session_id\":\"f1d410b4-2717-4bf5-92cb-d6b7fa786fac\"}\n{\"type\":\"system\",\"subtype\":\"api_retry\",\"attempt\":1,\"max_retries\":10,\"retry_delay_ms\":518.9285996359215,\"error_status\":529,\"error\":\"rate_limit\",\"session_id\":\"f1d410b4-2717-4bf5-92cb-d6b7fa786fac\",\"uuid\":\"3f875b96-c05e-4d87-b406-2fd4d99a1ed3\"}\n{\"type\":\"system\",\"subtype\":\"api_retry\",\"attempt\":2,\"max_retries\":10,\"retry_delay_ms\":1118.6578882199337,\"error_status\":529,\"error\":\"rate_limit\",\"session_id\":\"f1d410b4-2717-4bf5-92cb-d6b7fa786fac\",\"uuid\":\"24a5de09-2d11-4c46-b9b6-bdd8e5c8bdc2\"}\n{\"type\":\"system\",\"subtype\":\"api_retry\",\"attempt\":3,\"max_retries\":10,\"retry_delay_ms\":2111.0780181694536,\"error_status\":529,\"error\":\"rate_limit\",\"session_id\":\"f1d410b4-2717-4bf5-92cb-d6b7fa786fac\",\"uuid\":\"9c7092ee-a866-4395-b724-6135d1ddbd84\"}\n{\"type\":\"system\",\"subtype\":\"api_retry\",\"attempt\":4,\"max_retries\":10,\"retry_delay_ms\":4138.25219942541,\"error_status\":529,\"error\":\"rate_limit\",\"session_id\":\"f1d410b4-2717-4bf5-92cb-d6b7fa786fac\",\"uuid\":\"f97e1ab8-b013-4dc8-" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-054/ts-1779958361068531366> .
+
+<https://decision-cli.dev/ns/result/VGR-333/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T08:56:36.331Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:56:36.331Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-054/ts-1779958361068531366> .
