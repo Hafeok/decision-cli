@@ -69,14 +69,27 @@ fn collect_tuples(
     tcs: &[String],
 ) -> Result<Vec<GraphTuple>, HandlerError> {
     let mut tuples: Vec<GraphTuple> = Vec::new();
-    // Pattern 1: graphs whose dec:verifies is the feature.
-    extend_from_verifies_target(&mut tuples, store, feature_iri)?;
+    // Pattern 1 (graphs whose dec:verifies is the feature) was
+    // intentionally dropped: stale or speculative
+    // `dec:verifies <feature>` triples in the store would pull in
+    // graphs that have no step-level evidence for the feature's TCs.
+    // Such graphs can't contribute to the per-TC roll-up anyway —
+    // including them just produces "uncovered TCs" with empty
+    // rationales. Coverage is now strictly evidence-based: pattern 2
+    // (the graph directly verifies one of the feature's TCs) or
+    // pattern 3 (a step provides evidence for one of the feature's
+    // TCs). A graph that wants to be counted MUST emit per-TC
+    // evidence.
     // Pattern 2: graphs whose dec:verifies is one of the feature's TCs.
     for tc in tcs {
         extend_from_verifies_target(&mut tuples, store, tc)?;
     }
     // Pattern 3: graphs whose any step has `dec:providesEvidenceFor` ?tc.
     extend_from_evidence(&mut tuples, store, tcs)?;
+    // Suppress the unused `feature_iri` lint while keeping the
+    // signature stable (callers still pass it in case future
+    // patterns need it).
+    let _ = feature_iri;
     Ok(tuples)
 }
 

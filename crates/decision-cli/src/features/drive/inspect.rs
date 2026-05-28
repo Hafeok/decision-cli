@@ -185,30 +185,71 @@ SELECT ?verdict WHERE {{
     }
 
     fn graphs_exist_for_feature(&self, feature_id: &str) -> Result<bool, InspectError> {
+        use crate::core::ontology::verification_graph::io::from_turtle;
         use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-        use oxigraph::sparql::QueryResults;
+        use crate::core::verify::coverage::feature_resolver::{
+            resolve_feature_tcs_short, tc_iri_for,
+        };
 
-        let feature_iri = format!("https://decision-cli.dev/ns/feature/{feature_id}");
+        let tc_shorts =
+            resolve_feature_tcs_short(self.product_root(), feature_id).map_err(|e| {
+                InspectError::Store {
+                    detail: format!("resolve TCs for {feature_id}: {e}"),
+                }
+            })?;
+        if tc_shorts.is_empty() {
+            return Ok(false);
+        }
+        let tc_iris: std::collections::HashSet<String> =
+            tc_shorts.iter().map(|s| tc_iri_for(s)).collect();
+
+        // Coverage is evidence-based AND disk-authoritative: a graph
+        // counts only if its on-disk .ttl file's steps emit evidence
+        // for one of the feature's TCs. The store can carry stale
+        // `dec:providesEvidenceFor` cruft from past sessions that
+        // doesn't match the file's actual step definitions; the
+        // runner uses the .ttl files at execution time, so the
+        // planner must too. Superseded graphs are skipped via the
+        // store-side supersededBy edge.
         let dump = orchestration_dump_path(self.workdir());
         let store = load_store_from_dump(&dump).map_err(|e| InspectError::Store {
             detail: format!("opening store at {p}: {e:#}", p = dump.display()),
         })?;
-        let q = format!(
-            r#"PREFIX dec: <https://decision-cli.dev/ns#>
-ASK WHERE {{ GRAPH ?g {{
-  ?graph dec:verifies <{feature_iri}> .
-  FILTER NOT EXISTS {{ ?graph dec:supersededBy ?_succ }}
-}} }}"#
-        );
-        match store.query(&q) {
-            Ok(QueryResults::Boolean(b)) => Ok(b),
-            Ok(_) => Err(InspectError::Store {
-                detail: "graphs-exist query returned non-boolean shape".to_string(),
-            }),
-            Err(e) => Err(InspectError::Store {
-                detail: format!("graphs-exist query failed: {e}"),
-            }),
+        let superseded = superseded_graph_shorts(&store);
+
+        let graph_dir = self.workdir().join(".dec").join("verify").join("graph");
+        let Ok(read) = std::fs::read_dir(&graph_dir) else {
+            return Ok(false);
+        };
+        for entry in read.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("ttl") {
+                continue;
+            }
+            let Ok(graph) = from_turtle(&path) else {
+                continue;
+            };
+            let short = graph
+                .id
+                .as_str()
+                .split('/')
+                .last()
+                .unwrap_or_default()
+                .to_string();
+            if superseded.contains(&short) {
+                continue;
+            }
+            let direct_match = tc_iris.contains(graph.verifies.0.as_str());
+            let step_match = graph.steps.iter().any(|step| {
+                step.provides_evidence_for
+                    .iter()
+                    .any(|tc| tc_iris.contains(tc.as_str()))
+            });
+            if direct_match || step_match {
+                return Ok(true);
+            }
         }
+        Ok(false)
     }
 
     fn open_defect_feedback_count(
