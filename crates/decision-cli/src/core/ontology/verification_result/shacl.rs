@@ -1,5 +1,4 @@
-//! Write-side SHACL validation for `dec:VerificationGraphResult` and
-//! `dec:VerificationStepTrace` (FT-097 / ADR-028).
+//! Write-side SHACL validation for verification graph results (FT-097 / ADR-028).
 //!
 //! Enforces the four invariants declared in FT-097 §Invariants:
 //!

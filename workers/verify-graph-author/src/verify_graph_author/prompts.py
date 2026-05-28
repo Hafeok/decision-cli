@@ -506,13 +506,9 @@ def _render_fields_block(schema: dict) -> list[str]:
     return lines
 
 
-def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
-    """Render the FT-102 bundle-completeness fields as authoritative ground
-    truth. Each subsection is a closed universe of values the worker may
-    reference; out-of-bundle references are rejected at dispatch time."""
+def _render_cli_surface(cli: CliSurfaceRecord) -> list[str]:
+    """Render the CLI surface section of enrichment."""
     lines: list[str] = []
-
-    cli = enrichment.cli_surface
     lines.append("### Available `dec` commands (cli_surface)")
     if cli.dec_subcommands:
         lines.append(
@@ -536,8 +532,12 @@ def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
         for tpl in cli.init_templates:
             lines.append(f"- `{tpl}`")
         lines.append("")
+    return lines
 
-    ont = enrichment.ontology_vocabulary
+
+def _render_ontology_vocabulary(ont: OntologyVocabularyRecord) -> list[str]:
+    """Render the ontology vocabulary section of enrichment."""
+    lines: list[str] = []
     lines.append("### Ontology vocabulary (ontology_vocabulary)")
     if ont.namespace:
         lines.append(
@@ -561,8 +561,12 @@ def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
         lines.append("Declared dec classes (local names):")
         lines.append("  " + ", ".join(ont.classes))
     lines.append("")
+    return lines
 
-    sq = enrichment.store_query_surface
+
+def _render_store_query_surface(sq: StoreQuerySurfaceRecord) -> list[str]:
+    """Render the store query surface section of enrichment."""
+    lines: list[str] = []
     lines.append("### Store query surface (store_query_surface)")
     if sq.kind or sq.query_command:
         lines.append(f"- kind: `{sq.kind or '(unset)'}`")
@@ -573,8 +577,12 @@ def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
     else:
         lines.append("(default — use the env's local store)")
     lines.append("")
+    return lines
 
-    env_caps = enrichment.env_capabilities
+
+def _render_env_capabilities(env_caps: EnvCapabilitiesRecord) -> list[str]:
+    """Render the environment capabilities section of enrichment."""
+    lines: list[str] = []
     lines.append("### Environment capabilities (env_capabilities)")
     if env_caps.binaries_on_path:
         lines.append(
@@ -596,20 +604,39 @@ def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
         lines.append("Env-vars you may reference in `capture` steps:")
         lines.append("  " + ", ".join(f"`${v}`" for v in env_caps.environment_variables))
     lines.append("")
+    return lines
 
-    if enrichment.exemplar_graphs:
+
+def _render_exemplar_graphs(exemplars: list[ExemplarGraphRecord]) -> list[str]:
+    """Render the exemplar graphs section of enrichment."""
+    lines: list[str] = []
+    if exemplars:
         lines.append("### Exemplar graphs (exemplar_graphs)")
         lines.append(
             "Curated, known-good `VerificationGraph` patterns for this env's safety "
             "class. Use them as templates."
         )
-        for ex in enrichment.exemplar_graphs:
+        for ex in exemplars:
             head = f"- {ex.id}"
             if ex.pattern_name:
                 head += f" — `{ex.pattern_name}`"
             lines.append(head)
             if ex.rationale:
                 lines.append(f"  · {ex.rationale}")
+    return lines
+
+
+def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
+    """Render the FT-102 bundle-completeness fields as authoritative ground
+    truth. Each subsection is a closed universe of values the worker may
+    reference; out-of-bundle references are rejected at dispatch time."""
+    lines: list[str] = []
+
+    lines.extend(_render_cli_surface(enrichment.cli_surface))
+    lines.extend(_render_ontology_vocabulary(enrichment.ontology_vocabulary))
+    lines.extend(_render_store_query_surface(enrichment.store_query_surface))
+    lines.extend(_render_env_capabilities(enrichment.env_capabilities))
+    lines.extend(_render_exemplar_graphs(enrichment.exemplar_graphs))
 
     md = enrichment.bundle_metadata
     if md.warnings:

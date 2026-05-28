@@ -1,0 +1,46 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-132>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-014> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-132/0> <https://decision-cli.dev/ns/step/VG-132/1> <https://decision-cli.dev/ns/step/VG-132/2> <https://decision-cli.dev/ns/step/VG-132/3> <https://decision-cli.dev/ns/step/VG-132/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-132/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-042> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/function-length.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-132/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-043> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && python3 scripts/checks/function-length.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-132/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-044> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/module-structure.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-132/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-045> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/single-responsibility.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-132/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-086> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/run-all-fitness.sh" ;
+    dec:expectExitCode 0 .
