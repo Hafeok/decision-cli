@@ -83,11 +83,21 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 detail: format!("{e}"),
             })?;
 
-        // NeverRun branches on whether any VerificationGraph exists:
-        // with zero graphs the verifier has nothing to run (dispatch
-        // would be a no-op and the loop would spin until max_iter), so
-        // we have to author one first.
-        let graphs_exist = if matches!(verdict, FeatureVerdict::NeverRun) {
+        // Check graphs_exist for both NeverRun and the failing-with-
+        // no-feedback branches: in both, the planner needs to know
+        // whether a real evidence-emitting graph is available before
+        // deciding between "run the verifier" and "author a new
+        // graph first." The check reads on-disk .ttl files
+        // (authoritative for step definitions) rather than relying
+        // on the store, which can carry stale providesEvidenceFor
+        // cruft from past sessions.
+        let needs_graphs_check = matches!(
+            verdict,
+            FeatureVerdict::NeverRun
+                | FeatureVerdict::Rejected
+                | FeatureVerdict::AmendmentRequired
+        );
+        let graphs_exist = if needs_graphs_check {
             self.inspector
                 .graphs_exist_for_feature(feature_id)
                 .map_err(|e| PlanError::Store {
@@ -116,6 +126,20 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                 feature_id: feature_id.to_string(),
                 env_id: default_env_id.to_string(),
             },
+            (FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false)
+                if !graphs_exist =>
+            {
+                // Verdict says failing but no evidence-emitting
+                // graph exists on disk for the feature's TCs (any
+                // VGRs we see were emitted by graphs that don't
+                // actually cover this feature — stale
+                // providesEvidenceFor cruft in the store). Bootstrap
+                // a real graph rather than re-running ghosts.
+                Action::DispatchVerifyGraphAuthor {
+                    feature_id: feature_id.to_string(),
+                    env_id: default_env_id.to_string(),
+                }
+            }
             (FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false) => {
                 // Verdict is failing but no defect feedback is open
                 // — either everything was previously addressed
