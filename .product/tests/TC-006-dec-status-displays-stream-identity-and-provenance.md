@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-006-status.sh
 runner-timeout: 30
-last-run: 2026-05-28T09:36:27.972053047+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-28T14:36:17.291259523+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose

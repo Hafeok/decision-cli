@@ -3,7 +3,7 @@
 use oxigraph::model::{NamedNode, Term};
 use oxigraph::store::Store;
 
-use super::sparql::{collect_property_values, collect_string_property, term_kind};
+use super::sparql::{collect_property_values, term_kind};
 use super::vocab::{
     DEC_AUTHORIZED_GOALS, DEC_COMPATIBLE_GOALS, DEC_DESCRIPTION, DEC_NAME,
     DEC_TERMINAL_VALUE_ACTION, DEC_TITLE,
@@ -45,7 +45,7 @@ pub(super) fn check_stream_shacl(
         );
     }
     check_terminal_value_action(store, graph, subject_iri, &mut violations);
-    check_authorized_goals_present(store, subject_iri, &mut violations);
+    check_authorized_goals_present(store, graph, subject_iri, &mut violations);
     violations
 }
 
@@ -84,11 +84,12 @@ fn check_terminal_value_action(
 
 fn check_authorized_goals_present(
     store: &Store,
+    graph: &NamedNode,
     subject_iri: &str,
     violations: &mut Vec<Violation>,
 ) {
-    let authorized = collect_string_property(store, subject_iri, DEC_AUTHORIZED_GOALS);
-    if authorized.is_empty() {
+    let values = collect_property_values(store, graph, subject_iri, DEC_AUTHORIZED_GOALS);
+    if values.is_empty() {
         violations.push(Violation {
             target: subject_iri.to_string(),
             path: DEC_AUTHORIZED_GOALS.to_string(),

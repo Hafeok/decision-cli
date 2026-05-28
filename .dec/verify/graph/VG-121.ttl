@@ -1,0 +1,32 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-121>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-012> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-121/0> <https://decision-cli.dev/ns/step/VG-121/1> <https://decision-cli.dev/ns/step/VG-121/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-121/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-006> ;
+    dec:command "bash tests/scripts/tc-006-status.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-121/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-007> ;
+    dec:command "bash tests/scripts/tc-007-unauthorized-goal.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-121/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-008> ;
+    dec:command "bash tests/scripts/tc-008-implement-e2e.sh" ;
+    dec:expectExitCode 0 .

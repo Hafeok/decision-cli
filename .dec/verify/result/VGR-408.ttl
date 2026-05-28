@@ -1,0 +1,116 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-408>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-116> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-28T12:44:59.207Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:47:09.321Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-408/step/0> <https://decision-cli.dev/ns/result/VGR-408/step/1> <https://decision-cli.dev/ns/result/VGR-408/step/2> <https://decision-cli.dev/ns/result/VGR-408/step/3> <https://decision-cli.dev/ns/result/VGR-408/step/4> <https://decision-cli.dev/ns/result/VGR-408/step/5> ) ;
+    dec:rationale "step 2 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-007; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-006> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-408/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-007> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-408/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-408/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-408/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-408/step/5>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T12:47:09.321Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-408/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-116/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T12:44:59.207Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:44:59.223Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-120075-1779972299202754895/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> .
+
+<https://decision-cli.dev/ns/result/VGR-408/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-116/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T12:44:59.223Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:44:59.228Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Value Stream:      engineering-development\nDefinition:        template:engineering-development (sha256:3f116ce98b72…)\n  full hash:       sha256:3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f\nTerminal Value:    va:shipped-feature (bundled, ontology v0.7.0)\nAuthorized Goals:  land, ship\nGraph Store:       /tmp/dec-verify/ENV-002-120075-1779972299202754895/.dec/store\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> .
+
+<https://decision-cli.dev/ns/result/VGR-408/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-116/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T12:44:59.228Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:44:59.229Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "expected 1 rows, got 0" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> .
+
+<https://decision-cli.dev/ns/result/VGR-408/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-116/3> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T12:44:59.229Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:47:09.319Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "dec implement: success\n  Feature:        FT-012\n  Session:        https://decision-cli.dev/ns/session/9f686e81-496a-466c-b37d-b5b8207b6190\n  Dispatch:       https://decision-cli.dev/ns/dispatch/eebe0b28-bb22-4f0b-87c8-619a0f4cc40d\n  CodeChange:     https://decision-cli.dev/ns/dispatch/code-change/eebe0b28-bb22-4f0b-87c8-619a0f4cc40d\n  Bundle hash:    sha256:8fa55357dcfb…\n  Workspace:      /tmp/dec-verify/ENV-002-120075-1779972299202754895/.dec/workspace/FT-012\n  product graph:  /tmp/dec-verify/ENV-002-120075-1779972299202754895/.product/graph/code-changes.nq\n  Worker:         status=ok turns=1 latency=125.418s\n  Commit:         (no working-tree changes)\n  Status:         FT-012 → (not transitioned)\n  Note:           product feature status FT-012 complete: non-zero exit (exit status: 24). error[E024]: graph root not found\n   = supplied: /tmp/dec-verify/ENV-002-120075-1779972299202754895\n   = source: flag\n   = reason: no product config file (.product/config.toml, .product/product.toml, or product.toml) in supplied root\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/\n  Note:           /tmp/dec-verify/ENV-002-120075-1779972299202754895 is not inside a git work tree — skipping commit step\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> .
+
+<https://decision-cli.dev/ns/result/VGR-408/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-116/4> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T12:47:09.319Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:47:09.321Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> .
+
+<https://decision-cli.dev/ns/result/VGR-408/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-116/5> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-28T12:47:09.321Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T12:47:09.321Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-120075-1779972299202754895/.product/graph/index.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779972299201701473> .
