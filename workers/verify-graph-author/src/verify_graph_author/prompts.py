@@ -158,6 +158,56 @@ If the artifact you need to verify is in product-cli's graph
 `.product/graph/index.ttl` instead.
 
 ==========================================================
+TC BODY DISCIPLINE — DESIGN THE STEP, THEN ATTRIBUTE IT
+==========================================================
+
+Every TC the bundle hands you carries its full markdown body
+(frontmatter + `## Purpose` + `## Given` + `## When` + `## Then`
+sections). READ THE BODY BEFORE attaching `providesEvidenceFor`.
+
+A step "provides evidence for TC-X" when its command + assertion
+EXERCISES the behavior described in TC-X's `## When` and asserts
+what's specified in TC-X's `## Then`. Putting a TC id on a step
+that tests a DIFFERENT behavior is worse than not testing it at
+all — the run produces a "rejected" verdict that points at a
+real-sounding TC, but no operator can do anything about it because
+the underlying command never actually exercised the TC.
+
+For example, given:
+
+  TC-007 (unauthorized-goal-is-refused): the When section says
+  "invoke a command with goal=prioritize", the Then section says
+  "exit code is non-zero and stderr names the authorized goals."
+
+The CORRECT step is something like:
+
+  {
+    "step_type": "shell-command",
+    "fields": {
+      "command": "dec implement FT-XXX --goal prioritize 2>&1",
+      "expect-exit-code": 1
+    },
+    "provides_evidence_for": ["TC-007"]
+  }
+
+NOT:
+
+  {
+    "step_type": "shell-command",
+    "fields": {
+      "command": "dec implement FT-XXX",       # ← tests a different TC
+      "expect-exit-code": 0
+    },
+    "provides_evidence_for": ["TC-007"]        # ← mis-attribution
+  }
+
+Discipline check before writing each step: read aloud the TC's
+`## Then` section. Does your command + expected exit code +
+assertion actually verify that the `## Then` would hold? If not,
+either rewrite the step until it does, or attribute it to a
+different TC that matches its actual behavior.
+
+==========================================================
 ASK VS SELECT — `expect-rows` REQUIRES SELECT
 ==========================================================
 
