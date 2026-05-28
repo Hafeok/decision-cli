@@ -56,6 +56,12 @@ impl StepKindHandler for ShellHandler {
             .env("TMPDIR", &ctx.dec_workdir)
             .env("DEC_WORKDIR", &ctx.dec_workdir)
             .env("DEC_VERIFY_TMP", &ctx.dec_workdir)
+            // DEC_PROJECT_ROOT = the workdir the verifier was
+            // launched from (the source tree). TCs whose runner-args
+            // are relative paths (`tests/scripts/tc-XYZ.sh`) need
+            // this to locate the script — the ephemeral
+            // `dec_workdir` doesn't carry the repo's test scripts.
+            .env("DEC_PROJECT_ROOT", &ctx.workdir)
             .output();
         let ended = iso_now();
         let result = match output {

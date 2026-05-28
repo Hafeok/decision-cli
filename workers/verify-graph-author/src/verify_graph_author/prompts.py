@@ -166,7 +166,12 @@ declaring exactly which runner + args verify them (these come from
 the TC's product-cli frontmatter — `runner: bash` /
 `runner-args: tests/scripts/tc-007-foo.sh`, etc.). When you see one:
 
-  - Emit ONE shell-command step using the runner+args verbatim.
+  - Emit ONE shell-command step whose command is
+    `cd "$DEC_PROJECT_ROOT" && <runner> <args>`. The `cd` is
+    REQUIRED — TC runner-args are relative paths against the
+    project root, and the step runs in an ephemeral workspace
+    where those paths don't resolve. `$DEC_PROJECT_ROOT` is
+    exported by the runner.
   - Set `expect-exit-code: 0` (the runner contract is binary:
     0 = TC passes, non-zero = TC fails).
   - Set `providesEvidenceFor: [TC-X]` for the exact TC the block
@@ -424,21 +429,24 @@ def _render_tc(tc: TcRecord) -> str:
 
 def _runner_to_step_hint(runner: str, args: str) -> str:
     """Translate a TC's runner+args into the shell-command shape the
-    verifier should emit. Mirrors the runners product-cli's verify
-    pipeline knows about — when in doubt, the verifier falls back to
-    the runner+args block verbatim as a bash command.
+    verifier should emit. The runner cwd's into an ephemeral
+    workspace, but TC runner-args are relative to the project root
+    — `$DEC_PROJECT_ROOT` is exported so the step can cd into the
+    real source tree before invoking the runner.
     """
+    prefix = "cd \"$DEC_PROJECT_ROOT\" && "
     if runner == "bash":
-        return f"\nWrite this as a shell-command step with `command: \"bash {args}\"`.\n"
+        return f"\nWrite this as a shell-command step with `command: \"{prefix}bash {args}\"`.\n"
     if runner == "cargo-test":
         return (
             f"\nWrite this as a shell-command step with "
-            f"`command: \"cargo test {args}\"`.\n"
+            f"`command: \"{prefix}cargo test {args}\"`.\n"
         )
     if runner == "pytest":
-        return f"\nWrite this as a shell-command step with `command: \"pytest {args}\"`.\n"
+        return f"\nWrite this as a shell-command step with `command: \"{prefix}pytest {args}\"`.\n"
     return (
-        f"\nWrite this as a shell-command step that invokes `{runner}` with `{args}`.\n"
+        f"\nWrite this as a shell-command step with "
+        f"`command: \"{prefix}{runner} {args}\"`.\n"
     )
 
 
