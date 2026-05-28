@@ -2,7 +2,7 @@
 id: TC-132
 title: identity-verifier produces a SignatureVerdict for each of the five outcome classes
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features: []
   adrs: []
@@ -10,8 +10,9 @@ phase: 1
 runner: cargo-test
 runner-args: tc_132_identity_verifier_produces_a_signatureverdict_for
 runner-timeout: 120
-last-run: 2026-05-26T00:23:53.854789323+00:00
+last-run: 2026-05-28T08:48:39.700581621+00:00
 last-run-duration: 0.3s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Description

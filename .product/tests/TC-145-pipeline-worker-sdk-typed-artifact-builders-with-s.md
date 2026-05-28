@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-145-pipeline-worker-sdk-artifact-layer.sh
 runner-timeout: 120
-last-run: 2026-05-25T23:43:32.903681386+00:00
-last-run-duration: 0.7s
+last-run: 2026-05-28T08:48:31.221315450+00:00
+last-run-duration: 0.8s
 ---
 
 ## Description

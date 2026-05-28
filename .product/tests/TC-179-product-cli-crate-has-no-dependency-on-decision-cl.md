@@ -2,7 +2,7 @@
 id: TC-179
 title: product-cli crate has no dependency on decision-cli or oxi-events (SDP fitness check)
 type: scenario
-status: passing
+status: failing
 validates:
   features:
   - FT-105
@@ -11,8 +11,9 @@ phase: 1
 runner: cargo-test
 runner-args: tc_179_product_cli_crate_has_no_dependency_on_decision_cl
 runner-timeout: 120
-last-run: 2026-05-26T16:00:06.723927890+00:00
-last-run-duration: 43.9s
+last-run: 2026-05-28T08:49:11.449561482+00:00
+last-run-duration: 0.4s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Claim

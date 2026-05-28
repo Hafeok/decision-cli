@@ -11,7 +11,7 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-182-release-artifact-parity.sh
 runner-timeout: 60
-last-run: 2026-05-26T17:20:43.156697433+00:00
+last-run: 2026-05-28T08:49:13.087442580+00:00
 last-run-duration: 0.0s
 ---
 

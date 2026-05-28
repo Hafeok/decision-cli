@@ -2,7 +2,7 @@
 id: TC-194
 title: dec loop show resolves source_session and addressing_artifact for each feedback and surfaces them by short id
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features:
   - FT-109
@@ -11,8 +11,9 @@ phase: 3
 runner: cargo-test
 runner-args: tc_194_loop_show_short_id_resolution
 runner-timeout: 60
-last-run: 2026-05-27T10:44:23.462262169+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-28T08:49:17.282686518+00:00
+last-run-duration: 0.4s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Claim

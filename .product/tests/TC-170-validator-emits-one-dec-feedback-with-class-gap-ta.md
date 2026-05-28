@@ -2,7 +2,7 @@
 id: TC-170
 title: Validator emits one dec:Feedback with class=gap targeted at the upstream catalog artifact, not the worker
 type: scenario
-status: passing
+status: failing
 validates:
   features:
   - FT-102
@@ -11,8 +11,9 @@ phase: 1
 runner: cargo-test
 runner-args: tc_170_validator_emits_one_dec_feedback_with_class_gap_ta
 runner-timeout: 120
-last-run: 2026-05-26T15:22:03.477099377+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-28T08:49:05.201345116+00:00
+last-run-duration: 1.0s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Claim

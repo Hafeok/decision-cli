@@ -2,7 +2,7 @@
 id: TC-139
 title: verify-graph-author worker is spawned through the shared resolver chain
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features: []
   adrs: []
@@ -10,8 +10,9 @@ phase: 1
 runner: cargo-test
 runner-args: tc_139_verify_graph_author_worker_is_spawned_through_the
 runner-timeout: 120
-last-run: 2026-05-25T23:43:26.675511167+00:00
+last-run: 2026-05-28T08:48:24.817500230+00:00
 last-run-duration: 0.4s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Description

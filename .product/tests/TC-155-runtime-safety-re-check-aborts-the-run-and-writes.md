@@ -11,8 +11,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_155_runtime_safety_re_check_aborts_the_run_and_writes
 runner-timeout: 120
-last-run: 2026-05-26T13:38:44.856415896+00:00
-last-run-duration: 0.3s
+last-run: 2026-05-28T08:48:42.998264087+00:00
+last-run-duration: 0.5s
 ---
 
 ## Claim

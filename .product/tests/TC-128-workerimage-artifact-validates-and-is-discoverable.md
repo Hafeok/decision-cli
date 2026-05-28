@@ -12,7 +12,7 @@ phase: 3
 runner: cargo-test
 runner-args: -p decision-cli --test tc_128_workerimage_artifact_validates_and_is_discoverable
 runner-timeout: 120
-last-run: 2026-05-25T23:43:40.429452005+00:00
+last-run: 2026-05-28T08:48:38.720606524+00:00
 last-run-duration: 0.2s
 ---
 

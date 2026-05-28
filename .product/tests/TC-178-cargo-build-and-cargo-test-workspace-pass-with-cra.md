@@ -2,7 +2,7 @@
 id: TC-178
 title: cargo build and cargo test --workspace pass with crates/product-cli/ as a workspace member
 type: scenario
-status: passing
+status: failing
 validates:
   features:
   - FT-105
@@ -11,8 +11,9 @@ phase: 1
 runner: cargo-test
 runner-args: tc_178_cargo_build_and_cargo_test_workspace_pass_with_cra
 runner-timeout: 120
-last-run: 2026-05-26T16:00:06.723927890+00:00
-last-run-duration: 11.3s
+last-run: 2026-05-28T08:49:11.449561482+00:00
+last-run-duration: 0.4s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Claim

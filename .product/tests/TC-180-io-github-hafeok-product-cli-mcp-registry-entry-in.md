@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-180-mcp-registry-backwards-compat.sh
 runner-timeout: 120
-last-run: 2026-05-26T17:20:43.156697433+00:00
-last-run-duration: 1.0s
+last-run: 2026-05-28T08:49:13.087442580+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

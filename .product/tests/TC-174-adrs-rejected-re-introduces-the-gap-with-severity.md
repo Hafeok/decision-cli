@@ -2,7 +2,7 @@
 id: TC-174
 title: adrs-rejected re-introduces the gap with severity intentional and carries the reason through to the preflight report
 type: scenario
-status: passing
+status: failing
 validates:
   features:
   - FT-104
@@ -11,8 +11,9 @@ phase: 1
 runner: bash
 runner-args: cd /home/hafeok/projects/product-cli && python3 -m pytest tests/test_adrs_rejected.py -v
 runner-timeout: 120
-last-run: 2026-05-28T07:41:47.795570592+00:00
-last-run-duration: 0.5s
+last-run: 2026-05-28T08:49:09.264687901+00:00
+last-run-duration: 0.9s
+failure-message: "ERROR: file or directory not found: tests/test_adrs_rejected.py\n\n"
 ---
 
 ## Claim

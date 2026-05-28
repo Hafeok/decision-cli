@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-160-dec-verify-feature-coverage-gap.sh
 runner-timeout: 180
-last-run: 2026-05-26T14:11:38.572067190+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-28T08:48:45.960727560+00:00
+last-run-duration: 0.8s
 ---
 
 ## Claim

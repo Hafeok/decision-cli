@@ -11,8 +11,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_154_run_graph_executes_the_six_seed_step_kinds_end_to
 runner-timeout: 120
-last-run: 2026-05-26T13:38:44.856415896+00:00
-last-run-duration: 0.8s
+last-run: 2026-05-28T08:48:42.998264087+00:00
+last-run-duration: 1.0s
 ---
 
 ## Claim

@@ -1,0 +1,89 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-328>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-054> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-28T08:51:20.266Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:51:44.903Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-328/step/0> <https://decision-cli.dev/ns/result/VGR-328/step/1> <https://decision-cli.dev/ns/result/VGR-328/step/2> ) ;
+    dec:rationale "all 3 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-328/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-328/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-013> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-328/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-013> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-328/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-328/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-008> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-328/step/2>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779958280254927197> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T08:51:44.903Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-328/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T08:51:20.266Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:51:20.276Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779958280254927197> .
+
+<https://decision-cli.dev/ns/result/VGR-328/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T08:51:20.276Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:51:44.903Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "{\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/tmp/test-workspace\",\"session_id\":\"5bbf8ad7-6694-4f30-9baa-49e98986e0af\",\"tools\":[\"Task\",\"AskUserQuestion\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\",\"Edit\",\"EnterPlanMode\",\"EnterWorktree\",\"ExitPlanMode\",\"ExitWorktree\",\"Glob\",\"Grep\",\"ListMcpResourcesTool\",\"LSP\",\"Monitor\",\"NotebookEdit\",\"PushNotification\",\"Read\",\"ReadMcpResourceTool\",\"RemoteTrigger\",\"ScheduleWakeup\",\"Skill\",\"TaskOutput\",\"TaskStop\",\"TodoWrite\",\"ToolSearch\",\"WebFetch\",\"WebSearch\",\"Write\",\"mcp__claude_ai_Cloudflare_Developer_Platform__authenticate\",\"mcp__claude_ai_Cloudflare_Developer_Platform__complete_authentication\",\"mcp__claude_ai_Gmail__authenticate\",\"mcp__claude_ai_Gmail__complete_authentication\",\"mcp__claude_ai_Google_Calendar__authenticate\",\"mcp__claude_ai_Google_Calendar__complete_authentication\",\"mcp__claude_ai_Google_Drive__copy_file\",\"mcp__claude_ai_Google_Drive__create_file\",\"mcp__claude_ai_Google_Drive__download_file_content\",\"mcp__claude_ai_Google_Drive__get_file_metadata\",\"mcp__claude_ai_Google_Drive__get_file_permissions\",\"mcp__claude_ai_Google_Drive__list_recent_files\",\"mcp__claude_ai_Google_Drive__read_file_content\",\"mcp__claude_ai_Google_Drive__search_files\",\"mcp__claude_ai_MicrosoftDocs__microsoft_code_sample_search\",\"mcp__claude_ai_MicrosoftDocs__microsoft_docs_fetch\",\"mcp__claude_ai_MicrosoftDocs__microsoft_docs_search\"],\"mcp_servers\":[{\"name\":\"claude.ai Gmail\",\"status\":\"needs-auth\"},{\"name\":\"claude.ai Google Calendar\",\"status\":\"needs-auth\"},{\"name\":\"claude.ai Google Drive\",\"status\":\"connected\"},{\"name\":\"claude.ai Cloudflare Developer Platform\",\"status\":\"needs-auth\"},{\"name\":\"claude.ai MicrosoftDocs\",\"status\":\"connected\"}],\"model\":\"claude-sonnet-4-5\",\"permissionMode\":\"bypassPermissions\",\"slash_commands\":[\"factory-azure-test\",\"factory-prd-updater\",\"factory-local-test\",\"factory-implement\",\"picloud-implement\",\"picloud-e2e\",\"update-config\",\"debug\",\"simplify\",\"batch\",\"fewer-permission-prompts\",\"loop\",\"schedule\",\"claude-api\",\"clear\",\"compact\",\"context\",\"heapdump\",\"init\",\"review\",\"security-review\",\"extra-usage\",\"usage\",\"insights\",\"team-onboarding\"],\"apiKeySource\":\"none\",\"claude_code_version\":\"2.1.131\",\"output_style\":\"default\",\"agents\":[\"claude\",\"Explore\",\"general-purpose\",\"Plan\",\"statusline-setup\"],\"skills\":[\"factory-azure-test\",\"factory-prd-updater\",\"factory-local-test\",\"factory-implement\",\"picloud-implement\",\"picloud-e2e\",\"update-config\",\"debug\",\"simplify\",\"batch\",\"fewer-permission-prompts\",\"loop\",\"schedule\",\"claude-api\"],\"plugins\":[{\"name\":\"csharp-lsp\",\"path\":\"/home/hafeok/.claude/plugins/cache/claude-plugins-official/csharp-lsp/1.0.0\",\"source\":\"csharp-lsp@claude-plugins-official\"}],\"analytics_disabled\":false,\"uuid\":\"5d41cba0-f1b0-4fbf-8bb1-f2b3ff5f1f69\",\"memory_paths\":{\"auto\":\"/home/hafeok/.claude/projects/-tmp-test-workspace/memory/\"},\"fast_mode_state\":\"off\"}\n{\"type\":\"rate_limit_event\",\"rate_limit_info\":{\"status\":\"allowed\",\"resetsAt\":1779969600,\"rateLimitType\":\"five_hour\",\"overageStatus\":\"rejected\",\"overageDisabledReason\":\"org_level_disabled\",\"isUsingOverage\":false},\"uuid\":\"3262cc34-1e57-47bd-80c5-75e13fe64982\",\"session_id\":\"5bbf8ad7-6694-4f30-9baa-49e98986e0af\"}\n{\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_019HFFTXj4FmvLfxPEnWxnBh\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"thinking\",\"thinking\":\"The user wants me to write a simple hello world Python function to a file called \\\"test-file.py\\\". This is a straightforward task - I need to create a new Python file with a simple hello world function.\\n\\nSince this is a new file (not an existing one), I should use the Write tool. The user wants a simple hello world function, so I'll create a basic Python function that prints \\\"Hello, World!\\\" or returns it.\\n\\nLet me create a simple, clean implementation.\",\"signature\":\"EpYFCm4IDhgCKkD8PJJRkW1+8CMFjrplVDxeqiSlHxRQE35IN3FXuERioodjgxaFvCiX3k1p1HWGaKkK7NhEQFwzyHXaCH7fihUvMhpjbGF1ZGUtc29ubmV0LTQtNS0yMDI1MDkyOTgAQgh0aGlua2luZxIMSmJhe9S8WCDH3PLNGgxJC6tAcdnoAmBe1EAiMBjftiO4vx0RLt8T5t7uH4DmRemWxZNUO11dQh0twTu/YBgGJ3ntYUdMHPFTTAySLirVAwKmLYrIiBg1t6Stwr+lHzxKbdhGhr2CS" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779958280254927197> .
+
+<https://decision-cli.dev/ns/result/VGR-328/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-054/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T08:51:44.903Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T08:51:44.903Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-054/ts-1779958280254927197> .

@@ -2,7 +2,7 @@
 id: TC-175
 title: graph check warns when default-acknowledged-cross-cutting drifts from the live ADR catalog
 type: scenario
-status: passing
+status: failing
 validates:
   features:
   - FT-104
@@ -11,8 +11,9 @@ phase: 1
 runner: bash
 runner-args: cd /home/hafeok/projects/product-cli && python3 -m pytest tests/test_default_ack_drift.py -v
 runner-timeout: 120
-last-run: 2026-05-28T07:41:47.795570592+00:00
-last-run-duration: 0.8s
+last-run: 2026-05-28T08:49:09.264687901+00:00
+last-run-duration: 0.4s
+failure-message: "ERROR: file or directory not found: tests/test_default_ack_drift.py\n\n"
 ---
 
 ## Claim

@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-172-cross-cutting-adr-coverage.sh
 runner-timeout: 60
-last-run: 2026-05-26T15:25:02.619669787+00:00
-last-run-duration: 0.0s
+last-run: 2026-05-28T08:49:09.155965136+00:00
+last-run-duration: 0.1s
 ---
 
 ## Claim

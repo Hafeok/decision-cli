@@ -2,7 +2,7 @@
 id: TC-191
 title: dec loop show FT-XXX prints a chronological chain of every defect feedback for the feature's TCs with state transitions
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features:
   - FT-109
@@ -12,8 +12,9 @@ phase: 3
 runner: cargo-test
 runner-args: tc_191_loop_show_chronological_chain
 runner-timeout: 60
-last-run: 2026-05-27T10:44:23.462262169+00:00
-last-run-duration: 71.8s
+last-run: 2026-05-28T08:49:21.209988411+00:00
+last-run-duration: 0.4s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Claim

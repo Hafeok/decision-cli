@@ -10,8 +10,8 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test tc_130_worker_oci_image_manifest_exposes_capability_tags
 runner-timeout: 120
-last-run: 2026-05-25T23:57:20.804629099+00:00
-last-run-duration: 0.1s
+last-run: 2026-05-28T08:48:39.280115010+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

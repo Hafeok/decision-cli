@@ -2,7 +2,7 @@
 id: TC-198
 title: Driver terminates with Done as soon as the planner reports the goal is reached
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features:
   - FT-110
@@ -11,8 +11,9 @@ phase: 3
 runner: cargo-test
 runner-args: tc_198_driver_done_short_circuits
 runner-timeout: 60
-last-run: 2026-05-27T12:28:34.594881822+00:00
-last-run-duration: 0.7s
+last-run: 2026-05-28T08:49:19.011623470+00:00
+last-run-duration: 0.5s
+failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
 ---
 
 ## Claim

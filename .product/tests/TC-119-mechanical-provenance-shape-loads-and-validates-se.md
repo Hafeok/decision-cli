@@ -11,7 +11,7 @@ phase: 1
 runner: cargo-test
 runner-args: -p decision-cli --test ft_069_mechanical_provenance
 runner-timeout: 120
-last-run: 2026-05-25T23:43:27.586851940+00:00
+last-run: 2026-05-28T08:48:25.680773828+00:00
 last-run-duration: 0.3s
 ---
 

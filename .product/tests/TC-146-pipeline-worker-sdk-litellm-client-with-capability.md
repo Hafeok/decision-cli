@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-146-pipeline-worker-sdk-provider.sh
 runner-timeout: 180
-last-run: 2026-05-25T23:43:33.619618743+00:00
-last-run-duration: 3.8s
+last-run: 2026-05-28T08:48:32.051861798+00:00
+last-run-duration: 4.0s
 ---
 
 ## Description
