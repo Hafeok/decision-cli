@@ -23,40 +23,6 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
-class DefectFeedbackRecord(BaseModel):
-    """FT-108: one runtime defect-feedback entry surfaced to the worker.
-
-    The orchestrator populates these from the FT-108 implementer
-    defect-feedback loader: each entry references a TC whose
-    verification run regressed and that the worker should fix.
-    """
-
-    feedback_iri: str = Field(..., description="urn:dec:feedback:<uuid>.")
-    class_: str = Field(
-        default="defect",
-        alias="class",
-        description="Controlled-vocabulary class tag; always 'defect' for entries this bundle carries.",
-    )
-    severity: str = Field(default="error", description="'error' | 'warning' | 'info'.")
-    evidence: str = Field(
-        default="",
-        description=(
-            "Free-form evidence excerpt the runner wrote at emission "
-            "time — read this to understand what failed."
-        ),
-    )
-    source_tc: str = Field(
-        default="",
-        description="TC IRI the feedback's dec:sourceArtifact points at.",
-    )
-    graph_id: str = Field(
-        default="",
-        description="VG short id (empty when the implementer loader joins by TC alone).",
-    )
-
-    model_config = {"populate_by_name": True}
-
-
 class DispatchPayload(BaseModel):
     """Inputs the harness hands the worker for a single dispatch."""
 
@@ -75,26 +41,10 @@ class DispatchPayload(BaseModel):
     model_id: str = Field(
         ..., description="Identifier of the model the worker should invoke."
     )
-    endpoint: Literal["scaleway", "anthropic"] = Field(
-        ...,
-        description=(
-            "External API endpoint the worker dispatches to (FT-066 / "
-            "ADR-033). The dispatcher pins this from the resolved capability."
-        ),
-    )
     max_turns: int = Field(default=8, ge=1, le=64)
     timeout_seconds: int = Field(default=300, ge=10, le=3600)
     allowed_tools: list[str] = Field(
         default_factory=lambda: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    )
-    defect_feedback: list[DefectFeedbackRecord] = Field(
-        default_factory=list,
-        description=(
-            "FT-108: runtime defect feedback the implementer must address. "
-            "Non-empty means the verifier already ran and the cited TCs failed; "
-            "the worker MUST end its final result with a "
-            "<<DEC_ADDRESSED_FEEDBACK>>...<<END>> JSON citation block."
-        ),
     )
 
     # pydantic v2 namespaces — `model_` is a reserved prefix on BaseModel
@@ -123,16 +73,6 @@ class CodeChange(BaseModel):
         default_factory=list, description="Files written/edited during this run."
     )
     summary: str = Field(default="", description="Free-text summary from the model.")
-    addressed_feedback_iris: list[str] = Field(
-        default_factory=list,
-        description=(
-            "FT-108: feedback IRIs (urn:dec:feedback:<uuid>) this code change "
-            "claims to address. Populated server-side from the agent's final "
-            "<<DEC_ADDRESSED_FEEDBACK>>...<<END>> citation block. The Rust "
-            "accept path uses this list to transition each cited feedback "
-            "from produced to addressed."
-        ),
-    )
 
 
 class ToolCall(BaseModel):
@@ -165,11 +105,6 @@ class WorkerError(BaseModel):
         "timeout",
         "invalid_dispatch",
         "internal",
-        # FT-066 / ADR-033: endpoint resolution failed before subprocess
-        # spawn (missing SCW_SECRET_KEY, unknown endpoint, …).
-        "endpoint_config",
-        # FT-066: y-router proxy reachability probe failed.
-        "proxy_unreachable",
     ]
     message: str
     detail: str = ""

@@ -2,17 +2,11 @@
 id: ADR-002
 title: Graph-as-state over event-sourced
 status: accepted
-features:
-- FT-058
-- FT-054
-- FT-101
-- FT-102
-- FT-001
-- FT-009
+features: []
 supersedes: []
 superseded-by: []
 domains: []
-scope: platform
+scope: cross-cutting
 content-hash: sha256:cc6ee3b1268b64151c4aba59ef863317c6bcad153f76e75d1c492bfae6329a6a
 source-files:
 - scripts/checks/graph-as-state.sh

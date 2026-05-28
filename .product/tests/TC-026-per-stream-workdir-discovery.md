@@ -5,12 +5,14 @@ type: invariant
 status: passing
 validates:
   features: []
-  adrs: []
+  adrs:
+  - ADR-012
 phase: 1
 runner: bash
 runner-args: scripts/checks/per-stream-workdir.sh
 runner-timeout: 60
-last-run: 2026-05-28T14:37:54.422788933+00:00
+last-run: ''
+failure-message: ''
 last-run-duration: 0.0s
 ---
 
@@ -39,11 +41,3 @@ scripts/checks/per-stream-workdir.sh
    `orchestration.nq` from inside it.
 2. Exit 1 if either the `.dec/` join or the `orchestration.nq` path has
    been removed (per-stream-workdir-discovery regressed).
-
-## Formal Specification
-
-⟦Γ:Invariants⟧{
-  references(crates/decision-cli/src/scope/mod.rs, ".dec")
-  references(crates/decision-cli/src/scope/mod.rs, "orchestration.nq")
-  ¬ ∃ flag StreamRegistry ∈ crates/decision-cli/src/**.rs
-}

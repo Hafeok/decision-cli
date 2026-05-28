@@ -1,39 +1,27 @@
 //! TC-019 — `dec init` seeds the v0 bootstrap subscriptions.
-//! Validates: FT-009 · FT-022 · ADR-003.
+//! Validates: FT-009 · ADR-003.
 //! Spec: .product/tests/TC-019-dec-init-seeds-v0-bootstrap-subscriptions.md
 //!
 //! The v0 bootstrap subscriptions ("dispatch available for code-writer"
 //! and "code-writer dispatch completed") are part of FT-009's §Behaviour
-//! step 4. FT-022 extends the bootstrap set with the verifier-dispatch
-//! subscription (consumed by the slice-2 verifier worker, FT-023),
-//! FT-029 extends it again with the feedback-routing subscription
-//! (consumed by the slice-3 routing handler in
-//! `core::feedback::routing`), and FT-032 adds the feedback-resume
-//! subscription that unblocks paused DispatchGroups when their gating
-//! feedback reaches a terminal state — so the persisted count is now 5.
-//!
-//! Without these subscriptions the orchestration substrate is silent:
-//! every mutation through `StreamWriter` commits, but no `oxi:Event` is
-//! minted because no subscription matches. This test fails if a future
-//! init path ships without persisting the subscriptions in the graph,
-//! the way it did before this regression was caught.
+//! step 4. Without them the orchestration substrate is silent: every
+//! mutation through `StreamWriter` commits, but no `oxi:Event` is minted
+//! because no subscription matches. This test fails if a future init
+//! path ships without persisting the subscriptions in the graph, the
+//! way it did before this regression was caught.
 //!
 //! The test does three things:
 //!
 //! 1. After `dec init`, queries the persisted store dump for the two
-//!    v0 `oxi:Subscription` IRIs — exact graph, exact `oxi:mode`,
-//!    exact query class (SELECT, not ASK). Total subscription count is
-//!    asserted at 5 (v0 pair + FT-022 verifier-dispatch + FT-029
-//!    feedback-routing + FT-032 feedback-resume).
+//!    `oxi:Subscription` IRIs — exact count, exact graph, exact
+//!    `oxi:mode`, exact query class (SELECT, not ASK).
 //! 2. Re-opens a `GraphWriter` over the store and asserts the registry
-//!    rehydrates with 5 subscriptions. This proves the persisted form is
+//!    rehydrates with 2 subscriptions. This proves the persisted form is
 //!    consumable by FT-002's `load_from_store`, not just well-formed.
 //! 3. Drives one stub `dec implement` run and replays from seq 0 —
-//!    at least 2 events must be present, one per seeded v0 subscription
-//!    (the verifier-dispatch subscription may also fire when the
-//!    `DispatchGroup` reaches `awaiting-interpretation`). This is the
-//!    round-trip: dormant subscriptions are worthless; they have to
-//!    fire on real commits.
+//!    at least 2 events must be present, one per seeded subscription.
+//!    This is the round-trip: dormant subscriptions are worthless;
+//!    they have to fire on real commits.
 
 use std::env;
 use std::fs;
@@ -43,8 +31,8 @@ use std::sync::Arc;
 use decision_cli::implement::{run as implement_run, ImplementArgs};
 use decision_cli::init::{run as init_run, DefinitionSource};
 use oxi_events::vocab::{
-    IRI_OXI_GRAPH_SUBSCRIPTIONS, IRI_OXI_SUBSCRIPTION, IRI_OXI_SUB_ASK_QUERY, IRI_OXI_SUB_MODE,
-    IRI_OXI_SUB_SELECT_QUERY, SUB_MODE_INLINE,
+    IRI_OXI_GRAPH_SUBSCRIPTIONS, IRI_OXI_SUBSCRIPTION, IRI_OXI_SUB_ASK_QUERY,
+    IRI_OXI_SUB_MODE, IRI_OXI_SUB_SELECT_QUERY, SUB_MODE_INLINE,
 };
 use oxi_events::{replay, GraphWriter, ReplayRequest};
 use oxigraph::io::RdfFormat;
@@ -68,9 +56,7 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
 
     let store = load_store_from_dump(&workdir);
 
-    // -- 1. Exactly six Subscription instances (v0 pair + FT-022 +
-    //       FT-029 feedback-routing + FT-032 feedback-resume +
-    //       FT-050 verify-graph-author-dispatch).
+    // -- 1. Exactly two Subscription instances, with the expected IRIs.
     let count_q = format!(
         "SELECT (COUNT(?s) AS ?n) WHERE {{ GRAPH <{g}> {{ ?s a <{c}> }} }}",
         g = IRI_OXI_GRAPH_SUBSCRIPTIONS,
@@ -78,10 +64,8 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
     );
     let count = scalar_int(&store, &count_q);
     assert_eq!(
-        count, 6,
-        "expected exactly 6 seeded Subscriptions in <{IRI_OXI_GRAPH_SUBSCRIPTIONS}> \
-         (v0 pair + FT-022 verifier-dispatch + FT-029 feedback-routing + FT-032 feedback-resume + \
-         FT-050 verify-graph-author-dispatch), found {count}"
+        count, 2,
+        "expected exactly 2 seeded Subscriptions in <{IRI_OXI_GRAPH_SUBSCRIPTIONS}>, found {count}"
     );
 
     for iri in [SUB_DISPATCH_AVAILABLE, SUB_DISPATCH_COMPLETED] {
@@ -105,10 +89,7 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
             m = IRI_OXI_SUB_MODE,
             mode = SUB_MODE_INLINE,
         );
-        assert!(
-            ask(&store, &mode_q),
-            "<{iri}> should carry oxi:mode \"inline\""
-        );
+        assert!(ask(&store, &mode_q), "<{iri}> should carry oxi:mode \"inline\"");
 
         let select_q = format!(
             "ASK {{ GRAPH <{g}> {{ <{iri}> <{p}> ?body }} FILTER(STR(?body) != \"\") }}",
@@ -137,10 +118,8 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
         GraphWriter::open(Arc::clone(&store_for_writer)).expect("open GraphWriter over store");
     assert_eq!(
         writer.registry().len(),
-        6,
-        "registry should rehydrate with all six seeded subscriptions \
-         (v0 pair + FT-022 verifier-dispatch + FT-029 feedback-routing + FT-032 feedback-resume + \
-          FT-050 verify-graph-author-dispatch)"
+        2,
+        "registry should rehydrate with both seeded subscriptions"
     );
 
     // -- 3. Round-trip: a real dispatch produces events for both subs.

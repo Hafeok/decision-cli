@@ -5,12 +5,14 @@ type: invariant
 status: passing
 validates:
   features: []
-  adrs: []
+  adrs:
+  - ADR-002
 phase: 1
 runner: bash
 runner-args: scripts/checks/graph-as-state.sh
 runner-timeout: 60
-last-run: 2026-05-28T14:37:54.422788933+00:00
+last-run: ''
+failure-message: ''
 last-run-duration: 0.0s
 ---
 
@@ -43,11 +45,3 @@ scripts/checks/graph-as-state.sh
    store as an N-Quads dump.
 2. Exit 1 if the `RdfFormat::NQuads` serialisation or the
    `orchestration.nq` path has been removed (graph-as-state regression).
-
-## Formal Specification
-
-⟦Γ:Invariants⟧{
-  references(crates/decision-cli/src/init/persist.rs, RdfFormat::NQuads)
-  references(crates/decision-cli/src/init/persist.rs, "orchestration.nq")
-  ¬ ∃ EventLogReducer ∈ crates/decision-cli/src/**.rs
-}

@@ -158,5 +158,8 @@ fn build_worker_cmd() -> String {
         .arg("sync")
         .arg("--quiet")
         .status();
-    format!("uv --project {} run code-writer", worker_dir.display())
+    format!(
+        "uv --project {} run code-writer",
+        worker_dir.display()
+    )
 }

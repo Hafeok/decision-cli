@@ -1,15 +1,12 @@
 ---
 id: ADR-017
 title: Action-interpretation pairing as a structural requirement
-status: accepted
-features:
-- FT-021
+status: proposed
+features: []
 supersedes: []
 superseded-by: []
-domains:
-- data-model
-scope: domain
-content-hash: sha256:bb16ed26d3abda8355506b677d7cba07256efe78d556b27bcd1beff8adccfb1d
+domains: []
+scope: cross-cutting
 source-files:
 - scripts/checks/action-interpretation-pairing.sh
 - scripts/checks/dispatch-complete-paired-terminal.sh

@@ -2,18 +2,12 @@
 id: ADR-013
 title: Code Structure and Quality Standards
 status: accepted
-features:
-- FT-051
-- FT-014
+features: []
 supersedes: []
 superseded-by: []
 domains: []
-scope: platform
-content-hash: sha256:dd5e42b86eef90e68bc5191849e46d3fbedae6054d6d9fb11551f95ee921f22c
-amendments:
-- date: 2026-05-21T11:38:45Z
-  reason: 'Drop the exit-2 (warn-band) tier from the fitness-script exit-code contract. The original three-tier design (0=clean / 1=hard / 2=warn) does not compose with product-cli''s test runner, which treats any exit code other than 0/1 as `unrunnable`. Result: TC-016, TC-042, TC-043 sat in `unrunnable` while their underlying scripts ran cleanly with only warn-band diagnostics, blocking phase 1 closure for FT-014 and FT-015. The amendment moves to two-tier (0=clean-or-warn / 1=hard). Warn-band offenders remain visible as `WARNING:` lines on stdout — the soft signal is preserved as diagnostic narrative, just not as a separate exit code. The hard limit still gates CI. A follow-up feature_spec covers the actual shrinking of warn-band offenders.'
-  previous-hash: sha256:d42ad20a72f8e2191c5caf67c078bc2cf19f3b477a123d3e017787a59750a3f1
+scope: cross-cutting
+content-hash: sha256:d42ad20a72f8e2191c5caf67c078bc2cf19f3b477a123d3e017787a59750a3f1
 source-files:
 - scripts/checks/file-length.sh
 ---
@@ -39,7 +33,7 @@ The same rules apply across both implementation surfaces:
 
 ### Rule 1: File Size Limit
 
-No source file may exceed **400 lines** (blank lines and comments included). The 400-line limit is a hard gate — CI fails. A secondary warning threshold of **300 lines** produces a stdout `WARNING:` diagnostic but does not fail CI.
+No source file may exceed **400 lines** (blank lines and comments included). The 400-line limit is a hard gate — CI fails. A secondary warning threshold of **300 lines** produces a warning but does not fail CI.
 
 The limit applies to first-party source only. Test files in `crates/*/tests/`, `workers/*/tests/`, and benchmark files in `crates/*/benches/` are exempt — integration scenarios are necessarily verbose.
 
@@ -53,9 +47,9 @@ The limit applies to first-party source only. Test files in `crates/*/tests/`, `
 #!/usr/bin/env bash
 # scripts/checks/file-length.sh
 # Checks first-party source file lengths in crates/ and workers/.
-# Exit 0: every file at or below the hard limit (warn-band offenders, if any,
-#         are listed on stdout as advisory diagnostics).
-# Exit 1: one or more files exceed the hard limit (400 lines).
+# Exit 0: all files within limits
+# Exit 1: one or more files exceed hard limit (400 lines)
+# Exit 2: one or more files exceed warning threshold (300 lines), none exceed hard limit
 set -euo pipefail
 
 HARD_LIMIT=${FILE_LENGTH_HARD:-400}
@@ -91,9 +85,10 @@ if [ -n "$WARN_VIOLATIONS" ]; then
   echo "$WARN_VIOLATIONS" | while read -r count file; do
     echo "  $file: $count lines (warn at: $WARN_LIMIT)"
   done
+  exit 2
 fi
 
-echo "OK: all source files within hard limit"
+echo "OK: all source files within limits"
 exit 0
 ```
 
@@ -110,7 +105,7 @@ Enforcement is per-language:
 - Rust: `scripts/checks/function-length.sh` — awk-based detection of `fn` headers and brace-depth tracking.
 - Python: `scripts/checks/function-length.py` — uses the `ast` module, counts statement nodes within each `FunctionDef` / `AsyncFunctionDef`.
 
-Both scripts share the same threshold envelopes (`FN_LENGTH_HARD=40`, `FN_LENGTH_WARN=30`) and the same two-tier exit code semantics as Rule 1: exit 1 when any function body exceeds the hard limit; exit 0 otherwise. Warn-band offenders (31–40 statement lines) are listed on stdout as `WARNING:` diagnostics but do not gate CI.
+Both scripts share the same threshold envelopes (`FN_LENGTH_HARD=40`, `FN_LENGTH_WARN=30`) and the same three-tier exit code semantics as Rule 1.
 
 ---
 
@@ -189,17 +184,6 @@ The rules apply uniformly — but enforcement honors the Stable Dependency Princ
 
 ---
 
-### Exit-code contract for fitness scripts
-
-All ADR-013 enforcement scripts use a uniform **two-tier** exit-code contract so they compose cleanly with product-cli's binary pass/fail test runner:
-
-- **Exit 0** — clean tree, or warn-band offenders only. Any warn-band offenders are emitted on stdout as `WARNING:` diagnostic lines that name the file, line, and offending count. The diagnostics are advisory: they surface drift toward the hard limit without gating CI.
-- **Exit 1** — at least one hard-limit violation. Diagnostic lines on stdout enumerate the offenders.
-
-An earlier revision of this ADR specified a three-tier contract (exit 2 = warn). That tier was removed because product-cli's test runner treats any exit code other than 0 or 1 as `unrunnable`, which left fitness TCs stuck in a stale state whenever the tree had any warn-band drift. The two-tier contract preserves the soft signal (the `WARNING:` lines remain) but routes it through narrative rather than exit code.
-
----
-
 ### TC Files
 
 The cross-cutting TCs that validate these rules carry `scope: cross-cutting` (per the parent product-cli framework's classification — these TCs validate every feature's implementation implicitly). They run via `product verify --platform`. Each TC uses `runner: bash` (or `runner: pytest` where the underlying script is Python) pointing to the enforcement scripts.
@@ -221,7 +205,7 @@ Consequence: every time any feature in decision-cli is implemented and `product 
 - File size limits are not aesthetic. For LLM-driven development they are a *context quality* constraint. A 1600-line file means the implementation agent receives 1600 lines when it needs 80. The agent either truncates (missing context) or processes everything (noise drowning signal). Both outcomes produce worse implementations than a focused 200-line file.
 - The single-responsibility doc comment rule is self-enforcing documentation. Writing `//! Graph traversal and centrality computation.` and seeing it fail CI because of "and" is a clearer signal than a code review comment saying "this file has two responsibilities."
 - Shell scripts (with a small amount of Python `ast` for function-length on Python sources) make the rules auditable. Any developer can read `file-length.sh` and understand exactly what it checks. A custom clippy lint requires understanding `rustc`'s plugin API. Shell scripts and `ast` are boring and correct.
-- The 400-line hard limit with a 300-line warning gives two signals: "you're approaching the limit" (warning, visible on stdout) and "you've exceeded it" (error, blocks CI). The warning is the more valuable signal — it's caught before the file becomes a problem.
+- The 400-line hard limit with a 300-line warning gives two signals: "you're approaching the limit" (warning, visible in CI) and "you've exceeded it" (error, blocks CI). The warning is the more valuable signal — it's caught before the file becomes a problem.
 - Applying the same rules to both Rust and Python keeps the harness coherent. decision-cli is heterogeneous on purpose (the Rust binary owns orchestration; the Python workers own LLM calls). The quality contract is uniform so the heterogeneity does not produce drift.
 
 **Rejected alternatives:**
@@ -231,6 +215,5 @@ Consequence: every time any feature in decision-cli is implemented and `product 
 - **tokei / pylint plugin** — external dependencies. Rejected: `wc -l`, `awk`, and Python's standard-library `ast` are universally available.
 - **250-line limit** — too tight for legitimate cases like the Brandes centrality implementation referenced by ADR-029 in product-cli. Rejected.
 - **No module structure mandate** — leaves module decomposition to the implementing agent's judgment. Agents without a defined module structure will make different choices on different features, producing inconsistent organisation that compounds over time. A defined structure (Rust modules per the slice 1 split; Python packages per worker) eliminates this decision entirely.
-- **Three-tier exit codes (clean / warn / hard)** — the original revision of this ADR defined exit 2 as a warn-band signal. The product-cli test runner only distinguishes exit 0 (pass) from exit 1 (fail); any other code lands as `unrunnable`. Rejected in amendment: the runner contract is binary, so the warn-band signal moves to stdout diagnostics.
 
 **Derivation:** This decision is adapted directly from product-cli ADR-029 ("Code Structure and Quality Standards"). The thresholds (400/300, 40/30, 80-line `main.rs`) are inherited unchanged. The two additions are: (1) Python coverage for the workers, and (2) explicit interaction with the Stable Dependency Principle constraint on `oxi-events`.

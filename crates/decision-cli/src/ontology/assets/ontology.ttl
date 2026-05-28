@@ -1,0 +1,86 @@
+# Base ontology for decision-cli's orchestration graph.
+#
+# FT-006 / ADR-007 — this file is embedded into the `dec` binary via
+# `include_str!`. Bumping the ontology version is intentionally tied
+# to a binary release: the bootstrap session records the version that
+# was in effect at `dec init` time so the inputs to validation are
+# reproducible.
+#
+# This declaration is intentionally minimal; the SHACL constraints
+# that gate `dec init` live in the sibling `shapes.ttl`.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# --- Ontology header ---------------------------------------------------------
+
+<https://decision-cli.dev/ns> a owl:Ontology ;
+    rdfs:label       "decision-cli base ontology" ;
+    owl:versionInfo  "0.1.0" .
+
+# --- Classes (decision-cli-slice-1-bounds.md §5.3) ---------------------------
+
+dec:ValueStream a rdfs:Class ;
+    rdfs:label "ValueStream" ;
+    rdfs:comment "A value stream — the full chain of processes terminating in a specific value action." .
+
+dec:ValueAction a rdfs:Class ;
+    rdfs:label "ValueAction" ;
+    rdfs:comment "A canonical, schema-validated value action with stable URI, exit criteria, expected outputs, and compatible goals." .
+
+dec:Goal a rdfs:Class ;
+    rdfs:label "Goal" ;
+    rdfs:comment "A goal verb (e.g. ship, land) that a stream authorises a session to pursue." .
+
+dec:Session a rdfs:Class ;
+    rdfs:label "Session" ;
+    rdfs:comment "An orchestrator-managed role execution; emits a typed artifact." .
+
+dec:Dispatch a rdfs:Class ;
+    rdfs:label "Dispatch" ;
+    rdfs:comment "A role-dispatch event placing work on a worker." .
+
+dec:Event a rdfs:Class ;
+    rdfs:label "Event" ;
+    rdfs:comment "A graph-native event derived from a mutation (ADR-002)." .
+
+# --- Properties --------------------------------------------------------------
+
+dec:name a rdf:Property ;
+    rdfs:domain dec:ValueStream , dec:ValueAction ;
+    rdfs:range  xsd:string .
+
+dec:title a rdf:Property ;
+    rdfs:domain dec:ValueStream ;
+    rdfs:range  xsd:string .
+
+dec:description a rdf:Property ;
+    rdfs:range xsd:string .
+
+dec:terminalValueAction a rdf:Property ;
+    rdfs:domain dec:ValueStream ;
+    rdfs:range  dec:ValueAction .
+
+dec:authorizedGoals a rdf:Property ;
+    rdfs:domain dec:ValueStream .
+
+dec:compatibleGoals a rdf:Property ;
+    rdfs:domain dec:ValueAction .
+
+dec:expectedOutputType a rdf:Property ;
+    rdfs:domain dec:ValueAction ;
+    rdfs:range  xsd:string .
+
+dec:exitCriterion a rdf:Property ;
+    rdfs:domain dec:ValueAction ;
+    rdfs:range  xsd:string .
+
+dec:basePolicy a rdf:Property ;
+    rdfs:domain dec:ValueStream .
+
+dec:inStream a rdf:Property ;
+    rdfs:range dec:ValueStream ;
+    rdfs:comment "Every scoped artifact (Session, Goal, Dispatch, Event) carries dec:inStream → dec:ValueStream (ADR-005)." .

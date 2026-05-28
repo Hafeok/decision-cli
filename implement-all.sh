@@ -10,50 +10,6 @@ BRANCH=${BRANCH:-main}
 MAX_FAILURES=${MAX_FAILURES:-3}
 MAX_ITERATIONS=${MAX_ITERATIONS:-100}
 
-# Auto-fill `runner` / `runner-args` on any TC linked to $1 that lacks them.
-# Without this, `product verify` short-circuits with E022 and the agent run is
-# discarded — even when the implementation itself was sound. Defaults to
-# cargo-test with the test name derived from the TC's markdown filename, which
-# matches the orchestrator's E022 hint and lets the agent honour the name when
-# writing the test (or override via `product test runner ...`).
-ensure_tc_runners() {
-    local feature_id=$1
-    local tcs
-    tcs=$(product feature show "$feature_id" --format json 2>/dev/null \
-            | jq -r '.tests[]? // empty')
-
-    [ -z "$tcs" ] && return 0
-
-    local autofilled=0
-    while IFS= read -r tc; do
-        [ -z "$tc" ] && continue
-        local tc_file
-        tc_file=$(ls .product/tests/${tc}-*.md 2>/dev/null | head -1)
-        if [ -z "$tc_file" ] || [ ! -f "$tc_file" ]; then
-            echo "  pre-flight: $tc — no markdown file under .product/tests/, skipping"
-            continue
-        fi
-        if grep -qE '^runner:[[:space:]]+\S' "$tc_file" \
-                && grep -qE '^runner-args:[[:space:]]+\S' "$tc_file"; then
-            continue
-        fi
-        local id_num
-        id_num=$(echo "$tc" | sed 's/TC-//')
-        local slug
-        slug=$(basename "$tc_file" .md | sed "s/^${tc}-//" | tr '-' '_')
-        local args="tc_${id_num}_${slug}"
-        echo "  pre-flight: $tc missing runner config — auto-setting runner=cargo-test args=$args timeout=120s"
-        product test runner "$tc" --runner cargo-test --args "$args" --timeout 120s >/dev/null
-        autofilled=$((autofilled + 1))
-    done <<< "$tcs"
-
-    if [ "$autofilled" -gt 0 ]; then
-        echo "  pre-flight: auto-filled runner config on $autofilled TC(s)."
-        echo "  pre-flight: the agent must write tests matching the configured names,"
-        echo "              or run \`product test runner TC-XXX --args ...\` to rename them."
-    fi
-}
-
 failures=0
 iteration=0
 
@@ -95,10 +51,6 @@ while true; do
     echo "  Iteration $iteration: implementing $feature_id — $feature_title"
     echo "  $(date)"
     echo "============================================================"
-
-    # Auto-fill missing TC runner config so `product verify` doesn't
-    # short-circuit on E022 and discard an otherwise-good agent run.
-    ensure_tc_runners "$feature_id"
 
     if product implement "$feature_id" --headless; then
         echo "$feature_id completed successfully."

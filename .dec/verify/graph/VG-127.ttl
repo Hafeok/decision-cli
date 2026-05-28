@@ -1,0 +1,95 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-127>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-008> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-127/0> <https://decision-cli.dev/ns/step/VG-127/1> <https://decision-cli.dev/ns/step/VG-127/2> <https://decision-cli.dev/ns/step/VG-127/3> <https://decision-cli.dev/ns/step/VG-127/4> <https://decision-cli.dev/ns/step/VG-127/5> <https://decision-cli.dev/ns/step/VG-127/6> <https://decision-cli.dev/ns/step/VG-127/7> <https://decision-cli.dev/ns/step/VG-127/8> <https://decision-cli.dev/ns/step/VG-127/9> <https://decision-cli.dev/ns/step/VG-127/10> <https://decision-cli.dev/ns/step/VG-127/11> ) .
+
+<https://decision-cli.dev/ns/step/VG-127/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-001> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-001-init-template.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-002> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-002-init-from-path.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-003> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-003-malformed-ttl.sh" ;
+    dec:expectExitCode 1 .
+
+<https://decision-cli.dev/ns/step/VG-127/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-004> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-004-unknown-value-action-uri.sh" ;
+    dec:expectExitCode 1 .
+
+<https://decision-cli.dev/ns/step/VG-127/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-005> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-005-goal-outside-compatible-set.sh" ;
+    dec:expectExitCode 1 .
+
+<https://decision-cli.dev/ns/step/VG-127/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-006> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-006-status.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-015> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test -p decision-cli --test tc_015_bootstrap_session" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-022> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/oxi-events-sdp-boundary.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-023> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/graph-as-state.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-024> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/prov-o-lineage.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/10>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-025> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/value-stream-scope.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-127/11>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-026> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/per-stream-workdir.sh" ;
+    dec:expectExitCode 0 .

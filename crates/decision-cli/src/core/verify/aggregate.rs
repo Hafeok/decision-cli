@@ -120,53 +120,10 @@ pub fn single_graph_verdict_with_exit_codes(
         );
     }
     // First failing step (left-to-right) — fail dominates unrunnable.
-    let mut first_fail: Option<usize> = None;
-    let mut first_unrunnable: Option<usize> = None;
-    for (i, outcome) in traces.iter().enumerate() {
-        match outcome {
-            StepOutcome::Fail if first_fail.is_none() => first_fail = Some(i),
-            StepOutcome::Unrunnable if first_unrunnable.is_none() => first_unrunnable = Some(i),
-            _ => {}
-        }
-    }
+    let (first_fail, first_unrunnable) = find_first_failures(traces);
+
     if let Some(idx) = first_fail {
-        // fail dominates: rejected iff that step has evidence linkage;
-        // amendment-required iff it doesn't (setup/capture-style step).
-        let empty = Vec::new();
-        let linked = provides_evidence_for.get(idx).unwrap_or(&empty);
-        if !linked.is_empty() {
-            // FT-110.X — graph-fault exit codes demote to AmendmentRequired
-            // even on evidence-bearing steps. The binary refused the
-            // invocation before the code under test ran; the failure
-            // is in the graph's command spec, not in the code.
-            let exit = exit_codes.get(idx).copied().flatten();
-            if let Some(code) = exit {
-                if GRAPH_FAULT_EXIT_CODES.contains(&code) {
-                    let tcs = linked.join(", ");
-                    return (
-                        Verdict::AmendmentRequired,
-                        format!(
-                            "step {idx} failed with exit {code} (binary refused the invocation \
-                             before the code ran) on TCs: {tcs}; this is a graph-design fault, \
-                             not a code regression — the graph needs editing",
-                        ),
-                    );
-                }
-            }
-            let tcs = linked.join(", ");
-            return (
-                Verdict::Rejected,
-                format!(
-                    "step {idx} failed; evidence regression on TCs: {tcs}; the run is rejected",
-                ),
-            );
-        }
-        return (
-            Verdict::AmendmentRequired,
-            format!(
-                "step {idx} failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code",
-            ),
-        );
+        return handle_fail_verdict(idx, provides_evidence_for, exit_codes);
     }
     if let Some(idx) = first_unrunnable {
         return (
@@ -181,6 +138,63 @@ pub fn single_graph_verdict_with_exit_codes(
         format!(
             "all {n} steps passed; the run produced approved evidence for every linked TC",
             n = traces.len()
+        ),
+    )
+}
+
+fn find_first_failures(traces: &[StepOutcome]) -> (Option<usize>, Option<usize>) {
+    let mut first_fail: Option<usize> = None;
+    let mut first_unrunnable: Option<usize> = None;
+    for (i, outcome) in traces.iter().enumerate() {
+        match outcome {
+            StepOutcome::Fail if first_fail.is_none() => first_fail = Some(i),
+            StepOutcome::Unrunnable if first_unrunnable.is_none() => first_unrunnable = Some(i),
+            _ => {}
+        }
+    }
+    (first_fail, first_unrunnable)
+}
+
+fn handle_fail_verdict(
+    idx: usize,
+    provides_evidence_for: &[Vec<String>],
+    exit_codes: &[Option<i64>],
+) -> (Verdict, String) {
+    // fail dominates: rejected iff that step has evidence linkage;
+    // amendment-required iff it doesn't (setup/capture-style step).
+    let empty = Vec::new();
+    let linked = provides_evidence_for.get(idx).unwrap_or(&empty);
+    if !linked.is_empty() {
+        // FT-110.X — graph-fault exit codes demote to AmendmentRequired
+        // even on evidence-bearing steps. The binary refused the
+        // invocation before the code under test ran; the failure
+        // is in the graph's command spec, not in the code.
+        let exit = exit_codes.get(idx).copied().flatten();
+        if let Some(code) = exit {
+            if GRAPH_FAULT_EXIT_CODES.contains(&code) {
+                let tcs = linked.join(", ");
+                return (
+                    Verdict::AmendmentRequired,
+                    format!(
+                        "step {idx} failed with exit {code} (binary refused the invocation \
+                         before the code ran) on TCs: {tcs}; this is a graph-design fault, \
+                         not a code regression — the graph needs editing",
+                    ),
+                );
+            }
+        }
+        let tcs = linked.join(", ");
+        return (
+            Verdict::Rejected,
+            format!(
+                "step {idx} failed; evidence regression on TCs: {tcs}; the run is rejected",
+            ),
+        );
+    }
+    (
+        Verdict::AmendmentRequired,
+        format!(
+            "step {idx} failed before producing evidence (setup/capture-style failure); the graph needs editing, not the code",
         ),
     )
 }
@@ -214,12 +228,7 @@ fn aggregate_for_tc(
         .filter(|r| result_covers_tc(r, tc_iri))
         .collect();
     if covering.is_empty() {
-        return AggregateVerdict {
-            verdict: Verdict::Rejected,
-            rationale: format!("no verification graph result covers <{label}>", label = target.label()),
-            contributing_results: Vec::new(),
-            coverage_gaps: vec![tc_iri.to_string()],
-        };
+        return no_coverage_verdict(tc_iri, target);
     }
     let any_rejected = covering.iter().any(|r| r.verdict == Verdict::Rejected);
     let any_amendment = covering
@@ -227,52 +236,72 @@ fn aggregate_for_tc(
         .any(|r| r.verdict == Verdict::AmendmentRequired);
     let all_approved = covering.iter().all(|r| r.verdict == Verdict::Approved);
     if any_rejected {
-        let drivers: Vec<String> = covering
-            .iter()
-            .filter(|r| r.verdict == Verdict::Rejected)
-            .map(|r| r.id.clone())
-            .collect();
-        return AggregateVerdict {
-            verdict: Verdict::Rejected,
-            rationale: format!(
-                "rejection dominates: {n} of {total} contributing results returned rejected for <{label}>",
-                n = drivers.len(),
-                total = covering.len(),
-                label = target.label()
-            ),
-            contributing_results: drivers,
-            coverage_gaps: Vec::new(),
-        };
+        return rejected_verdict(&covering, target);
     }
     if all_approved {
-        return AggregateVerdict {
-            verdict: Verdict::Approved,
-            rationale: format!(
-                "all {n} contributing results approved <{label}>",
-                n = covering.len(),
-                label = target.label()
-            ),
-            contributing_results: covering.iter().map(|r| r.id.clone()).collect(),
-            coverage_gaps: Vec::new(),
-        };
+        return approved_verdict(&covering, target);
     }
-    // Mix of approved + amendment-required, no rejected.
     if any_amendment {
-        return AggregateVerdict {
-            verdict: Verdict::AmendmentRequired,
-            rationale: format!(
-                "mixed approved + amendment-required for <{label}>; no rejection but the run needs amendment",
-                label = target.label()
-            ),
-            contributing_results: covering.iter().map(|r| r.id.clone()).collect(),
-            coverage_gaps: Vec::new(),
-        };
+        return mixed_verdict(&covering, target);
     }
+    approved_verdict(&covering, target)
+}
+
+fn no_coverage_verdict(tc_iri: &str, target: &AggregationTarget) -> AggregateVerdict {
+    AggregateVerdict {
+        verdict: Verdict::Rejected,
+        rationale: format!("no verification graph result covers <{label}>", label = target.label()),
+        contributing_results: Vec::new(),
+        coverage_gaps: vec![tc_iri.to_string()],
+    }
+}
+
+fn rejected_verdict(
+    covering: &[&VerificationGraphResult],
+    target: &AggregationTarget,
+) -> AggregateVerdict {
+    let drivers: Vec<String> = covering
+        .iter()
+        .filter(|r| r.verdict == Verdict::Rejected)
+        .map(|r| r.id.clone())
+        .collect();
+    AggregateVerdict {
+        verdict: Verdict::Rejected,
+        rationale: format!(
+            "rejection dominates: {n} of {total} contributing results returned rejected for <{label}>",
+            n = drivers.len(),
+            total = covering.len(),
+            label = target.label()
+        ),
+        contributing_results: drivers,
+        coverage_gaps: Vec::new(),
+    }
+}
+
+fn approved_verdict(
+    covering: &[&VerificationGraphResult],
+    target: &AggregationTarget,
+) -> AggregateVerdict {
     AggregateVerdict {
         verdict: Verdict::Approved,
         rationale: format!(
             "all {n} contributing results approved <{label}>",
             n = covering.len(),
+            label = target.label()
+        ),
+        contributing_results: covering.iter().map(|r| r.id.clone()).collect(),
+        coverage_gaps: Vec::new(),
+    }
+}
+
+fn mixed_verdict(
+    covering: &[&VerificationGraphResult],
+    target: &AggregationTarget,
+) -> AggregateVerdict {
+    AggregateVerdict {
+        verdict: Verdict::AmendmentRequired,
+        rationale: format!(
+            "mixed approved + amendment-required for <{label}>; no rejection but the run needs amendment",
             label = target.label()
         ),
         contributing_results: covering.iter().map(|r| r.id.clone()).collect(),

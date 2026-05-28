@@ -5,10 +5,10 @@
 # Scans first-party source files under crates/*/src/ (Rust) and workers/*/
 # (Python, excluding tests/) and asserts no file exceeds the hard limit.
 #
-# Exit 0: no file exceeds the hard limit. Warn-band offenders (default
-#         300..=400 lines), if any, are listed on stdout as advisory
-#         `WARNING:` diagnostics but do not gate CI.
+# Exit 0: every first-party source file is within the warning threshold.
 # Exit 1: at least one file exceeds the hard limit (default: 400 lines).
+# Exit 2: at least one file is in the warning band (default: 300..=400), no
+#         file exceeds the hard limit.
 #
 # Thresholds may be overridden via environment variables:
 #   FILE_LENGTH_HARD (default: 400)
@@ -27,13 +27,9 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
 fi
 
 # Rust under crates/<crate>/src ; Python under workers/<worker>/
-# (excluding tests/, benches/, __pycache__/, .venv/, and the `tests.rs`
-# unit-test convention — ADR-013 §"Rule scope" exempts test files).
+# (excluding tests/ and __pycache__/).
 FILES="$( {
-    find crates -path '*/src/*.rs' \
-      -not -name 'tests.rs' \
-      -not -path '*/tests/*' \
-      -not -path '*/benches/*' 2>/dev/null || true
+    find crates -path '*/src/*.rs' 2>/dev/null || true
     find workers -name '*.py' \
       -not -path '*/tests/*' \
       -not -path '*/__pycache__/*' \
@@ -71,7 +67,8 @@ if [ -n "$WARN_VIOLATIONS" ]; then
   echo "$WARN_VIOLATIONS" | while read -r count file; do
     echo "  $file: $count lines (warn at: $WARN_LIMIT)"
   done
+  exit 2
 fi
 
-echo "OK: all source files within hard limit ($HARD_LIMIT)"
+echo "OK: all source files within limits (hard=$HARD_LIMIT, warn=$WARN_LIMIT)"
 exit 0

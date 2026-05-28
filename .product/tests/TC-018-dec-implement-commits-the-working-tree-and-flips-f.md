@@ -1,18 +1,13 @@
 ---
 id: TC-018
 title: dec implement commits the working tree and flips feature status
-type: exit-criteria
-status: passing
+type: integration
+status: unimplemented
 validates:
   features:
   - FT-017
   adrs: []
 phase: 1
-runner: cargo-test
-runner-args: -p decision-cli --test tc_018_finalize_commit_and_status
-runner-timeout: 120
-last-run: 2026-05-20T08:13:41.742381560+00:00
-last-run-duration: 1.0s
 ---
 
 ## Description

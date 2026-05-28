@@ -13,13 +13,11 @@ path = "src/main.rs"
 
 [dependencies]
 oxi-events = { workspace = true }
-product-cli = { workspace = true }
 oxigraph = { workspace = true }
 tokio = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_yaml = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
@@ -29,10 +27,6 @@ uuid = { workspace = true }
 clap = { workspace = true }
 reqwest = { workspace = true }
 sha2 = { workspace = true }
-
-[dev-dependencies]
-tower = { workspace = true }
-http-body-util = { workspace = true }
 
 [lints]
 workspace = true

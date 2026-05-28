@@ -2,14 +2,11 @@
 id: ADR-005
 title: Value stream as a graph-resident scope, enforced at command time
 status: accepted
-features:
-- FT-007
-- FT-009
-- FT-010
+features: []
 supersedes: []
 superseded-by: []
 domains: []
-scope: platform
+scope: cross-cutting
 content-hash: sha256:7b478fec4d210e1811722ba62ae3d58c857bb91d2b12f8717d2ddf4497962a24
 source-files:
 - scripts/checks/value-stream-scope.sh

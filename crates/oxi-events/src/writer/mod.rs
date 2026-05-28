@@ -126,7 +126,17 @@ impl GraphWriter {
         let plan = plan_commit(&self.store, mutation)?;
         apply_mutation_tx(&self.store, &plan)?;
 
-        let matches = self.evaluate_or_skip(&mutation_triggers);
+        // FT-002 §Behaviour steps 2-5: evaluate subscriptions against the
+        // post-commit store. Errors in this layer are isolated to the
+        // affected subscription (Delta::Error) and never block the commit.
+        let matches = match self.registry.evaluate(&self.store, &mutation_triggers) {
+            Ok(m) => m,
+            Err(err) => {
+                warn!(error = %err, "subscription evaluator failed wholesale; commit completes without events");
+                Vec::new()
+            }
+        };
+
         let events = emit_events(
             &self.store,
             &plan.mutation_id,
@@ -141,7 +151,11 @@ impl GraphWriter {
             "commit succeeded"
         );
 
-        self.notify_outbox(&events);
+        if !events.is_empty() {
+            if let Some(outbox) = self.outbox.get() {
+                outbox.notify();
+            }
+        }
 
         Ok(CommitResult {
             mutation_id: plan.mutation_id,
@@ -149,31 +163,6 @@ impl GraphWriter {
             affected_graphs: plan.affected_graphs,
             events,
         })
-    }
-
-    /// Run subscription evaluation; degrade gracefully on evaluator
-    /// failure so the commit itself is never blocked (FT-002 §Error
-    /// handling).
-    fn evaluate_or_skip(
-        &self,
-        mutation_triggers: &std::collections::BTreeSet<crate::subscription::TriggerType>,
-    ) -> Vec<crate::subscription::SubscriptionMatch> {
-        match self.registry.evaluate(&self.store, mutation_triggers) {
-            Ok(m) => m,
-            Err(err) => {
-                warn!(error = %err, "subscription evaluator failed wholesale; commit completes without events");
-                Vec::new()
-            }
-        }
-    }
-
-    /// Nudge the outbox sweep loop when this commit produced events.
-    fn notify_outbox(&self, events: &[crate::mutation::EventHandle]) {
-        if !events.is_empty() {
-            if let Some(outbox) = self.outbox.get() {
-                outbox.notify();
-            }
-        }
     }
 
     /// Current value of the persisted sequence counter (0 when unset).

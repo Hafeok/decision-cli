@@ -2,15 +2,11 @@
 id: ADR-004
 title: PROV-O for events and sessions
 status: accepted
-features:
-- FT-001
-- FT-009
-- FT-021
-- FT-069
+features: []
 supersedes: []
 superseded-by: []
 domains: []
-scope: platform
+scope: cross-cutting
 content-hash: sha256:7887f03ab2c496f653c1403c2380eb6e986cca2aa98da0bfcc1919035173b53f
 source-files:
 - scripts/checks/prov-o-lineage.sh

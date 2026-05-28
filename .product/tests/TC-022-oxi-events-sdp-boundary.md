@@ -5,12 +5,14 @@ type: invariant
 status: passing
 validates:
   features: []
-  adrs: []
+  adrs:
+  - ADR-001
 phase: 1
 runner: bash
 runner-args: scripts/checks/oxi-events-sdp-boundary.sh
 runner-timeout: 60
-last-run: 2026-05-28T14:37:54.422788933+00:00
+last-run: ''
+failure-message: ''
 last-run-duration: 0.0s
 ---
 
@@ -51,15 +53,3 @@ scripts/checks/oxi-events-sdp-boundary.sh
   module headers can *explain why* those terms are forbidden.
 - Authoring a new DDD-aware feature inside `oxi-events` will surface as
   an exit-1 here long before the SDP boundary erodes.
-
-## Formal Specification
-
-⟦Σ:Types⟧{
-  ForbiddenTerm ≜ role_id | RoleBinding | bundle_hash | session_id | policy_id | autonomy_level
-}
-
-⟦Γ:Invariants⟧{
-  ¬ depends_on(oxi-events, decision-cli)
-  ∀ t:ForbiddenTerm, src ∈ crates/oxi-events/src/**.rs:
-    ¬ references(src, t)  -- comments excepted
-}

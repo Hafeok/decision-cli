@@ -10,7 +10,9 @@ use oxigraph::store::Store;
 
 use crate::error::WriterError;
 use crate::mutation::{EventHandle, Mutation};
-use crate::quads::{affected_graph_set, counter_quad, event_quads_for, mint_iri, mutation_quads};
+use crate::quads::{
+    affected_graph_set, counter_quad, event_quads_for, mint_iri, mutation_quads,
+};
 use crate::subscription::{Delta, SubscriptionMatch};
 use crate::vocab::{
     events_graph, meta_graph, IRI_OXI_CURRENT, IRI_OXI_SEQ_COUNTER, IRI_OXI_STATUS, STATUS_FAILED,
@@ -31,7 +33,10 @@ pub(super) struct CommitPlan {
     pub counter_new: Quad,
 }
 
-pub(super) fn plan_commit(store: &Store, mutation: Mutation) -> Result<CommitPlan, WriterError> {
+pub(super) fn plan_commit(
+    store: &Store,
+    mutation: Mutation,
+) -> Result<CommitPlan, WriterError> {
     let Mutation {
         inserts,
         removes,
@@ -40,39 +45,34 @@ pub(super) fn plan_commit(store: &Store, mutation: Mutation) -> Result<CommitPla
         committed_at,
         triggers: _,
     } = mutation;
+    let committed_at = committed_at.unwrap_or_else(|| Utc::now().to_rfc3339());
     let mutation_id = mint_iri(MUTATION_IRI_PREFIX);
-    let mutation_sequence = current_sequence(store)? + 1;
-    let mutation_quads = build_mutation_quads(
+    let affected_graphs = affected_graph_set(&inserts, &removes);
+
+    let pre_seq = current_sequence(store)?;
+    let mutation_sequence = pre_seq + 1;
+
+    let mutation_quads = mutation_quads(
         &mutation_id,
         mutation_sequence,
-        committed_at,
+        &committed_at,
         actor.as_ref(),
         cause.as_deref(),
     );
+
+    let counter_old = existing_counter_quads(store)?;
+    let counter_new = counter_quad(mutation_sequence);
+
     Ok(CommitPlan {
-        affected_graphs: affected_graph_set(&inserts, &removes),
         inserts,
         removes,
         mutation_id,
         mutation_sequence,
+        affected_graphs,
         mutation_quads,
-        counter_old: existing_counter_quads(store)?,
-        counter_new: counter_quad(mutation_sequence),
+        counter_old,
+        counter_new,
     })
-}
-
-/// Resolve `committed_at` (defaulting to "now"), then assemble the
-/// mutation-meta quads via [`mutation_quads`]. Kept separate so
-/// `plan_commit` stays under the warn limit.
-fn build_mutation_quads(
-    mutation_id: &NamedNode,
-    mutation_sequence: u64,
-    committed_at: Option<String>,
-    actor: Option<&NamedNode>,
-    cause: Option<&str>,
-) -> Vec<Quad> {
-    let committed_at = committed_at.unwrap_or_else(|| Utc::now().to_rfc3339());
-    mutation_quads(mutation_id, mutation_sequence, &committed_at, actor, cause)
 }
 
 pub(super) fn apply_mutation_tx(store: &Store, plan: &CommitPlan) -> Result<(), WriterError> {
@@ -104,19 +104,6 @@ pub(super) fn emit_events(
         return Ok(Vec::new());
     }
     let emitted_at = Utc::now().to_rfc3339();
-    let handles = build_event_handles(matches, mutation_sequence);
-    let highest_seq = handles
-        .last()
-        .map(|h| h.sequence)
-        .unwrap_or(mutation_sequence);
-
-    commit_event_quads(store, &handles, mutation_id, &emitted_at, highest_seq)?;
-    patch_failed_event_statuses(store, &handles, matches)?;
-
-    Ok(handles)
-}
-
-fn build_event_handles(matches: &[SubscriptionMatch], mutation_sequence: u64) -> Vec<EventHandle> {
     let mut handles = Vec::with_capacity(matches.len());
     let mut next_seq = mutation_sequence + 1;
     for m in matches {
@@ -133,22 +120,16 @@ fn build_event_handles(matches: &[SubscriptionMatch], mutation_sequence: u64) ->
         });
         next_seq += 1;
     }
-    handles
-}
+    let highest_seq = next_seq - 1;
 
-fn commit_event_quads(
-    store: &Store,
-    handles: &[EventHandle],
-    mutation_id: &NamedNode,
-    emitted_at: &str,
-    highest_seq: u64,
-) -> Result<(), WriterError> {
     let mut event_quads: Vec<Quad> = Vec::new();
-    for handle in handles {
-        event_quads.extend(event_quads_for(handle, mutation_id, emitted_at));
+    for handle in &handles {
+        event_quads.extend(event_quads_for(handle, mutation_id, &emitted_at));
     }
+
     let counter_old = existing_counter_quads(store)?;
     let counter_new = counter_quad(highest_seq);
+
     store.transaction(|mut tx| {
         for q in &event_quads {
             tx.insert(q.as_ref())?;
@@ -159,14 +140,7 @@ fn commit_event_quads(
         tx.insert(counter_new.as_ref())?;
         Ok::<_, WriterError>(())
     })?;
-    Ok(())
-}
 
-fn patch_failed_event_statuses(
-    store: &Store,
-    handles: &[EventHandle],
-    matches: &[SubscriptionMatch],
-) -> Result<(), WriterError> {
     // Status fix-up: event_quads_for inserts STATUS_OK by default;
     // patch the handful of failed events to STATUS_FAILED so the
     // persisted form matches the in-memory delta classification.
@@ -175,7 +149,8 @@ fn patch_failed_event_statuses(
             patch_event_status(store, &handle.iri, STATUS_FAILED)?;
         }
     }
-    Ok(())
+
+    Ok(handles)
 }
 
 pub(super) fn current_sequence(store: &Store) -> Result<u64, WriterError> {

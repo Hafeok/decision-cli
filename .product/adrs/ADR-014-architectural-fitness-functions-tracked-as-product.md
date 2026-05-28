@@ -7,7 +7,7 @@ supersedes: []
 superseded-by: []
 domains:
 - observability
-scope: platform
+scope: cross-cutting
 content-hash: sha256:5367f3f82371a892630b0d483e2295bb82e8a5e4cc331be901e4a5ecc46d9e2f
 source-files:
 - CLAUDE.md

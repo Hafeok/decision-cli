@@ -1,16 +1,18 @@
 ---
 id: TC-024
 title: prov_o_lineage_in_writer_and_init
-type: scenario
+type: invariant
 status: passing
 validates:
   features: []
-  adrs: []
+  adrs:
+  - ADR-004
 phase: 1
 runner: bash
 runner-args: scripts/checks/prov-o-lineage.sh
 runner-timeout: 60
-last-run: 2026-05-28T14:37:54.422788933+00:00
+last-run: ''
+failure-message: ''
 last-run-duration: 0.0s
 ---
 
@@ -40,14 +42,3 @@ scripts/checks/prov-o-lineage.sh
    `crates/oxi-events/src/writer/` and `crates/decision-cli/src/init/`.
 2. Exit 1 otherwise; diagnostic lines on stdout name the missing
    predicate.
-
-## Formal Specification
-
-⟦Σ:Types⟧{
-  ProvPredicate ≜ wasGeneratedBy | wasDerivedFrom | atTime
-  Module ≜ crates/oxi-events/src/writer | crates/decision-cli/src/init
-}
-
-⟦Γ:Invariants⟧{
-  ∀ p:ProvPredicate, m:Module: references(m, p)
-}

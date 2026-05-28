@@ -2,7 +2,7 @@
 id: TC-020
 title: decision-cli source tree matches ADR-016 vertical-slice layout
 type: exit-criteria
-status: passing
+status: failing
 validates:
   features: []
   adrs: []
@@ -10,8 +10,6 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/vertical-slice-layout.sh
 runner-timeout: 120
-last-run: 2026-05-20T08:28:22.482056979+00:00
-last-run-duration: 1.9s
 ---
 
 ## Purpose

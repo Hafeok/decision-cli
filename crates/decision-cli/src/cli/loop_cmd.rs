@@ -44,46 +44,50 @@ pub struct LoopListArgs {
 
 pub fn run(workdir: &Path, cmd: LoopCmd) -> ExitCode {
     match cmd {
-        LoopCmd::Show(args) => {
-            let format = match OutputFormat::parse(&args.format) {
-                Some(f) => f,
-                None => {
-                    eprintln!("dec loop show: unknown --format {:?}; use text or json", args.format);
-                    return ExitCode::from(1);
-                }
-            };
-            decision_cli::loop_inspect::run_show(
-                workdir,
-                &InspectShowArgs {
-                    feature_id: args.feature_id,
-                    product_root: args.product_root,
-                    format,
-                },
-            )
-        }
-        LoopCmd::List(args) => {
-            let state = match StateFilter::parse(&args.state) {
-                Some(s) => s,
-                None => {
-                    eprintln!("dec loop list: unknown --state {:?}; use open, closed, or all", args.state);
-                    return ExitCode::from(1);
-                }
-            };
-            let format = match OutputFormat::parse(&args.format) {
-                Some(f) => f,
-                None => {
-                    eprintln!("dec loop list: unknown --format {:?}; use text or json", args.format);
-                    return ExitCode::from(1);
-                }
-            };
-            decision_cli::loop_inspect::run_list(
-                workdir,
-                &InspectListArgs {
-                    state,
-                    product_root: args.product_root,
-                    format,
-                },
-            )
-        }
+        LoopCmd::Show(args) => run_show(workdir, args),
+        LoopCmd::List(args) => run_list(workdir, args),
     }
+}
+
+fn run_show(workdir: &Path, args: LoopShowArgs) -> ExitCode {
+    let format = match OutputFormat::parse(&args.format) {
+        Some(f) => f,
+        None => {
+            eprintln!("dec loop show: unknown --format {:?}; use text or json", args.format);
+            return ExitCode::from(1);
+        }
+    };
+    decision_cli::loop_inspect::run_show(
+        workdir,
+        &InspectShowArgs {
+            feature_id: args.feature_id,
+            product_root: args.product_root,
+            format,
+        },
+    )
+}
+
+fn run_list(workdir: &Path, args: LoopListArgs) -> ExitCode {
+    let state = match StateFilter::parse(&args.state) {
+        Some(s) => s,
+        None => {
+            eprintln!("dec loop list: unknown --state {:?}; use open, closed, or all", args.state);
+            return ExitCode::from(1);
+        }
+    };
+    let format = match OutputFormat::parse(&args.format) {
+        Some(f) => f,
+        None => {
+            eprintln!("dec loop list: unknown --format {:?}; use text or json", args.format);
+            return ExitCode::from(1);
+        }
+    };
+    decision_cli::loop_inspect::run_list(
+        workdir,
+        &InspectListArgs {
+            state,
+            product_root: args.product_root,
+            format,
+        },
+    )
 }

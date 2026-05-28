@@ -1,4 +1,4 @@
-//! [`SubscriptionRegistry`] — in-process subscription state.
+//! [`SubscriptionRegistry`] — in-process state and evaluator entry point.
 
 use std::collections::{BTreeSet, HashMap};
 use std::sync::RwLock;
@@ -173,11 +173,23 @@ impl SubscriptionRegistry {
         let bindings = match collect_bindings(store, query) {
             Ok(b) => b,
             Err(err) => {
-                matches.push(select_error_match(sub, &err));
+                warn!(
+                    subscription = %sub.id.as_str(),
+                    error = %err,
+                    "SELECT subscription evaluation failed"
+                );
+                matches.push(SubscriptionMatch {
+                    subscription_id: sub.id.clone(),
+                    delta: Delta::Error(err.to_string()),
+                    mode: sub.mode,
+                });
                 return Ok(());
             }
         };
-        let prior = self.prior_bindings(&sub.id)?;
+        let prior = {
+            let guard = self.inner.read().map_err(|_| RegistryError::Poisoned)?;
+            guard.cache.get(&sub.id).cloned().unwrap_or_default()
+        };
         let delta = diff_bindings(&prior, &bindings);
         cache_updates.push((sub.id.clone(), bindings));
         if !delta.is_empty() {
@@ -189,34 +201,14 @@ impl SubscriptionRegistry {
         }
         Ok(())
     }
-
-    /// Cached prior bindings for `id`, or an empty vec when the
-    /// subscription has not yet been evaluated.
-    fn prior_bindings(&self, id: &NamedNode) -> Result<Vec<Binding>, RegistryError> {
-        let guard = self.inner.read().map_err(|_| RegistryError::Poisoned)?;
-        Ok(guard.cache.get(id).cloned().unwrap_or_default())
-    }
 }
 
-/// Build a `Delta::Error` match for a SELECT subscription whose query
-/// failed; logs the failure so operators see the underlying cause.
-fn select_error_match(
+fn run_ask(
+    store: &Store,
     sub: &Subscription,
-    err: &oxigraph::sparql::EvaluationError,
-) -> SubscriptionMatch {
-    warn!(
-        subscription = %sub.id.as_str(),
-        error = %err,
-        "SELECT subscription evaluation failed"
-    );
-    SubscriptionMatch {
-        subscription_id: sub.id.clone(),
-        delta: Delta::Error(err.to_string()),
-        mode: sub.mode,
-    }
-}
-
-fn run_ask(store: &Store, sub: &Subscription, query: &str, matches: &mut Vec<SubscriptionMatch>) {
+    query: &str,
+    matches: &mut Vec<SubscriptionMatch>,
+) {
     match store.query(query) {
         Ok(QueryResults::Boolean(true)) => {
             matches.push(SubscriptionMatch {
@@ -226,40 +218,30 @@ fn run_ask(store: &Store, sub: &Subscription, query: &str, matches: &mut Vec<Sub
             });
         }
         Ok(QueryResults::Boolean(false)) => {}
-        Ok(_) => matches.push(ask_non_boolean_match(sub)),
-        Err(err) => matches.push(ask_error_match(sub, &err)),
-    }
-}
-
-/// SubscriptionMatch for an ASK that returned a non-boolean (a
-/// vocabulary/store-corruption smell). Records a warning so the
-/// telemetry pipeline picks it up.
-fn ask_non_boolean_match(sub: &Subscription) -> SubscriptionMatch {
-    warn!(
-        subscription = %sub.id.as_str(),
-        "registered ASK subscription returned non-boolean result"
-    );
-    SubscriptionMatch {
-        subscription_id: sub.id.clone(),
-        delta: Delta::Error("ASK subscription returned non-boolean result".to_string()),
-        mode: sub.mode,
-    }
-}
-
-/// SubscriptionMatch for an ASK whose store-side evaluation errored
-/// out; logs the cause then surfaces it as `Delta::Error`.
-fn ask_error_match(
-    sub: &Subscription,
-    err: &oxigraph::sparql::EvaluationError,
-) -> SubscriptionMatch {
-    warn!(
-        subscription = %sub.id.as_str(),
-        error = %err,
-        "ASK subscription evaluation failed"
-    );
-    SubscriptionMatch {
-        subscription_id: sub.id.clone(),
-        delta: Delta::Error(err.to_string()),
-        mode: sub.mode,
+        Ok(_) => {
+            warn!(
+                subscription = %sub.id.as_str(),
+                "registered ASK subscription returned non-boolean result"
+            );
+            matches.push(SubscriptionMatch {
+                subscription_id: sub.id.clone(),
+                delta: Delta::Error(
+                    "ASK subscription returned non-boolean result".to_string(),
+                ),
+                mode: sub.mode,
+            });
+        }
+        Err(err) => {
+            warn!(
+                subscription = %sub.id.as_str(),
+                error = %err,
+                "ASK subscription evaluation failed"
+            );
+            matches.push(SubscriptionMatch {
+                subscription_id: sub.id.clone(),
+                delta: Delta::Error(err.to_string()),
+                mode: sub.mode,
+            });
+        }
     }
 }

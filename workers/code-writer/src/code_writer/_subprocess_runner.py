@@ -10,24 +10,17 @@ import time
 from pathlib import Path
 from typing import Any
 
-import re
-
 from . import claude_runner as _entry  # late import for test-mock hook
 from ._runner_common import STUB_ENV_VAR, _make_code_change_iri, _safe_join
-from .env_routing import EndpointConfigError, claude_env_for
 from .models import (
-    CodeChange, DefectFeedbackRecord, DispatchPayload, FileWrite, ToolCall,
-    WorkerError, WorkerResponse, WorkerTelemetry,
+    CodeChange,
+    DispatchPayload,
+    FileWrite,
+    ToolCall,
+    WorkerError,
+    WorkerResponse,
+    WorkerTelemetry,
 )
-
-
-# FT-108: agent must end its final result with a marker-delimited JSON
-# block whose `iris` field lists every feedback IRI from the bundle's
-# `defect_feedback` array that this code change addresses. The Rust
-# accept path uses this list to transition each cited feedback through
-# the ADR-024 lifecycle to `addressed`.
-ADDRESSED_FEEDBACK_BEGIN = "<<DEC_ADDRESSED_FEEDBACK>>"
-ADDRESSED_FEEDBACK_END = "<<END_DEC_ADDRESSED_FEEDBACK>>"
 
 
 def _parse_stream_json(
@@ -57,11 +50,15 @@ def _parse_stream_json(
         if event_type in {"tool_use", "tool_call"}:
             name = str(event.get("name", "")) or str(event.get("tool", ""))
             args: dict[str, Any] = event.get("input") or event.get("arguments") or {}
-            tool_calls.append(ToolCall(name=name, arguments=args if isinstance(args, dict) else {}))
+            tool_calls.append(
+                ToolCall(name=name, arguments=args if isinstance(args, dict) else {})
+            )
             if name in {"Write", "Edit"} and isinstance(args, dict):
                 path = str(args.get("file_path") or args.get("path") or "")
                 if path:
-                    file_writes.append(FileWrite(path=path, summary=f"{name} via claude -p"))
+                    file_writes.append(
+                        FileWrite(path=path, summary=f"{name} via claude -p")
+                    )
         elif event_type == "result":
             final_summary = str(event.get("result") or event.get("summary") or "")
         elif event_type == "error":
@@ -94,220 +91,40 @@ def _scrape_terminal_error(stdout: str) -> str:
     return stdout[-2000:]
 
 
-def _endpoint_config_response(
-    payload: DispatchPayload, err: EndpointConfigError
-) -> WorkerResponse:
-    """Response returned when endpoint env-overlay construction fails (FT-066)."""
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="error",
-        error=WorkerError(
-            category="endpoint_config",
-            message=err.message,
-            detail=f"endpoint={payload.endpoint!r} sub_category={err.category!r}",
-            retryable=False,
-        ),
-    )
-
-
-def _missing_binary_response(payload: DispatchPayload) -> WorkerResponse:
-    """Response returned when `claude` is not on $PATH."""
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="error",
-        error=WorkerError(
-            category="subscription_unavailable",
-            message="`claude` binary not found on $PATH",
-            detail=(
-                "Install Claude Code and run `claude login` once on this host. "
-                f"Alternatively, run the worker with {STUB_ENV_VAR}=1 to use "
-                "the deterministic stub runner."
+def run_claude(payload: DispatchPayload) -> WorkerResponse:
+    """Real ``claude -p`` subprocess runner (ADR-008 §Behaviour 3-5)."""
+    binary = _entry._claude_on_path()
+    if binary is None:
+        return WorkerResponse(
+            dispatch_id=payload.dispatch_id,
+            session_id=payload.session_id,
+            status="error",
+            error=WorkerError(
+                category="subscription_unavailable",
+                message="`claude` binary not found on $PATH",
+                detail=(
+                    "Install Claude Code and run `claude login` once on this host. "
+                    f"Alternatively, run the worker with {STUB_ENV_VAR}=1 to use "
+                    "the deterministic stub runner."
+                ),
+                retryable=False,
             ),
-            retryable=False,
-        ),
-    )
-
-
-def _write_bundle_prompt(payload: DispatchPayload) -> str:
-    """Persist the bundle as a temp `.md` file. Returns the file path.
-
-    When the bundle carries defect feedback (FT-108), the prompt is
-    PREFIXED (not suffixed) with the feedback section + citation block
-    requirement. Prefixing matters: bundles can be 100K+ tokens, and
-    Claude reads top-down — instructions placed after the bundle get
-    lost in implementation thinking before they're reached. The
-    server-side extractor rejects the dispatch with
-    `WorkerIgnoredFeedback` if the citation block is missing, so the
-    prompt has to make the requirement impossible to overlook.
-    """
-    prompt_body = payload.bundle_markdown
-    if payload.defect_feedback:
-        prompt_body = (
-            f"{_render_defect_feedback_section(payload.defect_feedback)}\n\n"
-            f"---\n\n"
-            f"{prompt_body}"
         )
+
+    workspace = Path(payload.workspace_path)
+    workspace.mkdir(parents=True, exist_ok=True)
+
     prompt_fd, prompt_path = tempfile.mkstemp(
         prefix=f"dec-bundle-{payload.feature_id}-",
         suffix=".md",
     )
     with os.fdopen(prompt_fd, "w", encoding="utf-8") as fh:
-        fh.write(prompt_body)
-    return prompt_path
-
-
-def _render_defect_feedback_section(records: list[DefectFeedbackRecord]) -> str:
-    """Render the FT-108 defect-feedback section for the agent prompt.
-
-    Renders an "outcome contract" first (read-this-first heading + the
-    exact citation block format the server-side extractor expects),
-    then the individual feedback entries. The intent is that even if
-    the model only reads the first few hundred tokens of the prompt
-    before deciding what to do, it sees the citation requirement and
-    the format — not the bundle's table of contents."""
-    iris_json = json.dumps([r.feedback_iri for r in records], indent=2)
-    empty_block = ADDRESSED_FEEDBACK_BEGIN + '\n{ "iris": [] }\n' + ADDRESSED_FEEDBACK_END
-    lines = [
-        "# ⚠ READ FIRST — Runtime defect feedback (FT-108)",
-        "",
-        f"This dispatch carries {len(records)} runtime defect(s) the prior verifier",
-        "produced against this feature's tests. **The orchestrator REQUIRES** that",
-        "your final assistant message end with a citation block listing every",
-        "feedback IRI your code change actually addressed. Without it the dispatch",
-        "is rejected and the feedback stays open — which makes the driver loop",
-        "report no-progress and escalate.",
-        "",
-        "## The citation block — EXACT format",
-        "",
-        "Your final assistant message must contain this verbatim block, with the",
-        "marker strings EXACTLY as shown (no whitespace variation, no commentary",
-        "inside the markers):",
-        "",
-        "```",
-        ADDRESSED_FEEDBACK_BEGIN,
-        '{',
-        f'  "iris": {_indent_json(iris_json, 2)}',
-        '}',
-        ADDRESSED_FEEDBACK_END,
-        "```",
-        "",
-        "The `iris` array lists every IRI you fixed. Drop any you couldn't fix.",
-        "",
-        "## What counts as \"addressed\"",
-        "",
-        "An IRI is addressed when the code change you produced would make the",
-        "evidence go away on a fresh verify run. Renaming an unrelated function,",
-        "adding a test stub that doesn't run, or writing a comment near the broken",
-        "code does NOT count as addressed. Cite ONLY the IRIs whose underlying",
-        "issue your diff actually fixes.",
-        "",
-        "## If you can't address any of them",
-        "",
-        "If after inspecting the bundle and the defects you conclude that NONE of",
-        "the defects describe a real code issue (e.g., they're all spec gaps, or",
-        "describe behaviour outside this feature's scope, or the underlying tests",
-        "are themselves wrong), emit the citation block with an EMPTY array and",
-        "explain in plain text BEFORE the block which defects you couldn't",
-        "address and why. The driver loop reads the empty array as an explicit",
-        "no-op signal and escalates to spec-author — this is far better than a",
-        "missing citation block, which the server treats as a malformed",
-        "dispatch.",
-        "",
-        "Empty-array form:",
-        "",
-        "```",
-        empty_block,
-        "```",
-        "",
-        "## The defects",
-        "",
-    ]
-    for r in records:
-        lines.append(f"### {r.feedback_iri}")
-        if r.source_tc:
-            lines.append(f"- source TC: `{r.source_tc}`")
-        if r.graph_id:
-            lines.append(
-                f"- source graph: `.dec/verify/graph/{r.graph_id}.ttl` — "
-                "**read this file first** to see the exact command that "
-                "failed; the `evidence` line below only carries the runner's "
-                "one-line diagnostic, not the full step text"
-            )
-        lines.append(f"- severity: {r.severity}")
-        lines.append(f"- evidence: {r.evidence.strip() or '(empty)'}")
-        lines.append("")
-    return "\n".join(lines)
-
-
-def _indent_json(blob: str, indent_spaces: int) -> str:
-    """Indent every line of a JSON blob past the first by `indent_spaces`."""
-    pad = " " * indent_spaces
-    lines = blob.splitlines()
-    if not lines:
-        return blob
-    return lines[0] + "\n" + "\n".join(pad + line for line in lines[1:])
-
-
-def _extract_addressed_feedback(blob: str) -> list[str]:
-    """Pull `addressed_feedback_iris` out of the agent's final-summary text.
-
-    Locates the most-recent `<<DEC_ADDRESSED_FEEDBACK>>...<<END>>` block
-    in `blob`, parses its JSON body, and returns the `iris` array. Any
-    parse failure / missing block → empty list (the Rust accept path
-    surfaces `WorkerIgnoredFeedback` for the operator).
-    """
-    if not blob:
-        return []
-    pattern = re.compile(
-        r"<<DEC_ADDRESSED_FEEDBACK>>\s*(\{.*?\})\s*<<END_DEC_ADDRESSED_FEEDBACK>>",
-        re.DOTALL,
+        fh.write(payload.bundle_markdown)
+    user_message = (
+        f"Implement feature {payload.feature_id} described in the system "
+        "prompt. Follow all constraints and run `product verify` when done."
     )
-    matches = list(pattern.finditer(blob))
-    if not matches:
-        return []
-    raw = matches[-1].group(1)
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        return []
-    iris = payload.get("iris") if isinstance(payload, dict) else None
-    if not isinstance(iris, list):
-        return []
-    return [str(i) for i in iris if isinstance(i, str)]
-
-
-def _build_claude_args(binary: str, prompt_path: str, payload: DispatchPayload) -> list[str]:
-    """Compose the argv list for `claude -p` with stream-json output."""
-    has_defects = bool(payload.defect_feedback)
-    if has_defects:
-        user_message = (
-            f"Implement feature {payload.feature_id} described in the system prompt.\n\n"
-            "The bundle's `# ⚠ READ FIRST` section at the top lists runtime defects from "
-            "prior verification runs. For each defect, the listed `source graph` path "
-            "(`.dec/verify/graph/VG-NNN.ttl`) shows the exact step text that failed — "
-            "READ THAT FILE before deciding what to change. The defect's `evidence` line "
-            "is the runner's one-line summary, not the whole story.\n\n"
-            "When the failing step exercises a `dec ...` subcommand, the fix lives in the "
-            "Rust source under `crates/decision-cli/` (or `crates/oxi-events/`); after "
-            "editing it you MUST run `cargo install --path crates/decision-cli --bin dec --offline` "
-            "so the verifier's next dispatch picks up your new binary. When it exercises a "
-            "worker (`code-writer`, `verify-graph-author`), edit the Python source under "
-            "`workers/<name>/` and re-install with `uv tool install workers/<name> --reinstall`.\n\n"
-            "If the failing step's command itself is wrong (the graph asks for a command "
-            "that was never meant to exist, or tests behaviour out of this feature's scope), "
-            "emit the citation block with `{\"iris\": []}` and explain why in plain text — "
-            "the driver will route those defects to the verify-graph-author to re-author the "
-            "test instead.\n\n"
-            "Run `product verify` when done."
-        )
-    else:
-        user_message = (
-            f"Implement feature {payload.feature_id} described in the system "
-            "prompt. Follow all constraints and run `product verify` when done."
-        )
-    return [
+    args = [
         binary,
         "-p",
         "--dangerously-skip-permissions",
@@ -319,154 +136,6 @@ def _build_claude_args(binary: str, prompt_path: str, payload: DispatchPayload) 
         user_message,
     ]
 
-
-def _timeout_response(payload: DispatchPayload, exc: subprocess.TimeoutExpired) -> WorkerResponse:
-    """Response returned when `claude -p` exceeded its timeout budget."""
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="error",
-        error=WorkerError(
-            category="timeout",
-            message=f"`claude -p` exceeded {payload.timeout_seconds}s",
-            detail=str(exc),
-            retryable=True,
-        ),
-    )
-
-
-def _nonzero_exit_response(
-    payload: DispatchPayload,
-    completed: subprocess.CompletedProcess[str],
-    latency: float,
-) -> WorkerResponse:
-    """Response built from a non-zero `claude -p` exit code."""
-    detail = completed.stderr.strip()
-    if not detail:
-        detail = _scrape_terminal_error(completed.stdout)
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="error",
-        error=WorkerError(
-            category="subprocess_failed",
-            message=f"`claude -p` exited with status {completed.returncode}",
-            detail=detail,
-            retryable=False,
-        ),
-        telemetry=WorkerTelemetry(
-            latency_seconds=latency,
-            stdout_excerpt=completed.stdout[-2000:],
-            stderr_excerpt=completed.stderr[-2000:],
-            errors=[completed.stderr[-2000:]] if completed.stderr else [],
-        ),
-    )
-
-
-def _workspace_violation_response(
-    payload: DispatchPayload,
-    workspace: Path,
-    file_path: str,
-    exc: ValueError,
-    completed: subprocess.CompletedProcess[str],
-    latency: float,
-) -> WorkerResponse:
-    """Response returned when the model tried to touch a file outside the workspace."""
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="error",
-        error=WorkerError(
-            category="workspace_violation",
-            message=str(exc),
-            detail=f"file path {file_path!r} escapes {workspace!s}",
-            retryable=False,
-        ),
-        telemetry=WorkerTelemetry(
-            latency_seconds=latency,
-            stdout_excerpt=completed.stdout[-2000:],
-        ),
-    )
-
-
-def _confine_writes(
-    workspace: Path,
-    file_writes: list[FileWrite],
-) -> tuple[list[FileWrite], FileWrite | None, ValueError | None]:
-    """Filter `file_writes` to those inside `workspace`.
-
-    Returns the confined list, plus the first offender (if any) with its error.
-    """
-    confined: list[FileWrite] = []
-    for fw in file_writes:
-        try:
-            _safe_join(workspace, fw.path)
-        except ValueError as exc:
-            return confined, fw, exc
-        confined.append(fw)
-    return confined, None, None
-
-
-def _build_success_response(
-    payload: DispatchPayload,
-    confined: list[FileWrite],
-    tool_calls: list[ToolCall],
-    parse_errors: list[str],
-    final_summary: str,
-    completed: subprocess.CompletedProcess[str],
-    latency: float,
-) -> WorkerResponse:
-    """Assemble the `status="ok"` response from parsed stream-json output."""
-    # FT-108: parse the agent's citation block when the bundle asked for
-    # one. The Rust accept path's WorkerIgnoredFeedback guard catches an
-    # empty list when the bundle had defect feedback, so we don't have
-    # to enforce non-emptiness here — surface what the model produced.
-    addressed = _extract_addressed_feedback(final_summary) if payload.defect_feedback else []
-    code_change = CodeChange(
-        iri=_make_code_change_iri(payload.dispatch_id),
-        feature_id=payload.feature_id,
-        session_id=payload.session_id,
-        files=confined,
-        summary=final_summary,
-        addressed_feedback_iris=addressed,
-    )
-    telemetry = WorkerTelemetry(
-        turn_count=len([tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]) or 1,
-        latency_seconds=latency,
-        tool_calls=tool_calls,
-        errors=parse_errors,
-        stdout_excerpt=completed.stdout[-2000:],
-        stderr_excerpt=completed.stderr[-2000:],
-    )
-    return WorkerResponse(
-        dispatch_id=payload.dispatch_id,
-        session_id=payload.session_id,
-        status="ok",
-        code_change=code_change,
-        telemetry=telemetry,
-    )
-
-
-def run_claude(payload: DispatchPayload) -> WorkerResponse:
-    """Real ``claude -p`` subprocess runner (ADR-008 §Behaviour 3-5)."""
-    binary = _entry._claude_on_path()
-    if binary is None:
-        return _missing_binary_response(payload)
-
-    # FT-066 / ADR-033 — translate the resolved capability's endpoint
-    # into the right ANTHROPIC_* env vars BEFORE spawning. A missing
-    # SCW_SECRET_KEY surfaces as a structured WorkerError pre-spawn so
-    # the operator sees a clear failure instead of an upstream 401.
-    try:
-        spawn_env = claude_env_for(payload)
-    except EndpointConfigError as exc:
-        return _endpoint_config_response(payload, exc)
-
-    workspace = Path(payload.workspace_path)
-    workspace.mkdir(parents=True, exist_ok=True)
-    prompt_path = _write_bundle_prompt(payload)
-    args = _build_claude_args(binary, prompt_path, payload)
-
     started = time.monotonic()
     try:
         try:
@@ -477,23 +146,93 @@ def run_claude(payload: DispatchPayload) -> WorkerResponse:
                 timeout=payload.timeout_seconds,
                 cwd=str(workspace),
                 check=False,
-                env=spawn_env,
             )
         except subprocess.TimeoutExpired as exc:
-            return _timeout_response(payload, exc)
+            return WorkerResponse(
+                dispatch_id=payload.dispatch_id,
+                session_id=payload.session_id,
+                status="error",
+                error=WorkerError(
+                    category="timeout",
+                    message=f"`claude -p` exceeded {payload.timeout_seconds}s",
+                    detail=str(exc),
+                    retryable=True,
+                ),
+            )
 
         latency = time.monotonic() - started
         if completed.returncode != 0:
-            return _nonzero_exit_response(payload, completed, latency)
-
-        tool_calls, file_writes, final_summary, parse_errors = _parse_stream_json(completed.stdout)
-        confined, offender, exc = _confine_writes(workspace, file_writes)
-        if offender is not None and exc is not None:
-            return _workspace_violation_response(
-                payload, workspace, offender.path, exc, completed, latency
+            detail = completed.stderr.strip()
+            if not detail:
+                detail = _scrape_terminal_error(completed.stdout)
+            return WorkerResponse(
+                dispatch_id=payload.dispatch_id,
+                session_id=payload.session_id,
+                status="error",
+                error=WorkerError(
+                    category="subprocess_failed",
+                    message=f"`claude -p` exited with status {completed.returncode}",
+                    detail=detail,
+                    retryable=False,
+                ),
+                telemetry=WorkerTelemetry(
+                    latency_seconds=latency,
+                    stdout_excerpt=completed.stdout[-2000:],
+                    stderr_excerpt=completed.stderr[-2000:],
+                    errors=[completed.stderr[-2000:]] if completed.stderr else [],
+                ),
             )
-        return _build_success_response(
-            payload, confined, tool_calls, parse_errors, final_summary, completed, latency
+
+        tool_calls, file_writes, final_summary, parse_errors = _parse_stream_json(
+            completed.stdout
+        )
+
+        confined: list[FileWrite] = []
+        for fw in file_writes:
+            try:
+                _safe_join(workspace, fw.path)
+            except ValueError as exc:
+                return WorkerResponse(
+                    dispatch_id=payload.dispatch_id,
+                    session_id=payload.session_id,
+                    status="error",
+                    error=WorkerError(
+                        category="workspace_violation",
+                        message=str(exc),
+                        detail=f"file path {fw.path!r} escapes {workspace!s}",
+                        retryable=False,
+                    ),
+                    telemetry=WorkerTelemetry(
+                        latency_seconds=latency,
+                        stdout_excerpt=completed.stdout[-2000:],
+                    ),
+                )
+            confined.append(fw)
+
+        code_change = CodeChange(
+            iri=_make_code_change_iri(payload.dispatch_id),
+            feature_id=payload.feature_id,
+            session_id=payload.session_id,
+            files=confined,
+            summary=final_summary,
+        )
+        telemetry = WorkerTelemetry(
+            turn_count=len(
+                [tc for tc in tool_calls if tc.name in {"Write", "Edit", "Bash"}]
+            )
+            or 1,
+            latency_seconds=latency,
+            tool_calls=tool_calls,
+            errors=parse_errors,
+            stdout_excerpt=completed.stdout[-2000:],
+            stderr_excerpt=completed.stderr[-2000:],
+        )
+        return WorkerResponse(
+            dispatch_id=payload.dispatch_id,
+            session_id=payload.session_id,
+            status="ok",
+            code_change=code_change,
+            telemetry=telemetry,
         )
     finally:
         try:

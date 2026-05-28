@@ -2,8 +2,7 @@
 id: ADR-009
 title: product-cli integration via subprocess and MCP for slice 1
 status: accepted
-features:
-- FT-105
+features: []
 supersedes: []
 superseded-by: []
 domains: []

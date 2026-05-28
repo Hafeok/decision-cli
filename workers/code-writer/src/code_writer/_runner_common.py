@@ -1,4 +1,4 @@
-"""Shared helpers used by every code-writer runner backend."""
+"""Shared helpers used by both the stub and real Claude runners."""
 
 from __future__ import annotations
 

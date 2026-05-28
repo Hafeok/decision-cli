@@ -2,7 +2,7 @@
 id: FT-032
 title: 'decision-cli: Blocking vs non-blocking feedback in the dispatch lifecycle'
 phase: 2
-status: complete
+status: planned
 depends-on:
 - FT-021
 - FT-026
@@ -15,21 +15,7 @@ tests:
 - TC-036
 - TC-037
 domains: []
-domains-acknowledged:
-  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-032 produces no feedback artifacts.
-  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-032 produces no action/interpretation pair.
-  ADR-004: ADR-004 (PROV-O) governs session/event lineage; FT-032 produces no new Session or event type and inherits lineage from the harness.
-  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-032 does not introduce or modify a role catalog entry.
-  ADR-002: ADR-002 (graph-as-state) governs persistence semantics; FT-032 reads/writes via the GraphWriter chokepoint and does not introduce event-sourced state.
-  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-032's code is reorganised under that migration, not by this feature.
-  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-032 produces no feedback artifacts.
-  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-032 neither emits nor routes feedback.
-  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-032 does not author or modify a fitness-function artifact.
-  ADR-012: ADR-012 (per-stream working directory discovery) governs CLI entry; FT-032 runs after the working directory is resolved and does not re-discover it.
-  ADR-005: ADR-005 (value-stream scope) governs command-time scope; FT-032 runs inside an already-scoped command and does not introduce a new scope check.
-  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-032's code conforms to cargo/clippy/rustfmt and the module-size convention. ADR-013 itself is owned by FT-014.
-  ADR-001: ADR-001 governs the oxi-events crate boundary; FT-032 does not cross or alter that boundary.
-  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-032 neither emits nor consumes verdicts.
+domains-acknowledged: {}
 ---
 
 ## Description

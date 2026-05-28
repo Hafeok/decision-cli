@@ -3,8 +3,6 @@ resolver = "2"
 members = [
     "crates/oxi-events",
     "crates/decision-cli",
-    "crates/product-cli",
-    "crates/product-shim",
 ]
 
 [workspace.package]
@@ -24,7 +22,6 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 axum = "0.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-serde_yaml = "0.9"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
@@ -46,14 +43,8 @@ clap = { version = "4", features = ["derive"] }
 # HTTP client (for subprocess + MCP wrappers in decision-cli)
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
-# HTTP test plumbing (decision-cli dev-dependency only — exercises the
-# axum router from inside-process tests via `tower::ServiceExt::oneshot`).
-tower = { version = "0.5", features = ["util"] }
-http-body-util = "0.1"
-
 # Internal
 oxi-events = { path = "crates/oxi-events" }
-product-cli = { path = "crates/product-cli" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

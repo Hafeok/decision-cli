@@ -1,15 +1,12 @@
 ---
 id: ADR-024
 title: Feedback lifecycle state machine
-status: accepted
-features:
-- FT-027
+status: proposed
+features: []
 supersedes: []
 superseded-by: []
-domains:
-- data-model
-scope: domain
-content-hash: sha256:ecf3fb8a151dfa11339c2d899511284c86bdd1ba90325dfa231130d5aa99904b
+domains: []
+scope: cross-cutting
 source-files:
 - crates/decision-cli/src/core/feedback/lifecycle.rs
 - scripts/checks/feedback-resume-on-addressed.sh

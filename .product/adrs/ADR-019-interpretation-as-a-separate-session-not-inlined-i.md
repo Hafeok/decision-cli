@@ -1,13 +1,12 @@
 ---
 id: ADR-019
 title: Interpretation as a separate session, not inlined into the action session
-status: accepted
+status: proposed
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
-content-hash: sha256:14431911712cda61cbe191f6c672c3502c300d39beb456a3966352de574ede27
 ---
 
 ## Context

@@ -2,13 +2,11 @@
 id: ADR-012
 title: Per-stream working directories (git-style discovery)
 status: accepted
-features:
-- FT-009
-- FT-016
+features: []
 supersedes: []
 superseded-by: []
 domains: []
-scope: platform
+scope: cross-cutting
 content-hash: sha256:6f0d005faa4187608f7266fe42431dfa0008721f42c4ba85d97b49c9766e5734
 source-files:
 - scripts/checks/per-stream-workdir.sh

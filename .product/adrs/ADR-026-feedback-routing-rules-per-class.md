@@ -1,13 +1,12 @@
 ---
 id: ADR-026
 title: Feedback routing rules per class
-status: accepted
+status: proposed
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
-content-hash: sha256:e188859899aa57a6b0566e1efbb13eb9cab9491572107661e06344536d0903dd
 source-files:
 - crates/decision-cli/src/core/feedback/routing.rs
 ---

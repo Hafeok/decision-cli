@@ -10,8 +10,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-004-unknown-value-action-uri.sh
 runner-timeout: 30
-last-run: 2026-05-28T14:37:54.422788933+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-19T09:46:01.479298690+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

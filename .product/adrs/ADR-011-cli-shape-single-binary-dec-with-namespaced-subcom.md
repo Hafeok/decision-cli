@@ -2,8 +2,7 @@
 id: ADR-011
 title: 'CLI shape: single-binary dec with namespaced subcommands'
 status: accepted
-features:
-- FT-052
+features: []
 supersedes: []
 superseded-by: []
 domains: []

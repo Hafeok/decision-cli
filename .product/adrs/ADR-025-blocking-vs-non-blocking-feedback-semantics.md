@@ -1,16 +1,12 @@
 ---
 id: ADR-025
 title: Blocking vs non-blocking feedback semantics
-status: accepted
-features:
-- FT-032
+status: proposed
+features: []
 supersedes: []
 superseded-by: []
-domains:
-- api
-- data-model
-scope: domain
-content-hash: sha256:5d20a2efe3b5ec7d8e275fec5020908cd34e32edc22537047c622b6e5996750c
+domains: []
+scope: cross-cutting
 source-files:
 - crates/decision-cli/src/core/dispatch/lifecycle.rs
 - scripts/checks/feedback-blocking-pauses.sh

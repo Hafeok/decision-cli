@@ -22,9 +22,3 @@ __pycache__/
 
 # WSL/NTFS metadata streams
 *:Zone.Identifier
-
-# Claude Code state (subagent worktrees, local settings)
-.claude/
-
-# Local run logs (implement-all.sh, etc.)
-.logs/

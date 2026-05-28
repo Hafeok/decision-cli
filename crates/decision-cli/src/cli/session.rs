@@ -41,74 +41,58 @@ pub struct SessionLogArgs {
 
 pub fn run(workdir: &Path, cmd: SessionCmd) -> ExitCode {
     match cmd {
-        SessionCmd::Show(args) => run_show(workdir, &args.iri),
-        SessionCmd::List(args) => run_list(workdir, args.limit, args.offset),
-        SessionCmd::Log(args) => run_log(workdir, &args.iri),
-    }
-}
-
-fn run_show(workdir: &Path, iri: &str) -> ExitCode {
-    match implement::session_show(workdir, iri) {
-        Ok(report) => {
-            print!("{report}");
-            ExitCode::SUCCESS
-        }
-        Err(err) => {
-            eprintln!("dec session show: {err:#}");
-            ExitCode::from(1)
-        }
-    }
-}
-
-fn run_list(workdir: &Path, limit: usize, offset: usize) -> ExitCode {
-    match session_inspect::list(workdir, limit, offset) {
-        Ok(rows) => {
-            print_session_rows(&rows);
-            ExitCode::SUCCESS
-        }
-        Err(err) => {
-            eprintln!("dec session list: {err:#}");
-            ExitCode::from(1)
-        }
-    }
-}
-
-fn print_session_rows(rows: &[session_inspect::SessionSummary]) {
-    if rows.is_empty() {
-        println!("(no sessions)");
-    }
-    for row in rows {
-        let started = if row.started_at.is_empty() {
-            "(unknown-time)"
-        } else {
-            row.started_at.as_str()
-        };
-        let feature = if row.feature_id.is_empty() {
-            "(no-feature)"
-        } else {
-            row.feature_id.as_str()
-        };
-        let status = if row.status.is_empty() {
-            "(pending)"
-        } else {
-            row.status.as_str()
-        };
-        println!(
-            "{started}  feature={feature}  status={status}  iri={}",
-            row.iri
-        );
-    }
-}
-
-fn run_log(workdir: &Path, iri: &str) -> ExitCode {
-    match session_inspect::log(workdir, iri) {
-        Ok(log) => {
-            print!("{}", session_inspect::format_log(&log));
-            ExitCode::SUCCESS
-        }
-        Err(err) => {
-            eprintln!("dec session log: {err:#}");
-            ExitCode::from(1)
-        }
+        SessionCmd::Show(args) => match implement::session_show(workdir, &args.iri) {
+            Ok(report) => {
+                print!("{report}");
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec session show: {err:#}");
+                ExitCode::from(1)
+            }
+        },
+        SessionCmd::List(args) => match session_inspect::list(workdir, args.limit, args.offset) {
+            Ok(rows) => {
+                if rows.is_empty() {
+                    println!("(no sessions)");
+                }
+                for row in &rows {
+                    let started = if row.started_at.is_empty() {
+                        "(unknown-time)"
+                    } else {
+                        row.started_at.as_str()
+                    };
+                    let feature = if row.feature_id.is_empty() {
+                        "(no-feature)"
+                    } else {
+                        row.feature_id.as_str()
+                    };
+                    let status = if row.status.is_empty() {
+                        "(pending)"
+                    } else {
+                        row.status.as_str()
+                    };
+                    println!(
+                        "{started}  feature={feature}  status={status}  iri={}",
+                        row.iri
+                    );
+                }
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec session list: {err:#}");
+                ExitCode::from(1)
+            }
+        },
+        SessionCmd::Log(args) => match session_inspect::log(workdir, &args.iri) {
+            Ok(log) => {
+                print!("{}", session_inspect::format_log(&log));
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("dec session log: {err:#}");
+                ExitCode::from(1)
+            }
+        },
     }
 }
