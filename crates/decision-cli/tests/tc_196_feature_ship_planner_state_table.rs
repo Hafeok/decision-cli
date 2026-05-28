@@ -31,6 +31,9 @@ impl GraphInspector for StubInspector {
             _ => 0,
         })
     }
+    fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
+        Ok(true)
+    }
 }
 
 fn classify(verdict: FeatureVerdict, impl_c: usize, vga_c: usize) -> Action {
@@ -102,15 +105,19 @@ fn tc_196_feature_ship_planner_state_table() {
         other => panic!("expected DispatchVerifier; got {other:?}"),
     }
 
-    // Row 5: bad verdict + clean slate → Stuck.
+    // Row 5: bad verdict + clean slate → re-dispatch verifier to refresh
+    // evidence. The no-state-change detector will catch terminal Stuck on
+    // the next iteration if the verifier run produces no new feedback.
+    // This gives the loop a chance to continue automatically instead of
+    // bailing on a potentially stale snapshot.
     for verdict in [FeatureVerdict::Rejected, FeatureVerdict::AmendmentRequired] {
         let action = classify(verdict, 0, 0);
         match action {
-            Action::Stuck { reason } => {
-                assert!(reason.contains("FT-T196"), "reason should name the feature: {reason}");
-                assert!(reason.contains("not converging"), "reason should diagnose stuck-cause: {reason}");
+            Action::DispatchVerifier { feature_id, env_id } => {
+                assert_eq!(feature_id, "FT-T196");
+                assert_eq!(env_id, "ENV-002");
             }
-            other => panic!("{verdict:?} 0 0 should be Stuck; got {other:?}"),
+            other => panic!("{verdict:?} 0 0 should be DispatchVerifier; got {other:?}"),
         }
     }
 }
