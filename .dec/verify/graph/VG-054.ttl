@@ -22,7 +22,7 @@
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-013> ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-011> ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-008> ;
-    dec:command "cd /tmp/test-workspace && claude -p --system-prompt-file /tmp/test-bundle.md --dangerously-skip-permissions --output-format stream-json --verbose" ;
+    dec:command "cd /tmp/test-workspace && claude -p 'Write a simple hello world Python function to test-file.py' --system-prompt-file /tmp/test-bundle.md --dangerously-skip-permissions --output-format stream-json --verbose" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-054/2>
