@@ -228,6 +228,13 @@ def _render_defect_feedback_section(records: list[DefectFeedbackRecord]) -> str:
         lines.append(f"### {r.feedback_iri}")
         if r.source_tc:
             lines.append(f"- source TC: `{r.source_tc}`")
+        if r.graph_id:
+            lines.append(
+                f"- source graph: `.dec/verify/graph/{r.graph_id}.ttl` — "
+                "**read this file first** to see the exact command that "
+                "failed; the `evidence` line below only carries the runner's "
+                "one-line diagnostic, not the full step text"
+            )
         lines.append(f"- severity: {r.severity}")
         lines.append(f"- evidence: {r.evidence.strip() or '(empty)'}")
         lines.append("")
@@ -273,10 +280,33 @@ def _extract_addressed_feedback(blob: str) -> list[str]:
 
 def _build_claude_args(binary: str, prompt_path: str, payload: DispatchPayload) -> list[str]:
     """Compose the argv list for `claude -p` with stream-json output."""
-    user_message = (
-        f"Implement feature {payload.feature_id} described in the system "
-        "prompt. Follow all constraints and run `product verify` when done."
-    )
+    has_defects = bool(payload.defect_feedback)
+    if has_defects:
+        user_message = (
+            f"Implement feature {payload.feature_id} described in the system prompt.\n\n"
+            "The bundle's `# ⚠ READ FIRST` section at the top lists runtime defects from "
+            "prior verification runs. For each defect, the listed `source graph` path "
+            "(`.dec/verify/graph/VG-NNN.ttl`) shows the exact step text that failed — "
+            "READ THAT FILE before deciding what to change. The defect's `evidence` line "
+            "is the runner's one-line summary, not the whole story.\n\n"
+            "When the failing step exercises a `dec ...` subcommand, the fix lives in the "
+            "Rust source under `crates/decision-cli/` (or `crates/oxi-events/`); after "
+            "editing it you MUST run `cargo install --path crates/decision-cli --bin dec --offline` "
+            "so the verifier's next dispatch picks up your new binary. When it exercises a "
+            "worker (`code-writer`, `verify-graph-author`), edit the Python source under "
+            "`workers/<name>/` and re-install with `uv tool install workers/<name> --reinstall`.\n\n"
+            "If the failing step's command itself is wrong (the graph asks for a command "
+            "that was never meant to exist, or tests behaviour out of this feature's scope), "
+            "emit the citation block with `{\"iris\": []}` and explain why in plain text — "
+            "the driver will route those defects to the verify-graph-author to re-author the "
+            "test instead.\n\n"
+            "Run `product verify` when done."
+        )
+    else:
+        user_message = (
+            f"Implement feature {payload.feature_id} described in the system "
+            "prompt. Follow all constraints and run `product verify` when done."
+        )
     return [
         binary,
         "-p",

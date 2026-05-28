@@ -47,12 +47,54 @@ pub fn load_for_implementer(workdir: &Path, tc_iris: &[String]) -> Vec<DefectFee
             severity: fb.severity.as_str().to_string(),
             evidence: fb.evidence.clone(),
             source_tc: source_str.to_string(),
-            // The implementer loader joins by TC alone; we deliberately
-            // leave graph_id empty (verify-graph-author is the consumer
-            // that cares which graph).
-            graph_id: String::new(),
+            // Best-effort: lift the VG short id out of the source-
+            // session activity URI so the worker can read the graph
+            // file (.dec/verify/graph/VG-NNN.ttl) to see the exact
+            // failing command. The activity URI shape is
+            // `…/verify-feature/FT-NNN/VG-NNN/ts-…` or
+            // `…/verify-graph-run/VG-NNN/ts-…`. Empty when the URI
+            // doesn't follow the convention — we don't promise.
+            graph_id: extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default(),
         });
     }
     out.sort_by(|a, b| a.feedback_iri.cmp(&b.feedback_iri));
     out
+}
+
+/// Best-effort extractor: pull the `VG-NNN` segment out of a
+/// source-session activity URI. Returns `None` when the URI doesn't
+/// contain a `/VG-NNN/` segment.
+fn extract_graph_short_id(session_uri: &str) -> Option<String> {
+    for segment in session_uri.split('/') {
+        if segment.starts_with("VG-")
+            && segment.len() > 3
+            && segment[3..].chars().all(|c| c.is_ascii_digit())
+        {
+            return Some(segment.to_string());
+        }
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_graph_short_id_pulls_vg_from_verify_feature_uri() {
+        let uri = "https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-054/ts-1779954488359098791";
+        assert_eq!(extract_graph_short_id(uri), Some("VG-054".to_string()));
+    }
+
+    #[test]
+    fn extract_graph_short_id_pulls_vg_from_verify_graph_run_uri() {
+        let uri = "https://decision-cli.dev/ns/activity/verify-graph-run/VG-097/ts-1779887801534721139";
+        assert_eq!(extract_graph_short_id(uri), Some("VG-097".to_string()));
+    }
+
+    #[test]
+    fn extract_graph_short_id_returns_none_when_absent() {
+        let uri = "https://decision-cli.dev/ns/session/abc-123";
+        assert_eq!(extract_graph_short_id(uri), None);
+    }
 }
