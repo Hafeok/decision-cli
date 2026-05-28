@@ -11,7 +11,7 @@ phase: 1
 runner: bash
 runner-args: cd /home/hafeok/projects/product-cli && python3 -m pytest tests/test_adrs_rejected.py -v
 runner-timeout: 120
-last-run: 2026-05-28T07:41:04.540341929+00:00
+last-run: 2026-05-28T07:41:47.795570592+00:00
 last-run-duration: 0.5s
 ---
 
