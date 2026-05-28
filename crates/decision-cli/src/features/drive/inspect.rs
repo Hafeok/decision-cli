@@ -133,13 +133,20 @@ impl<'a> GraphInspector for ProductionInspector<'a> {
         let store = load_store_from_dump(&dump).map_err(|e| InspectError::Store {
             detail: format!("opening store at {p}: {e:#}", p = dump.display()),
         })?;
+        // Orchestration store keeps every artifact in a named graph;
+        // bare patterns query only the default graph (empty) and
+        // return nothing. We need GRAPH wrapping, and crucially each
+        // triple may live in a *different* named graph
+        // (VerificationGraph artifacts in verify-graph,
+        // VerificationGraphResults in result-graph), so each is
+        // wrapped separately. The supersession check is its own
+        // GRAPH clause for the same reason.
         let q = format!(
             r#"PREFIX dec: <https://decision-cli.dev/ns#>
 SELECT ?verdict WHERE {{
-  ?graph dec:verifies <{feature_iri}> .
-  ?vgr dec:resultOf ?graph ;
-       dec:verdict ?verdict .
-  FILTER NOT EXISTS {{ ?graph dec:supersededBy ?_succ }}
+  GRAPH ?g1 {{ ?graph dec:verifies <{feature_iri}> . }}
+  GRAPH ?g2 {{ ?vgr dec:resultOf ?graph ; dec:verdict ?verdict . }}
+  FILTER NOT EXISTS {{ GRAPH ?h {{ ?graph dec:supersededBy ?_succ }} }}
 }}"#
         );
         let solutions = match store.query(&q) {
