@@ -176,6 +176,126 @@ product preflight FT-007     # context coverage check for a specific feature
 dec health                   # decision-cli liveness check
 ```
 
+## Rules live in `.product/`
+
+**Code-quality rules, architectural constraints, and other fitness functions are ADRs with `scope: cross-cutting`** (per ADR-014). The `.product/` graph is the single source of truth; CI is the enforcer; the context bundle is the carrier.
+
+Why this matters: Every implementation session in decision-cli receives a context bundle assembled from `.product/features/`, `.product/adrs/`, and `.product/tests/`. Cross-cutting ADRs surface automatically in every bundle. Rules in the graph means rules reach the implementer; rules in CONTRIBUTING.md or tribal knowledge do not.
+
+### The structure
+
+A rule is an ADR + TC pair:
+
+- **ADR** (`.product/adrs/`) — carries `scope: cross-cutting`, declares the rule in its body (thresholds, rationale, script paths).
+- **TC** (`.product/tests/`) — links back to the ADR via `validates.adrs: [ADR-XXX]`, points at the enforcement script via `runner` + `runner-args`.
+
+Examples in this repo: ADR-013 (code structure limits — source file length, function length, single-responsibility comments), ADR-008 (worker contract), ADR-001 (SDP boundary on `oxi-events`).
+
+### Lifecycle
+
+**Add a rule.** The flow from decision to enforcement:
+
+1. Author the ADR in `product author` mode (or via `product request apply` if you have a written request):
+   ```bash
+   product author adr          # or product adr new ADR-XXX --title "..."
+   # In the session: describe the rule, set scope: cross-cutting, set domains: [...]
+   ```
+2. Write the enforcement script under `scripts/checks/`:
+   ```bash
+   # Example: scripts/checks/source-file-length.sh
+   # Exit 0 if passes, 1 if fails, 2 if warnings
+   ```
+3. Author one or more TCs that link to the ADR:
+   ```bash
+   product test new TC-XXX --title "Source files under 400 lines"
+   product test runner TC-XXX --runner bash --args "scripts/checks/source-file-length.sh" --timeout 30s
+   # Set validates.adrs: [ADR-013] in the TC frontmatter
+   ```
+4. Apply the request (if using request flow):
+   ```bash
+   product request apply <request-id>
+   ```
+5. CI on the PR validates `product graph check` and `product verify --platform`.
+
+**Change a rule.** ADRs go through the accepted-ADR amend flow:
+
+```bash
+product author adr          # or product adr amend ADR-XXX
+# In the session: describe the change, record the reason
+```
+
+The amendment is recorded with a reason and a previous-hash; the request log carries the audit trail.
+
+**Retire a rule.** Mark the ADR as `superseded` or `abandoned`:
+
+```bash
+product adr status ADR-XXX superseded --by ADR-YYY
+# or
+product adr status ADR-XXX abandoned
+```
+
+Cross-cutting TCs lose their parent rule and surface in `product graph check` until they are deleted or relinked.
+
+### Enforcement via `product verify --platform`
+
+A pull request CI step runs `product verify --platform`. This command executes every TC linked to a cross-cutting ADR. The exit code is the gate:
+
+- `0` — every cross-cutting TC passes. Merge.
+- `1` — at least one cross-cutting TC fails. Block.
+- `2` — warnings only (e.g. a file is in the 300–400 line warning zone). Allow merge, surface in the PR comment.
+
+There is no separate "linting" CI pipeline or fitness-functions config. All cross-cutting checks live in `.product/` and run through `product verify --platform`.
+
+### Worked example: landing a new "no TODO comments without issue links" rule
+
+From decision to automated enforcement:
+
+```bash
+# 1. Author the rule
+product author adr
+# In the session:
+#   - Title: "TODO comments must link to an issue"
+#   - Scope: cross-cutting
+#   - Domains: [observability]
+#   - Body: "Every TODO/FIXME comment must include a GitHub issue link (github.com/.../issues/NNN).
+#            Orphaned TODOs accumulate and rot. Linked TODOs trace back to a reason and a plan."
+# (session completes, writes .product/adrs/ADR-021-todo-comments-must-link.md and a request to requests.jsonl)
+
+# 2. Write the enforcement script
+cat > scripts/checks/todo-comments-have-links.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+rg --type rust --type python 'TODO|FIXME' -n \
+  | grep -v 'github\.com/.*/issues/[0-9]' \
+  && { echo "Found TODO/FIXME without issue link"; exit 1; } \
+  || exit 0
+EOF
+chmod +x scripts/checks/todo-comments-have-links.sh
+
+# 3. Author the TC
+product test new TC-042 --title "TODO comments link to issues"
+product test runner TC-042 --runner bash --args "scripts/checks/todo-comments-have-links.sh" --timeout 30s
+# Edit .product/tests/TC-042-todo-comments-link-to-issues.md frontmatter:
+#   validates:
+#     adrs: [ADR-021]
+#     features: []
+
+# 4. Apply the request
+product request apply <request-id from step 1>
+
+# 5. Verify locally
+product verify --platform
+# TC-042 runs scripts/checks/todo-comments-have-links.sh
+# Exit 0 → rule passes
+
+# 6. Commit and open PR
+git add .product/adrs/ADR-021-*.md .product/tests/TC-042-*.md scripts/checks/todo-comments-have-links.sh .product/requests.jsonl
+git commit -m "[ADR-021] Require issue links in TODO comments"
+# CI on the PR runs `product verify --platform`, includes TC-042 in the fitness-function gate
+```
+
+From this point forward, every feature context bundle will include ADR-021, and every PR will run TC-042. The rule is in the system.
+
 ## CLI vocabulary
 
 Slice 1 exposes a minimal subset of the `dec` command surface. The full vocabulary emerges over later slices and follows the single-command pattern of `az`/`gcloud`/`kubectl`:

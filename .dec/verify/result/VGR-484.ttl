@@ -1,0 +1,72 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-484>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-123> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-28T19:39:03.164Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T19:39:03.625Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-484/step/0> <https://decision-cli.dev/ns/result/VGR-484/step/1> <https://decision-cli.dev/ns/result/VGR-484/step/2> ) ;
+    dec:rationale "all 3 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-009> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-484/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-010> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-484/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-011> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-484/step/2>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-005/VG-123/ts-1779997143161911718> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T19:39:03.625Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-484/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-123/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T19:39:03.164Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T19:39:03.315Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "\nrunning 1 test\ntest graphwriter_events_have_monotonic_sequence_numbers ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n" ;
+    dec:stderrExcerpt "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s\n     Running tests/tc_009_monotonic_events.rs (target/debug/deps/tc_009_monotonic_events-96964fbf1f264656)\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-005/VG-123/ts-1779997143161911718> .
+
+<https://decision-cli.dev/ns/result/VGR-484/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-123/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T19:39:03.315Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T19:39:03.467Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-005/VG-123/ts-1779997143161911718> .
+
+<https://decision-cli.dev/ns/result/VGR-484/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-123/2> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T19:39:03.467Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T19:39:03.625Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n\n" ;
+    dec:stderrExcerpt "TC-011 latencies (ms): [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]\n" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-005/VG-123/ts-1779997143161911718> .
