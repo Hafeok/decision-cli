@@ -35,7 +35,7 @@
 
 mod sparql;
 
-use oxigraph::sparql::{Query, QueryResults};
+use oxigraph::sparql::{Query, QueryResults, QuerySolution};
 use oxigraph::store::Store;
 use serde::{Deserialize, Serialize};
 
@@ -188,77 +188,82 @@ pub struct ReplayedEvent {
 ///   (missing field or unparseable literal). Indicates store
 ///   corruption — not a recoverable error condition.
 pub fn replay(store: &Store, request: &ReplayRequest) -> Result<Vec<ReplayedEvent>, ReplayError> {
-    let sparql = build_query(request);
+    let sparql = prepare_replay_query(request)?;
+    let sols = execute_replay_query(store, &sparql)?;
 
+    let mut out = Vec::new();
+    let mut last_seq: Option<u64> = None;
+    for sol in sols {
+        let sol = sol?;
+        let event = decode_replay_row(&sol)?;
+        enforce_strict_monotonic(last_seq, event.seq)?;
+        last_seq = Some(event.seq);
+        out.push(event);
+    }
+
+    Ok(out)
+}
+
+fn prepare_replay_query(request: &ReplayRequest) -> Result<String, ReplayError> {
+    let sparql = build_query(request);
     if let Err(err) = Query::parse(&sparql, None) {
         return Err(match &request.filter {
             Some(_) => ReplayError::InvalidFilter(err.to_string()),
             None => ReplayError::Internal(format!("replay query failed to parse: {err}")),
         });
     }
+    Ok(sparql)
+}
 
-    let results = store.query(sparql.as_str())?;
-    let QueryResults::Solutions(sols) = results else {
-        return Err(ReplayError::Internal(
+fn execute_replay_query(
+    store: &Store,
+    sparql: &str,
+) -> Result<oxigraph::sparql::QuerySolutionIter, ReplayError> {
+    let results = store.query(sparql)?;
+    match results {
+        QueryResults::Solutions(sols) => Ok(sols),
+        _ => Err(ReplayError::Internal(
             "replay SELECT returned non-solution results".to_string(),
-        ));
-    };
-
-    let mut out = Vec::new();
-    let mut last_seq: Option<u64> = None;
-    for sol in sols {
-        let sol = sol?;
-        let event = sol
-            .get("event")
-            .ok_or_else(|| ReplayError::Internal("replay row missing ?event".to_string()))?;
-        let seq_term = sol
-            .get("seq")
-            .ok_or_else(|| ReplayError::Internal("replay row missing ?seq".to_string()))?;
-        let mutation = sol
-            .get("mutation")
-            .ok_or_else(|| ReplayError::Internal("replay row missing ?mutation".to_string()))?;
-        let subscription = sol.get("subscription").ok_or_else(|| {
-            ReplayError::Internal("replay row missing ?subscription".to_string())
-        })?;
-        let emitted_at = sol
-            .get("emittedAt")
-            .ok_or_else(|| ReplayError::Internal("replay row missing ?emittedAt".to_string()))?;
-        let published = sol
-            .get("published")
-            .ok_or_else(|| ReplayError::Internal("replay row missing ?published".to_string()))?;
-        let status = sol
-            .get("status")
-            .ok_or_else(|| ReplayError::Internal("replay row missing ?status".to_string()))?;
-
-        let event_iri = named_node_iri(event, "event")?;
-        let seq = parse_u64_literal(seq_term, "seq")?;
-        let mutation_iri = named_node_iri(mutation, "mutation")?;
-        let subscription_iri = named_node_iri(subscription, "subscription")?;
-        let emitted_at_str = literal_value(emitted_at, "emittedAt")?;
-        let published_bool = parse_bool_literal(published, "published")?;
-        let status_str = literal_value(status, "status")?;
-
-        // Defence-in-depth: re-assert strict-monotonic so a future
-        // schema mistake surfaces as a clear error.
-        if let Some(prev) = last_seq {
-            if seq <= prev {
-                return Err(ReplayError::Internal(format!(
-                    "replay output not strictly increasing: {prev} followed by {seq}"
-                )));
-            }
-        }
-        last_seq = Some(seq);
-
-        out.push(ReplayedEvent {
-            event: event_iri,
-            seq,
-            mutation: mutation_iri,
-            subscription: subscription_iri,
-            emitted_at: emitted_at_str,
-            published: published_bool,
-            status: status_str,
-        });
+        )),
     }
+}
 
-    Ok(out)
+fn decode_replay_row(sol: &QuerySolution) -> Result<ReplayedEvent, ReplayError> {
+    let event = require_field(sol, "event")?;
+    let seq_term = require_field(sol, "seq")?;
+    let mutation = require_field(sol, "mutation")?;
+    let subscription = require_field(sol, "subscription")?;
+    let emitted_at = require_field(sol, "emittedAt")?;
+    let published = require_field(sol, "published")?;
+    let status = require_field(sol, "status")?;
+    Ok(ReplayedEvent {
+        event: named_node_iri(event, "event")?,
+        seq: parse_u64_literal(seq_term, "seq")?,
+        mutation: named_node_iri(mutation, "mutation")?,
+        subscription: named_node_iri(subscription, "subscription")?,
+        emitted_at: literal_value(emitted_at, "emittedAt")?,
+        published: parse_bool_literal(published, "published")?,
+        status: literal_value(status, "status")?,
+    })
+}
+
+fn require_field<'a>(
+    sol: &'a QuerySolution,
+    name: &str,
+) -> Result<&'a oxigraph::model::Term, ReplayError> {
+    sol.get(name)
+        .ok_or_else(|| ReplayError::Internal(format!("replay row missing ?{name}")))
+}
+
+fn enforce_strict_monotonic(prev: Option<u64>, seq: u64) -> Result<(), ReplayError> {
+    // Defence-in-depth: re-assert strict-monotonic so a future
+    // schema mistake surfaces as a clear error.
+    if let Some(prev) = prev {
+        if seq <= prev {
+            return Err(ReplayError::Internal(format!(
+                "replay output not strictly increasing: {prev} followed by {seq}"
+            )));
+        }
+    }
+    Ok(())
 }

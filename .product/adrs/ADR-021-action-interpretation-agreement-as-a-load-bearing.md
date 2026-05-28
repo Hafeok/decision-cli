@@ -1,12 +1,13 @@
 ---
 id: ADR-021
 title: Action-interpretation agreement as a load-bearing fitness metric
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
-scope: cross-cutting
+scope: feature-specific
+content-hash: sha256:e26b7d5160dbcfc9575c99f271b69b323ce7bf0240f56791d410e3efcccf1474
 source-files:
 - crates/decision-cli/src/core/metrics/agreement.rs
 - scripts/checks/metrics-agreement.sh

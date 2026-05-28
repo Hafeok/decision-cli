@@ -1,12 +1,18 @@
 ---
 id: ADR-020
 title: 'Verifier worker shape: single-shot LLM call for slice 2'
-status: proposed
-features: []
+status: accepted
+features:
+- FT-064
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:78330327d4dda8fc08d58350b763a4851891fbe7ed5210c416accd5e166122dd
+amendments:
+- date: 2026-05-22T18:29:04Z
+  reason: Note that the verifier's model identifier now arrives via the dispatch payload from the capability resolver ([FT-061](FT-061)), not from a module constant. The decision (single-shot LLM call, no tool use, no graph access) is unchanged; the `ModelCaller` seam at `worker.py:52` is what [ADR-033](ADR-033)'s injection plugs into. Also strikes the rejection of asymmetric model selection — it was a Phase A scope decision, and Phase B (capability layer) is now landing.
+  previous-hash: sha256:8ccc04528970449ed6309622b27462ec167383888592308d1607d788b8ed7fa4
 ---
 
 ## Context
@@ -63,6 +69,16 @@ A later ADR-020 amendment (or a successor ADR) records when verifier tool use be
 
 Until one of those fires, single-shot stays.
 
+### Amendment — model identifier arrives via dispatch payload (Phase B, post [ADR-033](ADR-033))
+
+The original "asymmetric model selection (Sonnet write / Opus verify) — Phase B at earliest" rejection in this ADR is now resolved by Phase B itself: [ADR-033](ADR-033) introduces `dec:Capability` and `dec:RoleBinding` as the artifacts that drive asymmetric model selection per role. The verifier remains single-shot; what changes is that:
+
+- The `DEFAULT_MODEL_ID = "claude-sonnet-4-5"` constant at `workers/verifier/src/verifier/worker.py:17` is removed by [FT-064](FT-064).
+- The model identifier arrives via the dispatch payload from the capability resolver ([FT-061](FT-061)).
+- The existing `ModelCaller` indirection at `worker.py:52` is the seam — it is replaced by the `ModelRouter` from [FT-060](FT-060), which dispatches to either the Anthropic SDK or the Scaleway OpenAI-compatible client ([FT-059](FT-059)) based on the resolved capability's `endpoint`.
+
+The single-shot, no-tool-use, no-graph-access invariants are unchanged. Only the source of the model identifier moves: from worker constant to dispatch payload.
+
 ## Rejected alternatives
 
 - **Tool-using verifier from day one.** Rejected — see "Why no tool use." Phase A wants the simplest observable shape.
@@ -86,4 +102,4 @@ Until one of those fires, single-shot stays.
 
 ## Status
 
-Proposed. Bound to slice 2 ([FT-023](FT-023)). Inherits the slice-1 worker contract from [ADR-008](ADR-008).
+Proposed. Bound to slice 2 ([FT-023](FT-023)). Inherits the slice-1 worker contract from [ADR-008](ADR-008). Phase-B model identifier source recorded by amendment, governed by [ADR-033](ADR-033).

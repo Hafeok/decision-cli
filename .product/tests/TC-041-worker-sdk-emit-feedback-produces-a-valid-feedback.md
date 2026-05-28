@@ -2,7 +2,7 @@
 id: TC-041
 title: worker SDK emit_feedback produces a valid Feedback artifact in session telemetry
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-030
@@ -13,6 +13,8 @@ phase: 2
 runner: pytest
 runner-args: workers/_shared/tests/test_emit_feedback.py
 runner-timeout: 120
+last-run: 2026-05-25T23:43:40.429452005+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

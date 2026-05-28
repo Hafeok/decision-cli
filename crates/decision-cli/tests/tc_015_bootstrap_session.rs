@@ -83,9 +83,7 @@ fn bootstrap_session_reachable_from_valuestream_via_provo() {
     }
 
     // Negative check: no ValueStream may be missing the PROV chain.
-    let QueryResults::Solutions(sols) = store
-        .query(NEG_TC_015)
-        .expect("negative audit query runs")
+    let QueryResults::Solutions(sols) = store.query(NEG_TC_015).expect("negative audit query runs")
     else {
         panic!("negative audit query returned non-solutions");
     };

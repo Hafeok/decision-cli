@@ -28,6 +28,7 @@ def _payload(workspace: Path, feature: str = "FT-013") -> DispatchPayload:
         bundle_hash="a" * 64,
         workspace_path=str(workspace),
         model_id="claude-sonnet-4-5",
+        endpoint="anthropic",
     )
 
 

@@ -15,7 +15,7 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
 fi
 
 WRITER_DIR="crates/oxi-events/src/writer"
-INIT_DIR="crates/decision-cli/src/init"
+INIT_DIR="crates/decision-cli/src/features/init"
 
 for dir in "$WRITER_DIR" "$INIT_DIR"; do
   if [ ! -d "$dir" ]; then

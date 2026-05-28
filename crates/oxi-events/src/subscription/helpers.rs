@@ -1,4 +1,4 @@
-//! SPARQL helpers and binding-diff utilities used by the registry.
+//! Binding-diff utilities (with their SPARQL helpers) for the registry.
 
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -2,12 +2,17 @@
 id: ADR-015
 title: Graph-native worker bindings
 status: accepted
-features: []
+features:
+- FT-061
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
-content-hash: sha256:6c7db92741d1b0b9a7058a691437c163785a664ed5d53dd74ad7bd19fa9ce3c6
+content-hash: sha256:abade8d8a9806efba5e21d00d2cfdcd12f34a4dbfba5313c554a6a662762c86b
+amendments:
+- date: 2026-05-22T18:28:29Z
+  reason: 'Clarify the orthogonality between worker bindings (this ADR — which executable runs a role) and capability bindings ([ADR-033](ADR-033) — which model the executable calls). The two artifacts now coexist on a session: `session.workerBinding` + `session.capability` form the full reproducibility tuple. The text below adds a §"Relationship to capability layer" section to head off the conflation; no other content changes.'
+  previous-hash: sha256:6c7db92741d1b0b9a7058a691437c163785a664ed5d53dd74ad7bd19fa9ce3c6
 ---
 
 ## Context
@@ -66,6 +71,20 @@ Compatibility checks become straightforward and graph-visible:
 
 The embedded worker *manifest* from FT-016 is retained and reframed: it becomes the **installer catalogue** that `dec worker install` consults, not the *resolver* `dec implement` consults. Resolution is graph-only after this ADR lands.
 
+## Relationship to capability layer (Phase 2)
+
+This ADR governs **which executable runs a role** (the worker binary, its install path, its content hash). [ADR-033](ADR-033) introduces a parallel concern: **which model the executable calls** for a given dispatch, via the `dec:Capability` and `dec:RoleBinding` artifacts.
+
+The two axes are orthogonal and must not be conflated:
+
+| Concern | Artifact | Examples |
+|---|---|---|
+| Which executable runs role R? | `dec:WorkerBinding` (this ADR) | the code-writer uv-tool at version 0.4.2 |
+| Which model is appropriate for role R given this bundle? | `dec:RoleBinding` → `dec:Capability` ([ADR-033](ADR-033)) | implementer's `code-writer` capability → qwen3-coder-30b on Scaleway |
+| What does the worker do once it has a model? | Worker code (governed by [ADR-008](ADR-008)) | bundle parse, model call, output validation |
+
+The two artifacts coexist on a session: `session.workerBinding` + `session.capability` (with version pins on both) form the full reproducibility tuple. A single `code-writer` binary in Phase 3 will route to multiple capabilities depending on the bundle; this is exactly the separation `dec:WorkerBinding` (binary identity) and `dec:Capability` (model identity) maintain.
+
 ## Consequences
 
 **Positive:**
@@ -88,6 +107,7 @@ The embedded worker *manifest* from FT-016 is retained and reframed: it becomes 
 - The binding schema lives in the embedded base ontology (ADR-007), not in the worker manifest. The manifest tells `dec worker install` how to install; the ontology tells the graph how to validate the resulting binding.
 - Installer adapters live in `decision-cli` (the orchestration crate), not in `oxi-events`. The SDP boundary from ADR-001 is unchanged — `oxi-events` does not learn about workers.
 - Workers themselves remain stateless (ADR-008). Bindings record how the harness invokes workers; they do not change what workers do.
+- This ADR's binding schema does **not** gain model fields. Model identity is the concern of `dec:Capability` per [ADR-033](ADR-033); growing `dec:WorkerBinding` to carry model data would re-tangle the two axes this amendment explicitly separates.
 
 ## Relationship to FT-016 and onward path
 
@@ -101,4 +121,4 @@ Concretely, when this ADR is accepted:
 
 ## Status
 
-Proposed. Implementation will be specified by a follow-on feature_spec in slice 2, after FT-016 lands and the operator UX is validated against real second-worker scenarios. The slice 1 surface (FT-016) is intentionally compatible with this direction — neither superseded nor blocked by this proposal.
+Proposed. Implementation will be specified by a follow-on feature_spec in slice 2, after FT-016 lands and the operator UX is validated against real second-worker scenarios. The slice 1 surface (FT-016) is intentionally compatible with this direction — neither superseded nor blocked by this proposal. Capability-layer orthogonality recorded by amendment, governed by [ADR-033](ADR-033).

@@ -1,4 +1,4 @@
-"""Invoke Claude Code in headless mode (``claude -p``) and observe writes.
+"""Invoke Claude Code in headless mode (``claude -p``) with tool-write observation.
 
 This module implements ADR-008 §Behaviour step 3-5 for FT-013:
 

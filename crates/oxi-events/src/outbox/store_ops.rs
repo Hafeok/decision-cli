@@ -1,8 +1,10 @@
-//! SPARQL helpers for the outbox: scan unpublished events and flip the
+//! SPARQL helpers for the outbox publisher's store-side operations.
+//!
+//! Scans unpublished events from the graph, then flips the
 //! `oxi:published` flag once a broadcast has been attempted.
 
 use oxigraph::model::{Literal, NamedNode, NamedNodeRef, Quad, Term};
-use oxigraph::sparql::QueryResults;
+use oxigraph::sparql::{QueryResults, QuerySolution};
 use oxigraph::store::Store;
 
 use crate::error::WriterError;
@@ -16,7 +18,22 @@ use super::EventEnvelope;
 pub(super) const XSD_BOOLEAN: &str = "http://www.w3.org/2001/XMLSchema#boolean";
 
 pub(super) fn scan_unpublished(store: &Store) -> Result<Vec<EventEnvelope>, WriterError> {
-    let q = format!(
+    let q = build_unpublished_select();
+    let mut out = Vec::new();
+    let QueryResults::Solutions(sols) = store.query(q.as_str())? else {
+        return Ok(out);
+    };
+    for sol in sols {
+        let sol = sol?;
+        if let Some(envelope) = decode_unpublished_row(&sol)? {
+            out.push(envelope);
+        }
+    }
+    Ok(out)
+}
+
+fn build_unpublished_select() -> String {
+    format!(
         "SELECT ?e ?seq ?mut ?sub ?ts FROM <{events}> WHERE {{ \
             ?e a <{event}> ; \
                <{published}> false ; \
@@ -32,41 +49,36 @@ pub(super) fn scan_unpublished(store: &Store) -> Result<Vec<EventEnvelope>, Writ
         wgb = IRI_PROV_WAS_GENERATED_BY,
         matched = IRI_OXI_MATCHED_SUBSCRIPTION,
         emitted = IRI_OXI_EMITTED_AT,
-    );
-    let mut out = Vec::new();
-    let QueryResults::Solutions(sols) = store.query(q.as_str())? else {
-        return Ok(out);
+    )
+}
+
+fn decode_unpublished_row(sol: &QuerySolution) -> Result<Option<EventEnvelope>, WriterError> {
+    let Some(Term::NamedNode(event)) = sol.get("e").cloned() else {
+        return Ok(None);
     };
-    for sol in sols {
-        let sol = sol?;
-        let Some(Term::NamedNode(event)) = sol.get("e").cloned() else {
-            continue;
-        };
-        let Some(Term::Literal(seq_lit)) = sol.get("seq").cloned() else {
-            continue;
-        };
-        let Some(Term::NamedNode(mutation)) = sol.get("mut").cloned() else {
-            continue;
-        };
-        let Some(Term::NamedNode(subscription)) = sol.get("sub").cloned() else {
-            continue;
-        };
-        let Some(Term::Literal(ts_lit)) = sol.get("ts").cloned() else {
-            continue;
-        };
-        let seq: u64 = seq_lit
-            .value()
-            .parse()
-            .map_err(|e| WriterError::Internal(format!("outbox: malformed seq literal: {e}")))?;
-        out.push(EventEnvelope {
-            event: event.as_str().to_string(),
-            seq,
-            mutation: mutation.as_str().to_string(),
-            subscription: subscription.as_str().to_string(),
-            emitted_at: ts_lit.value().to_string(),
-        });
-    }
-    Ok(out)
+    let Some(Term::Literal(seq_lit)) = sol.get("seq").cloned() else {
+        return Ok(None);
+    };
+    let Some(Term::NamedNode(mutation)) = sol.get("mut").cloned() else {
+        return Ok(None);
+    };
+    let Some(Term::NamedNode(subscription)) = sol.get("sub").cloned() else {
+        return Ok(None);
+    };
+    let Some(Term::Literal(ts_lit)) = sol.get("ts").cloned() else {
+        return Ok(None);
+    };
+    let seq: u64 = seq_lit
+        .value()
+        .parse()
+        .map_err(|e| WriterError::Internal(format!("outbox: malformed seq literal: {e}")))?;
+    Ok(Some(EventEnvelope {
+        event: event.as_str().to_string(),
+        seq,
+        mutation: mutation.as_str().to_string(),
+        subscription: subscription.as_str().to_string(),
+        emitted_at: ts_lit.value().to_string(),
+    }))
 }
 
 pub(super) fn mark_published(store: &Store, event_iri: &str) -> Result<(), WriterError> {

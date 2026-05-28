@@ -1,4 +1,4 @@
-//! FT-109 — audit-trail reporters for `dec loop show`/`dec loop list`.
+//! FT-109 — `dec loop show` and `dec loop list` audit-trail reporters.
 //!
 //! Operator-facing views over the verify → re-fix loop that FT-107 +
 //! FT-108 wired up. The data lives in the orchestration store today —

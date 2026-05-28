@@ -1,12 +1,16 @@
 ---
 id: ADR-018
 title: VerificationVerdict schema and the three verdicts
-status: proposed
-features: []
+status: accepted
+features:
+- FT-020
+- FT-023
 supersedes: []
 superseded-by: []
-domains: []
-scope: cross-cutting
+domains:
+- data-model
+scope: domain
+content-hash: sha256:8a23203c0e42dff4466dbe777617e1b253eb9f52435deb403580995baa809665
 source-files:
 - crates/decision-cli/src/core/ontology/verdict.rs
 - crates/decision-cli/src/core/ontology/verdict.ttl

@@ -2,11 +2,15 @@
 id: ADR-001
 title: oxi-events as a separate crate under SDP
 status: accepted
-features: []
+features:
+- FT-002
+- FT-003
+- FT-004
+- FT-005
 supersedes: []
 superseded-by: []
 domains: []
-scope: cross-cutting
+scope: platform
 content-hash: sha256:f21fbad45664668bda9603d6458c9cde2fa18447a30dc7be500fccfc5031ce45
 source-files:
 - scripts/checks/oxi-events-sdp-boundary.sh

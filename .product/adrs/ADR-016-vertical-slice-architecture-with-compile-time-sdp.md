@@ -1,12 +1,15 @@
 ---
 id: ADR-016
 title: Vertical-slice architecture with compile-time SDP enforcement
-status: proposed
-features: []
+status: accepted
+features:
+- FT-018
+- FT-105
 supersedes: []
 superseded-by: []
 domains: []
-scope: cross-cutting
+scope: platform
+content-hash: sha256:3286afc008ec2a3cecd338fd232c35932b526e8618cc7b34e0e5b61877035b3b
 source-files:
 - scripts/checks/vertical-slice-imports.sh
 - scripts/checks/vertical-slice-layout.sh

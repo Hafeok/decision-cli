@@ -510,20 +510,9 @@ def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
     """Render the FT-102 bundle-completeness fields as authoritative ground
     truth. Each subsection is a closed universe of values the worker may
     reference; out-of-bundle references are rejected at dispatch time."""
-    sections = [
-        _render_cli_surface(enrichment.cli_surface),
-        _render_ontology_vocabulary(enrichment.ontology_vocabulary),
-        _render_store_query_surface(enrichment.store_query_surface),
-        _render_env_capabilities(enrichment.env_capabilities),
-        _render_exemplar_graphs(enrichment.exemplar_graphs),
-        _render_bundle_warnings(enrichment.bundle_metadata),
-    ]
-    return "\n".join(s for s in sections if s).rstrip()
-
-
-def _render_cli_surface(cli: CliSurfaceRecord) -> str:
-    """Render the cli_surface section of enrichment."""
     lines: list[str] = []
+
+    cli = enrichment.cli_surface
     lines.append("### Available `dec` commands (cli_surface)")
     if cli.dec_subcommands:
         lines.append(
@@ -547,12 +536,8 @@ def _render_cli_surface(cli: CliSurfaceRecord) -> str:
         for tpl in cli.init_templates:
             lines.append(f"- `{tpl}`")
         lines.append("")
-    return "\n".join(lines)
 
-
-def _render_ontology_vocabulary(ont: OntologyVocabularyRecord) -> str:
-    """Render the ontology_vocabulary section of enrichment."""
-    lines: list[str] = []
+    ont = enrichment.ontology_vocabulary
     lines.append("### Ontology vocabulary (ontology_vocabulary)")
     if ont.namespace:
         lines.append(
@@ -576,12 +561,8 @@ def _render_ontology_vocabulary(ont: OntologyVocabularyRecord) -> str:
         lines.append("Declared dec classes (local names):")
         lines.append("  " + ", ".join(ont.classes))
     lines.append("")
-    return "\n".join(lines)
 
-
-def _render_store_query_surface(sq: StoreQuerySurfaceRecord) -> str:
-    """Render the store_query_surface section of enrichment."""
-    lines: list[str] = []
+    sq = enrichment.store_query_surface
     lines.append("### Store query surface (store_query_surface)")
     if sq.kind or sq.query_command:
         lines.append(f"- kind: `{sq.kind or '(unset)'}`")
@@ -592,12 +573,8 @@ def _render_store_query_surface(sq: StoreQuerySurfaceRecord) -> str:
     else:
         lines.append("(default — use the env's local store)")
     lines.append("")
-    return "\n".join(lines)
 
-
-def _render_env_capabilities(env_caps: EnvCapabilitiesRecord) -> str:
-    """Render the env_capabilities section of enrichment."""
-    lines: list[str] = []
+    env_caps = enrichment.env_capabilities
     lines.append("### Environment capabilities (env_capabilities)")
     if env_caps.binaries_on_path:
         lines.append(
@@ -619,39 +596,29 @@ def _render_env_capabilities(env_caps: EnvCapabilitiesRecord) -> str:
         lines.append("Env-vars you may reference in `capture` steps:")
         lines.append("  " + ", ".join(f"`${v}`" for v in env_caps.environment_variables))
     lines.append("")
-    return "\n".join(lines)
 
+    if enrichment.exemplar_graphs:
+        lines.append("### Exemplar graphs (exemplar_graphs)")
+        lines.append(
+            "Curated, known-good `VerificationGraph` patterns for this env's safety "
+            "class. Use them as templates."
+        )
+        for ex in enrichment.exemplar_graphs:
+            head = f"- {ex.id}"
+            if ex.pattern_name:
+                head += f" — `{ex.pattern_name}`"
+            lines.append(head)
+            if ex.rationale:
+                lines.append(f"  · {ex.rationale}")
 
-def _render_exemplar_graphs(exemplars: list[ExemplarGraphRecord] | None) -> str:
-    """Render the exemplar_graphs section of enrichment."""
-    if not exemplars:
-        return ""
-    lines: list[str] = []
-    lines.append("### Exemplar graphs (exemplar_graphs)")
-    lines.append(
-        "Curated, known-good `VerificationGraph` patterns for this env's safety "
-        "class. Use them as templates."
-    )
-    for ex in exemplars:
-        head = f"- {ex.id}"
-        if ex.pattern_name:
-            head += f" — `{ex.pattern_name}`"
-        lines.append(head)
-        if ex.rationale:
-            lines.append(f"  · {ex.rationale}")
-    return "\n".join(lines)
+    md = enrichment.bundle_metadata
+    if md.warnings:
+        lines.append("")
+        lines.append("### Bundle warnings (bundle_metadata.warnings)")
+        for w in md.warnings:
+            lines.append(f"- {w}")
 
-
-def _render_bundle_warnings(md: BundleMetadataRecord) -> str:
-    """Render the bundle_metadata.warnings section of enrichment."""
-    if not md.warnings:
-        return ""
-    lines: list[str] = []
-    lines.append("")
-    lines.append("### Bundle warnings (bundle_metadata.warnings)")
-    for w in md.warnings:
-        lines.append(f"- {w}")
-    return "\n".join(lines)
+    return "\n".join(lines).rstrip()
 
 
 def _render_defect_feedback(records: list[DefectFeedbackRecord]) -> str:

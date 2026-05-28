@@ -15,7 +15,7 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   cd "$REPO_ROOT"
 fi
 
-PERSIST="crates/decision-cli/src/init/persist.rs"
+PERSIST="crates/decision-cli/src/features/init/persist.rs"
 if [ ! -f "$PERSIST" ]; then
   echo "ERROR: expected $PERSIST (ADR-002 anchor file)" >&2
   exit 1

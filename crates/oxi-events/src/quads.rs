@@ -42,7 +42,23 @@ pub(crate) fn mutation_quads(
     cause: Option<&str>,
 ) -> Vec<Quad> {
     let g: GraphName = meta_graph().into_owned().into();
-    let mut quads = vec![
+    let mut quads = mutation_core_quads(mutation_id, mutation_sequence, committed_at, &g);
+    if let Some(actor) = actor {
+        quads.push(mutation_actor_quad(mutation_id, actor, &g));
+    }
+    if let Some(cause) = cause {
+        quads.push(mutation_cause_quad(mutation_id, cause, g));
+    }
+    quads
+}
+
+fn mutation_core_quads(
+    mutation_id: &NamedNode,
+    sequence: u64,
+    committed_at: &str,
+    g: &GraphName,
+) -> Vec<Quad> {
+    vec![
         Quad::new(
             mutation_id.clone(),
             rdf_type(),
@@ -52,7 +68,7 @@ pub(crate) fn mutation_quads(
         Quad::new(
             mutation_id.clone(),
             NamedNodeRef::new_unchecked(IRI_OXI_SEQ).into_owned(),
-            Literal::new_typed_literal(mutation_sequence.to_string(), xsd_integer().into_owned()),
+            Literal::new_typed_literal(sequence.to_string(), xsd_integer().into_owned()),
             g.clone(),
         ),
         Quad::new(
@@ -61,24 +77,25 @@ pub(crate) fn mutation_quads(
             Literal::new_typed_literal(committed_at, xsd_datetime().into_owned()),
             g.clone(),
         ),
-    ];
-    if let Some(actor) = actor {
-        quads.push(Quad::new(
-            mutation_id.clone(),
-            NamedNodeRef::new_unchecked(IRI_OXI_ACTOR).into_owned(),
-            actor.clone(),
-            g.clone(),
-        ));
-    }
-    if let Some(cause) = cause {
-        quads.push(Quad::new(
-            mutation_id.clone(),
-            NamedNodeRef::new_unchecked(IRI_OXI_CAUSE).into_owned(),
-            Literal::new_simple_literal(cause),
-            g,
-        ));
-    }
-    quads
+    ]
+}
+
+fn mutation_actor_quad(mutation_id: &NamedNode, actor: &NamedNode, g: &GraphName) -> Quad {
+    Quad::new(
+        mutation_id.clone(),
+        NamedNodeRef::new_unchecked(IRI_OXI_ACTOR).into_owned(),
+        actor.clone(),
+        g.clone(),
+    )
+}
+
+fn mutation_cause_quad(mutation_id: &NamedNode, cause: &str, g: GraphName) -> Quad {
+    Quad::new(
+        mutation_id.clone(),
+        NamedNodeRef::new_unchecked(IRI_OXI_CAUSE).into_owned(),
+        Literal::new_simple_literal(cause),
+        g,
+    )
 }
 
 pub(crate) fn event_quads_for(
@@ -87,8 +104,14 @@ pub(crate) fn event_quads_for(
     emitted_at: &str,
 ) -> Vec<Quad> {
     let g: GraphName = events_graph().into_owned().into();
+    let mut quads = event_identity_quads(handle, &g);
+    quads.extend(event_lineage_quads(handle, mutation_id, emitted_at, &g));
+    quads.push(event_published_quad(handle, &g));
+    quads
+}
+
+fn event_identity_quads(handle: &EventHandle, g: &GraphName) -> Vec<Quad> {
     let event_class = NamedNodeRef::new_unchecked(IRI_OXI_EVENT).into_owned();
-    let xsd_bool = NamedNodeRef::new_unchecked(XSD_BOOLEAN).into_owned();
     vec![
         Quad::new(handle.iri.clone(), rdf_type(), event_class, g.clone()),
         Quad::new(
@@ -99,14 +122,24 @@ pub(crate) fn event_quads_for(
         ),
         Quad::new(
             handle.iri.clone(),
-            NamedNodeRef::new_unchecked(IRI_PROV_WAS_GENERATED_BY).into_owned(),
-            mutation_id.clone(),
-            g.clone(),
-        ),
-        Quad::new(
-            handle.iri.clone(),
             NamedNodeRef::new_unchecked(IRI_OXI_STATUS).into_owned(),
             Literal::new_simple_literal(STATUS_OK),
+            g.clone(),
+        ),
+    ]
+}
+
+fn event_lineage_quads(
+    handle: &EventHandle,
+    mutation_id: &NamedNode,
+    emitted_at: &str,
+    g: &GraphName,
+) -> Vec<Quad> {
+    vec![
+        Quad::new(
+            handle.iri.clone(),
+            NamedNodeRef::new_unchecked(IRI_PROV_WAS_GENERATED_BY).into_owned(),
+            mutation_id.clone(),
             g.clone(),
         ),
         Quad::new(
@@ -121,47 +154,70 @@ pub(crate) fn event_quads_for(
             handle.subscription.clone(),
             g.clone(),
         ),
-        Quad::new(
-            handle.iri.clone(),
-            NamedNodeRef::new_unchecked(IRI_OXI_PUBLISHED).into_owned(),
-            Literal::new_typed_literal("false", xsd_bool),
-            g,
-        ),
     ]
+}
+
+fn event_published_quad(handle: &EventHandle, g: &GraphName) -> Quad {
+    let xsd_bool = NamedNodeRef::new_unchecked(XSD_BOOLEAN).into_owned();
+    Quad::new(
+        handle.iri.clone(),
+        NamedNodeRef::new_unchecked(IRI_OXI_PUBLISHED).into_owned(),
+        Literal::new_typed_literal("false", xsd_bool),
+        g.clone(),
+    )
 }
 
 pub(crate) fn subscription_quads(sub: &Subscription) -> Vec<Quad> {
     let g: GraphName = subscriptions_graph().into_owned().into();
-    let mut quads = vec![Quad::new(
-        sub.id.clone(),
-        rdf_type(),
-        NamedNodeRef::new_unchecked(IRI_OXI_SUBSCRIPTION).into_owned(),
-        g.clone(),
-    )];
+    let mut quads = subscription_core_quads(sub, &g);
+    quads.extend(subscription_trigger_quads(sub, &g));
+    quads.extend(subscription_optional_quads(sub, &g));
+    quads
+}
+
+fn subscription_core_quads(sub: &Subscription, g: &GraphName) -> Vec<Quad> {
     let (query_pred, query_str) = match &sub.query {
         SubscriptionQuery::Ask(q) => (IRI_OXI_SUB_ASK_QUERY, q.as_str()),
         SubscriptionQuery::Select(q) => (IRI_OXI_SUB_SELECT_QUERY, q.as_str()),
     };
-    quads.push(Quad::new(
-        sub.id.clone(),
-        NamedNodeRef::new_unchecked(query_pred).into_owned(),
-        Literal::new_simple_literal(query_str),
-        g.clone(),
-    ));
-    quads.push(Quad::new(
-        sub.id.clone(),
-        NamedNodeRef::new_unchecked(IRI_OXI_SUB_MODE).into_owned(),
-        Literal::new_simple_literal(sub.mode.as_str()),
-        g.clone(),
-    ));
-    for trigger in &sub.triggers {
-        quads.push(Quad::new(
+    vec![
+        Quad::new(
             sub.id.clone(),
-            NamedNodeRef::new_unchecked(IRI_OXI_SUB_TRIGGER).into_owned(),
-            Literal::new_simple_literal(trigger),
+            rdf_type(),
+            NamedNodeRef::new_unchecked(IRI_OXI_SUBSCRIPTION).into_owned(),
             g.clone(),
-        ));
-    }
+        ),
+        Quad::new(
+            sub.id.clone(),
+            NamedNodeRef::new_unchecked(query_pred).into_owned(),
+            Literal::new_simple_literal(query_str),
+            g.clone(),
+        ),
+        Quad::new(
+            sub.id.clone(),
+            NamedNodeRef::new_unchecked(IRI_OXI_SUB_MODE).into_owned(),
+            Literal::new_simple_literal(sub.mode.as_str()),
+            g.clone(),
+        ),
+    ]
+}
+
+fn subscription_trigger_quads(sub: &Subscription, g: &GraphName) -> Vec<Quad> {
+    sub.triggers
+        .iter()
+        .map(|trigger| {
+            Quad::new(
+                sub.id.clone(),
+                NamedNodeRef::new_unchecked(IRI_OXI_SUB_TRIGGER).into_owned(),
+                Literal::new_simple_literal(trigger),
+                g.clone(),
+            )
+        })
+        .collect()
+}
+
+fn subscription_optional_quads(sub: &Subscription, g: &GraphName) -> Vec<Quad> {
+    let mut quads = Vec::new();
     if let Some(handler) = sub.handler.as_ref() {
         quads.push(Quad::new(
             sub.id.clone(),
@@ -175,7 +231,7 @@ pub(crate) fn subscription_quads(sub: &Subscription) -> Vec<Quad> {
             sub.id.clone(),
             NamedNode::new_unchecked("http://www.w3.org/2000/01/rdf-schema#label"),
             Literal::new_simple_literal(label.clone()),
-            g,
+            g.clone(),
         ));
     }
     quads

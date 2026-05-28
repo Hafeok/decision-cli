@@ -10,22 +10,28 @@ depends-on:
 - FT-010
 - FT-013
 adrs:
-- ADR-004
-- ADR-005
 - ADR-008
 - ADR-009
 - ADR-010
-- ADR-001
-- ADR-002
 - ADR-011
-- ADR-012
 tests:
 - TC-008
 - TC-010
 - TC-012
 - TC-013
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-013: ADR-013 (code structure standards) applies workspace-wide; FT-011's code conforms to cargo/clippy/rustfmt and the module-size convention. ADR-013 itself is owned by FT-014.
+  ADR-017: ADR-017 (action-interpretation pairing) is a Slice 2 structural requirement implemented by FT-021; FT-011 is out of scope for the pairing.
+  ADR-027: ADR-027 (authority declarations in role catalog) is implemented by FT-030; FT-011 does not introduce or modify a role catalog entry.
+  ADR-023: ADR-023 (feedback class controlled vocabulary) is implemented by FT-028; FT-011 produces no feedback artifacts.
+  ADR-014: ADR-014 (fitness functions tracked as artifacts) is owned by FT-014/FT-015; FT-011 does not author or modify a fitness-function artifact.
+  ADR-024: ADR-024 (feedback lifecycle state machine) is implemented by FT-027; FT-011 produces no feedback artifacts.
+  ADR-022: ADR-022 (feedback as a first-class flow class) is a Slice 3 concern implemented by FT-026; FT-011 neither emits nor routes feedback.
+  ADR-021: ADR-021 (action-interpretation agreement metric) is a Slice 2 fitness function implemented by FT-024; FT-011 produces no action/interpretation pair.
+  ADR-025: ADR-025 (blocking vs non-blocking feedback semantics) is implemented by FT-032; FT-011 has no feedback to gate.
+  ADR-018: ADR-018 (VerificationVerdict schema) is a Slice 2 artifact implemented by FT-020; FT-011 neither emits nor consumes verdicts.
+  ADR-016: ADR-016 (vertical-slice + compile-time SDP) is migrated by FT-018; FT-011's code is reorganised under that migration, not by this feature.
 ---
 
 ## Description
