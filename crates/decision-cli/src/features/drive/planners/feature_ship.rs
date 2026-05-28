@@ -32,17 +32,19 @@ pub struct FeatureShipPlanner<I: GraphInspector> {
 }
 
 /// Snapshot of the planner's observed state from a prior classify
-/// call. The `intended_action` field records what the planner would
-/// have returned (i.e., the dispatch we expected the executor to run
-/// before the next iteration); the next classify call compares
-/// against it.
+/// call. `final_action` records what classify() actually returned to
+/// the driver (i.e., what the executor ran in the prior iteration);
+/// `escalated_in_chain` tracks whether the driver has already used
+/// one of the two escalations on this feature, so we can return a
+/// terminal Stuck rather than ping-ponging back and forth.
 #[derive(Debug, Clone)]
 struct LastSeen {
     feature_id: String,
     verdict: FeatureVerdict,
     impl_open: usize,
     vga_open: usize,
-    intended_action: Action,
+    final_action: Action,
+    escalated_in_chain: bool,
 }
 
 impl<I: GraphInspector> FeatureShipPlanner<I> {
@@ -125,6 +127,13 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             }
         };
 
+        let prior_escalated = self
+            .last_seen
+            .borrow()
+            .as_ref()
+            .filter(|p| p.feature_id == feature_id)
+            .map_or(false, |p| p.escalated_in_chain);
+
         let final_action = match self
             .detect_no_progress(feature_id, verdict, impl_open, vga_open, &intended)
         {
@@ -132,15 +141,25 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             Some(NoProgress::EscalateVgaToImplementer) => Action::EscalateVgaToImplementer {
                 feature_id: feature_id.to_string(),
             },
+            Some(NoProgress::EscalateImplementerToVga) => Action::EscalateImplementerToVga {
+                feature_id: feature_id.to_string(),
+                env_id: default_env_id.to_string(),
+            },
             None => intended.clone(),
         };
+
+        let now_escalated = matches!(
+            final_action,
+            Action::EscalateVgaToImplementer { .. } | Action::EscalateImplementerToVga { .. }
+        );
 
         *self.last_seen.borrow_mut() = Some(LastSeen {
             feature_id: feature_id.to_string(),
             verdict,
             impl_open,
             vga_open,
-            intended_action: intended,
+            final_action: final_action.clone(),
+            escalated_in_chain: prior_escalated || now_escalated,
         });
 
         Ok(final_action)
@@ -171,72 +190,31 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         if prev.feature_id != feature_id {
             return None;
         }
-        match (&prev.intended_action, intended) {
+        // Settling round: the round immediately after an Escalate
+        // executor runs sees rerouted defect counts that the
+        // pre-escalation baseline can't fairly compare against.
+        // Skip detection entirely — the next round will pair up two
+        // post-escalation observations and detect normally.
+        if matches!(
+            prev.final_action,
+            Action::EscalateVgaToImplementer { .. }
+                | Action::EscalateImplementerToVga { .. }
+        ) {
+            return None;
+        }
+        match (&prev.final_action, intended) {
             (
                 Action::DispatchImplementer { .. },
                 Action::DispatchImplementer { .. },
-            ) => {
-                // Only flag stuck when the previous round HAD defects
-                // to fix and the new round has just as many or more.
-                // prev_count == 0 means the prior dispatch wasn't a
-                // "fix" round (probably bootstrap evidence-production),
-                // so a count going up is expected.
-                if prev.impl_open > 0 && impl_open >= prev.impl_open {
-                    Some(NoProgress::Stuck {
-                        reason: format!(
-                            "implementer dispatch did not reduce open \
-                             implementer-defect count ({prev_n} → {new_n}) for \
-                             feature {feature_id}. Either the worker returned \
-                             without addressing any feedback (no \
-                             addressed_feedback_iris in CodeChange output) or the \
-                             defects describe scope outside its capability. \
-                             Escalate to spec-author or inspect `dec loop show \
-                             {feature_id}` for the chain.",
-                            prev_n = prev.impl_open,
-                            new_n = impl_open,
-                        ),
-                    })
-                } else {
-                    None
-                }
-            }
+            ) => no_progress_for_impl(prev, feature_id, impl_open),
             (
                 Action::DispatchVerifyGraphAuthor { .. },
                 Action::DispatchVerifyGraphAuthor { .. },
-            ) => {
-                // Same logic: prev_count == 0 means the prior dispatch
-                // was a bootstrap (authoring graphs from scratch on a
-                // never-verified feature), so freshly-emitted defects
-                // are evidence-production, not regression.
-                //
-                // When the verifier IS stuck (count didn't drop), the
-                // most useful next move is to ask the implementer to
-                // fix what the verifier was complaining about — the
-                // failure is almost always "the underlying command
-                // isn't implemented yet" rather than "the graph
-                // design is wrong." The driver wires this via the
-                // EscalateVgaToImplementer action which re-routes the
-                // open verifier-defects through ADR-024 supersession.
-                if prev.vga_open > 0 && vga_open >= prev.vga_open {
-                    Some(NoProgress::EscalateVgaToImplementer)
-                } else {
-                    None
-                }
-            }
+            ) => no_progress_for_vga(prev, feature_id, vga_open),
             (
                 Action::DispatchVerifier { .. },
                 Action::DispatchVerifier { .. },
             ) => {
-                // Verifier dispatch's job is to produce verdict
-                // (turning NeverRun into Approved / Rejected /
-                // AmendmentRequired) and emit defect feedback when
-                // graphs fail. If verdict didn't change and no new
-                // feedback appeared, the dispatch was a no-op —
-                // most commonly because no graphs cover the feature
-                // yet (the verify-graph-author branch handles that
-                // case ahead of us, so this fallback fires only on
-                // unexpected wiring issues like the verifier handler
-                // silently failing).
                 if verdict == prev.verdict
                     && impl_open == prev.impl_open
                     && vga_open == prev.vga_open
@@ -261,14 +239,65 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
     }
 }
 
+/// Implementer no-progress: only fires when prev had defects to fix
+/// (so the count going up from 0 doesn't false-positive) and the new
+/// count didn't strictly decrease. When `escalated_in_chain` is
+/// already true (we used the other escalation earlier), this is the
+/// terminal stuck — both directions tried, both failed.
+fn no_progress_for_impl(prev: &LastSeen, feature_id: &str, impl_open: usize) -> Option<NoProgress> {
+    if prev.impl_open == 0 || impl_open < prev.impl_open {
+        return None;
+    }
+    if prev.escalated_in_chain {
+        return Some(NoProgress::Stuck {
+            reason: format!(
+                "feature {feature_id}: both escalation directions exhausted. \
+                 We already routed the defects across the verifier↔implementer \
+                 boundary once, and the implementer still can't make progress \
+                 (impl_open {prev_n} → {new_n}). The TC most likely describes a \
+                 real spec gap that needs spec-author attention. Inspect `dec \
+                 loop show {feature_id}` for the chain.",
+                prev_n = prev.impl_open,
+                new_n = impl_open,
+            ),
+        });
+    }
+    Some(NoProgress::EscalateImplementerToVga)
+}
+
+/// Verify-graph-author no-progress: symmetric to the implementer
+/// branch. Bootstrap (prev.vga_open == 0) is treated as
+/// evidence-production, not regression.
+fn no_progress_for_vga(prev: &LastSeen, feature_id: &str, vga_open: usize) -> Option<NoProgress> {
+    if prev.vga_open == 0 || vga_open < prev.vga_open {
+        return None;
+    }
+    if prev.escalated_in_chain {
+        return Some(NoProgress::Stuck {
+            reason: format!(
+                "feature {feature_id}: both escalation directions exhausted. \
+                 We already routed the defects across the verifier↔implementer \
+                 boundary once, and the verify-graph-author still can't make \
+                 progress (vga_open {prev_n} → {new_n}). The TC most likely \
+                 describes a real spec gap that needs spec-author attention. \
+                 Inspect `dec loop show {feature_id}` for the chain.",
+                prev_n = prev.vga_open,
+                new_n = vga_open,
+            ),
+        });
+    }
+    Some(NoProgress::EscalateVgaToImplementer)
+}
+
 /// What `detect_no_progress` decided the planner should do next.
-/// Distinguishes the terminal `Stuck` (driver returns DriveError::Stuck)
-/// from `EscalateVgaToImplementer` (driver routes the verifier-targeted
-/// open defects to the implementer and tries one more round).
+/// Distinguishes terminal `Stuck` (driver returns DriveError::Stuck)
+/// from the two escalation directions, which re-route open defects
+/// across the targetRole boundary and try one more round.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum NoProgress {
     Stuck { reason: String },
     EscalateVgaToImplementer,
+    EscalateImplementerToVga,
 }
 
 impl<I: GraphInspector> Planner for FeatureShipPlanner<I> {
@@ -478,21 +507,104 @@ mod tests {
     }
 
     #[test]
-    fn implementer_repeated_with_no_progress_returns_stuck() {
+    fn implementer_repeated_with_no_progress_escalates_to_vga() {
         // Round 1: 5 implementer-defects, dispatch implementer.
-        // Round 2: same 5 defects (worker no-op), expect Stuck.
+        // Round 2: same 5 defects (worker no-op), expect
+        // EscalateImplementerToVga (mirror of the vga→impl
+        // escalation — when impl can't fix, ask verifier to
+        // re-author the test).
         let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 5, 0);
         let planner = FeatureShipPlanner::new(inspector);
         let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
         assert!(matches!(a1, Action::DispatchImplementer { .. }));
         let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
         match a2 {
-            Action::Stuck { reason } => {
-                assert!(reason.contains("implementer"), "reason: {reason}");
-                assert!(reason.contains("5 → 5"), "reason: {reason}");
+            Action::EscalateImplementerToVga { feature_id, env_id } => {
+                assert_eq!(feature_id, "FT-TEST");
+                assert_eq!(env_id, "ENV-002");
             }
-            other => panic!("expected Stuck, got {other:?}"),
+            other => panic!("expected EscalateImplementerToVga, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn vga_to_impl_escalation_then_impl_no_progress_is_terminal_stuck() {
+        // Sequence: VGA twice with no progress → escalate to impl
+        // → settling round (impl dispatches normally, no detection)
+        // → impl still no progress → terminal Stuck (both directions
+        // exhausted).
+        let inspector = MutableStubInspector::new(FeatureVerdict::AmendmentRequired, 0, 3);
+        let planner = FeatureShipPlanner::new(inspector);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap();
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a2, Action::EscalateVgaToImplementer { .. }));
+        // Simulate the escalation executor: vga drops, impl jumps.
+        planner.inspector.vga_count.set(0);
+        planner.inspector.impl_count.set(3);
+        let a3 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        // Settling round — detection skipped; planner dispatches
+        // implementer against the rerouted defects.
+        assert!(matches!(a3, Action::DispatchImplementer { .. }), "got {a3:?}");
+        // Implementer ran but couldn't reduce impl_open. Now the
+        // detector fires terminal Stuck because escalation was used.
+        let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a4 {
+            Action::Stuck { reason } => {
+                assert!(
+                    reason.contains("both escalation directions exhausted"),
+                    "reason: {reason}"
+                );
+                assert!(reason.contains("spec-author"), "reason: {reason}");
+            }
+            other => panic!("expected terminal Stuck, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn impl_to_vga_escalation_then_vga_no_progress_is_terminal_stuck() {
+        // Symmetric sequence: impl twice no progress → escalate to
+        // VGA → settling round → VGA still no progress → terminal
+        // Stuck.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 3, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap();
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a2, Action::EscalateImplementerToVga { .. }));
+        planner.inspector.impl_count.set(0);
+        planner.inspector.vga_count.set(3);
+        let a3 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a3, Action::DispatchVerifyGraphAuthor { .. }), "got {a3:?}");
+        let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a4 {
+            Action::Stuck { reason } => {
+                assert!(
+                    reason.contains("both escalation directions exhausted"),
+                    "reason: {reason}"
+                );
+            }
+            other => panic!("expected terminal Stuck, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn escalation_then_progress_continues_without_stuck() {
+        // If the post-escalation worker actually makes progress, the
+        // detector must NOT terminal-stuck on the round after that.
+        // Sequence: impl no-progress → escalate → settling → VGA
+        // makes progress → no stuck.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 3, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap();
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap();
+        planner.inspector.impl_count.set(0);
+        planner.inspector.vga_count.set(3);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap(); // settling
+        planner.inspector.vga_count.set(1); // VGA fixed two of three
+        let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(
+            matches!(a4, Action::DispatchVerifyGraphAuthor { .. }),
+            "expected continued dispatch, got {a4:?}"
+        );
     }
 
     #[test]

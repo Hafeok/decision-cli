@@ -48,6 +48,20 @@ pub enum Action {
         /// Feature short id.
         feature_id: String,
     },
+    /// Reverse escalation: the implementer can't address the open
+    /// defects (typically because the failing step in the graph
+    /// exercises something out-of-scope for the feature spec — a
+    /// command in a different repo, a transient environment issue, or
+    /// a test that was authored against the wrong artifact). The
+    /// executor re-routes the feature's open implementer-targeted
+    /// defects to the verifier via the ADR-024 lifecycle and then
+    /// dispatches the verify-graph-author to re-author the test.
+    EscalateImplementerToVga {
+        /// Feature short id.
+        feature_id: String,
+        /// Env short id.
+        env_id: String,
+    },
     /// Terminal — no path forward. Driver returns `DriveError::Stuck`.
     /// The `reason` is rendered verbatim so the operator sees the
     /// planner's diagnosis.
@@ -74,6 +88,7 @@ impl Action {
             Self::DispatchImplementer { .. } => "dispatch:implementer",
             Self::DispatchVerifyGraphAuthor { .. } => "dispatch:verify-graph-author",
             Self::EscalateVgaToImplementer { .. } => "escalate:vga-to-implementer",
+            Self::EscalateImplementerToVga { .. } => "escalate:implementer-to-vga",
             Self::Stuck { .. } => "stuck",
         }
     }

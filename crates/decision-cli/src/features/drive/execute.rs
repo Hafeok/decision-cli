@@ -48,6 +48,11 @@ impl Executor for ProductionExecutor {
                     format!("escalate vga→implementer for {feature_id}")
                 })
             }
+            Action::EscalateImplementerToVga { feature_id, env_id } => {
+                escalate_and_dispatch_vga(ctx, feature_id, env_id).with_context(|| {
+                    format!("escalate implementer→vga for {feature_id}")
+                })
+            }
         }
     }
 }
@@ -77,6 +82,33 @@ fn escalate_and_dispatch_implementer(ctx: &PlanContext, feature_id: &str) -> Res
     );
     run_implement(&ctx.workdir, feature_id)
         .with_context(|| format!("dispatch implementer for {feature_id} (post-escalation)"))
+}
+
+/// Implementation of [`Action::EscalateImplementerToVga`]. Mirror of
+/// the above: re-routes the feature's open implementer-targeted
+/// defects to the verifier (per ADR-024 supersession + twin pattern),
+/// then dispatches the verify-graph-author to re-author the test.
+fn escalate_and_dispatch_vga(ctx: &PlanContext, feature_id: &str, env_id: &str) -> Result<()> {
+    use crate::core::feedback::supersede_misrouted::escalate_implementer_defects_to_verifier;
+    use crate::core::verify::coverage::feature_resolver::{
+        resolve_feature_tcs_short, tc_iri_for,
+    };
+
+    let tc_shorts = resolve_feature_tcs_short(&ctx.product_root, feature_id)
+        .with_context(|| format!("resolve TCs for {feature_id}"))?;
+    let tc_iris: Vec<String> = tc_shorts.iter().map(|s| tc_iri_for(s)).collect();
+    let n =
+        escalate_implementer_defects_to_verifier(&ctx.workdir, &tc_iris).with_context(|| {
+            format!("escalating implementer defects for {feature_id}")
+        })?;
+    tracing::info!(
+        target: "dec::drive::escalate",
+        feature = %feature_id,
+        rerouted = n,
+        "rerouted implementer-targeted defects to verifier before dispatch"
+    );
+    run_verify_graph_generate(&ctx.workdir, feature_id, env_id)
+        .with_context(|| format!("dispatch verify-graph-author for {feature_id} (post-escalation)"))
 }
 
 fn run_verify_feature(workdir: &Path, feature_id: &str, env: Option<&str>) -> Result<()> {

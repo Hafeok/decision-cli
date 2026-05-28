@@ -141,6 +141,22 @@ fn evidence_signals_graph_fault(evidence: &str) -> bool {
     false
 }
 
+/// Escalate every open `targetRole = "implementer"` defect feedback
+/// whose `dec:sourceArtifact` is one of `tc_iris` by superseding it
+/// with a twin that has `targetRole = "verifier"`. Mirror of
+/// [`escalate_verifier_defects_to_implementer`] — used by the FT-110
+/// planner's `EscalateImplementerToVga` path when the implementer
+/// can't make progress on a defect (typically because the failing
+/// step exercises something the feature spec doesn't own, or the
+/// test's command itself is wrong). Returns the count of feedbacks
+/// successfully escalated.
+pub fn escalate_implementer_defects_to_verifier(
+    workdir: &std::path::Path,
+    tc_iris: &[String],
+) -> Result<usize> {
+    escalate_for_target_role(workdir, tc_iris, "implementer", "verifier")
+}
+
 /// Escalate every open `targetRole = "verifier"` defect feedback whose
 /// `dec:sourceArtifact` is one of `tc_iris` by superseding it with a
 /// twin that has `targetRole = "implementer"`. Used by the FT-110
@@ -157,6 +173,19 @@ fn evidence_signals_graph_fault(evidence: &str) -> bool {
 pub fn escalate_verifier_defects_to_implementer(
     workdir: &std::path::Path,
     tc_iris: &[String],
+) -> Result<usize> {
+    escalate_for_target_role(workdir, tc_iris, "verifier", "implementer")
+}
+
+/// Shared sweep used by both escalation directions. Walks open
+/// defect feedback whose source TC is in `tc_iris` and whose current
+/// `targetRole` matches `from_role`, supersedes each with a twin
+/// carrying `to_role` per ADR-024. Idempotent across re-runs.
+fn escalate_for_target_role(
+    workdir: &std::path::Path,
+    tc_iris: &[String],
+    from_role: &str,
+    to_role: &str,
 ) -> Result<usize> {
     if tc_iris.is_empty() {
         return Ok(0);
@@ -177,7 +206,7 @@ pub fn escalate_verifier_defects_to_implementer(
         .map_err(|e| anyhow::anyhow!("listing defect feedback: {e}"))?;
     let mut escalated = 0_usize;
     for fb in defects {
-        if fb.target_role != "verifier" {
+        if fb.target_role != from_role {
             continue;
         }
         if !matches!(
@@ -192,7 +221,7 @@ pub fn escalate_verifier_defects_to_implementer(
         if !tc_set.contains(source.as_str()) {
             continue;
         }
-        if supersede_with_role_twin(&store, &writer, &fb, &stream_iri, "implementer").is_ok() {
+        if supersede_with_role_twin(&store, &writer, &fb, &stream_iri, to_role).is_ok() {
             escalated += 1;
         }
     }
