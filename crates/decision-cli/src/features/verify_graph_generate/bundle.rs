@@ -96,6 +96,21 @@ pub struct TcRecord {
     /// Markdown body; empty when not resolvable.
     #[serde(default)]
     pub body: String,
+    /// Runner name from TC frontmatter (e.g. `bash`, `cargo-test`,
+    /// `pytest`). Empty when the TC declares none — in that case
+    /// the verifier has to compose its own command from the body.
+    #[serde(default)]
+    pub runner: String,
+    /// Runner arguments from TC frontmatter (e.g.
+    /// `tests/scripts/tc-007-unauthorized-goal.sh`). Empty when no
+    /// runner is declared.
+    #[serde(default)]
+    pub runner_args: String,
+    /// Runner timeout (e.g. `30`, `30s`). Empty when no timeout is
+    /// declared. The verifier doesn't translate this directly into
+    /// a step field — it's informational.
+    #[serde(default)]
+    pub runner_timeout: String,
 }
 
 /// Target environment record.
@@ -309,13 +324,17 @@ fn read_feature_file(path: &Path) -> Result<String, HandlerError> {
 /// with empty title/body so the bundle still assembles. Lookup mirrors
 /// `load_feature_body`: exact match first, then prefix scan.
 fn load_tc_record(product_root: &Path, tc_id: &str) -> TcRecord {
+    let empty = |id: &str| TcRecord {
+        id: id.to_string(),
+        title: String::new(),
+        body: String::new(),
+        runner: String::new(),
+        runner_args: String::new(),
+        runner_timeout: String::new(),
+    };
     let tests_dir = product_root.join(".product").join("tests");
     if !tests_dir.is_dir() {
-        return TcRecord {
-            id: tc_id.to_string(),
-            title: String::new(),
-            body: String::new(),
-        };
+        return empty(tc_id);
     }
     let path = tests_dir.join(format!("{tc_id}.md"));
     let path = if path.is_file() {
@@ -324,28 +343,62 @@ fn load_tc_record(product_root: &Path, tc_id: &str) -> TcRecord {
         find_prefixed_tc_path(&tests_dir, tc_id)
     };
     let Some(path) = path else {
-        return TcRecord {
-            id: tc_id.to_string(),
-            title: String::new(),
-            body: String::new(),
-        };
+        return empty(tc_id);
     };
     let raw = match fs::read_to_string(&path) {
         Ok(s) => s,
-        Err(_) => {
-            return TcRecord {
-                id: tc_id.to_string(),
-                title: String::new(),
-                body: String::new(),
-            };
-        }
+        Err(_) => return empty(tc_id),
     };
-    let title = extract_frontmatter_title(&raw);
+    let frontmatter = extract_tc_frontmatter(&raw);
     TcRecord {
         id: tc_id.to_string(),
-        title,
+        title: frontmatter.title,
         body: raw,
+        runner: frontmatter.runner,
+        runner_args: frontmatter.runner_args,
+        runner_timeout: frontmatter.runner_timeout,
     }
+}
+
+/// Parsed TC frontmatter — only the fields the verifier needs.
+#[derive(Default)]
+struct TcFrontmatter {
+    title: String,
+    runner: String,
+    runner_args: String,
+    runner_timeout: String,
+}
+
+fn extract_tc_frontmatter(body: &str) -> TcFrontmatter {
+    let mut in_frontmatter = false;
+    let mut out = TcFrontmatter::default();
+    for line in body.lines() {
+        if line.trim() == "---" {
+            if in_frontmatter {
+                return out;
+            }
+            in_frontmatter = true;
+            continue;
+        }
+        if !in_frontmatter {
+            continue;
+        }
+        let trimmed_value = |rest: &str| -> String {
+            rest.trim()
+                .trim_matches(|c| c == '"' || c == '\'')
+                .to_string()
+        };
+        if let Some(rest) = line.strip_prefix("title:") {
+            out.title = trimmed_value(rest);
+        } else if let Some(rest) = line.strip_prefix("runner:") {
+            out.runner = trimmed_value(rest);
+        } else if let Some(rest) = line.strip_prefix("runner-args:") {
+            out.runner_args = trimmed_value(rest);
+        } else if let Some(rest) = line.strip_prefix("runner-timeout:") {
+            out.runner_timeout = trimmed_value(rest);
+        }
+    }
+    out
 }
 
 fn find_prefixed_tc_path(tests_dir: &Path, tc_id: &str) -> Option<std::path::PathBuf> {
@@ -361,25 +414,6 @@ fn find_prefixed_tc_path(tests_dir: &Path, tc_id: &str) -> Option<std::path::Pat
     None
 }
 
-fn extract_frontmatter_title(body: &str) -> String {
-    let mut in_frontmatter = false;
-    for line in body.lines() {
-        if line.trim() == "---" {
-            if in_frontmatter {
-                return String::new();
-            }
-            in_frontmatter = true;
-            continue;
-        }
-        if !in_frontmatter {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("title:") {
-            return rest.trim().trim_matches(|c| c == '"' || c == '\'').to_string();
-        }
-    }
-    String::new()
-}
 
 fn find_prefixed_feature_path(
     features_dir: &Path,

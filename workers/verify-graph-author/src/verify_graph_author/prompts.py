@@ -158,6 +158,35 @@ If the artifact you need to verify is in product-cli's graph
 `.product/graph/index.ttl` instead.
 
 ==========================================================
+LIFT THE RUNNER — DON'T COMPOSE WHEN THE TC ALREADY SAYS HOW
+==========================================================
+
+Most TCs carry a **CANONICAL VERIFICATION** block in their record,
+declaring exactly which runner + args verify them (these come from
+the TC's product-cli frontmatter — `runner: bash` /
+`runner-args: tests/scripts/tc-007-foo.sh`, etc.). When you see one:
+
+  - Emit ONE shell-command step using the runner+args verbatim.
+  - Set `expect-exit-code: 0` (the runner contract is binary:
+    0 = TC passes, non-zero = TC fails).
+  - Set `providesEvidenceFor: [TC-X]` for the exact TC the block
+    came from.
+  - That's it. Don't add helper steps, don't add capture steps,
+    don't add sparql-assertions to "double-check" — the runner is
+    the source of truth.
+
+Why: the operator who wrote the TC already encoded the test in the
+runner. Synthesizing your own command is how you end up running
+`dec implement FT-XXX` to test "unauthorized goal refused." When
+the canonical block is present, your job is mechanical — lift, not
+design.
+
+Only when the canonical block is ABSENT (TC frontmatter has no
+runner) should you fall back to composing the step from the TC's
+`## When` / `## Then` body. In that case, follow the next section
+(TC BODY DISCIPLINE) for designing what the step does.
+
+==========================================================
 TC BODY DISCIPLINE — DESIGN THE STEP, THEN ATTRIBUTE IT
 ==========================================================
 
@@ -379,8 +408,38 @@ def _render_tc(tc: TcRecord) -> str:
     head = f"### {tc.id}"
     if tc.title:
         head += f" — {tc.title}"
+    canonical = ""
+    if tc.runner and tc.runner_args:
+        canonical = (
+            "\n\n**CANONICAL VERIFICATION** (lift this verbatim — do not invent alternatives):\n\n"
+            f"- runner: `{tc.runner}`\n"
+            f"- runner-args: `{tc.runner_args}`\n"
+        )
+        if tc.runner_timeout:
+            canonical += f"- runner-timeout: `{tc.runner_timeout}`\n"
+        canonical += _runner_to_step_hint(tc.runner, tc.runner_args)
     body = tc.body.strip() or "(no body provided)"
-    return f"{head}\n\n{body}"
+    return f"{head}{canonical}\n\n{body}"
+
+
+def _runner_to_step_hint(runner: str, args: str) -> str:
+    """Translate a TC's runner+args into the shell-command shape the
+    verifier should emit. Mirrors the runners product-cli's verify
+    pipeline knows about — when in doubt, the verifier falls back to
+    the runner+args block verbatim as a bash command.
+    """
+    if runner == "bash":
+        return f"\nWrite this as a shell-command step with `command: \"bash {args}\"`.\n"
+    if runner == "cargo-test":
+        return (
+            f"\nWrite this as a shell-command step with "
+            f"`command: \"cargo test {args}\"`.\n"
+        )
+    if runner == "pytest":
+        return f"\nWrite this as a shell-command step with `command: \"pytest {args}\"`.\n"
+    return (
+        f"\nWrite this as a shell-command step that invokes `{runner}` with `{args}`.\n"
+    )
 
 
 def _render_env(env: EnvRecord) -> str:

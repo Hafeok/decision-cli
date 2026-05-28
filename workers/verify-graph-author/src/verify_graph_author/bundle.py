@@ -13,6 +13,25 @@ class TcRecord(BaseModel):
     id: str = Field(..., description="Test criterion identifier, e.g. 'TC-013'.")
     title: str = Field(default="", description="Short TC title for the prompt.")
     body: str = Field(default="", description="Markdown body of the TC.")
+    runner: str = Field(
+        default="",
+        description=(
+            "Runner name from TC frontmatter (e.g. 'bash', 'cargo-test', 'pytest'). "
+            "When present, the graph step for this TC should invoke this runner "
+            "against `runner_args` — do not synthesize an alternative command."
+        ),
+    )
+    runner_args: str = Field(
+        default="",
+        description=(
+            "Args the runner takes (e.g. 'tests/scripts/tc-007-unauthorized-goal.sh'). "
+            "Pair with `runner` to build the canonical shell-command for the step."
+        ),
+    )
+    runner_timeout: str = Field(
+        default="",
+        description="Suggested timeout (e.g. '30'). Informational; the step runner uses its own per-kind defaults.",
+    )
 
 
 class EnvRecord(BaseModel):
