@@ -25,6 +25,7 @@ pub fn load_for_implementer(workdir: &Path, tc_iris: &[String]) -> Vec<DefectFee
         return Vec::new();
     };
 
+    let superseded = superseded_graph_shorts(&store);
     let all_defects = list_by_class(&store, "defect").unwrap_or_default();
     let mut out: Vec<DefectFeedbackRecord> = Vec::new();
     for fb in all_defects {
@@ -41,6 +42,14 @@ pub fn load_for_implementer(workdir: &Path, tc_iris: &[String]) -> Vec<DefectFee
         if !tc_iris.iter().any(|t| t == source_str) {
             continue;
         }
+        let graph_short = extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
+        // Skip defects whose source graph has been superseded — the
+        // graph that emitted them is no longer authoritative, so the
+        // worker doesn't need to chase them. The audit trail
+        // (`dec loop show`) still preserves them.
+        if !graph_short.is_empty() && superseded.contains(&graph_short) {
+            continue;
+        }
         out.push(DefectFeedbackRecord {
             feedback_iri: fb.iri.as_str().to_string(),
             class: fb.class.clone(),
@@ -54,10 +63,36 @@ pub fn load_for_implementer(workdir: &Path, tc_iris: &[String]) -> Vec<DefectFee
             // `…/verify-feature/FT-NNN/VG-NNN/ts-…` or
             // `…/verify-graph-run/VG-NNN/ts-…`. Empty when the URI
             // doesn't follow the convention — we don't promise.
-            graph_id: extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default(),
+            graph_id: graph_short,
         });
     }
     out.sort_by(|a, b| a.feedback_iri.cmp(&b.feedback_iri));
+    out
+}
+
+/// Collect the set of superseded graph short ids (e.g. `VG-054`) by
+/// querying the store. Cheap SPARQL, run once per dispatch.
+fn superseded_graph_shorts(store: &oxigraph::store::Store) -> std::collections::HashSet<String> {
+    use oxigraph::sparql::QueryResults;
+    let q = r#"PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?graph WHERE { GRAPH ?g { ?graph dec:supersededBy ?_succ . } }"#;
+    let mut out = std::collections::HashSet::new();
+    let Ok(QueryResults::Solutions(sols)) = store.query(q) else {
+        return out;
+    };
+    for sol in sols.flatten() {
+        if let Some(oxigraph::model::Term::NamedNode(n)) = sol.get("graph") {
+            for segment in n.as_str().split('/') {
+                if segment.starts_with("VG-")
+                    && segment.len() > 3
+                    && segment[3..].chars().all(|c| c.is_ascii_digit())
+                {
+                    out.insert(segment.to_string());
+                    break;
+                }
+            }
+        }
+    }
     out
 }
 

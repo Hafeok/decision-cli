@@ -40,8 +40,10 @@ pub fn load_for(
         return Vec::new();
     };
 
+    let superseded = superseded_graph_shorts(&store);
     let graph_dir = workdir.join(".dec").join("verify").join("graph");
-    let candidate_graphs = collect_candidate_graphs(&graph_dir, feature_short, env_short);
+    let candidate_graphs =
+        collect_candidate_graphs(&graph_dir, feature_short, env_short, &superseded);
     if candidate_graphs.is_empty() {
         return Vec::new();
     }
@@ -65,6 +67,13 @@ pub fn load_for(
         if !tc_iris.contains(source.as_str()) {
             continue;
         }
+        // Skip defects whose source graph has been superseded; the
+        // graph that emitted them is no longer authoritative, so the
+        // verify-graph-author has nothing useful to do with them.
+        let source_short = extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
+        if !source_short.is_empty() && superseded.contains(&source_short) {
+            continue;
+        }
         let graph_id = locate_graph_for_tc(&candidate_graphs, source.as_str());
         out.push(DefectFeedbackRecord {
             feedback_iri: fb.iri.as_str().to_string(),
@@ -81,10 +90,52 @@ pub fn load_for(
     out
 }
 
+/// Set of graph short ids in the store with a `dec:supersededBy`
+/// edge (i.e., retired graphs).
+fn superseded_graph_shorts(
+    store: &oxigraph::store::Store,
+) -> std::collections::HashSet<String> {
+    use oxigraph::sparql::QueryResults;
+    let q = r#"PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?graph WHERE { GRAPH ?g { ?graph dec:supersededBy ?_succ . } }"#;
+    let mut out = std::collections::HashSet::new();
+    let Ok(QueryResults::Solutions(sols)) = store.query(q) else {
+        return out;
+    };
+    for sol in sols.flatten() {
+        if let Some(oxigraph::model::Term::NamedNode(n)) = sol.get("graph") {
+            for segment in n.as_str().split('/') {
+                if segment.starts_with("VG-")
+                    && segment.len() > 3
+                    && segment[3..].chars().all(|c| c.is_ascii_digit())
+                {
+                    out.insert(segment.to_string());
+                    break;
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Best-effort: pull the VG-NNN segment out of a session activity URI.
+fn extract_graph_short_id(session_uri: &str) -> Option<String> {
+    for segment in session_uri.split('/') {
+        if segment.starts_with("VG-")
+            && segment.len() > 3
+            && segment[3..].chars().all(|c| c.is_ascii_digit())
+        {
+            return Some(segment.to_string());
+        }
+    }
+    None
+}
+
 fn collect_candidate_graphs(
     graph_dir: &Path,
     feature_short: &str,
     env_short: &str,
+    superseded: &std::collections::HashSet<String>,
 ) -> Vec<VerificationGraph> {
     let Ok(read) = std::fs::read_dir(graph_dir) else {
         return Vec::new();
@@ -106,9 +157,23 @@ fn collect_candidate_graphs(
             .as_str()
             .ends_with(&feature_iri_suffix);
         let env_match = graph.environment.as_str().ends_with(&env_iri_suffix);
-        if verifies_match && env_match {
-            out.push(graph);
+        if !(verifies_match && env_match) {
+            continue;
         }
+        // Filter out superseded graphs — operator (or eventually the
+        // worker itself) marked the design as retired; don't bother
+        // re-presenting its defects as if they still matter.
+        let short = graph
+            .id
+            .as_str()
+            .split('/')
+            .last()
+            .unwrap_or_default()
+            .to_string();
+        if superseded.contains(&short) {
+            continue;
+        }
+        out.push(graph);
     }
     out
 }
