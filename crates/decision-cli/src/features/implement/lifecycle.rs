@@ -149,11 +149,15 @@ pub(super) fn commit_session_completion(
 }
 
 /// Drive FT-017 finalisation (commit + status transition).
+/// `defect_scoped` toggles the FT-110.X scope guard — when the
+/// bundle carried defect feedback, modifications outside the
+/// feature's prior commit history are rejected.
 pub(super) fn finalize_implement_run(
     workdir: &std::path::Path,
     ctx: &DispatchContext,
     args: &ImplementArgs,
     code_change: &CodeChangeJson,
+    defect_scoped: bool,
 ) -> Result<crate::finalize::FinalizeOutcome> {
     let finalize_input = crate::finalize::FinalizeInput {
         repo_root: workdir,
@@ -164,6 +168,7 @@ pub(super) fn finalize_implement_run(
         code_change_iri: code_change.iri.as_str(),
         bundle_hash: &ctx.bundle_hash,
         worker_summary: &code_change.summary,
+        defect_scoped,
     };
     crate::finalize::finalize_run(&finalize_input).context("finalising dec implement run (FT-017)")
 }

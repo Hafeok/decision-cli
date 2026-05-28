@@ -1,0 +1,105 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-131>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-017> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-131/0> <https://decision-cli.dev/ns/step/VG-131/1> <https://decision-cli.dev/ns/step/VG-131/2> <https://decision-cli.dev/ns/step/VG-131/3> <https://decision-cli.dev/ns/step/VG-131/4> <https://decision-cli.dev/ns/step/VG-131/5> <https://decision-cli.dev/ns/step/VG-131/6> <https://decision-cli.dev/ns/step/VG-131/7> <https://decision-cli.dev/ns/step/VG-131/8> <https://decision-cli.dev/ns/step/VG-131/9> <https://decision-cli.dev/ns/step/VG-131/10> <https://decision-cli.dev/ns/step/VG-131/11> <https://decision-cli.dev/ns/step/VG-131/12> <https://decision-cli.dev/ns/step/VG-131/13> ) .
+
+<https://decision-cli.dev/ns/step/VG-131/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "git init" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "git config user.email 'test@example.com' && git config user.name 'Test User'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "mkdir -p .product && echo 'name = \"test-product\"' > .product/product.toml" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "product feature new FT-017 --title 'Test Feature' --status in-progress" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "git add -A && git commit -m 'Initial commit'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:command "dec init --template decision-cli-development" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "CODE_WRITER_STUB=1 dec implement FT-017" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "[ -z \"$(git status --porcelain)\" ]" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/8>
+    a dec:VerificationStep ;
+    dec:stepType "file-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:path ".dec/store/orchestration.nq" ;
+    dec:expectContent "Session:" .
+
+<https://decision-cli.dev/ns/step/VG-131/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "git log -1 --format=%s | grep -q '^\\[FT-017\\] '" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/10>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "git log -1 --format=%B | grep -q 'Session:' && git log -1 --format=%B | grep -q 'Dispatch:' && git log -1 --format=%B | grep -q 'CodeChange:' && git log -1 --format=%B | grep -q 'Bundle: sha256:'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/11>
+    a dec:VerificationStep ;
+    dec:stepType "sparql-assertion" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:target ".dec/store/orchestration.nq" ;
+    dec:query "PREFIX dec: <https://decision-cli.dev/ns#> SELECT ?session WHERE { GRAPH ?g { ?session a dec:Session ; dec:status \"complete\" . } }" ;
+    dec:expectRows 1 .
+
+<https://decision-cli.dev/ns/step/VG-131/12>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "product feature show FT-017 --format json | grep -q '\"status\": \"complete\"'" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-131/13>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-018> ;
+    dec:command "git log -1 --format=%H" ;
+    dec:expectExitCode 0 ;
+    dec:captureOutput true .

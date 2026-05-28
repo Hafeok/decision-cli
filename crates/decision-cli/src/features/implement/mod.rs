@@ -214,7 +214,9 @@ pub fn run(workdir: &Path, args: &ImplementArgs) -> Result<ImplementOutcome> {
     // up. The handler is idempotent — a stale event from a previous run
     // is not duplicated.
     emit_verifier_dispatch_for_group(&mut ctx)?;
-    let finalize_outcome = finalize_implement_run(workdir, &ctx, args, code_change)?;
+    let defect_scoped = !dispatch_payload.defect_feedback.is_empty();
+    let finalize_outcome =
+        finalize_implement_run(workdir, &ctx, args, code_change, defect_scoped)?;
     Ok(assemble_implement_outcome(
         ctx,
         &response,

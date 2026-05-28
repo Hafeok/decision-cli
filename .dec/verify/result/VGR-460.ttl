@@ -1,0 +1,133 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-460>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-131> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-05-28T14:54:45.291Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.306Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-460/step/0> <https://decision-cli.dev/ns/result/VGR-460/step/1> <https://decision-cli.dev/ns/result/VGR-460/step/2> <https://decision-cli.dev/ns/result/VGR-460/step/3> <https://decision-cli.dev/ns/result/VGR-460/step/4> <https://decision-cli.dev/ns/result/VGR-460/step/5> <https://decision-cli.dev/ns/result/VGR-460/step/6> <https://decision-cli.dev/ns/result/VGR-460/step/7> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-018; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-018> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-460/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-018> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-460/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-018> ;
+        dec:outcome "unrunnable" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-460/step/5>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T14:54:45.306Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.291Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.294Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-180613-1779980085287332564/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.294Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.296Z"^^xsd:dateTime ;
+    dec:exitCode 128 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "fatal: not a git repository (or any of the parent directories): .git\n" ;
+    dec:errorMessage "expected exit 0, got 128" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.296Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.296Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-180613-1779980085287332564/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.296Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.298Z"^^xsd:dateTime ;
+    dec:exitCode 128 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "fatal: not a git repository (or any of the parent directories): .git\n" ;
+    dec:errorMessage "expected exit 0, got 128" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.298Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.300Z"^^xsd:dateTime ;
+    dec:exitCode 128 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "fatal: not a git repository (or any of the parent directories): .git\n" ;
+    dec:errorMessage "expected exit 0, got 128" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/5> ;
+    dec:outcome "unrunnable" ;
+    dec:startedAt "2026-05-28T14:54:45.301Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.301Z"^^xsd:dateTime ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-180613-1779980085287332564/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.301Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.304Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: No product.toml found in current directory or any parent\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
+
+<https://decision-cli.dev/ns/result/VGR-460/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-131/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-05-28T14:54:45.304Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T14:54:45.306Z"^^xsd:dateTime ;
+    dec:exitCode 128 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "fatal: not a git repository (or any of the parent directories): .git\n" ;
+    dec:errorMessage "expected exit 0, got 128" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ENV-002/ts-1779980085286505882> .
