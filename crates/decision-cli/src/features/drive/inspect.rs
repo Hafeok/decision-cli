@@ -230,6 +230,7 @@ ASK WHERE {{ GRAPH ?g {{
         let store = load_store_from_dump(&dump).map_err(|e| InspectError::Store {
             detail: format!("opening store at {p}: {e:#}", p = dump.display()),
         })?;
+        let superseded = superseded_graph_shorts(&store);
         let defects = list_by_class(&store, "defect").map_err(|e| InspectError::Store {
             detail: format!("listing defect feedback: {e}"),
         })?;
@@ -245,7 +246,56 @@ ASK WHERE {{ GRAPH ?g {{
                     .map(|src| tc_iris.contains(src.as_str()))
                     .unwrap_or(false)
             })
+            // Skip defects emitted by superseded graphs — the workers'
+            // bundle loaders hide them too, so counting them here would
+            // make the planner dispatch workers that see nothing to do.
+            .filter(|fb| {
+                let short =
+                    extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
+                short.is_empty() || !superseded.contains(&short)
+            })
             .count();
         Ok(count)
     }
+}
+
+/// Set of graph short ids (`VG-NNN`) in the store with a
+/// `dec:supersededBy` edge.
+fn superseded_graph_shorts(
+    store: &oxigraph::store::Store,
+) -> std::collections::HashSet<String> {
+    use oxigraph::sparql::QueryResults;
+    let q = r#"PREFIX dec: <https://decision-cli.dev/ns#>
+SELECT ?graph WHERE { GRAPH ?g { ?graph dec:supersededBy ?_succ . } }"#;
+    let mut out = std::collections::HashSet::new();
+    let Ok(QueryResults::Solutions(sols)) = store.query(q) else {
+        return out;
+    };
+    for sol in sols.flatten() {
+        if let Some(oxigraph::model::Term::NamedNode(n)) = sol.get("graph") {
+            for segment in n.as_str().split('/') {
+                if segment.starts_with("VG-")
+                    && segment.len() > 3
+                    && segment[3..].chars().all(|c| c.is_ascii_digit())
+                {
+                    out.insert(segment.to_string());
+                    break;
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Best-effort: pull the VG-NNN segment out of a session activity URI.
+fn extract_graph_short_id(session_uri: &str) -> Option<String> {
+    for segment in session_uri.split('/') {
+        if segment.starts_with("VG-")
+            && segment.len() > 3
+            && segment[3..].chars().all(|c| c.is_ascii_digit())
+        {
+            return Some(segment.to_string());
+        }
+    }
+    None
 }
