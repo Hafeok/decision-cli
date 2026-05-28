@@ -485,6 +485,7 @@ mod tests {
                 }],
                 dec_subcommands: vec!["dec verify graph new".to_string()],
                 capability_version: "0.3.0".to_string(),
+                init_templates: vec!["engineering-development".to_string()],
             },
             ontology_vocabulary: OntologyVocabulary {
                 namespace: "https://decision-cli.dev/ns#".to_string(),

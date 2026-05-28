@@ -407,6 +407,18 @@ def _render_enrichment(enrichment: EnrichmentFieldsRecord) -> str:
     else:
         lines.append("(empty — no dec commands are catalog-registered for this version)")
     lines.append("")
+    if cli.init_templates:
+        lines.append("### Valid `dec init --template` values (cli_surface.init_templates)")
+        lines.append(
+            "When step 0 of an init-first graph uses `dec init --template <name>`, the "
+            "`<name>` MUST be one of these — anything else exits with code 1 before any "
+            "evidence step runs and the graph's verdict is amendment-required. There is "
+            "no `decision-cli-development` template; the only template currently shipped "
+            "with this `dec` is the one listed below."
+        )
+        for tpl in cli.init_templates:
+            lines.append(f"- `{tpl}`")
+        lines.append("")
 
     ont = enrichment.ontology_vocabulary
     lines.append("### Ontology vocabulary (ontology_vocabulary)")

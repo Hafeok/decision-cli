@@ -63,6 +63,13 @@ pub struct CliSurface {
     pub dec_subcommands: Vec<String>,
     /// The dec version this surface was resolved against (e.g. `0.3.0`).
     pub capability_version: String,
+    /// Valid value-stream template names for `dec init --template
+    /// <name>`. Derived from the bundled stream assets at build time
+    /// — the verifier MUST pick from this list when authoring an
+    /// init step. Hallucinated template names (e.g.
+    /// `decision-cli-development`) blow up step 0 with exit 1.
+    #[serde(default)]
+    pub init_templates: Vec<String>,
 }
 
 /// One structured command from a `CapabilityReference`.
@@ -393,7 +400,21 @@ fn query_cli_surface(
         commands,
         dec_subcommands,
         capability_version: dec_version.to_string(),
+        init_templates: bundled_init_templates(),
     })
+}
+
+/// Enumerates the bundled value-stream templates the running `dec`
+/// binary ships. The list is the file stem of every
+/// `streams/<name>.ttl` baked into the binary via
+/// `core::bundled::stream_template_list`. Kept here so the
+/// enrichment writer doesn't reach across module boundaries — the
+/// list is small (currently just `engineering-development`).
+fn bundled_init_templates() -> Vec<String> {
+    crate::core::bundled::known_template_names()
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect()
 }
 
 fn query_ontology_vocabulary(

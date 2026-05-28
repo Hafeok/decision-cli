@@ -84,6 +84,15 @@ class CliSurfaceRecord(BaseModel):
         description="Flat list of `dec <subcommand>` strings for cheap lookup.",
     )
     capability_version: str = Field(default="", description="dec version this surface was resolved against.")
+    init_templates: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Valid value-stream template names for `dec init --template <name>`. "
+            "When authoring an init step, pick from this list — hallucinated names "
+            "fail at exit 1 and produce no useful evidence. If the list is empty, "
+            "fall back to `dec init --from <path>` against a known-good .ttl."
+        ),
+    )
 
 
 class OntologyVocabularyRecord(BaseModel):
