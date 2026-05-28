@@ -10,7 +10,7 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/per-stream-workdir.sh
 runner-timeout: 60
-last-run: 2026-05-28T14:37:54.422788933+00:00
+last-run: 2026-05-28T14:36:17.291259523+00:00
 last-run-duration: 0.0s
 ---
 
