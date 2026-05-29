@@ -79,13 +79,15 @@ pub(super) fn resolve_environment(
             detail: "environment reference must be non-empty".to_string(),
         });
     }
-    if !reference.starts_with("ENV-") {
+    if !reference.starts_with("BNCH-") && !reference.starts_with("ENV-") {
         return Err(HandlerError::InvalidArgument {
             field: "environment".to_string(),
-            detail: format!("environment reference must start with ENV-; got {reference:?}"),
+            detail: format!(
+                "environment reference must start with BNCH- (or legacy ENV-); got {reference:?}"
+            ),
         });
     }
-    let env_dir = workdir.join(".dec").join("verify").join("env");
+    let env_dir = workdir.join(".dec").join("verify").join("bench");
     let resolved_id =
         resolve_env_id(&env_dir, reference)?.ok_or_else(|| HandlerError::DanglingRef {
             reference: reference.to_string(),

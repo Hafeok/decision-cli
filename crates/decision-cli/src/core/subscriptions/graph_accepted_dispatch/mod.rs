@@ -371,10 +371,11 @@ fn resolve_target_envs(
 }
 
 fn env_exists(workdir: &Path, env_short: &str) -> bool {
+    // FT-112 renamed env/ → bench/; this loader was missed in original migration.
     let path = workdir
         .join(".dec")
         .join("verify")
-        .join("env")
+        .join("bench")
         .join(format!("{env_short}.ttl"));
     path.is_file()
 }

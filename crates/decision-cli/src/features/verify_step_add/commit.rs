@@ -110,7 +110,8 @@ pub(super) fn load_env_for_graph(
             .ok_or_else(|| HandlerError::Internal {
                 detail: format!("graph references non-canonical env IRI {env_iri:?}"),
             })?;
-    let env_dir = workdir.join(".dec").join("verify").join("env");
+    // FT-112 renamed env/ → bench/; this loader was missed in original migration.
+    let env_dir = workdir.join(".dec").join("verify").join("bench");
     let env_path = env_dir.join(format!("{env_id}.ttl"));
     if !env_path.is_file() {
         return Err(HandlerError::DanglingRef {

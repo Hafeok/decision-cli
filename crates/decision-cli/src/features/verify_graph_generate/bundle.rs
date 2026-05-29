@@ -246,10 +246,12 @@ fn load_env_struct(
 }
 
 fn env_path_for(workdir: &Path, env_short: &str) -> std::path::PathBuf {
+    // FT-112 renamed env/ → bench/; this loader was missed (see also
+    // load_env_record at the bottom of this file).
     workdir
         .join(".dec")
         .join("verify")
-        .join("env")
+        .join("bench")
         .join(format!("{env_short}.ttl"))
 }
 
@@ -440,7 +442,10 @@ fn find_prefixed_feature_path(
 }
 
 fn load_env_record(workdir: &Path, env_short: &str) -> Result<EnvRecord, HandlerError> {
-    let env_dir = workdir.join(".dec").join("verify").join("env");
+    // FT-112 renamed `.dec/verify/env/` to `.dec/verify/bench/`. This
+    // loader was missed in the original migration; FT-117 surfaced the
+    // gap when drives kept failing at iteration 0 with "not found".
+    let env_dir = workdir.join(".dec").join("verify").join("bench");
     let env_path = env_dir.join(format!("{env_short}.ttl"));
     if !env_path.is_file() {
         return Err(HandlerError::ArtifactNotFound {
