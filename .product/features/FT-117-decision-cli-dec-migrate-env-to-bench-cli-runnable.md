@@ -2,7 +2,7 @@
 id: FT-117
 title: 'decision-cli: dec _migrate-env-to-bench CLI runnable against live orchestration store'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-112
 adrs: []

@@ -18,6 +18,19 @@ pub enum MigrateCmd {
     /// Migrate the existing artifact corpus to dual-provenance
     /// conformance (FT-074 / ADR-042).
     Provenance(ProvenanceCli),
+    /// Rewrite legacy ENV-NNN vocabulary to BNCH-NNN in the live
+    /// orchestration store (FT-117). FT-112 specced the migration
+    /// but the implementation only exercised it in a unit test;
+    /// this subcommand exposes the migration as an operator action.
+    EnvToBench(EnvToBenchCli),
+}
+
+#[derive(Debug, Args)]
+pub struct EnvToBenchCli {
+    /// Audit-only mode — print what would be rewritten without
+    /// writing the store.
+    #[arg(long)]
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Args)]
@@ -43,6 +56,20 @@ pub struct ProvenanceCli {
 pub fn run(workdir: &Path, cmd: MigrateCmd) -> ExitCode {
     match cmd {
         MigrateCmd::Provenance(cli) => run_provenance(workdir, cli),
+        MigrateCmd::EnvToBench(cli) => run_env_to_bench(workdir, cli),
+    }
+}
+
+fn run_env_to_bench(workdir: &Path, cli: EnvToBenchCli) -> ExitCode {
+    match decision_cli::migrate_env_to_bench::migrate(workdir, cli.dry_run) {
+        Ok(report) => {
+            print!("{}", report.render(cli.dry_run));
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("dec migrate env-to-bench: {e:#}");
+            ExitCode::FAILURE
+        }
     }
 }
 

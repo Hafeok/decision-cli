@@ -2,7 +2,7 @@
 id: TC-248
 title: Post-migration dec verify bench list returns the migrated entries with BNCH ids
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-117
@@ -13,6 +13,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-248-post-migration-bench-list.sh
 runner-timeout: 60
+last-run: 2026-05-29T18:42:47.594980702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

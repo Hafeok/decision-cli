@@ -2,7 +2,7 @@
 id: TC-246
 title: Hidden CLI dec _migrate-env-to-bench rewrites class assertion and predicate IRIs in live store
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-117
@@ -14,6 +14,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-246-migrate-cli-rewrites-store.sh
 runner-timeout: 60
+last-run: 2026-05-29T18:42:47.594980702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description
