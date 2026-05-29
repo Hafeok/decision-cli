@@ -136,15 +136,24 @@ pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, Finali
         if input.defect_scoped {
             let allowed =
                 feature_commit_files(input.repo_root, input.feature_id).unwrap_or_default();
-            let dirty = working_tree_modified_files(input.repo_root)?;
-            let violations: Vec<String> = dirty
-                .into_iter()
-                .filter(|(status, _)| status == "M" || status == "D" || status == "R")
-                .filter(|(_, path)| !allowed.contains(path))
-                .map(|(_, path)| path)
-                .collect();
-            if !violations.is_empty() {
-                return Err(FinalizeError::ScopeViolation { paths: violations });
+            // Empty allowlist means no prior `[FT-XXX]` commits exist — i.e.,
+            // this is the first implementation round for a brand-new feature
+            // whose VGA auto-ran and emitted defects on round 0. The guard's
+            // intent ("stop bad fixes to old features") doesn't apply because
+            // there's no "old feature" yet; bypass it so the implementer can
+            // write the initial implementation unrestricted. The guard kicks
+            // back in on round 2+ once the first commit lands.
+            if !allowed.is_empty() {
+                let dirty = working_tree_modified_files(input.repo_root)?;
+                let violations: Vec<String> = dirty
+                    .into_iter()
+                    .filter(|(status, _)| status == "M" || status == "D" || status == "R")
+                    .filter(|(_, path)| !allowed.contains(path))
+                    .map(|(_, path)| path)
+                    .collect();
+                if !violations.is_empty() {
+                    return Err(FinalizeError::ScopeViolation { paths: violations });
+                }
             }
         }
         let message = build_commit_message(input);

@@ -171,6 +171,73 @@ fn scope_guard_allows_new_file_additions() {
     assert!(outcome.commit_sha.is_some());
 }
 
+/// Scope-guard bypass for first-round defect-fix on a feature with no
+/// prior `[FT-XXX]` commits. This happens when a fresh feature's VGA
+/// auto-ran on round 0 and emitted defects (no scripts / code yet);
+/// round 1 dispatches the implementer with defect_scoped=true but
+/// the allowlist would be empty, trapping the very first
+/// implementation. Bypass is required so the loop can converge.
+#[test]
+fn scope_guard_bypasses_when_no_prior_feature_commits_exist() {
+    use super::{finalize_run, FinalizeInput};
+    use std::process::Command;
+    // Repo with an [FT-other] commit so `git log` is non-empty, but
+    // NO `[FT-300]` commits.
+    let base = std::env::temp_dir().join(format!(
+        "decision-cli-scope-empty-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    std::fs::create_dir_all(&base).unwrap();
+    let run = |args: &[&str]| {
+        Command::new("git")
+            .current_dir(&base)
+            .args(args)
+            .output()
+            .expect("git command")
+    };
+    run(&["init", "-q"]);
+    run(&["config", "user.email", "test@test"]);
+    run(&["config", "user.name", "test"]);
+    run(&["config", "commit.gpgsign", "false"]);
+    std::fs::create_dir_all(base.join("crates/existing")).unwrap();
+    std::fs::write(base.join("crates/existing/lib.rs"), "// seed\n").unwrap();
+    run(&["add", "-A"]);
+    Command::new("git")
+        .current_dir(&base)
+        .args(["commit", "-m", "[FT-other] unrelated", "--no-gpg-sign"])
+        .output()
+        .unwrap();
+    // Implementer dispatched for FT-300 (no prior FT-300 commits) with
+    // defect_scoped=true (VGA's round-0 auto-run produced defects).
+    // Worker modifies an existing file — under the buggy logic this
+    // would abort. Under the fix it commits.
+    std::fs::write(
+        base.join("crates/existing/lib.rs"),
+        "// implementer's initial pass on FT-300\n",
+    )
+    .unwrap();
+    let input = FinalizeInput {
+        repo_root: &base,
+        product_root: &base,
+        feature_id: "FT-300",
+        session_iri: "s",
+        dispatch_iri: "d",
+        code_change_iri: "",
+        bundle_hash: "abc",
+        worker_summary: "initial impl with defects",
+        defect_scoped: true,
+    };
+    let outcome = finalize_run(&input).expect("finalize succeeds for empty-allowlist case");
+    assert!(
+        outcome.commit_sha.is_some(),
+        "expected commit, got outcome: {outcome:?}"
+    );
+}
+
 /// Build a fresh git repo with one `[FT-XXX]` commit that touches
 /// `files`. Returns the repo path. Each file gets created with
 /// trivial contents so the commit succeeds.
