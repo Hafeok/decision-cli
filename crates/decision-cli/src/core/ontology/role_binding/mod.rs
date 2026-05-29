@@ -19,6 +19,6 @@ mod read_helpers;
 pub mod shacl;
 pub mod types;
 
-pub use read::{active_for_role, list_all_active, RoleBindingReadError};
+pub use read::{active_for_role, all_for_role, list_all_active, RoleBindingReadError};
 pub use shacl::{validate_quads, RoleBindingShaclError, RoleBindingViolation};
 pub use types::{EscalationStep, RoleBinding, TriggerSignal};

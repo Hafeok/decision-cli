@@ -1,12 +1,14 @@
 //! SPARQL read API for `dec:RoleBinding` (FT-055 §Behaviour, step 4).
 //!
-//! Two entry points:
+//! Entry points:
 //!
 //! - [`active_for_role`] — resolves the dispatcher's authoritative
 //!   binding for a given `role_id` (the unique `dec:active = true`
 //!   binding), preserving rdf:List order on the escalation chain.
 //! - [`list_all_active`] — enumerates every active binding (for the
 //!   forthcoming `dec binding list` command).
+//! - [`all_for_role`] — enumerates all bindings (active and inactive)
+//!   for a given `role_id` (FT-118).
 
 use oxigraph::model::{NamedNode, Quad, Subject, Term};
 use oxigraph::sparql::QueryResults;
@@ -76,6 +78,53 @@ pub fn list_all_active(store: &Store) -> Result<Vec<RoleBinding>, RoleBindingRea
         out.push(load_binding(store, &iri)?);
     }
     out.sort_by(|a, b| a.role_id.cmp(&b.role_id));
+    Ok(out)
+}
+
+/// Enumerate all `dec:RoleBinding` artifacts (active and inactive) for
+/// a given `role_id`. Ordering is stable by version descending (newest
+/// first). FT-118 deactivation logic uses this to find prior bindings.
+pub fn all_for_role(
+    store: &Store,
+    role_id: &str,
+) -> Result<Vec<RoleBinding>, RoleBindingReadError> {
+    let iris = find_all_iris(store, role_id)?;
+    let mut out = Vec::with_capacity(iris.len());
+    for iri in iris {
+        out.push(load_binding(store, &iri)?);
+    }
+    out.sort_by(|a, b| b.version.cmp(&a.version));
+    Ok(out)
+}
+
+fn find_all_iris(
+    store: &Store,
+    role_id: &str,
+) -> Result<Vec<NamedNode>, RoleBindingReadError> {
+    let filter_clause = format!("?b dec:role_id {lit} . ", lit = format_sparql_string(role_id));
+    let q = format!(
+        "PREFIX dec: <https://decision-cli.dev/ns#> \
+         SELECT DISTINCT ?b WHERE {{ \
+           {{ ?b a dec:RoleBinding . {filter_clause} }} \
+           UNION \
+           {{ GRAPH ?g {{ ?b a dec:RoleBinding . {filter_clause} }} }} \
+         }}",
+    );
+    let QueryResults::Solutions(sols) = store
+        .query(q.as_str())
+        .map_err(|e| RoleBindingReadError::Store(e.to_string()))?
+    else {
+        return Ok(Vec::new());
+    };
+    let mut out: Vec<NamedNode> = Vec::new();
+    for sol in sols {
+        let sol = sol.map_err(|e| RoleBindingReadError::Store(e.to_string()))?;
+        if let Some(Term::NamedNode(n)) = sol.get("b") {
+            if !out.iter().any(|m| m == n) {
+                out.push(n.clone());
+            }
+        }
+    }
     Ok(out)
 }
 

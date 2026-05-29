@@ -2,7 +2,7 @@
 id: TC-249
 title: Bootstrap deactivates prior role-binding versions in the same transaction as new active write
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-118
@@ -13,6 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_249_bootstrap_deactivates_prior_bindings
 runner-timeout: 60
+last-run: 2026-05-29T19:57:40.853088466+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description

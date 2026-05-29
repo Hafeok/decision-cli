@@ -2,7 +2,7 @@
 id: FT-118
 title: 'decision-cli: bootstrap_catalog deactivates prior role-binding versions when adding new ones'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs: []
 tests:

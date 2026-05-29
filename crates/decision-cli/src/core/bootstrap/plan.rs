@@ -11,7 +11,7 @@ use crate::core::ontology::capability::{
 };
 use crate::core::ontology::role_binding::types::RoleBinding;
 use crate::core::ontology::role_binding::{
-    active_for_role, validate_quads as validate_binding_quads, RoleBindingShaclError,
+    active_for_role, all_for_role, validate_quads as validate_binding_quads, RoleBindingShaclError,
 };
 use crate::core::vocab::{capability_graph, role_binding_graph};
 
@@ -163,12 +163,16 @@ fn subject_exists(store: &Store, iri: &NamedNode) -> Result<bool, String> {
 }
 
 /// Walk every YAML-derived binding and decide skip-vs-write-vs-error.
+/// Returns a tuple: (new_binding_quads, deactivation_quads).
+/// FT-118: when a new active binding lands, deactivate all prior bindings
+/// for the same role_id in the same transaction.
 pub(super) fn plan_binding_writes(
     store: &Store,
     bindings: &[RoleBinding],
     report: &mut BootstrapReport,
-) -> Result<Vec<Quad>, BootstrapError> {
+) -> Result<(Vec<Quad>, Vec<Quad>), BootstrapError> {
     let mut to_write: Vec<Quad> = Vec::new();
+    let mut to_deactivate: Vec<Quad> = Vec::new();
     let bind_graph = role_binding_graph();
     for binding in bindings {
         match active_for_role(store, &binding.role_id) {
@@ -192,27 +196,80 @@ pub(super) fn plan_binding_writes(
                         report: e.report,
                     }
                 })?;
+                // FT-118: deactivate all active bindings for this role before
+                // inserting the new one (atomic uniqueness enforcement).
+                let deactivation_quads = plan_deactivations(store, &binding.role_id, binding)?;
+                to_deactivate.extend(deactivation_quads);
                 to_write.extend(quads);
                 report.bindings_written += 1;
             }
             Err(e) => return Err(BootstrapError::Internal(e.to_string())),
         }
     }
-    Ok(to_write)
+    Ok((to_write, to_deactivate))
 }
 
-/// Atomically insert every quad from both lists in a single store
-/// transaction. SHACL errors and partial writes never land — the
-/// transaction either commits all quads or rolls back entirely.
+/// Generate quads to deactivate all active bindings for `role_id` except
+/// the one we're about to write. FT-118 invariant enforcement.
+fn plan_deactivations(
+    store: &Store,
+    role_id: &str,
+    new_binding: &RoleBinding,
+) -> Result<Vec<Quad>, BootstrapError> {
+    use oxigraph::model::{Literal, NamedNode};
+    let bind_graph = role_binding_graph();
+    let all_bindings = all_for_role(store, role_id)
+        .map_err(|e| BootstrapError::Internal(e.to_string()))?;
+    let mut deactivation_quads = Vec::new();
+    for binding in all_bindings {
+        // Skip if it's not active (already deactivated) or if it's the new one
+        if !binding.active || binding.version == new_binding.version {
+            continue;
+        }
+        // Generate a quad that sets dec:active to false
+        let subject = binding.iri();
+        let predicate = NamedNode::new_unchecked("https://decision-cli.dev/ns#active");
+        let old_value = Literal::new_typed_literal("true", NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean"));
+        let new_value = Literal::new_typed_literal("false", NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean"));
+
+        // We need to both remove the old triple and insert the new one
+        deactivation_quads.push(Quad::new(
+            subject.clone(),
+            predicate.clone(),
+            old_value,
+            bind_graph,
+        ));
+        deactivation_quads.push(Quad::new(
+            subject,
+            predicate,
+            new_value,
+            bind_graph,
+        ));
+    }
+    Ok(deactivation_quads)
+}
+
+/// Atomically insert capabilities, deactivate prior bindings, and insert
+/// new bindings in a single transaction. SHACL errors and partial writes
+/// never land — the transaction either commits all changes or rolls back
+/// entirely. FT-118: deactivation quads alternate (remove, insert) pairs.
 pub(super) fn commit_all(
     store: &Store,
     cap_quads: &[Quad],
     bind_quads: &[Quad],
+    deactivate_quads: &[Quad],
 ) -> Result<(), BootstrapError> {
     store
         .transaction(|mut tx| {
             for q in cap_quads {
                 tx.insert(q.as_ref())?;
+            }
+            // FT-118: process deactivation quads in pairs (remove old, insert new)
+            for chunk in deactivate_quads.chunks(2) {
+                if chunk.len() == 2 {
+                    tx.remove(&chunk[0])?;
+                    tx.insert(chunk[1].as_ref())?;
+                }
             }
             for q in bind_quads {
                 tx.insert(q.as_ref())?;

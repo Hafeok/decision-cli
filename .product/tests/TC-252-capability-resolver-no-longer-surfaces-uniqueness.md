@@ -2,7 +2,7 @@
 id: TC-252
 title: Capability resolver no longer surfaces uniqueness errors after bootstrap with FT-118 lands
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-118
@@ -13,6 +13,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-252-resolver-no-uniqueness-after-bootstrap.sh
 runner-timeout: 60
+last-run: 2026-05-29T19:57:40.853088466+00:00
+last-run-duration: 0.0s
 ---
 
 ## Description

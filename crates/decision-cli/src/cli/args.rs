@@ -11,6 +11,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 use super::{
+    binding_admin, binding_admin::{ActivateBindingArgs, DeactivateBindingArgs, ListBindingsArgs},
     bootstrap_catalog, bootstrap_catalog::BootstrapCatalogArgs, check_goal,
     check_goal::CheckGoalArgs, doctor, doctor::DoctorArgs, events, events::EventsCmd, feedback,
     feedback::FeedbackCmd, health, implement, implement::ImplementCmdArgs, init, init::InitArgs,
@@ -57,6 +58,17 @@ pub enum Command {
     /// point; this command is the Rust-side chokepoint it shells out to.
     #[command(name = "_bootstrap-catalog", hide = true)]
     BootstrapCatalog(BootstrapCatalogArgs),
+    /// Hidden helper (FT-118): atomically activate one role binding and
+    /// deactivate all others for the same role.
+    #[command(name = "_activate-binding", hide = true)]
+    ActivateBinding(ActivateBindingArgs),
+    /// Hidden helper (FT-118): deactivate a role binding (idempotent).
+    #[command(name = "_deactivate-binding", hide = true)]
+    DeactivateBinding(DeactivateBindingArgs),
+    /// Hidden helper (FT-118): list all bindings (active + inactive) for
+    /// a role.
+    #[command(name = "_list-bindings", hide = true)]
+    ListBindings(ListBindingsArgs),
     /// Hidden helper (FT-107 follow-up): seed the FT-101 catalog
     /// (CapabilityReference + OntologyDescription) so the
     /// verify-graph-author bundle's enrichment fields are non-empty.
@@ -129,6 +141,9 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Sparql(args) => sparql::run(workdir, args),
         Command::CheckGoal(args) => check_goal::run(workdir, args),
         Command::BootstrapCatalog(args) => bootstrap_catalog::run(workdir, args),
+        Command::ActivateBinding(args) => binding_admin::activate(workdir, args),
+        Command::DeactivateBinding(args) => binding_admin::deactivate(workdir, args),
+        Command::ListBindings(args) => binding_admin::list(workdir, args),
         Command::SeedFt101Catalog(args) => seed_ft101_catalog::run(workdir, args),
         Command::SupersedeMisroutedDefects(args) => supersede_misrouted::run(workdir, args),
         Command::SupersedeGraph(args) => supersede_graph::run(workdir, args),

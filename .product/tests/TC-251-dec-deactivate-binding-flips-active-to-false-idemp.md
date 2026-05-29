@@ -2,7 +2,7 @@
 id: TC-251
 title: dec _deactivate-binding flips active to false idempotently and preserves binding history
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-118
@@ -14,6 +14,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-251-deactivate-binding-idempotent.sh
 runner-timeout: 30
+last-run: 2026-05-29T19:57:40.853088466+00:00
+last-run-duration: 0.0s
 ---
 
 ## Description

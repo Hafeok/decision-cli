@@ -131,9 +131,9 @@ pub fn bootstrap_catalog(
     };
 
     let cap_quads = plan_capability_writes(&store, &capabilities, &mut report)?;
-    let bind_quads = plan_binding_writes(&store, &bindings, &mut report)?;
+    let (bind_quads, deactivate_quads) = plan_binding_writes(&store, &bindings, &mut report)?;
 
-    commit_all(&store, &cap_quads, &bind_quads)?;
+    commit_all(&store, &cap_quads, &bind_quads, &deactivate_quads)?;
 
     let store_arc = Arc::new(store);
     if migrate {
