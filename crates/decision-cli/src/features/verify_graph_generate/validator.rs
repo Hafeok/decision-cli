@@ -159,7 +159,17 @@ fn validate_shell_command(
         return;
     };
     let cmd_trim = cmd.trim();
-    let head = cmd_trim.split_whitespace().next().unwrap_or("");
+    // The LIFT THE RUNNER teaching produces commands of shape
+    // `cd "$DEC_PROJECT_ROOT" && <real-binary> …`. `cd` is a shell
+    // builtin (not a binary on PATH), so a naive head-of-command
+    // check would reject every step. Strip a leading
+    // `cd <anything> &&` (or `; cd <anything>;`) so the real binary
+    // is what gets validated against `binaries_on_path`. Operators
+    // who want stricter validation can re-tighten this in a later
+    // ADR; today the validator accommodates the canonical pattern
+    // every worker is taught to produce.
+    let effective = strip_cd_prefix(cmd_trim);
+    let head = effective.split_whitespace().next().unwrap_or("");
     if head.is_empty() {
         return;
     }
@@ -200,6 +210,48 @@ fn validate_shell_command(
             referenced_thing: head.to_string(),
             why_rejected: "not in env_capabilities.binaries_on_path".to_string(),
         });
+    }
+}
+
+/// Strip a leading `cd <path> [&&|;]` from a command so the binary
+/// validator sees the *real* command head, not the shell builtin
+/// `cd`. The LIFT THE RUNNER teaching produces commands of shape
+/// `cd "$DEC_PROJECT_ROOT" && <real-binary>` so callers can rely on
+/// the workdir being correct; this helper makes the validator
+/// recognise that intent.
+///
+/// Handles:
+/// - `cd PATH && rest…` → `rest…`
+/// - `cd PATH ; rest…`  → `rest…`
+/// - `cd PATH&&rest…`   → `rest…` (no whitespace around &&)
+///
+/// Returns the original input unchanged if it doesn't start with `cd `.
+fn strip_cd_prefix(cmd: &str) -> &str {
+    let trimmed = cmd.trim_start();
+    if !trimmed.starts_with("cd ") && !trimmed.starts_with("cd\t") {
+        return cmd;
+    }
+    // Find the first &&, ; or end-of-string. Inside quotes is fine to
+    // skip naively here because the canonical pattern's `cd "$X"` quote
+    // doesn't contain `&&` or `;`.
+    let after_cd = &trimmed[3..]; // strip "cd " (or "cd\t")
+    let mut split_at = None;
+    let bytes = after_cd.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if i + 1 < bytes.len() && bytes[i] == b'&' && bytes[i + 1] == b'&' {
+            split_at = Some(i + 2);
+            break;
+        }
+        if bytes[i] == b';' {
+            split_at = Some(i + 1);
+            break;
+        }
+        i += 1;
+    }
+    match split_at {
+        Some(pos) => after_cd[pos..].trim_start(),
+        None => cmd, // `cd PATH` with no follow-up — keep original
     }
 }
 
@@ -657,5 +709,45 @@ mod tests {
             ViolationKind::SparqlNamespace.upstream_target(),
             UpstreamTarget::OntologyDescription
         );
+    }
+
+    #[test]
+    fn strip_cd_prefix_unwraps_canonical_pattern() {
+        // The LIFT THE RUNNER teaching produces commands of this shape.
+        assert_eq!(
+            strip_cd_prefix("cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/x.sh"),
+            "bash tests/scripts/x.sh"
+        );
+        assert_eq!(
+            strip_cd_prefix("cd /tmp && cargo test foo"),
+            "cargo test foo"
+        );
+        // Semicolon separator.
+        assert_eq!(
+            strip_cd_prefix("cd /tmp ; ls"),
+            "ls"
+        );
+        // No-whitespace &&.
+        assert_eq!(
+            strip_cd_prefix("cd /tmp&&ls"),
+            "ls"
+        );
+    }
+
+    #[test]
+    fn strip_cd_prefix_leaves_non_cd_commands_alone() {
+        assert_eq!(strip_cd_prefix("bash tests/x.sh"), "bash tests/x.sh");
+        assert_eq!(strip_cd_prefix("dec verify feature FT-1"), "dec verify feature FT-1");
+        assert_eq!(strip_cd_prefix("cdup foo"), "cdup foo"); // not actually `cd`
+        assert_eq!(strip_cd_prefix(""), "");
+    }
+
+    #[test]
+    fn strip_cd_prefix_handles_dangling_cd() {
+        // `cd PATH` with no follow-up — return the original; the
+        // validator will reject it via the `cd` head, which is the
+        // correct outcome (a step that JUST changes directory is
+        // useless anyway).
+        assert_eq!(strip_cd_prefix("cd /tmp"), "cd /tmp");
     }
 }
