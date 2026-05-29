@@ -19,6 +19,9 @@ tests:
 - TC-199
 domains: []
 domains-acknowledged: {}
+patterns:
+- PAT-001
+- PAT-002
 ---
 
 ## Description
