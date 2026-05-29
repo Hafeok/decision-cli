@@ -7,7 +7,14 @@ depends-on:
 - FT-110
 - FT-112
 adrs: []
-tests: []
+tests:
+- TC-215
+- TC-216
+- TC-217
+- TC-218
+- TC-219
+- TC-220
+- TC-221
 domains:
 - api
 domains-acknowledged:
