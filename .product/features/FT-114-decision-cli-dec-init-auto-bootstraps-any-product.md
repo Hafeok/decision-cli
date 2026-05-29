@@ -4,7 +4,8 @@ title: 'decision-cli: dec init auto-bootstraps any product-cli repo, with .env s
 phase: 4
 status: planned
 depends-on: []
-adrs: []
+adrs:
+- ADR-068
 tests:
 - TC-222
 - TC-223
@@ -13,6 +14,8 @@ tests:
 - TC-226
 - TC-227
 - TC-228
+- TC-237
+- TC-238
 domains:
 - api
 - storage
@@ -97,6 +100,24 @@ CLI surface (the existing `dec init` command, extended):
 - Comment header naming the generator (this feature), the
   generation timestamp, and the source `.product/` path —
   audit-trail for "where did this come from."
+
+**Generated config.toml** — `.dec/config.toml`, per ADR-068:
+
+- Bootstrapped from ADR-068's initial inventory: `[driver]`,
+  `[sweep]`, `[show]`, `[init]`, `[paths]` sections with every
+  key set to its built-in default. The generated file is
+  byte-stable (deterministic generation) so re-running `dec
+  init` against an unchanged ADR produces an unchanged file.
+- Includes header comment naming ADR-068 as the authority and
+  the precedence-chain reminder
+  (`# flag > DEC_* env > this file > built-in default`).
+- Strict-parsed at every CLI startup; unknown keys, type
+  mismatches, out-of-range values, and credential-shaped key
+  names cause CLI startup to fail with a precise error
+  (TC-238 pins the contract).
+- Operator may delete the file entirely; the CLI falls back
+  to built-in defaults across the board (the file is a
+  preference layer, not required state).
 
 **`.env.example`** — created at repo root if absent:
 
