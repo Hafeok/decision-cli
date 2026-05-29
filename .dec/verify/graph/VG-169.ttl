@@ -1,0 +1,39 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-169>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-118> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-169/0> <https://decision-cli.dev/ns/step/VG-169/1> <https://decision-cli.dev/ns/step/VG-169/2> <https://decision-cli.dev/ns/step/VG-169/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-169/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-249> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_249_bootstrap_deactivates_prior_bindings" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-169/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-250> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-250-activate-binding-conflict.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-169/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-251> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-251-deactivate-binding-idempotent.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-169/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-252> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-252-resolver-no-uniqueness-after-bootstrap.sh" ;
+    dec:expectExitCode 0 .
