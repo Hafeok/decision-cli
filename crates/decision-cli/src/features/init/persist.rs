@@ -198,8 +198,8 @@ pub(super) fn seed_bootstrap_subscriptions(
     // uncovered (feature, env) pair.
     quads.extend(crate::core::subscriptions::verify_graph_author_dispatch::seed_quads());
     // FT-100: verify-graph-runner auto-dispatch subscriptions.
-    // graph_accepted_dispatch fires on dec:VerificationGraph create/update;
-    // code_change_committed_dispatch fires on dec:CodeChangeCommitted.
+    // graph_accepted_dispatch fires on verify-graph create/update;
+    // code_change_committed_dispatch fires on CodeChangeCommitted.
     quads.extend(crate::core::subscriptions::graph_accepted_dispatch::seed_quads());
     quads.extend(crate::core::subscriptions::code_change_committed_dispatch::seed_quads());
     store.transaction(|mut tx| {

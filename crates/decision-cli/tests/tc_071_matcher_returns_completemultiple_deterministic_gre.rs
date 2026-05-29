@@ -111,6 +111,15 @@ fn build_graph(graph_id: &str, env_iri_str: &str, covers: &[&str]) -> Verificati
     )
 }
 
+fn write_graph_to_disk(workdir: &Path, graph: &VerificationGraph) {
+    use decision_cli::core::ontology::verification_graph::to_canonical_turtle;
+    let dir = workdir.join(".dec/verify/graph");
+    fs::create_dir_all(&dir).expect("create graph dir");
+    let graph_short = graph.id.as_str().rsplit('/').next().unwrap();
+    let ttl = to_canonical_turtle(graph);
+    fs::write(dir.join(format!("{graph_short}.ttl")), ttl).expect("write graph");
+}
+
 #[test]
 fn tc_071_matcher_returns_completemultiple_deterministic_greedy_cover() {
     let wd = WorkdirGuard::new("complete-multiple");
@@ -124,22 +133,21 @@ fn tc_071_matcher_returns_completemultiple_deterministic_greedy_cover() {
 
     // VG-3 covers [T1, T2]; VG-5 covers [T2, T3];
     // VG-7 covers [T3, T4]; VG-9 covers [T4].
-    insert_quads(
-        &store,
-        &build_graph("VG-3", &env_iri_full, &["T1", "T2"]).to_quads(verify_graph_named_graph()),
-    );
-    insert_quads(
-        &store,
-        &build_graph("VG-5", &env_iri_full, &["T2", "T3"]).to_quads(verify_graph_named_graph()),
-    );
-    insert_quads(
-        &store,
-        &build_graph("VG-7", &env_iri_full, &["T3", "T4"]).to_quads(verify_graph_named_graph()),
-    );
-    insert_quads(
-        &store,
-        &build_graph("VG-9", &env_iri_full, &["T4"]).to_quads(verify_graph_named_graph()),
-    );
+    let vg3 = build_graph("VG-3", &env_iri_full, &["T1", "T2"]);
+    insert_quads(&store, &vg3.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg3);
+
+    let vg5 = build_graph("VG-5", &env_iri_full, &["T2", "T3"]);
+    insert_quads(&store, &vg5.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg5);
+
+    let vg7 = build_graph("VG-7", &env_iri_full, &["T3", "T4"]);
+    insert_quads(&store, &vg7.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg7);
+
+    let vg9 = build_graph("VG-9", &env_iri_full, &["T4"]);
+    insert_quads(&store, &vg9.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg9);
 
     let report = best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("matcher ok");
 
@@ -192,10 +200,9 @@ fn tc_071_matcher_is_deterministic_across_100_runs() {
         ("VG-7", &["T3", "T4"][..]),
         ("VG-9", &["T4"][..]),
     ] {
-        insert_quads(
-            &store,
-            &build_graph(id, &env_iri_full, covers).to_quads(verify_graph_named_graph()),
-        );
+        let graph = build_graph(id, &env_iri_full, covers);
+        insert_quads(&store, &graph.to_quads(verify_graph_named_graph()));
+        write_graph_to_disk(wd.path(), &graph);
     }
 
     let first = best_matching_graphs("FT-W", env_short, &store, wd.path()).expect("first");

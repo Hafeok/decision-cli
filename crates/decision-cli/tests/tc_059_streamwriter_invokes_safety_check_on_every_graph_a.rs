@@ -291,8 +291,15 @@ fn no_safety_bypass_in_features() {
         if !imports_vg {
             continue;
         }
-        // Look for a raw store mutation method.
-        let mutating_paths = [".insert(", ".bulk_loader(", ".bulk_extend("];
+        // Look for a raw store mutation method. Use patterns that are more
+        // specific to Store/transaction operations to avoid false positives
+        // from HashSet/HashMap/Vec insertions.
+        let mutating_paths = [
+            "tx.insert(",
+            "store.insert(",
+            "bulk_loader(",
+            "bulk_extend(",
+        ];
         for needle in mutating_paths {
             if prod_content.contains(needle) {
                 offenders.push(format!("{}: '{needle}'", f.display()));

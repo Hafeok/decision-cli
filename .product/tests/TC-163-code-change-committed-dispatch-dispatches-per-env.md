@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-163-code-change-committed-dispatch.sh
 runner-timeout: 180
-last-run: 2026-05-28T08:48:49.733702120+00:00
-last-run-duration: 9.4s
+last-run: 2026-05-28T20:37:16.719173153+00:00
+last-run-duration: 7.4s
 ---
 
 ## Claim

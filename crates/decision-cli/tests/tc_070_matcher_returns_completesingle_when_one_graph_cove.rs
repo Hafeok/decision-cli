@@ -67,6 +67,15 @@ fn write_feature_fixture(workdir: &Path, feature_id: &str, tcs: &[&str]) {
     fs::write(dir.join(format!("{feature_id}-fixture.md")), body).expect("write fixture");
 }
 
+fn write_graph_to_disk(workdir: &Path, graph: &VerificationGraph) {
+    use decision_cli::core::ontology::verification_graph::to_canonical_turtle;
+    let dir = workdir.join(".dec/verify/graph");
+    fs::create_dir_all(&dir).expect("create graph dir");
+    let graph_short = graph.id.as_str().rsplit('/').next().unwrap();
+    let ttl = to_canonical_turtle(graph);
+    fs::write(dir.join(format!("{graph_short}.ttl")), ttl).expect("write graph");
+}
+
 fn insert_quads(store: &Store, quads: &[Quad]) {
     for q in quads {
         store.insert(q.as_ref()).expect("insert");
@@ -164,14 +173,22 @@ fn tc_070_matcher_returns_completesingle_when_one_graph_covers_all() {
 
     let store = Store::new().expect("in-memory store");
     seed_env(&store, &env_iri_full);
+
+    // Build and persist the complete graph
+    let vg_complete = build_vg_z_complete(&env_iri_full);
     insert_quads(
         &store,
-        &build_vg_z_complete(&env_iri_full).to_quads(verify_graph_named_graph()),
+        &vg_complete.to_quads(verify_graph_named_graph()),
     );
+    write_graph_to_disk(wd.path(), &vg_complete);
+
+    // Build and persist the partial graph
+    let vg_partial = build_vg_z2_partial(&env_iri_full);
     insert_quads(
         &store,
-        &build_vg_z2_partial(&env_iri_full).to_quads(verify_graph_named_graph()),
+        &vg_partial.to_quads(verify_graph_named_graph()),
     );
+    write_graph_to_disk(wd.path(), &vg_partial);
 
     let before = store.len().expect("len before");
     let report = best_matching_graphs("FT-Z", env_short, &store, wd.path()).expect("matcher ok");
@@ -190,11 +207,11 @@ fn tc_070_matcher_returns_completesingle_when_one_graph_covers_all() {
     );
     assert!(report.residual_uncovered.is_empty());
 
-    // Matcher must be side-effect-free.
+    // Matcher must be side-effect-free (does not mutate the store).
     let after = store.len().expect("len after");
     assert_eq!(before, after, "matcher must not mutate the store");
-    let dec_dir = wd.path().join(".dec");
-    assert!(!dec_dir.exists(), "matcher must not create .dec/");
+    // Note: .dec/ now exists because we write graph .ttl files before
+    // calling the matcher (required for disk-authoritative cross-check).
 
     // feature / environment carried as IRIs.
     assert_eq!(report.feature, feature_iri_for("FT-Z"));
@@ -211,14 +228,20 @@ fn tc_070_matcher_is_deterministic_across_repeats() {
 
     let store = Store::new().expect("in-memory store");
     seed_env(&store, &env_iri_full);
+
+    let vg_complete = build_vg_z_complete(&env_iri_full);
     insert_quads(
         &store,
-        &build_vg_z_complete(&env_iri_full).to_quads(verify_graph_named_graph()),
+        &vg_complete.to_quads(verify_graph_named_graph()),
     );
+    write_graph_to_disk(wd.path(), &vg_complete);
+
+    let vg_partial = build_vg_z2_partial(&env_iri_full);
     insert_quads(
         &store,
-        &build_vg_z2_partial(&env_iri_full).to_quads(verify_graph_named_graph()),
+        &vg_partial.to_quads(verify_graph_named_graph()),
     );
+    write_graph_to_disk(wd.path(), &vg_partial);
 
     let r1 = best_matching_graphs("FT-Z", env_short, &store, wd.path()).expect("r1");
     let r2 = best_matching_graphs("FT-Z", env_short, &store, wd.path()).expect("r2");

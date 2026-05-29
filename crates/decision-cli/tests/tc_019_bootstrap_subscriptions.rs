@@ -68,9 +68,10 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
 
     let store = load_store_from_dump(&workdir);
 
-    // -- 1. Exactly six Subscription instances (v0 pair + FT-022 +
+    // -- 1. Exactly eight Subscription instances (v0 pair + FT-022 +
     //       FT-029 feedback-routing + FT-032 feedback-resume +
-    //       FT-050 verify-graph-author-dispatch).
+    //       FT-050 verify-graph-author-dispatch +
+    //       FT-100 graph_accepted_dispatch + code_change_committed_dispatch).
     let count_q = format!(
         "SELECT (COUNT(?s) AS ?n) WHERE {{ GRAPH <{g}> {{ ?s a <{c}> }} }}",
         g = IRI_OXI_GRAPH_SUBSCRIPTIONS,
@@ -78,10 +79,10 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
     );
     let count = scalar_int(&store, &count_q);
     assert_eq!(
-        count, 6,
-        "expected exactly 6 seeded Subscriptions in <{IRI_OXI_GRAPH_SUBSCRIPTIONS}> \
+        count, 8,
+        "expected exactly 8 seeded Subscriptions in <{IRI_OXI_GRAPH_SUBSCRIPTIONS}> \
          (v0 pair + FT-022 verifier-dispatch + FT-029 feedback-routing + FT-032 feedback-resume + \
-         FT-050 verify-graph-author-dispatch), found {count}"
+         FT-050 verify-graph-author-dispatch + FT-100 graph_accepted_dispatch + code_change_committed_dispatch), found {count}"
     );
 
     for iri in [SUB_DISPATCH_AVAILABLE, SUB_DISPATCH_COMPLETED] {
@@ -137,10 +138,10 @@ fn dec_init_seeds_v0_bootstrap_subscriptions() {
         GraphWriter::open(Arc::clone(&store_for_writer)).expect("open GraphWriter over store");
     assert_eq!(
         writer.registry().len(),
-        6,
-        "registry should rehydrate with all six seeded subscriptions \
+        8,
+        "registry should rehydrate with all eight seeded subscriptions \
          (v0 pair + FT-022 verifier-dispatch + FT-029 feedback-routing + FT-032 feedback-resume + \
-          FT-050 verify-graph-author-dispatch)"
+          FT-050 verify-graph-author-dispatch + FT-100 graph_accepted_dispatch + code_change_committed_dispatch)"
     );
 
     // -- 3. Round-trip: a real dispatch produces events for both subs.

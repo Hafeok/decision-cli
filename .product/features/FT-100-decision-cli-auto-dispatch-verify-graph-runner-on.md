@@ -2,7 +2,7 @@
 id: FT-100
 title: 'decision-cli: auto-dispatch verify-graph-runner on graph accept and CodeChange commit'
 phase: 3
-status: complete
+status: in-progress
 depends-on:
 - FT-097
 - FT-098

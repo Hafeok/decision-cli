@@ -111,6 +111,15 @@ fn build_graph(graph_id: &str, env_iri_str: &str, covers: &[&str]) -> Verificati
     )
 }
 
+fn write_graph_to_disk(workdir: &Path, graph: &VerificationGraph) {
+    use decision_cli::core::ontology::verification_graph::to_canonical_turtle;
+    let dir = workdir.join(".dec/verify/graph");
+    fs::create_dir_all(&dir).expect("create graph dir");
+    let graph_short = graph.id.as_str().rsplit('/').next().unwrap();
+    let ttl = to_canonical_turtle(graph);
+    fs::write(dir.join(format!("{graph_short}.ttl")), ttl).expect("write graph");
+}
+
 #[test]
 fn tc_072_matcher_excludes_graphs_in_different_environment_from_match_set() {
     let wd = WorkdirGuard::new("env-isolation");
@@ -124,15 +133,14 @@ fn tc_072_matcher_excludes_graphs_in_different_environment_from_match_set() {
     seed_env(&store, &env2_iri);
 
     // VG-A in ENV-1 covers [T1] only.
-    insert_quads(
-        &store,
-        &build_graph("VG-A", &env1_iri, &["T1"]).to_quads(verify_graph_named_graph()),
-    );
+    let vg_a = build_graph("VG-A", &env1_iri, &["T1"]);
+    insert_quads(&store, &vg_a.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg_a);
+
     // VG-B in ENV-2 covers [T1, T2] — strict superset, but wrong env.
-    insert_quads(
-        &store,
-        &build_graph("VG-B", &env2_iri, &["T1", "T2"]).to_quads(verify_graph_named_graph()),
-    );
+    let vg_b = build_graph("VG-B", &env2_iri, &["T1", "T2"]);
+    insert_quads(&store, &vg_b.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg_b);
 
     let report = best_matching_graphs("FT-V", "ENV-1", &store, wd.path()).expect("matcher ok");
 
@@ -164,14 +172,14 @@ fn tc_072_querying_env2_returns_vg_b_only() {
     let store = Store::new().expect("in-memory store");
     seed_env(&store, &env1_iri);
     seed_env(&store, &env2_iri);
-    insert_quads(
-        &store,
-        &build_graph("VG-A", &env1_iri, &["T1"]).to_quads(verify_graph_named_graph()),
-    );
-    insert_quads(
-        &store,
-        &build_graph("VG-B", &env2_iri, &["T1", "T2"]).to_quads(verify_graph_named_graph()),
-    );
+
+    let vg_a = build_graph("VG-A", &env1_iri, &["T1"]);
+    insert_quads(&store, &vg_a.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg_a);
+
+    let vg_b = build_graph("VG-B", &env2_iri, &["T1", "T2"]);
+    insert_quads(&store, &vg_b.to_quads(verify_graph_named_graph()));
+    write_graph_to_disk(wd.path(), &vg_b);
 
     let r = best_matching_graphs("FT-V", "ENV-2", &store, wd.path()).expect("ok");
     assert_eq!(r.kind, MatchKind::CompleteSingle);

@@ -45,11 +45,7 @@ pub(super) fn collect_non_empty(
 ) -> Result<Vec<Candidate>, MatchError> {
     let candidates = query::graphs_in_env(store, env_iri)?;
     let mut out: Vec<Candidate> = Vec::with_capacity(candidates.len());
-    let workdir = product_root
-        .parent()
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| product_root.to_path_buf());
-    let graph_dir = workdir.join(".dec").join("verify").join("graph");
+    let graph_dir = product_root.join(".dec").join("verify").join("graph");
     for (graph_iri, verifies_iri) in &candidates {
         let report =
             feature_covered_by(feature, graph_iri_to_short(graph_iri), store, product_root)?;

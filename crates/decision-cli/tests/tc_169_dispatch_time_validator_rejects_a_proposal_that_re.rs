@@ -41,6 +41,7 @@ fn fixture_enrichment() -> EnrichmentFields {
                 "dec sparql query".to_string(),
             ],
             capability_version: "0.3.0".to_string(),
+            init_templates: vec![],
         },
         ontology_vocabulary: OntologyVocabulary {
             namespace: "https://decision-cli.dev/ns#".to_string(),
