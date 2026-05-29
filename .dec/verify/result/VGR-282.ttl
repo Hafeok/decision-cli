@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-282>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-104> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-27T13:40:04.988Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T13:40:05.014Z"^^xsd:dateTime ;
@@ -64,7 +64,7 @@
     dec:endedAt "2026-05-27T13:40:04.992Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-307800-1779889204983671194/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/BNCH-002-307800-1779889204983671194/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-104/ts-1779889204981433628> .
 
@@ -177,7 +177,7 @@
     dec:endedAt "2026-05-27T13:40:05.007Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-307800-1779889204983671194/.dec/store/orchestration.nq" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-307800-1779889204983671194/.dec/store/orchestration.nq" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-104/ts-1779889204981433628> .
 
 <https://decision-cli.dev/ns/result/VGR-282/step/11>

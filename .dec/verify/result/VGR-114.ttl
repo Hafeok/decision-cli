@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-114>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-018> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:04.028Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:04.074Z"^^xsd:dateTime ;
@@ -98,7 +98,7 @@
     dec:endedAt "2026-05-26T18:06:04.032Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
 <https://decision-cli.dev/ns/result/VGR-114/step/3>
@@ -109,7 +109,7 @@
     dec:endedAt "2026-05-26T18:06:04.032Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
 <https://decision-cli.dev/ns/result/VGR-114/step/4>
@@ -120,7 +120,7 @@
     dec:endedAt "2026-05-26T18:06:04.032Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333039-1779818764024020080/core/role_catalog/seeds/implementer-authority.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-333039-1779818764024020080/core/role_catalog/seeds/implementer-authority.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
 <https://decision-cli.dev/ns/result/VGR-114/step/5>
@@ -131,7 +131,7 @@
     dec:endedAt "2026-05-26T18:06:04.032Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333039-1779818764024020080/core/role_catalog/seeds/verifier-authority.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-333039-1779818764024020080/core/role_catalog/seeds/verifier-authority.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
 <https://decision-cli.dev/ns/result/VGR-114/step/6>
@@ -142,7 +142,7 @@
     dec:endedAt "2026-05-26T18:06:04.032Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
 <https://decision-cli.dev/ns/result/VGR-114/step/7>
@@ -153,7 +153,7 @@
     dec:endedAt "2026-05-26T18:06:04.032Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-333039-1779818764024020080/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
 <https://decision-cli.dev/ns/result/VGR-114/step/8>
@@ -164,7 +164,7 @@
     dec:endedAt "2026-05-26T18:06:04.049Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-333039-1779818764024020080` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-333039-1779818764024020080` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .
 
@@ -176,6 +176,6 @@
     dec:endedAt "2026-05-26T18:06:04.074Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-333039-1779818764024020080` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-333039-1779818764024020080` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-018/ts-1779818764023037483> .

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-361>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-115> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-28T11:20:12.363Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T11:20:12.380Z"^^xsd:dateTime ;
@@ -46,7 +46,7 @@
         dec:outcome "unrunnable" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-361/step/5>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T11:20:12.380Z"^^xsd:dateTime .
 
@@ -60,7 +60,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "dec init failed: unknown bundled template 'decision-cli-development'; available: engineering-development\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> .
 
 <https://decision-cli.dev/ns/result/VGR-361/step/1>
     a dec:VerificationStepTrace ;
@@ -72,7 +72,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "dec status: not inside an initialised decision-cli working dir.\n  Run `dec init --template engineering-development` first.\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> .
 
 <https://decision-cli.dev/ns/result/VGR-361/step/2>
     a dec:VerificationStepTrace ;
@@ -82,8 +82,8 @@
     dec:endedAt "2026-05-28T11:20:12.377Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-108046-1779967212360490776/.dec/store/orchestration.nq" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-108046-1779967212360490776/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> .
 
 <https://decision-cli.dev/ns/result/VGR-361/step/3>
     a dec:VerificationStepTrace ;
@@ -93,9 +93,9 @@
     dec:endedAt "2026-05-28T11:20:12.380Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-108046-1779967212360490776/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/BNCH-002-108046-1779967212360490776/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> .
 
 <https://decision-cli.dev/ns/result/VGR-361/step/4>
     a dec:VerificationStepTrace ;
@@ -105,8 +105,8 @@
     dec:endedAt "2026-05-28T11:20:12.380Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-108046-1779967212360490776/.dec/store/orchestration.nq" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-108046-1779967212360490776/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> .
 
 <https://decision-cli.dev/ns/result/VGR-361/step/5>
     a dec:VerificationStepTrace ;
@@ -116,5 +116,5 @@
     dec:endedAt "2026-05-28T11:20:12.380Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-108046-1779967212360490776/.product/graph/index.ttl" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/ENV-002/ts-1779967212360015726> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-108046-1779967212360490776/.product/graph/index.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-115/BNCH-002/ts-1779967212360015726> .

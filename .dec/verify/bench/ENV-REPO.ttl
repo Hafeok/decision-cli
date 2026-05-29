@@ -3,15 +3,15 @@
 
 @prefix dec: <https://decision-cli.dev/ns#> .
 
-<https://decision-cli.dev/ns/env/ENV-002>
+<https://decision-cli.dev/ns/bench/BNCH-REPO>
     a dec:VerificationEnvironment ;
-    dec:envType "ephemeral-tempdir" ;
-    dec:safetyClass "isolated" ;
+    dec:envType "repo-path" ;
+    dec:safetyClass "shared-non-destructive" ;
     dec:allowedOps ( "shell" "filesystem" "sparql-local" ) ;
-    dec:setup "mkdir -p \"$DEC_VERIFY_TMP\" && cd \"$DEC_VERIFY_TMP\"" ;
-    dec:teardown "rm -rf \"$DEC_VERIFY_TMP\"" ;
+    dec:fixtureSource "." ;
     dec:concreteCapabilities [
         dec:binariesOnPath ( "bash" "dec" "product" "cargo" "rustc" "python" "python3" "uv" "grep" "find" "ls" "cat" "mkdir" "touch" "echo" "sed" "awk" "head" "tail" "wc" "test" "cd" "rm" "cp" "mv" "diff" "jq" "curl" "git" "true" "false" ) ;
-        dec:writablePaths ( "$DEC_VERIFY_TMP" "./" ) ;
-        dec:environmentVariables ( "DEC_VERIFY_TMP" "DEC_WORKDIR" "TMPDIR" "PATH" "HOME" )
+        dec:writablePaths ( "./" "target/" ".dec/" ) ;
+        dec:benchVariables ( "DEC_VERIFY_TMP" "DEC_WORKDIR" "TMPDIR" "PATH" "HOME" "CARGO_HOME" "RUSTUP_HOME" ) ;
+        dec:preSeededArtifacts ( "Cargo.toml" "Cargo.lock" "crates/" "workers/" "scripts/" ".product/" ".dec/" )
     ] .

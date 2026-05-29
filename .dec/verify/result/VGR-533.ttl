@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-533>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-159> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "approved" ;
     dec:startedAt "2026-05-28T20:39:31.570Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T20:39:32.026Z"^^xsd:dateTime ;
@@ -34,7 +34,7 @@
         dec:outcome "pass" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-533/step/2>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/ENV-002/ts-1780000771566764859> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/BNCH-002/ts-1780000771566764859> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T20:39:32.026Z"^^xsd:dateTime .
 
@@ -47,7 +47,7 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "Scenario A precheck: server.json shape OK\nTC-180 info: Scenario D OK: deprecation warning on stderr only\nTC-180 info: Scenarios A/B/C/E skipped (TC180_NETWORK!=1 — offline mode).\nTC-180 info: Set TC180_NETWORK=1 in nightly/release CI to exercise the live registry.\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/ENV-002/ts-1780000771566764859> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/BNCH-002/ts-1780000771566764859> .
 
 <https://decision-cli.dev/ns/result/VGR-533/step/1>
     a dec:VerificationStepTrace ;
@@ -58,7 +58,7 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "TC-181 OK: /home/hafeok/projects/decision-cli/crates/product-cli/server.json validated against https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json\nTC-181 OK: /home/hafeok/projects/decision-cli/crates/decision-cli/server.json validated against https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json\nTC-181 info: Scenarios A/B/E OK: both server.json files schema-valid.\nTC-181 info: Scenario D OK: validator rejects deliberate breakage.\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/ENV-002/ts-1780000771566764859> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/BNCH-002/ts-1780000771566764859> .
 
 <https://decision-cli.dev/ns/result/VGR-533/step/2>
     a dec:VerificationStepTrace ;
@@ -69,4 +69,4 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "dist-workspace.toml structural check OK\nTC-182 info: Scenario F OK: lockstep version 0.1.0 across 3 crates\nTC-182 info: PR-mode complete. Pass --tag vX.Y.Z to run release-mode scenarios.\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/ENV-002/ts-1780000771566764859> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-159/BNCH-002/ts-1780000771566764859> .

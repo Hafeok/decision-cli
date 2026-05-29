@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-497>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-135> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-28T19:52:36.178Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T19:52:37.032Z"^^xsd:dateTime ;
@@ -28,7 +28,7 @@
         dec:outcome "pass" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-497/step/1>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-135/ENV-002/ts-1779997956175505858> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-135/BNCH-002/ts-1779997956175505858> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T19:52:37.032Z"^^xsd:dateTime .
 
@@ -42,7 +42,7 @@
     dec:stdoutExcerpt "ERROR: files exceeding hard limit (400 lines):\n  crates/decision-cli/src/features/verify_graph_generate/enrichment.rs: 888 lines (limit: 400)\n  crates/decision-cli/src/core/subscriptions/code_change_committed_dispatch/mod.rs: 807 lines (limit: 400)\n  crates/decision-cli/src/core/ontology/catalog/shacl.rs: 780 lines (limit: 400)\n  crates/decision-cli/src/features/drive/planners/feature_ship.rs: 765 lines (limit: 400)\n  crates/decision-cli/src/core/bootstrap/ft101_catalog.rs: 720 lines (limit: 400)\n  crates/decision-cli/src/core/ontology/verification_result/shacl.rs: 706 lines (limit: 400)\n  workers/verify-graph-author/src/verify_graph_author/prompts.py: 698 lines (limit: 400)\n  crates/decision-cli/src/features/verify_graph_generate/validator.rs: 661 lines (limit: 400)\n  crates/decision-cli/src/core/subscriptions/graph_accepted_dispatch/mod.rs: 613 lines (limit: 400)\n  crates/decision-cli/src/features/verify_graph_generate/mod.rs: 585 lines (limit: 400)\n  crates/decision-cli/src/features/verify_graph_generate/bundle.rs: 531 lines (limit: 400)\n  workers/code-writer/src/code_writer/_subprocess_runner.py: 502 lines (limit: 400)\n  crates/decision-cli/src/core/verify/aggregate.rs: 457 lines (limit: 400)\n  crates/decision-cli/src/features/finalize/mod.rs: 435 lines (limit: 400)\n  crates/decision-cli/src/cli/mcp.rs: 415 lines (limit: 400)\n  crates/decision-cli/src/core/ontology/mod.rs: 402 lines (limit: 400)\n" ;
     dec:stderrExcerpt "" ;
     dec:errorMessage "expected exit 0, got 1" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-135/ENV-002/ts-1779997956175505858> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-135/BNCH-002/ts-1779997956175505858> .
 
 <https://decision-cli.dev/ns/result/VGR-497/step/1>
     a dec:VerificationStepTrace ;
@@ -53,4 +53,4 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "OK: no cross-cutting ADRs found (vacuously satisfied)\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-135/ENV-002/ts-1779997956175505858> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-135/BNCH-002/ts-1779997956175505858> .

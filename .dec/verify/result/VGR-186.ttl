@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-186>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-090> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T19:06:33.684Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T19:06:33.688Z"^^xsd:dateTime ;
@@ -28,7 +28,7 @@
         dec:outcome "unrunnable" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-186/step/1>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-090/ENV-002/ts-1779822393680562273> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-090/BNCH-002/ts-1779822393680562273> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-26T19:06:33.688Z"^^xsd:dateTime .
 
@@ -42,7 +42,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "error: unexpected argument '--force' found\n\nUsage: dec init [OPTIONS]\n\nFor more information, try '--help'.\n" ;
     dec:errorMessage "expected exit 0, got 2" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-090/ENV-002/ts-1779822393680562273> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-090/BNCH-002/ts-1779822393680562273> .
 
 <https://decision-cli.dev/ns/result/VGR-186/step/1>
     a dec:VerificationStepTrace ;
@@ -52,5 +52,5 @@
     dec:endedAt "2026-05-26T19:06:33.688Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-367882-1779822393680853193/.dec/store" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-090/ENV-002/ts-1779822393680562273> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-367882-1779822393680853193/.dec/store" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-090/BNCH-002/ts-1779822393680562273> .

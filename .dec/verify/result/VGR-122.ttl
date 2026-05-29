@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-122>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-026> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:08.743Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:09.593Z"^^xsd:dateTime ;
@@ -64,7 +64,7 @@
     dec:endedAt "2026-05-26T18:06:08.746Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify env show: not found: VerificationEnvironment 'ENV-001'\n" ;
+    dec:stderrExcerpt "dec verify env show: not found: VerificationEnvironment 'BNCH-001'\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-026/ts-1779818768739883629> .
 
@@ -76,7 +76,7 @@
     dec:endedAt "2026-05-26T18:06:08.748Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify env show: not found: VerificationEnvironment 'ENV-001'\n" ;
+    dec:stderrExcerpt "dec verify env show: not found: VerificationEnvironment 'BNCH-001'\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-026/ts-1779818768739883629> .
 
@@ -100,5 +100,5 @@
     dec:endedAt "2026-05-26T18:06:09.593Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333207-1779818768740765027/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-333207-1779818768740765027/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-026/ts-1779818768739883629> .

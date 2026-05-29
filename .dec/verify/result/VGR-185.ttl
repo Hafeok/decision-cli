@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-185>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-089> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:07:08.940Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:07:08.982Z"^^xsd:dateTime ;
@@ -130,7 +130,7 @@
     dec:endedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-334591-1779818828937607841` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-334591-1779818828937607841` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
 
@@ -142,7 +142,7 @@
     dec:endedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-334591-1779818828937607841/crates/product-cli/Cargo.toml" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-334591-1779818828937607841/crates/product-cli/Cargo.toml" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
 
 <https://decision-cli.dev/ns/result/VGR-185/step/2>
@@ -153,7 +153,7 @@
     dec:endedAt "2026-05-26T18:07:08.968Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-334591-1779818828937607841/crates/product-shim/Cargo.toml" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-334591-1779818828937607841/crates/product-shim/Cargo.toml" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ts-1779818828936408466> .
 
 <https://decision-cli.dev/ns/result/VGR-185/step/3>

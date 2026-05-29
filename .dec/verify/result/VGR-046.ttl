@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-046>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-039> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:30.833Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
@@ -81,7 +81,7 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/crates/decision-cli/core/ontology/embedded.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/crates/decision-cli/core/ontology/embedded.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .
 
 <https://decision-cli.dev/ns/result/VGR-046/step/2>
@@ -92,7 +92,7 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/crates/decision-cli/core/ontology/embedded.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/crates/decision-cli/core/ontology/embedded.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .
 
 <https://decision-cli.dev/ns/result/VGR-046/step/3>
@@ -103,7 +103,7 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .
 
 <https://decision-cli.dev/ns/result/VGR-046/step/4>
@@ -114,7 +114,7 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .
 
 <https://decision-cli.dev/ns/result/VGR-046/step/5>
@@ -125,7 +125,7 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .
 
 <https://decision-cli.dev/ns/result/VGR-046/step/6>
@@ -136,7 +136,7 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .
 
 <https://decision-cli.dev/ns/result/VGR-046/step/7>
@@ -147,5 +147,5 @@
     dec:endedAt "2026-05-26T17:38:30.835Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317745-1779817110830701025/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317745-1779817110830701025/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-039/ts-1779817110829689550> .

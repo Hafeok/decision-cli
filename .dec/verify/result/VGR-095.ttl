@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-095>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-088> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-001> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:39:06.834Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:39:06.843Z"^^xsd:dateTime ;
@@ -93,7 +93,7 @@
     dec:endedAt "2026-05-26T17:39:06.843Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/ENV-001-319061-1779817146832395676/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/BNCH-001-319061-1779817146832395676/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-088/ts-1779817146830880532> .
 
@@ -105,7 +105,7 @@
     dec:endedAt "2026-05-26T17:39:06.843Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-001-319061-1779817146832395676/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-001-319061-1779817146832395676/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-088/ts-1779817146830880532> .
 
 <https://decision-cli.dev/ns/result/VGR-095/step/5>
@@ -116,5 +116,5 @@
     dec:endedAt "2026-05-26T17:39:06.843Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-001-319061-1779817146832395676/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-001-319061-1779817146832395676/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-088/ts-1779817146830880532> .

@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-088>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-100> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-001> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-088/0> <https://decision-cli.dev/ns/step/VG-088/1> <https://decision-cli.dev/ns/step/VG-088/2> <https://decision-cli.dev/ns/step/VG-088/3> <https://decision-cli.dev/ns/step/VG-088/4> <https://decision-cli.dev/ns/step/VG-088/5> ) .
 
 <https://decision-cli.dev/ns/step/VG-088/0>
@@ -20,14 +20,14 @@
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-162> ;
-    dec:command "dec verify graph new --env ENV-001 --file .dec/store/graph_accepted_dispatch_test.ttl" ;
+    dec:command "dec verify graph new --env BNCH-001 --file .dec/store/graph_accepted_dispatch_test.ttl" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-088/2>
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-163> ;
-    dec:command "dec verify feature --feature FT-100 --env ENV-001" ;
+    dec:command "dec verify feature --feature FT-100 --env BNCH-001" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-088/3>

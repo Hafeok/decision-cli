@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-028>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-021> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:24.022Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:24.026Z"^^xsd:dateTime ;
@@ -70,7 +70,7 @@
     dec:endedAt "2026-05-26T17:38:24.026Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317405-1779817104019254678/.dec/verify/env/ENV-001-ephemeral-cli.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317405-1779817104019254678/.dec/verify/env/BNCH-001-ephemeral-cli.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779817104018593026> .
 
 <https://decision-cli.dev/ns/result/VGR-028/step/2>
@@ -81,7 +81,7 @@
     dec:endedAt "2026-05-26T17:38:24.026Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317405-1779817104019254678/.dec/verify/env/ENV-001-ephemeral-cli.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317405-1779817104019254678/.dec/verify/env/BNCH-001-ephemeral-cli.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779817104018593026> .
 
 <https://decision-cli.dev/ns/result/VGR-028/step/3>
@@ -92,5 +92,5 @@
     dec:endedAt "2026-05-26T17:38:24.026Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317405-1779817104019254678/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317405-1779817104019254678/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-021/ts-1779817104018593026> .

@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-046>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-061> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-046/0> <https://decision-cli.dev/ns/step/VG-046/1> <https://decision-cli.dev/ns/step/VG-046/2> <https://decision-cli.dev/ns/step/VG-046/3> <https://decision-cli.dev/ns/step/VG-046/4> <https://decision-cli.dev/ns/step/VG-046/5> ) .
 
 <https://decision-cli.dev/ns/step/VG-046/0>

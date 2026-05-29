@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-226>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-090> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-27T11:57:09.053Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T11:57:09.057Z"^^xsd:dateTime ;
@@ -52,5 +52,5 @@
     dec:endedAt "2026-05-27T11:57:09.057Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-158219-1779883029050334535/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-158219-1779883029050334535/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-019/VG-090/ts-1779883029049838995> .

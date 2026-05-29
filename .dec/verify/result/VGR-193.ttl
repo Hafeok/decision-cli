@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-193>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-093> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-27T07:25:41.244Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T07:25:41.248Z"^^xsd:dateTime ;
@@ -64,7 +64,7 @@
     dec:endedAt "2026-05-27T07:25:41.248Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-11390-1779866741241383055/.dec/config.toml" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-11390-1779866741241383055/.dec/config.toml" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-093/ts-1779866741240150976> .
 
 <https://decision-cli.dev/ns/result/VGR-193/step/2>
@@ -75,7 +75,7 @@
     dec:endedAt "2026-05-27T07:25:41.248Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-11390-1779866741241383055/.dec/store" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-11390-1779866741241383055/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-093/ts-1779866741240150976> .
 
 <https://decision-cli.dev/ns/result/VGR-193/step/3>
@@ -86,5 +86,5 @@
     dec:endedAt "2026-05-27T07:25:41.248Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-11390-1779866741241383055/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-11390-1779866741241383055/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-093/ts-1779866741240150976> .

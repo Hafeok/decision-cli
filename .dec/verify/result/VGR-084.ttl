@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-084>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-077> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T17:38:58.680Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:59.171Z"^^xsd:dateTime ;
@@ -134,5 +134,5 @@
     dec:endedAt "2026-05-26T17:38:59.171Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target /tmp/dec-verify/ENV-002-318730-1779817138677774962/.dec/store/trustlist.ttl did not parse as Turtle or N-Quads" ;
+    dec:errorMessage "target /tmp/dec-verify/BNCH-002-318730-1779817138677774962/.dec/store/trustlist.ttl did not parse as Turtle or N-Quads" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-077/ts-1779817138676922474> .

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-115>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-019> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:04.579Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:04.631Z"^^xsd:dateTime ;
@@ -58,7 +58,7 @@
     dec:endedAt "2026-05-26T18:06:04.597Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-333073-1779818764576642082` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-333073-1779818764576642082` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-019/ts-1779818764575659585> .
 
@@ -70,7 +70,7 @@
     dec:endedAt "2026-05-26T18:06:04.631Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-333073-1779818764576642082` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-333073-1779818764576642082` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-019/ts-1779818764575659585> .
 
@@ -82,7 +82,7 @@
     dec:endedAt "2026-05-26T18:06:04.631Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333073-1779818764576642082/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-333073-1779818764576642082/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-019/ts-1779818764575659585> .
 
 <https://decision-cli.dev/ns/result/VGR-115/step/3>
@@ -93,7 +93,7 @@
     dec:endedAt "2026-05-26T18:06:04.631Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333073-1779818764576642082/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-333073-1779818764576642082/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-019/ts-1779818764575659585> .
 
 <https://decision-cli.dev/ns/result/VGR-115/step/4>
@@ -104,5 +104,5 @@
     dec:endedAt "2026-05-26T18:06:04.631Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333073-1779818764576642082/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-333073-1779818764576642082/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-019/ts-1779818764575659585> .

@@ -1,0 +1,10 @@
+# decision-cli VerificationEnvironment artifact.
+# Authored by FT-035 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+
+<https://decision-cli.dev/ns/bench/BNCH-PROBE-094>
+    a dec:VerificationEnvironment ;
+    dec:envType "ephemeral-tempdir" ;
+    dec:safetyClass "isolated" ;
+    dec:allowedOps ( "shell" "filesystem" ) .

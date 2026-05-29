@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-034>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-049> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-034/0> ) .
 
 <https://decision-cli.dev/ns/step/VG-034/0>
@@ -17,5 +17,5 @@
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-080> ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-081> ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-082> ;
-    dec:command "dec verify graph generate FT-049 --environment ENV-002 --print-only" ;
+    dec:command "dec verify graph generate FT-049 --environment BNCH-002 --print-only" ;
     dec:expectExitCode 0 .

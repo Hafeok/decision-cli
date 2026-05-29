@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-073>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-066> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:50.486Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:50.488Z"^^xsd:dateTime ;
@@ -94,7 +94,7 @@
     dec:endedAt "2026-05-26T17:38:50.488Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-318527-1779817130483741061/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-318527-1779817130483741061/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-066/ts-1779817130483060545> .
 
 <https://decision-cli.dev/ns/result/VGR-073/step/4>
@@ -105,5 +105,5 @@
     dec:endedAt "2026-05-26T17:38:50.488Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318527-1779817130483741061/completion_payload.json" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318527-1779817130483741061/completion_payload.json" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-066/ts-1779817130483060545> .

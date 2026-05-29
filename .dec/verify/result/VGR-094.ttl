@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-094>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-087> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-001> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:39:06.371Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:39:06.382Z"^^xsd:dateTime ;
@@ -98,7 +98,7 @@
     dec:endedAt "2026-05-26T17:39:06.377Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-001-319040-1779817146367628075/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-001-319040-1779817146367628075/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-087/ts-1779817146366857389> .
 
 <https://decision-cli.dev/ns/result/VGR-094/step/3>

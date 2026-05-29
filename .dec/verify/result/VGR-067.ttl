@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-067>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-060> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T17:38:48.026Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
@@ -154,7 +154,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-318368-1779817128023179070` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-318368-1779817128023179070` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
@@ -166,7 +166,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/mechanical-provenance.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/mechanical-provenance.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/2>
@@ -177,7 +177,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/motivational-predicates.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/motivational-predicates.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/3>
@@ -188,7 +188,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/boundary-artifact.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/boundary-artifact.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/4>
@@ -199,7 +199,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/feature.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/feature.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/5>
@@ -210,7 +210,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/adr.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/adr.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/6>
@@ -221,7 +221,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/tc.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/tc.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/7>
@@ -232,7 +232,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/dependency.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/dependency.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/8>
@@ -243,7 +243,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/brief.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/brief.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/9>
@@ -254,7 +254,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/acknowledgement.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/acknowledgement.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/10>
@@ -265,7 +265,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/feedback.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/feedback.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/11>
@@ -276,7 +276,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/discovery-finding.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/discovery-finding.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/12>
@@ -287,7 +287,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/question.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/question.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/13>
@@ -298,7 +298,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/worker-image.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/worker-image.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/14>
@@ -309,7 +309,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/conformance-audit.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/conformance-audit.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/15>
@@ -320,7 +320,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/model.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/model.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/16>
@@ -331,7 +331,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/policy.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/policy.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/17>
@@ -342,7 +342,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/worker-image-submission.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/worker-image-submission.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/18>
@@ -353,7 +353,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/subscription.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/subscription.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/19>
@@ -364,7 +364,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/dispatch.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/dispatch.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/20>
@@ -375,7 +375,7 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/query-template.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/query-template.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .
 
 <https://decision-cli.dev/ns/result/VGR-067/step/21>
@@ -386,5 +386,5 @@
     dec:endedAt "2026-05-26T17:38:48.047Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/manifest.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-318368-1779817128023179070/crates/decision-cli/src/core/ontology/shapes/manifest.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-060/ts-1779817128020890168> .

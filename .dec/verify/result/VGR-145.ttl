@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-145>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-049> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T18:06:28.246Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:28.288Z"^^xsd:dateTime ;
@@ -129,7 +129,7 @@
     dec:endedAt "2026-05-26T18:06:28.268Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/ENV-002-333616-1779818788243144947/test-workspace/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/BNCH-002-333616-1779818788243144947/test-workspace/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
 
@@ -141,7 +141,7 @@
     dec:endedAt "2026-05-26T18:06:28.274Z"^^xsd:dateTime ;
     dec:exitCode 2 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/ENV-002-333616-1779818788243144947/test-workspace/.dec/store/orchestration.nq — run `dec init` first\nerror: unexpected argument '--session-id' found\n\n  tip: to pass '--session-id' as a value, use '-- --session-id'\n\nUsage: dec session show [OPTIONS] <IRI>\n\nFor more information, try '--help'.\n" ;
+    dec:stderrExcerpt "dec session list: no orchestration store at /tmp/dec-verify/BNCH-002-333616-1779818788243144947/test-workspace/.dec/store/orchestration.nq — run `dec init` first\nerror: unexpected argument '--session-id' found\n\n  tip: to pass '--session-id' as a value, use '-- --session-id'\n\nUsage: dec session show [OPTIONS] <IRI>\n\nFor more information, try '--help'.\n" ;
     dec:errorMessage "expected exit 0, got 2" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-049/ts-1779818788241847632> .
 

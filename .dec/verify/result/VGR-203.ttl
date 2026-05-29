@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-203>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-098> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-27T08:13:40.992Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T08:13:41.012Z"^^xsd:dateTime ;
@@ -45,7 +45,7 @@
     dec:startedAt "2026-05-27T08:13:40.992Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T08:13:41.009Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-21475-1779869620988649254/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/BNCH-002-21475-1779869620988649254/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
     dec:stderrExcerpt "" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-098/ts-1779869620987786075> .
 
@@ -68,7 +68,7 @@
     dec:endedAt "2026-05-27T08:13:41.012Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-21475-1779869620988649254/core/role_catalog/seeds/implementer-authority.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-21475-1779869620988649254/core/role_catalog/seeds/implementer-authority.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-098/ts-1779869620987786075> .
 
 <https://decision-cli.dev/ns/result/VGR-203/step/3>
@@ -79,7 +79,7 @@
     dec:endedAt "2026-05-27T08:13:41.012Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-21475-1779869620988649254/core/role_catalog/seeds/verifier-authority.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-21475-1779869620988649254/core/role_catalog/seeds/verifier-authority.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-098/ts-1779869620987786075> .
 
 <https://decision-cli.dev/ns/result/VGR-203/step/4>
@@ -90,5 +90,5 @@
     dec:endedAt "2026-05-27T08:13:41.012Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-21475-1779869620988649254/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-21475-1779869620988649254/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-098/ts-1779869620987786075> .

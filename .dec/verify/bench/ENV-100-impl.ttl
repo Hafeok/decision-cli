@@ -3,7 +3,7 @@
 
 @prefix dec: <https://decision-cli.dev/ns#> .
 
-<https://decision-cli.dev/ns/env/ENV-100-impl>
+<https://decision-cli.dev/ns/bench/BNCH-100-impl>
     a dec:VerificationEnvironment ;
     dec:envType "ephemeral-tempdir" ;
     dec:safetyClass "isolated" ;

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-141>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-045> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:24.685Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:26.055Z"^^xsd:dateTime ;
@@ -74,7 +74,7 @@
     dec:endedAt "2026-05-26T18:06:24.689Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333546-1779818784683092726/workers/_shared/src/_shared/model_router.py" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-333546-1779818784683092726/workers/_shared/src/_shared/model_router.py" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-045/ts-1779818784682242474> .
 
 <https://decision-cli.dev/ns/result/VGR-141/step/3>
@@ -85,7 +85,7 @@
     dec:endedAt "2026-05-26T18:06:24.689Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333546-1779818784683092726/workers/_shared/src/_shared/tools.py" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-333546-1779818784683092726/workers/_shared/src/_shared/tools.py" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-045/ts-1779818784682242474> .
 
 <https://decision-cli.dev/ns/result/VGR-141/step/4>

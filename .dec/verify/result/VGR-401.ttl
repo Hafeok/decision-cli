@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-401>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-120> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-28T12:44:32.816Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:44:47.096Z"^^xsd:dateTime ;
@@ -46,7 +46,7 @@
         dec:outcome "unrunnable" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-401/step/5>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T12:44:47.096Z"^^xsd:dateTime .
 
@@ -57,9 +57,9 @@
     dec:startedAt "2026-05-28T12:44:32.816Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:44:32.829Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-120075-1779972272810831013/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/BNCH-002-120075-1779972272810831013/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> .
 
 <https://decision-cli.dev/ns/result/VGR-401/step/1>
     a dec:VerificationStepTrace ;
@@ -68,9 +68,9 @@
     dec:startedAt "2026-05-28T12:44:32.829Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:44:32.833Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Value Stream:      engineering-development\nDefinition:        template:engineering-development (sha256:3f116ce98b72…)\n  full hash:       sha256:3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f\nTerminal Value:    va:shipped-feature (bundled, ontology v0.7.0)\nAuthorized Goals:  land, ship\nGraph Store:       /tmp/dec-verify/ENV-002-120075-1779972272810831013/.dec/store\n" ;
+    dec:stdoutExcerpt "Value Stream:      engineering-development\nDefinition:        template:engineering-development (sha256:3f116ce98b72…)\n  full hash:       sha256:3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f\nTerminal Value:    va:shipped-feature (bundled, ontology v0.7.0)\nAuthorized Goals:  land, ship\nGraph Store:       /tmp/dec-verify/BNCH-002-120075-1779972272810831013/.dec/store\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> .
 
 <https://decision-cli.dev/ns/result/VGR-401/step/2>
     a dec:VerificationStepTrace ;
@@ -81,7 +81,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
     dec:errorMessage "query parse / evaluate error: error at 1:143: expected IRI parsing failed" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> .
 
 <https://decision-cli.dev/ns/result/VGR-401/step/3>
     a dec:VerificationStepTrace ;
@@ -90,9 +90,9 @@
     dec:startedAt "2026-05-28T12:44:32.833Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:44:47.094Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "dec implement: success\n  Feature:        FT-XXX\n  Session:        https://decision-cli.dev/ns/session/0c34baa1-b733-4623-bcfc-364598139338\n  Dispatch:       https://decision-cli.dev/ns/dispatch/12ae6083-1ac9-4bb0-b09b-b994192b6ba1\n  CodeChange:     https://decision-cli.dev/ns/dispatch/code-change/12ae6083-1ac9-4bb0-b09b-b994192b6ba1\n  Bundle hash:    sha256:b74b826407d1…\n  Workspace:      /tmp/dec-verify/ENV-002-120075-1779972272810831013/.dec/workspace/FT-XXX\n  product graph:  /tmp/dec-verify/ENV-002-120075-1779972272810831013/.product/graph/code-changes.nq\n  Worker:         status=ok turns=1 latency=12.902s\n  Commit:         (no working-tree changes)\n  Status:         FT-XXX → (not transitioned)\n  Note:           product feature status FT-XXX complete: non-zero exit (exit status: 24). error[E024]: graph root not found\n   = supplied: /tmp/dec-verify/ENV-002-120075-1779972272810831013\n   = source: flag\n   = reason: no product config file (.product/config.toml, .product/product.toml, or product.toml) in supplied root\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/\n  Note:           /tmp/dec-verify/ENV-002-120075-1779972272810831013 is not inside a git work tree — skipping commit step\n" ;
+    dec:stdoutExcerpt "dec implement: success\n  Feature:        FT-XXX\n  Session:        https://decision-cli.dev/ns/session/0c34baa1-b733-4623-bcfc-364598139338\n  Dispatch:       https://decision-cli.dev/ns/dispatch/12ae6083-1ac9-4bb0-b09b-b994192b6ba1\n  CodeChange:     https://decision-cli.dev/ns/dispatch/code-change/12ae6083-1ac9-4bb0-b09b-b994192b6ba1\n  Bundle hash:    sha256:b74b826407d1…\n  Workspace:      /tmp/dec-verify/BNCH-002-120075-1779972272810831013/.dec/workspace/FT-XXX\n  product graph:  /tmp/dec-verify/BNCH-002-120075-1779972272810831013/.product/graph/code-changes.nq\n  Worker:         status=ok turns=1 latency=12.902s\n  Commit:         (no working-tree changes)\n  Status:         FT-XXX → (not transitioned)\n  Note:           product feature status FT-XXX complete: non-zero exit (exit status: 24). error[E024]: graph root not found\n   = supplied: /tmp/dec-verify/BNCH-002-120075-1779972272810831013\n   = source: flag\n   = reason: no product config file (.product/config.toml, .product/product.toml, or product.toml) in supplied root\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/\n  Note:           /tmp/dec-verify/BNCH-002-120075-1779972272810831013 is not inside a git work tree — skipping commit step\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> .
 
 <https://decision-cli.dev/ns/result/VGR-401/step/4>
     a dec:VerificationStepTrace ;
@@ -103,7 +103,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
     dec:errorMessage "query parse / evaluate error: error at 1:143: expected IRI parsing failed" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> .
 
 <https://decision-cli.dev/ns/result/VGR-401/step/5>
     a dec:VerificationStepTrace ;
@@ -113,5 +113,5 @@
     dec:endedAt "2026-05-28T12:44:47.096Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-120075-1779972272810831013/.product/graph/index.ttl" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/ENV-002/ts-1779972272809996660> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-120075-1779972272810831013/.product/graph/index.ttl" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-120/BNCH-002/ts-1779972272809996660> .

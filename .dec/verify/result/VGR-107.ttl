@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-107>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-011> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:05:59.111Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:05:59.113Z"^^xsd:dateTime ;
@@ -76,7 +76,7 @@
     dec:endedAt "2026-05-26T18:05:59.112Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-332818-1779818759109316479/crates/decision-cli/src/core" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-332818-1779818759109316479/crates/decision-cli/src/core" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-011/ts-1779818759108381489> .
 
 <https://decision-cli.dev/ns/result/VGR-107/step/2>
@@ -87,7 +87,7 @@
     dec:endedAt "2026-05-26T18:05:59.112Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-332818-1779818759109316479/crates/decision-cli/src/features" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-332818-1779818759109316479/crates/decision-cli/src/features" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-011/ts-1779818759108381489> .
 
 <https://decision-cli.dev/ns/result/VGR-107/step/3>
@@ -110,7 +110,7 @@
     dec:endedAt "2026-05-26T18:05:59.113Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-332818-1779818759109316479/crates/decision-cli/src/lib.rs" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-332818-1779818759109316479/crates/decision-cli/src/lib.rs" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-011/ts-1779818759108381489> .
 
 <https://decision-cli.dev/ns/result/VGR-107/step/5>
@@ -121,5 +121,5 @@
     dec:endedAt "2026-05-26T18:05:59.113Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-332818-1779818759109316479/crates/decision-cli/src/main.rs" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-332818-1779818759109316479/crates/decision-cli/src/main.rs" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-011/ts-1779818759108381489> .

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-029>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-022> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:24.354Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:24.531Z"^^xsd:dateTime ;
@@ -73,7 +73,7 @@
     dec:endedAt "2026-05-26T17:38:24.525Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "  File \"/tmp/dec-verify/ENV-002-317421-1779817104352387142/./test-worker/mock_worker.py\", line 1\n    import json\\n\\n# Mock worker emitting feedback\\nemission = {\\n    \"feedback_class\": \"gap\",\\n    \"severity\": \"high\",\\n    \"evidence\": \"Test evidence string with more than twenty characters\",\\n    \"recommendation\": \"Recommendation here\",\\n    \"target_role_override\": \"test-role\",\\n    \"blocking\": True,\\n    \"disposition_rationale\": \"Rationale for blocking\"\\n}\\n\\nprint('__DEC_FEEDBACK__' + json.dumps(emission))\n                ^\nSyntaxError: unexpected character after line continuation character\n" ;
+    dec:stderrExcerpt "  File \"/tmp/dec-verify/BNCH-002-317421-1779817104352387142/./test-worker/mock_worker.py\", line 1\n    import json\\n\\n# Mock worker emitting feedback\\nemission = {\\n    \"feedback_class\": \"gap\",\\n    \"severity\": \"high\",\\n    \"evidence\": \"Test evidence string with more than twenty characters\",\\n    \"recommendation\": \"Recommendation here\",\\n    \"target_role_override\": \"test-role\",\\n    \"blocking\": True,\\n    \"disposition_rationale\": \"Rationale for blocking\"\\n}\\n\\nprint('__DEC_FEEDBACK__' + json.dumps(emission))\n                ^\nSyntaxError: unexpected character after line continuation character\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-022/ts-1779817104351627734> .
 
@@ -107,5 +107,5 @@
     dec:endedAt "2026-05-26T17:38:24.531Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317421-1779817104352387142/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317421-1779817104352387142/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-022/ts-1779817104351627734> .

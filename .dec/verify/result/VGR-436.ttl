@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-436>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-123> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "approved" ;
     dec:startedAt "2026-05-28T14:29:48.241Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T14:29:58.083Z"^^xsd:dateTime ;
@@ -34,7 +34,7 @@
         dec:outcome "pass" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-436/step/2>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/ENV-002/ts-1779978588232996467> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/BNCH-002/ts-1779978588232996467> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T14:29:58.083Z"^^xsd:dateTime .
 
@@ -47,7 +47,7 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "\nrunning 1 test\ntest graphwriter_events_have_monotonic_sequence_numbers ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n" ;
     dec:stderrExcerpt "   Compiling hyper-rustls v0.27.9\n   Compiling oxi-events v0.1.0 (/home/hafeok/projects/decision-cli/crates/oxi-events)\n   Compiling reqwest v0.12.28\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.67s\n     Running tests/tc_009_monotonic_events.rs (target/debug/deps/tc_009_monotonic_events-96964fbf1f264656)\n" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/ENV-002/ts-1779978588232996467> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/BNCH-002/ts-1779978588232996467> .
 
 <https://decision-cli.dev/ns/result/VGR-436/step/1>
     a dec:VerificationStepTrace ;
@@ -58,7 +58,7 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/ENV-002/ts-1779978588232996467> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/BNCH-002/ts-1779978588232996467> .
 
 <https://decision-cli.dev/ns/result/VGR-436/step/2>
     a dec:VerificationStepTrace ;
@@ -69,4 +69,4 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n" ;
     dec:stderrExcerpt "TC-011 latencies (ms): [3, 2, 3, 3, 3, 2, 3, 4, 1, 2]\n" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/ENV-002/ts-1779978588232996467> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-123/BNCH-002/ts-1779978588232996467> .

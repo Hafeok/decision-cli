@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-050>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-043> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:35.749Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:36.401Z"^^xsd:dateTime ;
@@ -58,7 +58,7 @@
     dec:endedAt "2026-05-26T17:38:35.750Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317852-1779817115747237711/config/capabilities.yaml" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317852-1779817115747237711/config/capabilities.yaml" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-043/ts-1779817115746496852> .
 
 <https://decision-cli.dev/ns/result/VGR-050/step/1>
@@ -69,7 +69,7 @@
     dec:endedAt "2026-05-26T17:38:35.750Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317852-1779817115747237711/config/role-bindings.yaml" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317852-1779817115747237711/config/role-bindings.yaml" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-043/ts-1779817115746496852> .
 
 <https://decision-cli.dev/ns/result/VGR-050/step/2>
@@ -92,7 +92,7 @@
     dec:endedAt "2026-05-26T17:38:36.401Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317852-1779817115747237711/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317852-1779817115747237711/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-043/ts-1779817115746496852> .
 
 <https://decision-cli.dev/ns/result/VGR-050/step/4>
@@ -103,5 +103,5 @@
     dec:endedAt "2026-05-26T17:38:36.401Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317852-1779817115747237711/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317852-1779817115747237711/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-043/ts-1779817115746496852> .

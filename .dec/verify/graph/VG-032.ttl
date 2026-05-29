@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-032>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-046> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-032/0> <https://decision-cli.dev/ns/step/VG-032/1> <https://decision-cli.dev/ns/step/VG-032/2> <https://decision-cli.dev/ns/step/VG-032/3> <https://decision-cli.dev/ns/step/VG-032/4> ) .
 
 <https://decision-cli.dev/ns/step/VG-032/0>
@@ -20,7 +20,7 @@
     a dec:VerificationStep ;
     dec:stepType "sparql-assertion" ;
     dec:target ".dec/store" ;
-    dec:query "PREFIX dec: <https://w3id.org/oxigraph/dec#> SELECT ?graph WHERE { ?graph a dec:VerificationGraph . ?graph dec:environment <ENV-002> . }" .
+    dec:query "PREFIX dec: <https://w3id.org/oxigraph/dec#> SELECT ?graph WHERE { ?graph a dec:VerificationGraph . ?graph dec:bench <BNCH-002> . }" .
 
 <https://decision-cli.dev/ns/step/VG-032/2>
     a dec:VerificationStep ;

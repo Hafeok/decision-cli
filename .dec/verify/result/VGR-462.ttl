@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-462>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-131> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-28T14:59:53.236Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T14:59:53.253Z"^^xsd:dateTime ;
@@ -46,7 +46,7 @@
     dec:endedAt "2026-05-28T14:59:53.239Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-181665-1779980393233080528/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/BNCH-002-181665-1779980393233080528/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ts-1779980393231714670> .
 
@@ -70,7 +70,7 @@
     dec:endedAt "2026-05-28T14:59:53.242Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-181665-1779980393233080528/.dec/store/orchestration.nq" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-181665-1779980393233080528/.dec/store/orchestration.nq" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ts-1779980393231714670> .
 
 <https://decision-cli.dev/ns/result/VGR-462/step/3>
@@ -105,7 +105,7 @@
     dec:endedAt "2026-05-28T14:59:53.248Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-181665-1779980393233080528/.dec/store/orchestration.nq" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-181665-1779980393233080528/.dec/store/orchestration.nq" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-131/ts-1779980393231714670> .
 
 <https://decision-cli.dev/ns/result/VGR-462/step/6>

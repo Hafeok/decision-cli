@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-021>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-035> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-021/0> <https://decision-cli.dev/ns/step/VG-021/1> <https://decision-cli.dev/ns/step/VG-021/2> <https://decision-cli.dev/ns/step/VG-021/3> ) .
 
 <https://decision-cli.dev/ns/step/VG-021/0>
@@ -21,13 +21,13 @@
     a dec:VerificationStep ;
     dec:stepType "file-assertion" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-054> ;
-    dec:path ".dec/verify/env/ENV-001-ephemeral-cli.ttl" .
+    dec:path ".dec/verify/env/BNCH-001-ephemeral-cli.ttl" .
 
 <https://decision-cli.dev/ns/step/VG-021/2>
     a dec:VerificationStep ;
     dec:stepType "file-assertion" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-055> ;
-    dec:path ".dec/verify/env/ENV-001-ephemeral-cli.ttl" .
+    dec:path ".dec/verify/env/BNCH-001-ephemeral-cli.ttl" .
 
 <https://decision-cli.dev/ns/step/VG-021/3>
     a dec:VerificationStep ;

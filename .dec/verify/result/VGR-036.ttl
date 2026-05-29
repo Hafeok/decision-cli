@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-036>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-029> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:27.051Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
@@ -112,7 +112,7 @@
     dec:endedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/2>
@@ -123,7 +123,7 @@
     dec:endedAt "2026-05-26T17:38:27.054Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/3>
@@ -146,7 +146,7 @@
     dec:endedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/5>
@@ -157,7 +157,7 @@
     dec:endedAt "2026-05-26T17:38:27.056Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/6>
@@ -180,7 +180,7 @@
     dec:endedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/8>
@@ -191,7 +191,7 @@
     dec:endedAt "2026-05-26T17:38:27.059Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/9>
@@ -214,7 +214,7 @@
     dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/verify/graph/VG-*.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .
 
 <https://decision-cli.dev/ns/result/VGR-036/step/11>
@@ -225,5 +225,5 @@
     dec:endedAt "2026-05-26T17:38:27.062Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317555-1779817107049183155/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317555-1779817107049183155/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-029/ts-1779817107048023520> .

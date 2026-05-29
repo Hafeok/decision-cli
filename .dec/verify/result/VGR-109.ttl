@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-109>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-013> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:00.813Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:00.844Z"^^xsd:dateTime ;
@@ -78,7 +78,7 @@
     dec:endedAt "2026-05-26T18:06:00.843Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-332864-1779818760809866906` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-332864-1779818760809866906` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-013/ts-1779818760808666843> .
 
@@ -90,5 +90,5 @@
     dec:endedAt "2026-05-26T18:06:00.844Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-332864-1779818760809866906/.dec/metrics_output.json" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-332864-1779818760809866906/.dec/metrics_output.json" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-013/ts-1779818760808666843> .

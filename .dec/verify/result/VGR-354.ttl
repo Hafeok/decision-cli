@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-354>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-010> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-28T10:33:23.123Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T10:33:23.135Z"^^xsd:dateTime ;

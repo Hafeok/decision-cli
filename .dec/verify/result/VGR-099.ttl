@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-099>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-003> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T18:05:55.753Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:05:55.769Z"^^xsd:dateTime ;
@@ -27,7 +27,7 @@
     dec:startedAt "2026-05-26T18:05:55.753Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:05:55.769Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-332634-1779818755751415660/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/BNCH-002-332634-1779818755751415660/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
     dec:stderrExcerpt "" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-003/ts-1779818755750655629> .
 
@@ -39,7 +39,7 @@
     dec:endedAt "2026-05-26T18:05:55.769Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-332634-1779818755751415660/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-332634-1779818755751415660/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-003/ts-1779818755750655629> .
 
 <https://decision-cli.dev/ns/result/VGR-099/step/2>
@@ -50,5 +50,5 @@
     dec:endedAt "2026-05-26T18:05:55.769Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-332634-1779818755751415660/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-332634-1779818755751415660/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-003/ts-1779818755750655629> .

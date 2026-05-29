@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-130>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-034> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:15.023Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:15.026Z"^^xsd:dateTime ;
@@ -52,6 +52,6 @@
     dec:endedAt "2026-05-26T18:06:15.026Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify graph generate: internal error: matcher: loading orchestration store: reading /tmp/dec-verify/ENV-002-333347-1779818775019676446/.dec/store/orchestration.nq\n" ;
+    dec:stderrExcerpt "dec verify graph generate: internal error: matcher: loading orchestration store: reading /tmp/dec-verify/BNCH-002-333347-1779818775019676446/.dec/store/orchestration.nq\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-034/ts-1779818775018665869> .

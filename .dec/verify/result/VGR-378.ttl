@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-378>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-116> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-28T11:55:13.187Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:00:58.849Z"^^xsd:dateTime ;
@@ -57,7 +57,7 @@
     dec:startedAt "2026-05-28T11:55:13.187Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T11:55:13.200Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-115985-1779969313182676185/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/BNCH-002-115985-1779969313182676185/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
     dec:stderrExcerpt "" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779969313181881689> .
 
@@ -68,7 +68,7 @@
     dec:startedAt "2026-05-28T11:55:13.200Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T11:55:13.204Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Value Stream:      engineering-development\nDefinition:        template:engineering-development (sha256:3f116ce98b72…)\n  full hash:       sha256:3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f\nTerminal Value:    va:shipped-feature (bundled, ontology v0.7.0)\nAuthorized Goals:  land, ship\nGraph Store:       /tmp/dec-verify/ENV-002-115985-1779969313182676185/.dec/store\n" ;
+    dec:stdoutExcerpt "Value Stream:      engineering-development\nDefinition:        template:engineering-development (sha256:3f116ce98b72…)\n  full hash:       sha256:3f116ce98b72bed6b42ebbf87f9ec4c622477799ccc7ecdd0fea1f29853b3c4f\nTerminal Value:    va:shipped-feature (bundled, ontology v0.7.0)\nAuthorized Goals:  land, ship\nGraph Store:       /tmp/dec-verify/BNCH-002-115985-1779969313182676185/.dec/store\n" ;
     dec:stderrExcerpt "" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779969313181881689> .
 
@@ -90,7 +90,7 @@
     dec:startedAt "2026-05-28T11:55:13.205Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:00:58.846Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "dec implement: success\n  Feature:        FT-012\n  Session:        https://decision-cli.dev/ns/session/bbcfa1de-29c6-495a-8d6b-4fcb04e039fa\n  Dispatch:       https://decision-cli.dev/ns/dispatch/d397ea25-29ee-4651-b4bf-94a328905d8a\n  CodeChange:     https://decision-cli.dev/ns/dispatch/code-change/d397ea25-29ee-4651-b4bf-94a328905d8a\n  Bundle hash:    sha256:8fa55357dcfb…\n  Workspace:      /tmp/dec-verify/ENV-002-115985-1779969313182676185/.dec/workspace/FT-012\n  product graph:  /tmp/dec-verify/ENV-002-115985-1779969313182676185/.product/graph/code-changes.nq\n  Worker:         status=ok turns=1 latency=333.533s\n  Commit:         (no working-tree changes)\n  Status:         FT-012 → (not transitioned)\n  Note:           product feature status FT-012 complete: non-zero exit (exit status: 24). error[E024]: graph root not found\n   = supplied: /tmp/dec-verify/ENV-002-115985-1779969313182676185\n   = source: flag\n   = reason: no product config file (.product/config.toml, .product/product.toml, or product.toml) in supplied root\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/\n  Note:           /tmp/dec-verify/ENV-002-115985-1779969313182676185 is not inside a git work tree — skipping commit step\n" ;
+    dec:stdoutExcerpt "dec implement: success\n  Feature:        FT-012\n  Session:        https://decision-cli.dev/ns/session/bbcfa1de-29c6-495a-8d6b-4fcb04e039fa\n  Dispatch:       https://decision-cli.dev/ns/dispatch/d397ea25-29ee-4651-b4bf-94a328905d8a\n  CodeChange:     https://decision-cli.dev/ns/dispatch/code-change/d397ea25-29ee-4651-b4bf-94a328905d8a\n  Bundle hash:    sha256:8fa55357dcfb…\n  Workspace:      /tmp/dec-verify/BNCH-002-115985-1779969313182676185/.dec/workspace/FT-012\n  product graph:  /tmp/dec-verify/BNCH-002-115985-1779969313182676185/.product/graph/code-changes.nq\n  Worker:         status=ok turns=1 latency=333.533s\n  Commit:         (no working-tree changes)\n  Status:         FT-012 → (not transitioned)\n  Note:           product feature status FT-012 complete: non-zero exit (exit status: 24). error[E024]: graph root not found\n   = supplied: /tmp/dec-verify/BNCH-002-115985-1779969313182676185\n   = source: flag\n   = reason: no product config file (.product/config.toml, .product/product.toml, or product.toml) in supplied root\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/\n  Note:           /tmp/dec-verify/BNCH-002-115985-1779969313182676185 is not inside a git work tree — skipping commit step\n" ;
     dec:stderrExcerpt "" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779969313181881689> .
 
@@ -112,5 +112,5 @@
     dec:endedAt "2026-05-28T12:00:58.849Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-115985-1779969313182676185/.product/graph/index.ttl" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-115985-1779969313182676185/.product/graph/index.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-116/ts-1779969313181881689> .

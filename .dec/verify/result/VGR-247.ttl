@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-247>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-103> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-27T13:07:49.592Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T13:07:49.626Z"^^xsd:dateTime ;
@@ -34,7 +34,7 @@
         dec:outcome "fail" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-247/step/3>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/ENV-002/ts-1779887269588740328> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/BNCH-002/ts-1779887269588740328> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-27T13:07:49.626Z"^^xsd:dateTime .
 
@@ -45,9 +45,9 @@
     dec:startedAt "2026-05-27T13:07:49.592Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T13:07:49.604Z"^^xsd:dateTime ;
     dec:exitCode 0 ;
-    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/ENV-002-245844-1779887269589121810/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
+    dec:stdoutExcerpt "Initialised orchestration store in /tmp/dec-verify/BNCH-002-245844-1779887269589121810/.dec/store\n  ValueStream:       https://decision-cli.dev/ns/streams/engineering-development\n  ValueAction:       https://decision-cli.dev/ns/value-actions/shipped-feature\n  Bootstrap session: https://decision-cli.dev/ns/session/init-001\n  Definition source: template:engineering-development (sha256:3f116ce98b72…)\n  Ontology version:  0.7.0\n  Authorized goals:  land, ship\n\nWorker preflight:\n  code-writer  OK   /home/hafeok/.local/bin/code-writer (resolved via path)\n  verify-graph-author OK   /home/hafeok/.local/bin/verify-graph-author (resolved via path)\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/ENV-002/ts-1779887269588740328> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/BNCH-002/ts-1779887269588740328> .
 
 <https://decision-cli.dev/ns/result/VGR-247/step/1>
     a dec:VerificationStepTrace ;
@@ -57,9 +57,9 @@
     dec:endedAt "2026-05-27T13:07:49.622Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-245844-1779887269589121810` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-245844-1779887269589121810` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/ENV-002/ts-1779887269588740328> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/BNCH-002/ts-1779887269588740328> .
 
 <https://decision-cli.dev/ns/result/VGR-247/step/2>
     a dec:VerificationStepTrace ;
@@ -71,7 +71,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: tests/scripts/tc-010-outbox-recovery.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/ENV-002/ts-1779887269588740328> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/BNCH-002/ts-1779887269588740328> .
 
 <https://decision-cli.dev/ns/result/VGR-247/step/3>
     a dec:VerificationStepTrace ;
@@ -83,4 +83,4 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: tests/scripts/tc-011-sse-latency.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/ENV-002/ts-1779887269588740328> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-103/BNCH-002/ts-1779887269588740328> .

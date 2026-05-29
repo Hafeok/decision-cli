@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-157>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-061> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T18:06:40.375Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:40.393Z"^^xsd:dateTime ;
@@ -123,7 +123,7 @@
     dec:endedAt "2026-05-26T18:06:40.393Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec feedback list: no orchestration store at /tmp/dec-verify/ENV-002-333998-1779818800371857197/test-workspace/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec feedback list: no orchestration store at /tmp/dec-verify/BNCH-002-333998-1779818800371857197/test-workspace/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-061/ts-1779818800370896956> .
 
@@ -135,5 +135,5 @@
     dec:endedAt "2026-05-26T18:06:40.393Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-333998-1779818800371857197/test-workspace/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-333998-1779818800371857197/test-workspace/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-061/ts-1779818800370896956> .

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-532>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-158> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "approved" ;
     dec:startedAt "2026-05-28T20:38:49.209Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T20:38:49.250Z"^^xsd:dateTime ;
@@ -22,7 +22,7 @@
         dec:outcome "pass" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-532/step/0>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-158/ENV-002/ts-1780000729206063190> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-158/BNCH-002/ts-1780000729206063190> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T20:38:49.250Z"^^xsd:dateTime .
 
@@ -35,4 +35,4 @@
     dec:exitCode 0 ;
     dec:stdoutExcerpt "OK: every accepted cross-cutting ADR has >=1 implementing feature (modulo 4 documented exclusions), and the exclusion set is reflected in FT-103.\n" ;
     dec:stderrExcerpt "" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-158/ENV-002/ts-1780000729206063190> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-158/BNCH-002/ts-1780000729206063190> .

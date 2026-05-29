@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-204>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-099> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-27T08:14:49.623Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T08:14:49.677Z"^^xsd:dateTime ;
@@ -28,7 +28,7 @@
         dec:outcome "fail" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-204/step/1>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ENV-002/ts-1779869689619251684> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/BNCH-002/ts-1779869689619251684> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-27T08:14:49.677Z"^^xsd:dateTime .
 
@@ -42,7 +42,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: scripts/checks/vertical-slice-layout.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ENV-002/ts-1779869689619251684> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/BNCH-002/ts-1779869689619251684> .
 
 <https://decision-cli.dev/ns/result/VGR-204/step/1>
     a dec:VerificationStepTrace ;
@@ -54,7 +54,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: scripts/checks/vertical-slice-imports.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ENV-002/ts-1779869689619251684> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/BNCH-002/ts-1779869689619251684> .
 
 <https://decision-cli.dev/ns/result/VGR-204/step/2>
     a dec:VerificationStepTrace ;
@@ -64,9 +64,9 @@
     dec:endedAt "2026-05-27T08:14:49.653Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-21842-1779869689619679125` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-21842-1779869689619679125` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ENV-002/ts-1779869689619251684> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/BNCH-002/ts-1779869689619251684> .
 
 <https://decision-cli.dev/ns/result/VGR-204/step/3>
     a dec:VerificationStepTrace ;
@@ -76,6 +76,6 @@
     dec:endedAt "2026-05-27T08:14:49.677Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-21842-1779869689619679125` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-21842-1779869689619679125` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/ENV-002/ts-1779869689619251684> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-099/BNCH-002/ts-1779869689619251684> .

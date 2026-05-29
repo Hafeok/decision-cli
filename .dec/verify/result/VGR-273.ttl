@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-273>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-097> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-27T13:33:06.280Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T13:33:06.343Z"^^xsd:dateTime ;
@@ -46,7 +46,7 @@
     dec:endedAt "2026-05-27T13:33:06.301Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-292479-1779888786275822643` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-292479-1779888786275822643` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-023/VG-097/ts-1779888786275298372> .
 
@@ -58,7 +58,7 @@
     dec:endedAt "2026-05-27T13:33:06.326Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-292479-1779888786275822643` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-292479-1779888786275822643` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-023/VG-097/ts-1779888786275298372> .
 
@@ -70,6 +70,6 @@
     dec:endedAt "2026-05-27T13:33:06.343Z"^^xsd:dateTime ;
     dec:exitCode 101 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/ENV-002-292479-1779888786275822643` or any parent directory\n" ;
+    dec:stderrExcerpt "error: could not find `Cargo.toml` in `/tmp/dec-verify/BNCH-002-292479-1779888786275822643` or any parent directory\n" ;
     dec:errorMessage "expected exit 0, got 101" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-023/VG-097/ts-1779888786275298372> .

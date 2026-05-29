@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-049>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-042> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:31.870Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:35.338Z"^^xsd:dateTime ;
@@ -58,7 +58,7 @@
     dec:endedAt "2026-05-26T17:38:31.870Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317801-1779817111867295679/workers/_shared/src/_shared/scaleway_client.py" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317801-1779817111867295679/workers/_shared/src/_shared/scaleway_client.py" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-042/ts-1779817111866574071> .
 
 <https://decision-cli.dev/ns/result/VGR-049/step/1>

@@ -3,7 +3,7 @@
 
 @prefix dec: <https://decision-cli.dev/ns#> .
 
-<https://decision-cli.dev/ns/env/ENV-001>
+<https://decision-cli.dev/ns/bench/BNCH-001>
     a dec:VerificationEnvironment ;
     dec:envType "ephemeral-tempdir" ;
     dec:safetyClass "isolated" ;
@@ -13,5 +13,5 @@
     dec:concreteCapabilities [
         dec:binariesOnPath ( "bash" "dec" "product" "cargo" "rustc" "python" "python3" "uv" "grep" "find" "ls" "cat" "mkdir" "touch" "echo" "sed" "awk" "head" "tail" "wc" "test" "cd" "rm" "cp" "mv" "diff" "jq" "curl" "git" "true" "false" ) ;
         dec:writablePaths ( "$DEC_VERIFY_TMP" "./" ) ;
-        dec:environmentVariables ( "DEC_VERIFY_TMP" "DEC_WORKDIR" "TMPDIR" "PATH" "HOME" )
+        dec:benchVariables ( "DEC_VERIFY_TMP" "DEC_WORKDIR" "TMPDIR" "PATH" "HOME" )
     ] .

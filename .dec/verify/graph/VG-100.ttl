@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-100>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-018> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-REPO> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-REPO> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-100/0> <https://decision-cli.dev/ns/step/VG-100/1> <https://decision-cli.dev/ns/step/VG-100/2> <https://decision-cli.dev/ns/step/VG-100/3> <https://decision-cli.dev/ns/step/VG-100/4> <https://decision-cli.dev/ns/step/VG-100/5> <https://decision-cli.dev/ns/step/VG-100/6> <https://decision-cli.dev/ns/step/VG-100/7> <https://decision-cli.dev/ns/step/VG-100/8> <https://decision-cli.dev/ns/step/VG-100/9> <https://decision-cli.dev/ns/step/VG-100/10> <https://decision-cli.dev/ns/step/VG-100/11> <https://decision-cli.dev/ns/step/VG-100/12> <https://decision-cli.dev/ns/step/VG-100/13> <https://decision-cli.dev/ns/step/VG-100/14> <https://decision-cli.dev/ns/step/VG-100/15> <https://decision-cli.dev/ns/step/VG-100/16> <https://decision-cli.dev/ns/step/VG-100/17> <https://decision-cli.dev/ns/step/VG-100/18> <https://decision-cli.dev/ns/step/VG-100/19> <https://decision-cli.dev/ns/step/VG-100/20> ) .
 
 <https://decision-cli.dev/ns/step/VG-100/0>

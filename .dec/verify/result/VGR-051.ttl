@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-051>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-044> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T17:38:36.803Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
@@ -86,7 +86,7 @@
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-044/ts-1779817116800193989> .
 
 <https://decision-cli.dev/ns/result/VGR-051/step/3>
@@ -97,7 +97,7 @@
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-044/ts-1779817116800193989> .
 
 <https://decision-cli.dev/ns/result/VGR-051/step/4>
@@ -108,7 +108,7 @@
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-044/ts-1779817116800193989> .
 
 <https://decision-cli.dev/ns/result/VGR-051/step/5>
@@ -119,7 +119,7 @@
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-044/ts-1779817116800193989> .
 
 <https://decision-cli.dev/ns/result/VGR-051/step/6>
@@ -130,7 +130,7 @@
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-044/ts-1779817116800193989> .
 
 <https://decision-cli.dev/ns/result/VGR-051/step/7>
@@ -141,5 +141,5 @@
     dec:endedAt "2026-05-26T17:38:36.806Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-317869-1779817116801011882/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-044/ts-1779817116800193989> .

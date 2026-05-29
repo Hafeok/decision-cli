@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-132>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-036> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:16.188Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:16.203Z"^^xsd:dateTime ;
@@ -64,7 +64,7 @@
     dec:endedAt "2026-05-26T18:06:16.194Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec preflight FT-007: no graph projection at /tmp/dec-verify/ENV-002-333383-1779818776184976901/test-project/.product/graph/index.ttl — run `product graph rebuild` to produce it (FT-052 reads the projection, not the markdown)\n" ;
+    dec:stderrExcerpt "dec preflight FT-007: no graph projection at /tmp/dec-verify/BNCH-002-333383-1779818776184976901/test-project/.product/graph/index.ttl — run `product graph rebuild` to produce it (FT-052 reads the projection, not the markdown)\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-036/ts-1779818776183295285> .
 

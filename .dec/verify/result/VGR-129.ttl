@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-129>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-033> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T18:06:13.771Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:14.476Z"^^xsd:dateTime ;
@@ -57,7 +57,7 @@
     dec:endedAt "2026-05-26T18:06:13.774Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-333331-1779818773767843855/pyproject.toml" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-333331-1779818773767843855/pyproject.toml" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-033/ts-1779818773766481753> .
 
 <https://decision-cli.dev/ns/result/VGR-129/step/2>

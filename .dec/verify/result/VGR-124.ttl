@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-124>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-028> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-26T18:06:10.812Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T18:06:10.838Z"^^xsd:dateTime ;
@@ -111,7 +111,7 @@
     dec:endedAt "2026-05-26T18:06:10.824Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "could not load target /tmp/dec-verify/ENV-002-333240-1779818770808416126/.dec/store: Is a directory (os error 21)" ;
+    dec:errorMessage "could not load target /tmp/dec-verify/BNCH-002-333240-1779818770808416126/.dec/store: Is a directory (os error 21)" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779818770806882267> .
 
 <https://decision-cli.dev/ns/result/VGR-124/step/5>
@@ -122,7 +122,7 @@
     dec:endedAt "2026-05-26T18:06:10.827Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/BNCH-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779818770806882267> .
 
@@ -134,7 +134,7 @@
     dec:endedAt "2026-05-26T18:06:10.830Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/BNCH-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779818770806882267> .
 
@@ -146,7 +146,7 @@
     dec:endedAt "2026-05-26T18:06:10.833Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/BNCH-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779818770806882267> .
 
@@ -158,7 +158,7 @@
     dec:endedAt "2026-05-26T18:06:10.836Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/BNCH-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779818770806882267> .
 
@@ -170,6 +170,6 @@
     dec:endedAt "2026-05-26T18:06:10.838Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/ENV-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
+    dec:stderrExcerpt "dec verify graph list: internal error: no orchestration store at /tmp/dec-verify/BNCH-002-333240-1779818770808416126/.dec/store/orchestration.nq — run `dec init` first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-028/ts-1779818770806882267> .

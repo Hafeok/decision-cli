@@ -7,14 +7,14 @@
 <https://decision-cli.dev/ns/graph/VG-029>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-041> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-029/0> <https://decision-cli.dev/ns/step/VG-029/1> <https://decision-cli.dev/ns/step/VG-029/2> <https://decision-cli.dev/ns/step/VG-029/3> <https://decision-cli.dev/ns/step/VG-029/4> <https://decision-cli.dev/ns/step/VG-029/5> <https://decision-cli.dev/ns/step/VG-029/6> <https://decision-cli.dev/ns/step/VG-029/7> <https://decision-cli.dev/ns/step/VG-029/8> <https://decision-cli.dev/ns/step/VG-029/9> <https://decision-cli.dev/ns/step/VG-029/10> <https://decision-cli.dev/ns/step/VG-029/11> ) .
 
 <https://decision-cli.dev/ns/step/VG-029/0>
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-051> ;
-    dec:command "dec verify graph new --verifies TC-051 --environment ENV-002" ;
+    dec:command "dec verify graph new --verifies TC-051 --environment BNCH-002" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-029/1>
@@ -34,7 +34,7 @@
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
-    dec:command "dec verify graph new --verifies TC-052 --environment ENV-002" ;
+    dec:command "dec verify graph new --verifies TC-052 --environment BNCH-002" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-029/4>
@@ -54,7 +54,7 @@
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-063> ;
-    dec:command "dec verify graph new --verifies TC-063 --environment ENV-002" ;
+    dec:command "dec verify graph new --verifies TC-063 --environment BNCH-002" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-029/7>
@@ -74,7 +74,7 @@
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-095> ;
-    dec:command "dec verify graph new --verifies TC-095 --environment ENV-002" ;
+    dec:command "dec verify graph new --verifies TC-095 --environment BNCH-002" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-029/10>

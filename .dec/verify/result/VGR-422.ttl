@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-422>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-121> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-28T13:22:57.298Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T13:22:57.305Z"^^xsd:dateTime ;
@@ -34,7 +34,7 @@
         dec:outcome "fail" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-422/step/2>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/ENV-002/ts-1779974577293959196> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/BNCH-002/ts-1779974577293959196> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-28T13:22:57.305Z"^^xsd:dateTime .
 
@@ -48,7 +48,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: tests/scripts/tc-006-status.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/ENV-002/ts-1779974577293959196> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/BNCH-002/ts-1779974577293959196> .
 
 <https://decision-cli.dev/ns/result/VGR-422/step/1>
     a dec:VerificationStepTrace ;
@@ -60,7 +60,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: tests/scripts/tc-007-unauthorized-goal.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/ENV-002/ts-1779974577293959196> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/BNCH-002/ts-1779974577293959196> .
 
 <https://decision-cli.dev/ns/result/VGR-422/step/2>
     a dec:VerificationStepTrace ;
@@ -72,4 +72,4 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: tests/scripts/tc-008-implement-e2e.sh: No such file or directory\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/ENV-002/ts-1779974577293959196> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-121/BNCH-002/ts-1779974577293959196> .

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-031>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-024> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:38:25.081Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:38:25.086Z"^^xsd:dateTime ;
@@ -70,7 +70,7 @@
     dec:endedAt "2026-05-26T17:38:25.084Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify env new: internal error: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-317457-1779817105079444021/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:stderrExcerpt "dec verify env new: internal error: loading active scope: no orchestration store at /tmp/dec-verify/BNCH-002-317457-1779817105079444021/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-024/ts-1779817105078753404> .
 
@@ -82,7 +82,7 @@
     dec:endedAt "2026-05-26T17:38:25.084Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "file missing: /tmp/dec-verify/ENV-002-317457-1779817105079444021/.dec/verify/env/ENV-001.ttl" ;
+    dec:errorMessage "file missing: /tmp/dec-verify/BNCH-002-317457-1779817105079444021/.dec/verify/env/BNCH-001.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-024/ts-1779817105078753404> .
 
 <https://decision-cli.dev/ns/result/VGR-031/step/2>
@@ -93,7 +93,7 @@
     dec:endedAt "2026-05-26T17:38:25.084Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-317457-1779817105079444021/.dec/store" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-317457-1779817105079444021/.dec/store" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-024/ts-1779817105078753404> .
 
 <https://decision-cli.dev/ns/result/VGR-031/step/3>
@@ -104,6 +104,6 @@
     dec:endedAt "2026-05-26T17:38:25.086Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec verify env new: internal error: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-317457-1779817105079444021/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:stderrExcerpt "dec verify env new: internal error: loading active scope: no orchestration store at /tmp/dec-verify/BNCH-002-317457-1779817105079444021/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-024/ts-1779817105078753404> .

@@ -7,7 +7,7 @@
 <https://decision-cli.dev/ns/graph/VG-028>
     a dec:VerificationGraph ;
     dec:verifies <https://decision-cli.dev/ns/feature/FT-042> ;
-    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:steps ( <https://decision-cli.dev/ns/step/VG-028/0> <https://decision-cli.dev/ns/step/VG-028/1> <https://decision-cli.dev/ns/step/VG-028/2> <https://decision-cli.dev/ns/step/VG-028/3> <https://decision-cli.dev/ns/step/VG-028/4> <https://decision-cli.dev/ns/step/VG-028/5> <https://decision-cli.dev/ns/step/VG-028/6> <https://decision-cli.dev/ns/step/VG-028/7> <https://decision-cli.dev/ns/step/VG-028/8> <https://decision-cli.dev/ns/step/VG-028/9> ) .
 
 <https://decision-cli.dev/ns/step/VG-028/0>
@@ -19,19 +19,19 @@
 <https://decision-cli.dev/ns/step/VG-028/1>
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
-    dec:command "dec verify graph create --id VG-001 --verifies FT-038 --environment ENV-002 --steps 3" ;
+    dec:command "dec verify graph create --id VG-001 --verifies FT-038 --environment BNCH-002 --steps 3" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-028/2>
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
-    dec:command "dec verify graph create --id VG-002 --verifies TC-051 --environment ENV-002 --steps 2" ;
+    dec:command "dec verify graph create --id VG-002 --verifies TC-051 --environment BNCH-002 --steps 2" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-028/3>
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
-    dec:command "dec verify graph create --id VG-003 --verifies FT-042 --environment ENV-001 --steps 1" ;
+    dec:command "dec verify graph create --id VG-003 --verifies FT-042 --environment BNCH-001 --steps 1" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-028/4>
@@ -66,7 +66,7 @@
     a dec:VerificationStep ;
     dec:stepType "shell-command" ;
     dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-052> ;
-    dec:command "dec verify graph list --environment ENV-002 --format table" ;
+    dec:command "dec verify graph list --environment BNCH-002 --format table" ;
     dec:expectExitCode 0 .
 
 <https://decision-cli.dev/ns/step/VG-028/9>

@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-251>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-105> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-27T13:08:43.918Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-27T13:08:44.094Z"^^xsd:dateTime ;
@@ -34,7 +34,7 @@
         dec:outcome "unrunnable" ;
         dec:fromStep <https://decision-cli.dev/ns/result/VGR-251/step/2>
     ] ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/ENV-002/ts-1779887323914702161> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/BNCH-002/ts-1779887323914702161> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-27T13:08:44.094Z"^^xsd:dateTime .
 
@@ -48,7 +48,7 @@
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "bash: line 1: python: command not found\n" ;
     dec:errorMessage "expected exit 0, got 127" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/ENV-002/ts-1779887323914702161> .
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/BNCH-002/ts-1779887323914702161> .
 
 <https://decision-cli.dev/ns/result/VGR-251/step/1>
     a dec:VerificationStepTrace ;
@@ -58,8 +58,8 @@
     dec:endedAt "2026-05-27T13:08:44.094Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-246218-1779887323915129354/.dec/store/orchestration.nq" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/ENV-002/ts-1779887323914702161> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-246218-1779887323915129354/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/BNCH-002/ts-1779887323914702161> .
 
 <https://decision-cli.dev/ns/result/VGR-251/step/2>
     a dec:VerificationStepTrace ;
@@ -69,5 +69,5 @@
     dec:endedAt "2026-05-27T13:08:44.094Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-246218-1779887323915129354/.dec/store/orchestration.nq" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/ENV-002/ts-1779887323914702161> .
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-246218-1779887323915129354/.dec/store/orchestration.nq" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-105/BNCH-002/ts-1779887323914702161> .

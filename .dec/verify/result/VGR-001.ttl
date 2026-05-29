@@ -10,12 +10,12 @@
 <https://decision-cli.dev/ns/result/VGR-001>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-089> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "rejected" ;
     dec:startedAt "2026-05-26T17:27:53.953Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-26T17:27:53.953Z"^^xsd:dateTime ;
     dec:stepTraces () ;
     dec:rationale "env setup failed before any step ran: mkdir: cannot create directory ‘’: No such file or directory\n" ;
-    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/ENV-002/ts-1779816473937056407> ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-089/BNCH-002/ts-1779816473937056407> ;
     prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
     dcterms:created "2026-05-26T17:27:53.953Z"^^xsd:dateTime .

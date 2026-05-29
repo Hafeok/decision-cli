@@ -10,7 +10,7 @@
 <https://decision-cli.dev/ns/result/VGR-386>
     a dec:VerificationGraphResult ;
     dec:resultOf <https://decision-cli.dev/ns/graph/VG-115> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:ranOnBench <https://decision-cli.dev/ns/bench/BNCH-002> ;
     dec:verdict "amendment-required" ;
     dec:startedAt "2026-05-28T12:23:02.387Z"^^xsd:dateTime ;
     dec:endedAt "2026-05-28T12:23:02.401Z"^^xsd:dateTime ;
@@ -82,7 +82,7 @@
     dec:endedAt "2026-05-28T12:23:02.399Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-120075-1779970982384162047/.dec/store/orchestration.nq" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-120075-1779970982384162047/.dec/store/orchestration.nq" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-115/ts-1779970982383615213> .
 
 <https://decision-cli.dev/ns/result/VGR-386/step/3>
@@ -93,7 +93,7 @@
     dec:endedAt "2026-05-28T12:23:02.401Z"^^xsd:dateTime ;
     dec:exitCode 1 ;
     dec:stdoutExcerpt "" ;
-    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/ENV-002-120075-1779970982384162047/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
+    dec:stderrExcerpt "dec implement failed: loading active scope: no orchestration store at /tmp/dec-verify/BNCH-002-120075-1779970982384162047/.dec; run `dec init --template engineering-development` (or `dec init --from <path>`) first\n" ;
     dec:errorMessage "expected exit 0, got 1" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-115/ts-1779970982383615213> .
 
@@ -105,7 +105,7 @@
     dec:endedAt "2026-05-28T12:23:02.401Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-120075-1779970982384162047/.dec/store/orchestration.nq" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-120075-1779970982384162047/.dec/store/orchestration.nq" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-115/ts-1779970982383615213> .
 
 <https://decision-cli.dev/ns/result/VGR-386/step/5>
@@ -116,5 +116,5 @@
     dec:endedAt "2026-05-28T12:23:02.401Z"^^xsd:dateTime ;
     dec:stdoutExcerpt "" ;
     dec:stderrExcerpt "" ;
-    dec:errorMessage "target missing: /tmp/dec-verify/ENV-002-120075-1779970982384162047/.product/graph/index.ttl" ;
+    dec:errorMessage "target missing: /tmp/dec-verify/BNCH-002-120075-1779970982384162047/.product/graph/index.ttl" ;
     prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-012/VG-115/ts-1779970982383615213> .
