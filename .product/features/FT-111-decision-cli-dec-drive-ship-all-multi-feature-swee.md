@@ -5,6 +5,7 @@ phase: 4
 status: planned
 depends-on:
 - FT-110
+- FT-112
 adrs: []
 tests:
 - TC-200
@@ -61,8 +62,11 @@ investigation.
 CLI surface (added to the existing `dec drive ship` subcommand):
 
 - `dec drive ship --all` — sweep every feature.
-- `dec drive ship --all --env <ENV-XXX>` — env override; defaults
-  to the workdir's default env (matches single-feature behaviour).
+- `dec drive ship --all --bench <BNCH-XXX>` — verification-bench
+  override; defaults to the workdir's default bench (matches
+  single-feature behaviour). Per FT-112, `--env` is reserved
+  for the future deployment-target dimension and is NOT a
+  synonym for `--bench`.
 - `dec drive ship --all --max-iter <N>` — per-feature iteration
   cap; defaults to 6 (matches the recently-tuned sweep value
   where the state-hash cycle detector has room for period ≤ 5).
