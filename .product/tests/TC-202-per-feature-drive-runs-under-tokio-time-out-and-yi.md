@@ -13,8 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_202_per_feature_timeout_yields_timeout_outcome
 runner-timeout: 30
-last-run: 2026-05-29T09:21:58.939546097+00:00
-last-run-duration: 1.5s
+last-run: 2026-05-29T09:26:03.704087369+00:00
+last-run-duration: 1.7s
 ---
 
 ## Description
