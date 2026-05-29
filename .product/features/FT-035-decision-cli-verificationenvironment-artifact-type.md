@@ -1,6 +1,6 @@
 ---
 id: FT-035
-title: 'decision-cli: VerificationEnvironment artifact type'
+title: 'decision-cli: VerificationBench artifact type'
 phase: 2
 status: complete
 depends-on: []
@@ -32,7 +32,7 @@ domains-acknowledged:
 
 ## Description
 
-Land the `dec:VerificationEnvironment` artifact type — schema, SHACL shape, IRI minting, on-disk raw Turtle persistence at `.dec/verify/env/ENV-NNN.ttl`. Extends the embedded ontology and the `StreamWriter` validation paths. Seeds the `ephemeral-cli` environment at `dec init`.
+Land the `dec:VerificationBench` artifact type — schema, SHACL shape, IRI minting, on-disk raw Turtle persistence at `.dec/verify/bench/BNCH-NNN.ttl`. Extends the embedded ontology and the `StreamWriter` validation paths. Seeds the `ephemeral-cli` environment at `dec init`.
 
 Substrate consumed by [FT-037](FT-037) (safety enforcement) and by the env CLI subcommand-features ([FT-038](FT-038), [FT-039](FT-039), [FT-040](FT-040)). Pure schema-shaped feature: it does not author any `dec verify env` subcommand by itself.
 
@@ -44,31 +44,31 @@ Substrate consumed by [FT-037](FT-037) (safety enforcement) and by the env CLI s
 - The `StreamWriter` chokepoint — extended to recognise the new shape.
 - The `core::vocab` module — gains new IRIs.
 - The `dec init` pipeline — extended to seed the default env idempotently.
-- The Turtle vocabulary from [ADR-028](ADR-028) §VerificationEnvironment.
+- The Turtle vocabulary from [ADR-028](ADR-028) §VerificationBench.
 
 ### Outputs
 
-- New SHACL shape `dec:VerificationEnvironmentShape` embedded in the ontology bundle, enforcing:
+- New SHACL shape `dec:VerificationBenchShape` embedded in the ontology bundle, enforcing:
   - `dec:envType` is a non-empty string,
   - `dec:safetyClass` is one of `isolated`, `shared-non-destructive`, `production-readonly`,
   - `dec:allowedOps` is a non-empty rdf:List of operation tokens,
   - `dec:endpoint` is required iff `dec:envType` matches a remote-type pattern (e.g. `remote-http`).
 - New IRIs in `core::vocab`:
-  - `dec:VerificationEnvironment` (class).
+  - `dec:VerificationBench` (class).
   - `dec:envType`, `dec:setup`, `dec:teardown`, `dec:allowedOps`, `dec:safetyClass`, `dec:endpoint` (properties).
   - `safety:isolated`, `safety:shared-non-destructive`, `safety:production-readonly` (controlled vocabulary literals).
 - New Rust types under `core::ontology::verification_env`:
   - `enum SafetyClass { Isolated, SharedNonDestructive, ProductionReadonly }` with `as_str` / `parse`.
-  - `struct VerificationEnvironment { id, env_type, setup, teardown, allowed_ops, safety_class, endpoint }`.
+  - `struct VerificationBench { id, env_type, setup, teardown, allowed_ops, safety_class, endpoint }`.
   - `fn to_quads(&self, graph: NamedNodeRef) -> Vec<Quad>` — serialises to RDF.
   - `fn from_turtle(path: &Path) -> Result<Self>` — round-trip parse.
-- On-disk layout: `.dec/verify/env/ENV-NNN.ttl`. IRI scheme: `https://decision-cli.dev/ns/env/<id>`.
-- `dec init` extended to seed `ENV-001-ephemeral-cli.ttl` (safety class `isolated`, allowed ops = `shell`, `filesystem`, `sparql-local`) idempotently — re-running `dec init` does not duplicate the seed.
+- On-disk layout: `.dec/verify/bench/BNCH-NNN.ttl`. IRI scheme: `https://decision-cli.dev/ns/bench/<id>`.
+- `dec init` extended to seed `BNCH-001-ephemeral-cli.ttl` (safety class `isolated`, allowed ops = `shell`, `filesystem`, `sparql-local`) idempotently — re-running `dec init` does not duplicate the seed.
 
 ### State
 
-- One `.ttl` file per environment in `.dec/verify/env/`.
-- Named-graph projection in the orchestration store: `https://decision-cli.dev/ns/graph/verify-env`.
+- One `.ttl` file per environment in `.dec/verify/bench/`.
+- Named-graph projection in the orchestration store: `https://decision-cli.dev/ns/graph/verify-bench`.
 - On-disk Turtle is authoritative; the store projection is rebuilt from disk on every load.
 
 ### Behaviour
@@ -76,8 +76,8 @@ Substrate consumed by [FT-037](FT-037) (safety enforcement) and by the env CLI s
 1. Define the SHACL shape; embed in the ontology bundle.
 2. Add new IRIs to `core::vocab`.
 3. Implement `to_quads` / `from_turtle` for round-trip fidelity.
-4. Extend `StreamWriter` so commits including `VerificationEnvironment` quads validate against the shape; SHACL failure produces a structured error and aborts the commit.
-5. Add a loader that reads every file under `.dec/verify/env/*.ttl` and projects into the named graph; called at `dec init` and at every command that needs envs.
+4. Extend `StreamWriter` so commits including `VerificationBench` quads validate against the shape; SHACL failure produces a structured error and aborts the commit.
+5. Add a loader that reads every file under `.dec/verify/bench/*.ttl` and projects into the named graph; called at `dec init` and at every command that needs envs.
 6. Seed `ephemeral-cli` at `dec init` only if absent.
 
 ### Invariants
@@ -92,7 +92,7 @@ Substrate consumed by [FT-037](FT-037) (safety enforcement) and by the env CLI s
 
 - SHACL violation on commit → `Error::SchemaViolation { artifact: EnvId, detail }`; CLI exits 1, MCP returns structured error.
 - Malformed Turtle on load → `Error::ParseFailure { path, detail }`; surfaces at `dec init` / list / show commands.
-- Duplicate `ENV-NNN` id across files → `Error::DuplicateIri { id, paths }`; abort load.
+- Duplicate `BNCH-NNN` id across files → `Error::DuplicateIri { id, paths }`; abort load.
 
 ### Boundaries
 

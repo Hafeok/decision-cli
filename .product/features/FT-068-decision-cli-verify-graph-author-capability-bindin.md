@@ -91,7 +91,7 @@ This feature_spec covers only the *binding wiring* — the role catalog entry, t
        dec:roleId            "verify-graph-author" ;
        dec:roleInputType     <https://decision-cli.dev/ns#FeatureSpec> ,
                              <https://decision-cli.dev/ns#TestCriterion> ,
-                             <https://decision-cli.dev/ns#VerificationEnvironment> ;
+                             <https://decision-cli.dev/ns#VerificationBench> ;
        dec:roleOutputType    <https://decision-cli.dev/ns#GraphProposal> .
    ```
    No `roleModelBinding` literal — capabilities own this now (ADR-033).

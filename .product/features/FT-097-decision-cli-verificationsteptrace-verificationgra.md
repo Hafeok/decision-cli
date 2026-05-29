@@ -83,7 +83,7 @@ Fields:
 <https://decision-cli.dev/ns/result/VGR-001>
     a dec:VerificationGraphResult ;
     dec:resultOf        <https://decision-cli.dev/ns/graph/VG-001> ;
-    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-001> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/bench/BNCH-001> ;
     dec:verdict         "rejected" ;        # approved | rejected | amendment-required
     dec:startedAt       "2026-05-26T14:00:00Z"^^xsd:dateTime ;
     dec:endedAt         "2026-05-26T14:00:01.130Z"^^xsd:dateTime ;
