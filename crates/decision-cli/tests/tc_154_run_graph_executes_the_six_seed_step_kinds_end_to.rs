@@ -16,7 +16,7 @@ use axum::Router;
 use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::core::ontology::verification_result::StepOutcome;
 use decision_cli::core::verify::runner::{run_graph, RunGraphRequest, TriggerKind};
-use decision_cli::verify_env_new::{self, EnvNewRequest};
+use decision_cli::verify_bench_new::{self, BenchNewRequest};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
 use decision_cli::verify_step_add::{self, StepAddRequest};
 use oxigraph::model::NamedNode;
@@ -140,13 +140,13 @@ fn start_health_server() -> (String, std::thread::JoinHandle<()>) {
     (url, handle)
 }
 
-const ENV_ID: &str = "ENV-9-tc154";
+const ENV_ID: &str = "BNCH-9-tc154";
 const VG_ID: &str = "VG-9-tc154";
 
 fn seed_env(workdir: &Path) {
-    verify_env_new::run(&EnvNewRequest {
+    verify_bench_new::run(&BenchNewRequest {
         id: Some(ENV_ID.into()),
-        env_type: "ephemeral-tempdir".into(),
+        bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
         allowed_ops: vec![
             "shell".into(),

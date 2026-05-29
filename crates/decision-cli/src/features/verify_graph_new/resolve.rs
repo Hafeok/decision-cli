@@ -7,15 +7,15 @@
 //!     for an artifact file whose stem starts with the supplied id
 //!     (e.g. `FT-001-*.md`). Missing → [`HandlerError::DanglingRef`]
 //!     with `kind: "verifies"`.
-//!   * `environment` — `ENV-NNN[-suffix]`. Resolved against
-//!     `.dec/verify/env/` the same way `verify_env_show` does.
+//!   * `environment` — `BNCH-NNN[-suffix]`. Resolved against
+//!     `.dec/verify/env/` the same way `verify_bench_show` does.
 //!     Missing → [`HandlerError::DanglingRef`] with `kind: "environment"`.
 //!
 //! Both yield a stable IRI the SHACL shape expects:
 //!
 //!   * `https://decision-cli.dev/ns/feature/FT-NNN`
 //!   * `https://decision-cli.dev/ns/tc/TC-NNN`
-//!   * `https://decision-cli.dev/ns/env/ENV-NNN[-suffix]`
+//!   * `https://decision-cli.dev/ns/bench/BNCH-NNN[-suffix]`
 
 use std::fs;
 use std::path::Path;
@@ -23,7 +23,7 @@ use std::path::Path;
 use oxigraph::model::NamedNode;
 
 use crate::core::handler::Error as HandlerError;
-use crate::core::vocab::IRI_DEC_ENV_PREFIX;
+use crate::core::vocab::IRI_DEC_BENCH_PREFIX;
 
 /// IRI prefix for feature artifacts the graph's `dec:verifies` references.
 pub(super) const IRI_FEATURE_PREFIX: &str = "https://decision-cli.dev/ns/feature/";
@@ -67,7 +67,7 @@ pub(super) fn resolve_verifies(workdir: &Path, reference: &str) -> Result<NamedN
 }
 
 /// Resolve the caller-supplied `environment` string against
-/// `.dec/verify/env/`. Both `ENV-001` (no suffix) and `ENV-001-suffix`
+/// `.dec/verify/env/`. Both `BNCH-001` (no suffix) and `BNCH-001-suffix`
 /// shapes resolve.
 pub(super) fn resolve_environment(
     workdir: &Path,
@@ -91,7 +91,7 @@ pub(super) fn resolve_environment(
             reference: reference.to_string(),
             kind: "environment".to_string(),
         })?;
-    let iri = format!("{IRI_DEC_ENV_PREFIX}{resolved_id}");
+    let iri = format!("{IRI_DEC_BENCH_PREFIX}{resolved_id}");
     NamedNode::new(iri).map_err(|e| HandlerError::Internal {
         detail: format!("constructing environment IRI: {e}"),
     })
@@ -264,11 +264,11 @@ mod tests {
         let dir = TmpDir::new("env-short");
         let envs = dir.path().join(".dec/verify/env");
         std::fs::create_dir_all(&envs).expect("mkdir");
-        File::create(envs.join("ENV-001-ephemeral-cli.ttl")).expect("touch");
-        let iri = resolve_environment(dir.path(), "ENV-001").expect("ok");
+        File::create(envs.join("BNCH-001-ephemeral-cli.ttl")).expect("touch");
+        let iri = resolve_environment(dir.path(), "BNCH-001").expect("ok");
         assert_eq!(
             iri.as_str(),
-            "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli",
+            "https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli",
         );
     }
 

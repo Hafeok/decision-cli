@@ -1,7 +1,7 @@
-//! Write-side SHACL validation for `dec:VerificationEnvironment` (ADR-028).
+//! Write-side SHACL validation for `dec:VerificationBench` (ADR-028).
 //!
 //! Mirrors the verdict validator pattern (FT-020): every
-//! `dec:VerificationEnvironment` subject declared in the candidate quad
+//! `dec:VerificationBench` subject declared in the candidate quad
 //! set is checked against the ADR-028 §SHACL invariants. Violations are
 //! returned as structured records so the caller can surface a
 //! `SchemaViolation { artifact: EnvId, detail }`-style error.
@@ -12,32 +12,32 @@ use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_TYPE, IRI_DEC_FIXTURE_SOURCE,
-    IRI_DEC_SAFETY_CLASS, IRI_DEC_VERIFICATION_ENVIRONMENT, SAFETY_ISOLATED,
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_BENCH_TYPE, IRI_DEC_FIXTURE_SOURCE,
+    IRI_DEC_SAFETY_CLASS, IRI_DEC_VERIFICATION_BENCH, SAFETY_ISOLATED,
     SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 
 use super::shacl_list::{allowed_ops_heads, list_is_nil, walk_list};
 use super::types::RDF_TYPE;
 
-/// Prefix used by `env_type` strings to denote a *remote* environment
+/// Prefix used by `bench_type` strings to denote a *remote* environment
 /// (per ADR-028: `remote-http`, `remote-sparql`, …).
-pub const REMOTE_ENV_TYPE_PREFIX: &str = "remote-";
+pub const REMOTE_BENCH_TYPE_PREFIX: &str = "remote-";
 
 /// One SHACL violation against a candidate environment mutation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnvViolation {
     /// Subject IRI the violation is attached to.
     pub subject: String,
-    /// Predicate path the violation is against (`dec:envType`, etc.).
+    /// Predicate path the violation is against (`dec:benchType`, etc.).
     pub path: String,
     /// Operator-friendly explanation.
     pub detail: String,
 }
 
-/// Structured failure for SHACL validation of a `VerificationEnvironment`.
+/// Structured failure for SHACL validation of a `VerificationBench`.
 #[derive(Debug, Error)]
-#[error("SHACL validation failed for VerificationEnvironment:\n{report}")]
+#[error("SHACL validation failed for VerificationBench:\n{report}")]
 pub struct EnvShaclError {
     /// Rendered report (one `subject / path / detail` line per violation).
     pub report: String,
@@ -45,7 +45,7 @@ pub struct EnvShaclError {
     pub violations: Vec<EnvViolation>,
 }
 
-/// Run the ADR-028 SHACL shape against every `VerificationEnvironment`
+/// Run the ADR-028 SHACL shape against every `VerificationBench`
 /// subject declared in `quads`.
 pub fn validate_quads(quads: &[Quad]) -> Result<(), EnvShaclError> {
     let subjects = env_subjects(quads);
@@ -71,7 +71,7 @@ fn env_subjects(quads: &[Quad]) -> Vec<NamedNode> {
         let Term::NamedNode(cls) = &q.object else {
             continue;
         };
-        if cls.as_str() != IRI_DEC_VERIFICATION_ENVIRONMENT {
+        if cls.as_str() != IRI_DEC_VERIFICATION_BENCH {
             continue;
         }
         if let oxigraph::model::Subject::NamedNode(s) = &q.subject {
@@ -85,18 +85,18 @@ fn env_subjects(quads: &[Quad]) -> Vec<NamedNode> {
 
 fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<EnvViolation> {
     let mut violations = Vec::new();
-    let env_type_values = literal_values(quads, subject, IRI_DEC_ENV_TYPE);
-    check_env_type(subject, &env_type_values, &mut violations);
+    let bench_type_values = literal_values(quads, subject, IRI_DEC_BENCH_TYPE);
+    check_bench_type(subject, &bench_type_values, &mut violations);
     check_safety_class(quads, subject, &mut violations);
     check_allowed_ops(quads, subject, &mut violations);
-    check_endpoint_conditional(quads, subject, &env_type_values, &mut violations);
+    check_endpoint_conditional(quads, subject, &bench_type_values, &mut violations);
     check_fixture_source(quads, subject, &mut violations);
     violations
 }
 
 /// FT-053 / ADR-032 — `dec:fixtureSource` is optional, max-count 1,
 /// non-empty string. The path's filesystem presence is the authoring
-/// surface's responsibility (`features::verify_env_new::validate`); the
+/// surface's responsibility (`features::verify_bench_new::validate`); the
 /// shape only enforces shape.
 fn check_fixture_source(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<EnvViolation>) {
     let values = literal_values(quads, subject, IRI_DEC_FIXTURE_SOURCE);
@@ -121,28 +121,28 @@ fn check_fixture_source(quads: &[Quad], subject: &NamedNode, violations: &mut Ve
     }
 }
 
-fn check_env_type(subject: &NamedNode, values: &[String], violations: &mut Vec<EnvViolation>) {
+fn check_bench_type(subject: &NamedNode, values: &[String], violations: &mut Vec<EnvViolation>) {
     if values.is_empty() {
         violations.push(violation(
             subject,
-            IRI_DEC_ENV_TYPE,
-            "missing required dec:envType (sh:minCount 1)",
+            IRI_DEC_BENCH_TYPE,
+            "missing required dec:benchType (sh:minCount 1)",
         ));
         return;
     }
     if values.len() > 1 {
         violations.push(violation(
             subject,
-            IRI_DEC_ENV_TYPE,
-            &format!("expected exactly one dec:envType, found {}", values.len()),
+            IRI_DEC_BENCH_TYPE,
+            &format!("expected exactly one dec:benchType, found {}", values.len()),
         ));
     }
     for v in values {
         if v.is_empty() {
             violations.push(violation(
                 subject,
-                IRI_DEC_ENV_TYPE,
-                "dec:envType must be a non-empty string (sh:minLength 1)",
+                IRI_DEC_BENCH_TYPE,
+                "dec:benchType must be a non-empty string (sh:minLength 1)",
             ));
         }
     }
@@ -253,7 +253,7 @@ fn check_allowed_ops_head_cardinality(
 fn check_endpoint_conditional(
     quads: &[Quad],
     subject: &NamedNode,
-    env_type_values: &[String],
+    bench_type_values: &[String],
     violations: &mut Vec<EnvViolation>,
 ) {
     let endpoint_values = literal_values(quads, subject, IRI_DEC_ENDPOINT);
@@ -267,33 +267,33 @@ fn check_endpoint_conditional(
             ),
         ));
     }
-    check_endpoint_locality(subject, env_type_values, &endpoint_values, violations);
+    check_endpoint_locality(subject, bench_type_values, &endpoint_values, violations);
 }
 
 fn check_endpoint_locality(
     subject: &NamedNode,
-    env_type_values: &[String],
+    bench_type_values: &[String],
     endpoint_values: &[String],
     violations: &mut Vec<EnvViolation>,
 ) {
-    let is_remote = env_type_values
+    let is_remote = bench_type_values
         .iter()
-        .any(|t| t.starts_with(REMOTE_ENV_TYPE_PREFIX));
-    let is_local = env_type_values
+        .any(|t| t.starts_with(REMOTE_BENCH_TYPE_PREFIX));
+    let is_local = bench_type_values
         .iter()
-        .any(|t| !t.starts_with(REMOTE_ENV_TYPE_PREFIX));
+        .any(|t| !t.starts_with(REMOTE_BENCH_TYPE_PREFIX));
     if is_remote && endpoint_values.is_empty() {
         violations.push(violation(
             subject,
             IRI_DEC_ENDPOINT,
-            "remote env types (envType starts with \"remote-\") require dec:endpoint",
+            "remote bench types (envType starts with \"remote-\") require dec:endpoint",
         ));
     }
     if is_local && !endpoint_values.is_empty() {
         violations.push(violation(
             subject,
             IRI_DEC_ENDPOINT,
-            "local env types (envType does not start with \"remote-\") must NOT carry dec:endpoint",
+            "local bench types (envType does not start with \"remote-\") must NOT carry dec:endpoint",
         ));
     }
 }

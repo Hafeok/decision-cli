@@ -128,7 +128,7 @@ fn author_empty_graph(workdir: &Path, id: &str, verifies: &str, environment: &st
 /// Author a graph with `n` shell-command steps. Writes directly through
 /// `StreamWriter` because slice 2.5 has no `dec verify step add` yet
 /// (FT-043 ships that). The step list passes the FT-037 safety check
-/// against the seed `ENV-001-ephemeral-cli` env (`shell` + `filesystem`).
+/// against the seed `BNCH-001-ephemeral-cli` env (`shell` + `filesystem`).
 fn author_graph_with_steps(workdir: &Path, id: &str, verifies_iri: &str, env_iri: &str, n: usize) {
     let steps: Vec<VerificationStep> = (0..n)
         .map(|i| {
@@ -225,9 +225,9 @@ fn ac1_empty_store_prints_advisory_returns_empty_array_and_mcp_empty() {
 fn ac2_graphs_returned_in_ascending_numeric_order() {
     let tmp = init_workdir("ac2");
     // Author out of order: VG-003 first, then VG-001, then VG-002.
-    author_empty_graph(tmp.path(), "VG-003", "FT-001", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-002", "TC-013", "ENV-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-003", "FT-001", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-002", "TC-013", "BNCH-001-ephemeral-cli");
     let graphs = run_list(tmp.path(), GraphListRequest::default());
     let ids: Vec<&str> = graphs.iter().map(|g| g.id.as_str()).collect();
     assert_eq!(ids, vec!["VG-001", "VG-002", "VG-003"]);
@@ -239,13 +239,13 @@ fn ac2_graphs_returned_in_ascending_numeric_order() {
 fn ac3_step_count_three_and_zero() {
     let tmp = init_workdir("ac3");
     // Empty graph minted via the new handler.
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
     // 3-step graph minted directly through StreamWriter.
     author_graph_with_steps(
         tmp.path(),
         "VG-002",
         "https://decision-cli.dev/ns/feature/FT-001",
-        "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli",
+        "https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli",
         3,
     );
     let graphs = run_list(tmp.path(), GraphListRequest::default());
@@ -261,9 +261,9 @@ fn ac3_step_count_three_and_zero() {
 #[test]
 fn ac4_filter_by_verifies_feature_then_tc() {
     let tmp = init_workdir("ac4");
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-002", "TC-013", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-003", "FT-002", "ENV-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-002", "TC-013", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-003", "FT-002", "BNCH-001-ephemeral-cli");
 
     // FT-001 filter returns only VG-001.
     let req = GraphListRequest {
@@ -292,9 +292,9 @@ fn ac4_filter_by_verifies_feature_then_tc() {
 fn ac5_filter_by_environment() {
     let tmp = init_workdir("ac5");
     // Author a second env so we have two to filter between.
-    let env2_req = decision_cli::verify_env_new::EnvNewRequest {
-        id: Some("ENV-002".to_string()),
-        env_type: "ephemeral-tempdir".to_string(),
+    let env2_req = decision_cli::verify_bench_new::BenchNewRequest {
+        id: Some("BNCH-002".to_string()),
+        bench_type: "ephemeral-tempdir".to_string(),
         safety_class: "isolated".to_string(),
         allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
         setup: None,
@@ -303,19 +303,19 @@ fn ac5_filter_by_environment() {
         fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     };
-    decision_cli::verify_env_new::run(&env2_req).expect("env new");
+    decision_cli::verify_bench_new::run(&env2_req).expect("env new");
 
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-002", "FT-001", "ENV-002");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-002", "FT-001", "BNCH-002");
 
     let req = GraphListRequest {
-        environment: Some("ENV-001-ephemeral-cli".to_string()),
+        environment: Some("BNCH-001-ephemeral-cli".to_string()),
         ..Default::default()
     };
     let graphs = run_list(tmp.path(), req);
     let ids: Vec<&str> = graphs.iter().map(|g| g.id.as_str()).collect();
     assert_eq!(ids, vec!["VG-001"]);
-    assert_eq!(graphs[0].environment, "ENV-001-ephemeral-cli");
+    assert_eq!(graphs[0].environment, "BNCH-001-ephemeral-cli");
 }
 
 // --- AC #6: combined filters apply conjunctively -----------------------
@@ -323,9 +323,9 @@ fn ac5_filter_by_environment() {
 #[test]
 fn ac6_combined_filters_are_conjunctive() {
     let tmp = init_workdir("ac6");
-    let env2_req = decision_cli::verify_env_new::EnvNewRequest {
-        id: Some("ENV-002".to_string()),
-        env_type: "ephemeral-tempdir".to_string(),
+    let env2_req = decision_cli::verify_bench_new::BenchNewRequest {
+        id: Some("BNCH-002".to_string()),
+        bench_type: "ephemeral-tempdir".to_string(),
         safety_class: "isolated".to_string(),
         allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
         setup: None,
@@ -334,23 +334,23 @@ fn ac6_combined_filters_are_conjunctive() {
         fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     };
-    decision_cli::verify_env_new::run(&env2_req).expect("env new");
+    decision_cli::verify_bench_new::run(&env2_req).expect("env new");
     // Four graphs across two features × two envs.
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-002", "FT-001", "ENV-002");
-    author_empty_graph(tmp.path(), "VG-003", "FT-002", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-004", "FT-002", "ENV-002");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-002", "FT-001", "BNCH-002");
+    author_empty_graph(tmp.path(), "VG-003", "FT-002", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-004", "FT-002", "BNCH-002");
 
     let req = GraphListRequest {
         verifies: Some("FT-001".to_string()),
-        environment: Some("ENV-001-ephemeral-cli".to_string()),
+        environment: Some("BNCH-001-ephemeral-cli".to_string()),
         ..Default::default()
     };
     let graphs = run_list(tmp.path(), req);
     assert_eq!(graphs.len(), 1);
     assert_eq!(graphs[0].id, "VG-001");
     assert_eq!(graphs[0].verifies, "FT-001");
-    assert_eq!(graphs[0].environment, "ENV-001-ephemeral-cli");
+    assert_eq!(graphs[0].environment, "BNCH-001-ephemeral-cli");
 }
 
 // --- AC #7: MCP parity (CLI JSON ≡ MCP `graphs` array) ----------------
@@ -358,13 +358,13 @@ fn ac6_combined_filters_are_conjunctive() {
 #[test]
 fn ac7_mcp_parity_with_cli_json_output() {
     let tmp = init_workdir("ac7");
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
-    author_empty_graph(tmp.path(), "VG-002", "TC-013", "ENV-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-002", "TC-013", "BNCH-001-ephemeral-cli");
     author_graph_with_steps(
         tmp.path(),
         "VG-003",
         "https://decision-cli.dev/ns/feature/FT-001",
-        "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli",
+        "https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli",
         2,
     );
 
@@ -448,7 +448,7 @@ fn binary_cli_table_format_smoke() {
 #[test]
 fn binary_cli_json_format_outputs_array() {
     let tmp = init_workdir("binary-json");
-    author_empty_graph(tmp.path(), "VG-001", "FT-001", "ENV-001-ephemeral-cli");
+    author_empty_graph(tmp.path(), "VG-001", "FT-001", "BNCH-001-ephemeral-cli");
     let output = Command::new(dec_binary())
         .arg("verify")
         .arg("graph")

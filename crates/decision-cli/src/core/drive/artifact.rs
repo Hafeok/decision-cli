@@ -13,7 +13,7 @@ pub enum ArtifactKind {
     TestCriterion,
     /// `VG-NNN[-suffix]` verification graph.
     VerificationGraph,
-    /// `ENV-NNN[-suffix]` verification environment.
+    /// `BNCH-NNN[-suffix]` verification environment.
     Environment,
     /// `ADR-NNN` architectural decision record.
     Adr,
@@ -39,7 +39,7 @@ pub struct ArtifactRef {
     /// Which artifact-class this reference is for.
     pub kind: ArtifactKind,
     /// The supplied short id verbatim (e.g. `FT-019` or
-    /// `ENV-001-ephemeral-cli`).
+    /// `BNCH-001-ephemeral-cli`).
     pub short_id: String,
 }
 
@@ -67,7 +67,7 @@ pub enum ParseError {
 }
 
 impl ArtifactRef {
-    /// Parse a short id like `FT-019` or `ENV-001-ephemeral-cli` into
+    /// Parse a short id like `FT-019` or `BNCH-001-ephemeral-cli` into
     /// the typed reference.
     pub fn parse(s: &str) -> Result<Self, ParseError> {
         if s.is_empty() {
@@ -123,7 +123,7 @@ mod tests {
             ("TC-027", ArtifactKind::TestCriterion),
             ("VG-100", ArtifactKind::VerificationGraph),
             ("ENV-002", ArtifactKind::Environment),
-            ("ENV-001-ephemeral-cli", ArtifactKind::Environment),
+            ("BNCH-001-ephemeral-cli", ArtifactKind::Environment),
             ("ADR-066", ArtifactKind::Adr),
         ] {
             let r = ArtifactRef::parse(s).expect(s);

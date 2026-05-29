@@ -1,8 +1,8 @@
-//! On-disk persistence for `dec verify env new` (FT-038).
+//! On-disk persistence for `dec verify bench new` (FT-038).
 //!
 //! Writes the canonical Turtle file produced by
-//! [`crate::core::ontology::verification_env::to_canonical_turtle`] under
-//! `.dec/verify/env/<id>.ttl`. The file is written **after** the
+//! [`crate::core::ontology::verification_bench::to_canonical_turtle`] under
+//! `.dec/verify/bench/<id>.ttl`. The file is written **after** the
 //! `StreamWriter` chokepoint approves the mutation; SHACL failures
 //! therefore never leave a partial file on disk (FT-038 §Invariants).
 
@@ -10,21 +10,21 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::{to_canonical_turtle, VerificationEnvironment};
+use crate::core::ontology::verification_bench::{to_canonical_turtle, VerificationBench};
 
-/// Write the env's Turtle representation to `.dec/verify/env/<id>.ttl`.
+/// Write the bench's Turtle representation to `.dec/verify/bench/<id>.ttl`.
 ///
 /// Creates the directory if missing. Returns the path written.
-pub fn write_env_file(
-    env_dir: &Path,
+pub fn write_bench_file(
+    bench_dir: &Path,
     id: &str,
-    env: &VerificationEnvironment,
+    bench: &VerificationBench,
 ) -> Result<PathBuf, HandlerError> {
-    fs::create_dir_all(env_dir).map_err(|e| HandlerError::Internal {
-        detail: format!("creating {dir}: {e}", dir = env_dir.display()),
+    fs::create_dir_all(bench_dir).map_err(|e| HandlerError::Internal {
+        detail: format!("creating {dir}: {e}", dir = bench_dir.display()),
     })?;
-    let path = env_dir.join(format!("{id}.ttl"));
-    let ttl = to_canonical_turtle(env);
+    let path = bench_dir.join(format!("{id}.ttl"));
+    let ttl = to_canonical_turtle(bench);
     fs::write(&path, ttl.as_bytes()).map_err(|e| HandlerError::Internal {
         detail: format!("writing {p}: {e}", p = path.display()),
     })?;
@@ -34,7 +34,7 @@ pub fn write_env_file(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::ontology::verification_env::SafetyClass;
+    use crate::core::ontology::verification_bench::SafetyClass;
     use std::path::PathBuf;
 
     struct TmpDir {
@@ -65,9 +65,9 @@ mod tests {
     #[test]
     fn writes_canonical_turtle_to_disk() {
         let dir = TmpDir::new("write");
-        let env = VerificationEnvironment {
-            id: "ENV-042".to_string(),
-            env_type: "ephemeral-tempdir".to_string(),
+        let bench = VerificationBench {
+            id: "BNCH-042".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             setup: None,
             teardown: None,
             allowed_ops: vec!["shell".to_string()],
@@ -75,9 +75,9 @@ mod tests {
             endpoint: None,
             fixture_source: None,
         };
-        let p = write_env_file(dir.path(), "ENV-042", &env).expect("write");
+        let p = write_bench_file(dir.path(), "BNCH-042", &bench).expect("write");
         let bytes = fs::read_to_string(&p).expect("read");
-        assert!(bytes.contains("a dec:VerificationEnvironment"));
-        assert!(bytes.contains("ENV-042"));
+        assert!(bytes.contains("a dec:VerificationBench"));
+        assert!(bytes.contains("BNCH-042"));
     }
 }

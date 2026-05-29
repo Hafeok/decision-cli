@@ -132,7 +132,7 @@ fn tc_183_defect_feedback_bundle_field_is_populated() {
     let seed = write_seed_definition(wd.path());
     init_run(wd.path(), DefinitionSource::File(seed)).expect("dec init");
 
-    // Fixture: FT-T1 with one TC, ENV-001-ephemeral-cli (auto-seeded by init),
+    // Fixture: FT-T1 with one TC, BNCH-001-ephemeral-cli (auto-seeded by init),
     // one graph in that env with one step linked to TC-Ta.
     let feature_id = "FT-T1";
     let tcs = ["TC-Ta"];
@@ -140,7 +140,7 @@ fn tc_183_defect_feedback_bundle_field_is_populated() {
     let _ = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-183".to_string()),
         verifies: feature_id.to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
     })
     .expect("seed graph");
@@ -209,7 +209,7 @@ fn tc_183_defect_feedback_bundle_field_is_populated() {
     // which TC-185 already exercises end-to-end.
 
     // Call the loader.
-    let records = load_for(wd.path(), feature_id, "ENV-001-ephemeral-cli");
+    let records = load_for(wd.path(), feature_id, "BNCH-001-ephemeral-cli");
     assert_eq!(
         records.len(),
         2,

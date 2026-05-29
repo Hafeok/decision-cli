@@ -128,7 +128,7 @@ fn build_stub_new_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {
     GraphProposal::new_new(
         bundle_hash,
         NewProposal {
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             steps,
             rationale: "TC-140 stub proposal".to_string(),
             addressed_feedback_iris: Vec::new(),
@@ -225,7 +225,7 @@ fn ac2_bundle_carries_endpoint_and_model_id_from_resolved_capability() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         // PrintOnly skips persistence — we only care about the bundle
         // that flowed into the worker.
         mode: GenerateMode::PrintOnly,
@@ -313,8 +313,8 @@ fn ac3_bundle_hash_covers_endpoint_and_model_id() {
         feature_spec: "stub spec".to_string(),
         relevant_tcs: vec![],
         target_environment: verify_graph_generate::bundle::EnvRecord {
-            id: "ENV-001-ephemeral-cli".to_string(),
-            env_type: "ephemeral-tempdir".to_string(),
+            id: "BNCH-001-ephemeral-cli".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             safety_class: "safe".to_string(),
             allowed_ops: vec!["fs-tempdir".to_string()],
             endpoint: None,

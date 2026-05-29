@@ -85,11 +85,11 @@ fn tc_080_dec_verify_graph_generate_skips_worker_when_matche() {
     let tcs = ["TC-Oa", "TC-Ob"];
     write_feature_fixture(wd.path(), feature_id, &tcs);
 
-    // Seed an existing VG that covers all of FT-O's TCs in ENV-001-ephemeral-cli.
+    // Seed an existing VG that covers all of FT-O's TCs in BNCH-001-ephemeral-cli.
     let graph_req = GraphNewRequest {
         id: Some("VG-099-existing".to_string()),
         verifies: feature_id.to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
     };
     let _ = verify_graph_new::run(&graph_req).expect("seed graph");
@@ -119,7 +119,7 @@ fn tc_080_dec_verify_graph_generate_skips_worker_when_matche() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Interactive,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),

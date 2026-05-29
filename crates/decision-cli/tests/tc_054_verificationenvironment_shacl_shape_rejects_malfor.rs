@@ -1,4 +1,4 @@
-//! TC-054 — VerificationEnvironment SHACL shape rejects malformed env.
+//! TC-054 — VerificationBench SHACL shape rejects malformed env.
 //!
 //! Validates: FT-035 · ADR-028.
 //! Spec: `.product/tests/TC-054-verificationenvironment-shacl-shape-rejects-malfor.md`
@@ -11,8 +11,8 @@
 
 use std::sync::Arc;
 
-use decision_cli::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
-use decision_cli::vocab::verify_env_graph;
+use decision_cli::core::ontology::verification_bench::{SafetyClass, VerificationBench};
+use decision_cli::vocab::verify_bench_graph;
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
 use oxigraph::model::{NamedNode, Quad, Subject, Term};
@@ -20,10 +20,10 @@ use oxigraph::store::Store;
 
 const STREAM_IRI: &str = "https://decision-cli.dev/stream/tc-054";
 
-fn ephemeral_env() -> VerificationEnvironment {
-    VerificationEnvironment {
-        id: "ENV-001-ephemeral-cli".to_string(),
-        env_type: "ephemeral-tempdir".to_string(),
+fn ephemeral_env() -> VerificationBench {
+    VerificationBench {
+        id: "BNCH-001-ephemeral-cli".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         setup: Some("mkdir -p $TMPDIR && cd $TMPDIR".to_string()),
         teardown: Some("rm -rf $TMPDIR".to_string()),
         allowed_ops: vec![
@@ -54,7 +54,7 @@ fn commit_quads(w: &StreamWriter, quads: Vec<Quad>) -> Result<(), String> {
 fn well_formed_ephemeral_env_commits() {
     let (store, w) = writer();
     let env = ephemeral_env();
-    let quads = env.to_quads(verify_env_graph());
+    let quads = env.to_quads(verify_bench_graph());
     commit_quads(&w, quads).expect("well-formed ephemeral env commits cleanly");
     // The env now lives in the store under its canonical IRI.
     let iri = env.iri();
@@ -69,8 +69,8 @@ fn well_formed_ephemeral_env_commits() {
 fn missing_env_type_is_rejected() {
     let (store, w) = writer();
     let env = ephemeral_env();
-    let mut quads = env.to_quads(verify_env_graph());
-    quads.retain(|q| q.predicate.as_str() != "https://decision-cli.dev/ns#envType");
+    let mut quads = env.to_quads(verify_bench_graph());
+    quads.retain(|q| q.predicate.as_str() != "https://decision-cli.dev/ns#benchType");
     let err = commit_quads(&w, quads.clone()).expect_err("missing envType must fail");
     assert!(
         err.contains("SHACL violation"),
@@ -97,7 +97,7 @@ fn missing_env_type_is_rejected() {
 fn unknown_safety_class_is_rejected() {
     let (_store, w) = writer();
     let env = ephemeral_env();
-    let mut quads = env.to_quads(verify_env_graph());
+    let mut quads = env.to_quads(verify_bench_graph());
     for q in quads.iter_mut() {
         if q.predicate.as_str() == "https://decision-cli.dev/ns#safetyClass" {
             if matches!(q.object, Term::Literal(_)) {
@@ -120,11 +120,11 @@ fn unknown_safety_class_is_rejected() {
 #[test]
 fn empty_allowed_ops_is_rejected() {
     let (_store, w) = writer();
-    let env = VerificationEnvironment {
+    let env = VerificationBench {
         allowed_ops: Vec::new(),
         ..ephemeral_env()
     };
-    let quads = env.to_quads(verify_env_graph());
+    let quads = env.to_quads(verify_bench_graph());
     let err = commit_quads(&w, quads).expect_err("empty allowedOps must fail");
     assert!(err.contains("SHACL violation"), "{err}");
     assert!(err.contains("allowedOps"), "{err}");
@@ -133,12 +133,12 @@ fn empty_allowed_ops_is_rejected() {
 #[test]
 fn remote_env_without_endpoint_is_rejected() {
     let (_store, w) = writer();
-    let env = VerificationEnvironment {
-        env_type: "remote-http".to_string(),
+    let env = VerificationBench {
+        bench_type: "remote-http".to_string(),
         endpoint: None,
         ..ephemeral_env()
     };
-    let quads = env.to_quads(verify_env_graph());
+    let quads = env.to_quads(verify_bench_graph());
     let err = commit_quads(&w, quads).expect_err("remote env without endpoint must fail");
     assert!(err.contains("SHACL violation"), "{err}");
     assert!(err.contains("endpoint"), "{err}");
@@ -147,35 +147,35 @@ fn remote_env_without_endpoint_is_rejected() {
 #[test]
 fn remote_env_with_endpoint_commits() {
     let (_store, w) = writer();
-    let env = VerificationEnvironment {
-        env_type: "remote-http".to_string(),
+    let env = VerificationBench {
+        bench_type: "remote-http".to_string(),
         endpoint: Some("https://dev.decision-cli.dev".to_string()),
         ..ephemeral_env()
     };
-    let quads = env.to_quads(verify_env_graph());
+    let quads = env.to_quads(verify_bench_graph());
     commit_quads(&w, quads).expect("remote env with endpoint commits cleanly");
 }
 
 #[test]
 fn local_env_with_endpoint_is_rejected() {
     let (_store, w) = writer();
-    let env = VerificationEnvironment {
-        env_type: "ephemeral-tempdir".to_string(),
+    let env = VerificationBench {
+        bench_type: "ephemeral-tempdir".to_string(),
         endpoint: Some("https://example.com".to_string()),
         ..ephemeral_env()
     };
-    let quads = env.to_quads(verify_env_graph());
+    let quads = env.to_quads(verify_bench_graph());
     let err = commit_quads(&w, quads).expect_err("local env with endpoint must fail");
     assert!(err.contains("SHACL violation"), "{err}");
     assert!(err.contains("endpoint"), "{err}");
 }
 
 #[test]
-fn embedded_shapes_declare_verification_environment_shape() {
+fn embedded_shapes_declare_verification_benchironment_shape() {
     use decision_cli::OntologyHandle;
     let h = OntologyHandle::load().expect("load ontology");
     let target =
-        NamedNode::new("https://decision-cli.dev/ns#VerificationEnvironment").expect("class iri");
+        NamedNode::new("https://decision-cli.dev/ns#VerificationBench").expect("class iri");
     let mut has_shape = false;
     for q in h.shapes_graph() {
         if q.predicate.as_str() == "http://www.w3.org/ns/shacl#targetClass" {
@@ -189,6 +189,6 @@ fn embedded_shapes_declare_verification_environment_shape() {
     }
     assert!(
         has_shape,
-        "shapes.ttl must declare a sh:NodeShape with sh:targetClass dec:VerificationEnvironment"
+        "shapes.ttl must declare a sh:NodeShape with sh:targetClass dec:VerificationBench"
     );
 }

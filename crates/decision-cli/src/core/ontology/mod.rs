@@ -29,7 +29,7 @@ mod per_type_shapes;
 pub mod role_binding;
 pub mod session_record;
 pub mod verdict;
-pub mod verification_env;
+pub mod verification_bench;
 pub mod verification_graph;
 pub mod verification_result;
 pub mod worker_image;

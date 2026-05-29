@@ -96,7 +96,7 @@ fn build_new_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {
     GraphProposal::new_new(
         bundle_hash,
         NewProposal {
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             steps,
             rationale: "TC-082 mock proposal".to_string(),
             addressed_feedback_iris: Vec::new(),
@@ -124,7 +124,7 @@ fn tc_082_mcp_generate_then_accept_refuses_stale_proposals_a() {
     });
     let gen_req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::PrintOnly, // do not auto-persist
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),
@@ -140,7 +140,7 @@ fn tc_082_mcp_generate_then_accept_refuses_stale_proposals_a() {
     let other_graph = GraphNewRequest {
         id: Some("VG-150-concurrent".to_string()),
         verifies: feature_id.to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
     };
     let _ = verify_graph_new::run(&other_graph).expect("seed concurrent graph");
@@ -162,7 +162,7 @@ fn tc_082_mcp_generate_then_accept_refuses_stale_proposals_a() {
         proposal: proposal_t1,
         proposal_token: token_t1,
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),
     };
@@ -208,7 +208,7 @@ fn tc_082_accept_refuses_token_mismatch() {
         proposal,
         proposal_token: "DEADBEEFDEADBEEF".to_string(),
         feature_id: "FT-MTok".to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),
     };

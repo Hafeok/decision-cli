@@ -1,4 +1,4 @@
-//! On-disk Turtle (de)serialisation for `dec:VerificationEnvironment`.
+//! On-disk Turtle (de)serialisation for `dec:VerificationBench`.
 //!
 //! On-disk Turtle is authoritative per ADR-028 §State. The canonical
 //! writer here produces byte-identical output for the same input, which
@@ -13,18 +13,18 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_PREFIX, IRI_DEC_ENV_TYPE,
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_BENCH_PREFIX, IRI_DEC_BENCH_TYPE,
     IRI_DEC_FIXTURE_SOURCE, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_TEARDOWN,
-    IRI_DEC_VERIFICATION_ENVIRONMENT,
+    IRI_DEC_VERIFICATION_BENCH,
 };
 
-use super::types::{SafetyClass, VerificationEnvironment, RDF_FIRST, RDF_NIL, RDF_REST};
+use super::types::{SafetyClass, VerificationBench, RDF_FIRST, RDF_NIL, RDF_REST};
 
 /// Failures produced by [`from_turtle`].
 #[derive(Debug, Error)]
 pub enum EnvIoError {
     /// `fs::read` failure (missing file, permission denied, etc.).
-    #[error("failed to read env file {path}: {source}")]
+    #[error("failed to read bench file {path}: {source}")]
     ReadFailed {
         /// Path that failed to load.
         path: PathBuf,
@@ -40,10 +40,10 @@ pub enum EnvIoError {
         /// Parser-supplied diagnostic.
         detail: String,
     },
-    /// File parses, but its content does not form a valid env.
-    #[error("env file {path} has malformed shape: {detail}")]
+    /// File parses, but its content does not form a valid bench.
+    #[error("bench file {path} has malformed shape: {detail}")]
     MalformedShape {
-        /// Path whose env shape is invalid.
+        /// Path whose bench shape is invalid.
         path: PathBuf,
         /// Why the shape is invalid.
         detail: String,
@@ -51,7 +51,7 @@ pub enum EnvIoError {
 }
 
 /// Parse a single environment from a `.ttl` file on disk.
-pub fn from_turtle(path: &Path) -> Result<VerificationEnvironment, EnvIoError> {
+pub fn from_turtle(path: &Path) -> Result<VerificationBench, EnvIoError> {
     let bytes = fs::read(path).map_err(|source| EnvIoError::ReadFailed {
         path: path.to_path_buf(),
         source,
@@ -61,12 +61,12 @@ pub fn from_turtle(path: &Path) -> Result<VerificationEnvironment, EnvIoError> {
 
 /// Variant of [`from_turtle`] that consumes bytes directly. The `path`
 /// argument is only used for error reporting.
-pub fn from_turtle_bytes(path: &Path, bytes: &[u8]) -> Result<VerificationEnvironment, EnvIoError> {
+pub fn from_turtle_bytes(path: &Path, bytes: &[u8]) -> Result<VerificationBench, EnvIoError> {
     let store = Store::new().map_err(|e| EnvIoError::ParseFailed {
         path: path.to_path_buf(),
         detail: e.to_string(),
     })?;
-    let graph_iri = "urn:decision-cli:env-parse-staging";
+    let graph_iri = "urn:decision-cli:bench-parse-staging";
     let graph = NamedNode::new_unchecked(graph_iri);
     let parser = RdfParser::from_format(RdfFormat::Turtle)
         .without_named_graphs()
@@ -84,7 +84,7 @@ pub fn from_turtle_bytes(path: &Path, bytes: &[u8]) -> Result<VerificationEnviro
 fn find_env_subject(store: &Store, path: &Path) -> Result<NamedNode, EnvIoError> {
     let q = format!(
         "SELECT ?s WHERE {{ GRAPH ?g {{ ?s a <{cls}> }} }}",
-        cls = IRI_DEC_VERIFICATION_ENVIRONMENT,
+        cls = IRI_DEC_VERIFICATION_BENCH,
     );
     let res = store
         .query(q.as_str())
@@ -95,7 +95,7 @@ fn find_env_subject(store: &Store, path: &Path) -> Result<NamedNode, EnvIoError>
     let oxigraph::sparql::QueryResults::Solutions(sols) = res else {
         return Err(EnvIoError::MalformedShape {
             path: path.to_path_buf(),
-            detail: "SPARQL query for VerificationEnvironment returned non-solutions".to_string(),
+            detail: "SPARQL query for VerificationBench returned non-solutions".to_string(),
         });
     };
     let subjects = collect_env_subjects(sols, path)?;
@@ -126,12 +126,12 @@ fn pick_single_env_subject(
     match subjects.len() {
         0 => Err(EnvIoError::MalformedShape {
             path: path.to_path_buf(),
-            detail: "no dec:VerificationEnvironment subject in file".to_string(),
+            detail: "no dec:VerificationBench subject in file".to_string(),
         }),
         1 => Ok(subjects.remove(0)),
         n => Err(EnvIoError::MalformedShape {
             path: path.to_path_buf(),
-            detail: format!("expected exactly one VerificationEnvironment subject, found {n}"),
+            detail: format!("expected exactly one VerificationBench subject, found {n}"),
         }),
     }
 }
@@ -140,13 +140,13 @@ fn extract_env(
     store: &Store,
     subject: &NamedNode,
     path: &Path,
-) -> Result<VerificationEnvironment, EnvIoError> {
+) -> Result<VerificationBench, EnvIoError> {
     let id = extract_id(subject, path)?;
-    let env_type = require_literal(
+    let bench_type = require_literal(
         store,
         subject,
-        IRI_DEC_ENV_TYPE,
-        "missing dec:envType",
+        IRI_DEC_BENCH_TYPE,
+        "missing dec:benchType",
         path,
     )?;
     let safety_class = extract_safety_class(store, subject, path)?;
@@ -155,9 +155,9 @@ fn extract_env(
     let endpoint = single_literal(store, subject, IRI_DEC_ENDPOINT, path)?;
     let fixture_source = single_literal(store, subject, IRI_DEC_FIXTURE_SOURCE, path)?;
     let allowed_ops = read_allowed_ops_list(store, subject, path)?;
-    Ok(VerificationEnvironment {
+    Ok(VerificationBench {
         id,
-        env_type,
+        bench_type,
         setup,
         teardown,
         allowed_ops,
@@ -173,7 +173,7 @@ fn extract_id(subject: &NamedNode, path: &Path) -> Result<String, EnvIoError> {
         detail: format!(
             "subject IRI {iri:?} does not start with {prefix}",
             iri = subject.as_str(),
-            prefix = IRI_DEC_ENV_PREFIX
+            prefix = IRI_DEC_BENCH_PREFIX
         ),
     })
 }
@@ -210,7 +210,7 @@ fn extract_safety_class(
 }
 
 fn id_from_iri(iri: &str) -> Option<String> {
-    iri.strip_prefix(IRI_DEC_ENV_PREFIX).map(|s| s.to_string())
+    iri.strip_prefix(IRI_DEC_BENCH_PREFIX).map(|s| s.to_string())
 }
 
 fn single_literal(

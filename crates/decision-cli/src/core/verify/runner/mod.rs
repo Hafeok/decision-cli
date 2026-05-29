@@ -31,14 +31,14 @@ use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
 
 use crate::core::ontology::verdict::Verdict;
-use crate::core::ontology::verification_env::{from_turtle as env_from_turtle, VerificationEnvironment};
+use crate::core::ontology::verification_bench::{from_turtle as bench_from_turtle, VerificationBench};
 use crate::core::ontology::verification_graph::{from_turtle as graph_from_turtle, VerificationGraph};
 use crate::core::ontology::verification_result::{
     to_canonical_turtle, StepOutcome, VerificationGraphResult,
 };
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
-use crate::core::vocab::{verify_result_graph, IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX, IRI_DEC_VERIFY_RESULT_PREFIX};
+use crate::core::vocab::{verify_result_graph, IRI_DEC_BENCH_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX, IRI_DEC_VERIFY_RESULT_PREFIX};
 use crate::core::StreamWriter;
 
 use self::context::RunContext;
@@ -210,20 +210,20 @@ fn load_graph(workdir: &Path, graph_iri: &NamedNode) -> Result<VerificationGraph
 fn load_env(
     workdir: &Path,
     graph: &VerificationGraph,
-) -> Result<VerificationEnvironment, RunnerError> {
+) -> Result<VerificationBench, RunnerError> {
     let env_iri = graph.environment.as_str();
     let env_id = env_iri
-        .strip_prefix(IRI_DEC_ENV_PREFIX)
+        .strip_prefix(IRI_DEC_BENCH_PREFIX)
         .unwrap_or(env_iri);
-    let dir = workdir.join(".dec").join("verify").join("env");
+    let dir = workdir.join(".dec").join("verify").join("bench");
     let path = dir.join(format!("{env_id}.ttl"));
     if !path.is_file() {
         return Err(RunnerError::ArtifactNotFound {
-            kind: "VerificationEnvironment".into(),
+            kind: "VerificationBench".into(),
             id: env_id.to_string(),
         });
     }
-    env_from_turtle(&path).map_err(|e| RunnerError::Internal {
+    bench_from_turtle(&path).map_err(|e| RunnerError::Internal {
         detail: format!("parsing env turtle: {e}"),
     })
 }
@@ -280,7 +280,7 @@ fn derive_verdict(graph: &VerificationGraph, traces: &[StepRunTrace]) -> (Verdic
 fn persist_rejected(
     workdir: &Path,
     graph: &VerificationGraph,
-    env: &VerificationEnvironment,
+    env: &VerificationBench,
     run_activity: &NamedNode,
     runner_agent: &NamedNode,
     rationale: String,

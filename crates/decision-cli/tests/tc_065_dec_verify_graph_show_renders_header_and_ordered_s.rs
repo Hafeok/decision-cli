@@ -107,7 +107,7 @@ fn init_workdir(tag: &str) -> TmpDir {
 ///
 /// Steps 1..=3 also satisfy AC #2's ordering assertion.
 fn author_fixture_graph(workdir: &Path, id: &str) {
-    let env_iri = "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli";
+    let env_iri = "https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli";
     let verifies_iri = "https://decision-cli.dev/ns/feature/FT-001";
     let steps = vec![
         VerificationStep::new(
@@ -298,7 +298,7 @@ fn ac4_json_format_emits_graph_document_with_ordered_steps() {
     assert!(v.is_object(), "expected object, got {s}");
     assert_eq!(v["id"], "VG-001");
     assert_eq!(v["verifies"], "FT-001");
-    assert_eq!(v["environment"], "ENV-001-ephemeral-cli");
+    assert_eq!(v["environment"], "BNCH-001-ephemeral-cli");
     let steps = v["steps"].as_array().expect("steps array");
     assert_eq!(steps.len(), 4, "expected four steps, got {steps:?}");
     assert_eq!(steps[0]["kind"], "shell-command");

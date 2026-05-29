@@ -13,7 +13,7 @@
 
 mod assemble;
 mod candidates;
-mod env_lookup;
+mod bench_lookup;
 mod greedy;
 mod query;
 mod report;
@@ -36,7 +36,7 @@ pub enum MatchError {
     /// Unknown feature, environment, or candidate graph.
     #[error("not found: {kind} '{id}'")]
     ArtifactNotFound {
-        /// Artifact kind label (e.g. `"Feature"`, `"VerificationEnvironment"`).
+        /// Artifact kind label (e.g. `"Feature"`, `"VerificationBench"`).
         kind: String,
         /// The id the caller supplied.
         id: String,
@@ -79,10 +79,10 @@ pub fn best_matching_graphs(
 
     let feature_iri = feature_iri_for(feature);
     let all_tcs = resolve_feature_tc_iris(product_root, feature)?;
-    let env_iri = env_lookup::env_iri_for(env);
-    if !env_lookup::env_exists(store, &env_iri)? {
+    let env_iri = bench_lookup::bench_iri_for(env);
+    if !bench_lookup::bench_exists(store, &env_iri)? {
         return Err(MatchError::ArtifactNotFound {
-            kind: "VerificationEnvironment".to_string(),
+            kind: "VerificationBench".to_string(),
             id: env.to_string(),
         });
     }

@@ -34,7 +34,7 @@ fn vgr(id: &str, verdict: Verdict, covers: &[&str]) -> VerificationGraphResult {
     VerificationGraphResult {
         id: format!("https://decision-cli.dev/ns/result/{id}"),
         result_of: "https://decision-cli.dev/ns/graph/VG-FIXTURE".into(),
-        ran_in_environment: "https://decision-cli.dev/ns/env/ENV-001".into(),
+        ran_in_environment: "https://decision-cli.dev/ns/bench/BNCH-001".into(),
         verdict,
         started_at: "2026-05-26T00:00:00Z".into(),
         ended_at: "2026-05-26T00:00:01Z".into(),

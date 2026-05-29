@@ -102,7 +102,7 @@ fn build_vg_x() -> VerificationGraph {
     VerificationGraph::new(
         "VG-X",
         ArtifactRef(NamedNode::new_unchecked(feature_iri_for("FT-X"))),
-        NamedNode::new_unchecked("https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli"),
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli"),
         vec![step0, step1],
     )
 }

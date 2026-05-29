@@ -8,7 +8,7 @@ use oxigraph::model::{NamedNode, Quad, Subject, Term};
 use oxigraph::store::Store;
 
 use crate::core::vocab::{
-    IRI_DEC_ENVIRONMENT, IRI_DEC_STEPS, IRI_DEC_VERIFICATION_GRAPH, IRI_DEC_VERIFICATION_STEP,
+    IRI_DEC_BENCH, IRI_DEC_STEPS, IRI_DEC_VERIFICATION_GRAPH, IRI_DEC_VERIFICATION_STEP,
 };
 
 use super::super::safety::{OpSource, SafetyError};
@@ -81,7 +81,7 @@ pub(super) fn step_env_iri(
 fn env_via_inserts(inserts: &[Quad], step: &NamedNode) -> Option<NamedNode> {
     for g in graphs_listing_step(inserts, step) {
         for q in inserts {
-            if q.predicate.as_str() != IRI_DEC_ENVIRONMENT {
+            if q.predicate.as_str() != IRI_DEC_BENCH {
                 continue;
             }
             if !matches_subject(q, &g) {
@@ -109,7 +109,7 @@ fn env_via_store(store: &Store, step: &NamedNode) -> Option<NamedNode> {
     {
         let list_head = quad.subject;
         let parent = walk_back_to_graph_in_store(store, &list_head)?;
-        let env_pred = NamedNode::new_unchecked(IRI_DEC_ENVIRONMENT);
+        let env_pred = NamedNode::new_unchecked(IRI_DEC_BENCH);
         for q in store
             .quads_for_pattern(
                 Some(Subject::NamedNode(parent.clone()).as_ref()),

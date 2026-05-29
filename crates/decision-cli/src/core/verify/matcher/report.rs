@@ -10,8 +10,8 @@ use oxigraph::model::NamedNode;
 use crate::core::ontology::verification_graph::ArtifactRef;
 use crate::core::verify::coverage::{GraphId, TcId};
 
-/// Stable IRI of a `dec:VerificationEnvironment`
-/// (`https://decision-cli.dev/ns/env/ENV-…`).
+/// Stable IRI of a `dec:VerificationBench`
+/// (`https://decision-cli.dev/ns/bench/ENV-…`).
 pub type EnvId = String;
 
 /// One graph in a match result. Lists the TCs *this graph alone*

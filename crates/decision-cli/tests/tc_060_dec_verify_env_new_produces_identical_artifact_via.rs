@@ -1,6 +1,6 @@
 //! TC-060 — `dec verify env new` produces identical artifact via CLI and MCP.
 //!
-//! Spec: `.product/tests/TC-060-dec-verify-env-new-produces-identical-artifact-via.md`
+//! Spec: `.product/tests/TC-060-dec-verify-bench-new-produces-identical-artifact-via.md`
 //! Validates: FT-038 · ADR-028 · ADR-029.
 //!
 //! The single-handler discipline (ADR-029) guarantees CLI and MCP take the
@@ -15,9 +15,9 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use decision_cli::core::handler::{Error as HandlerError, Request};
-use decision_cli::core::ontology::verification_env::from_turtle;
-use decision_cli::verify_env_new::{
-    self, canonical_turtle, parse_request, EnvNewRequest, EnvNewResponse,
+use decision_cli::core::ontology::verification_bench::from_turtle;
+use decision_cli::verify_bench_new::{
+    self, canonical_turtle, parse_request, BenchNewRequest, BenchNewResponse,
 };
 use serde_json::{json, Value};
 
@@ -98,7 +98,7 @@ fn init_workdir(tag: &str) -> TmpDir {
 
 // --- helper: build a Request via the MCP tool descriptor ------------------
 
-fn invoke_mcp_tool(workdir: &Path, args: Value) -> Result<EnvNewResponse, HandlerError> {
+fn invoke_mcp_tool(workdir: &Path, args: Value) -> Result<BenchNewResponse, HandlerError> {
     // Bind the workdir into the request — production code threads this
     // via features::mcp::build_registry; for the unit-level test we
     // construct the Request directly.
@@ -106,17 +106,17 @@ fn invoke_mcp_tool(workdir: &Path, args: Value) -> Result<EnvNewResponse, Handle
     obj.as_object_mut()
         .expect("args is object")
         .insert("workdir".to_string(), json!(workdir.to_string_lossy()));
-    let req = Request::new(verify_env_new::TOOL_NAME, obj);
+    let req = Request::new(verify_bench_new::TOOL_NAME, obj);
     let parsed = parse_request(&req)?;
-    verify_env_new::run(&parsed)
+    verify_bench_new::run(&parsed)
 }
 
 // --- helper: CLI-equivalent invocation ------------------------------------
 
-fn invoke_cli(workdir: &Path, req: EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
+fn invoke_cli(workdir: &Path, req: BenchNewRequest) -> Result<BenchNewResponse, HandlerError> {
     let mut req = req;
     req.workdir = Some(workdir.to_path_buf());
-    verify_env_new::run(&req)
+    verify_bench_new::run(&req)
 }
 
 // --- AC #1 + #2: happy paths -------------------------------------------------
@@ -124,9 +124,9 @@ fn invoke_cli(workdir: &Path, req: EnvNewRequest) -> Result<EnvNewResponse, Hand
 #[test]
 fn cli_happy_path_creates_env_file_and_returns_minted_id() {
     let tmp = init_workdir("cli");
-    let req = EnvNewRequest {
+    let req = BenchNewRequest {
         id: None,
-        env_type: "ephemeral-tempdir".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         safety_class: "isolated".to_string(),
         allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
         setup: None,
@@ -136,11 +136,11 @@ fn cli_happy_path_creates_env_file_and_returns_minted_id() {
         workdir: None,
     };
     let outcome = invoke_cli(tmp.path(), req).expect("env new succeeds");
-    // Seed env already lives as ENV-001-ephemeral-cli; first mint = ENV-002.
-    assert_eq!(outcome.id, "ENV-002", "first user-minted id");
+    // Seed env already lives as BNCH-001-ephemeral-cli; first mint = BNCH-002.
+    assert_eq!(outcome.id, "BNCH-002", "first user-minted id");
     assert!(outcome.path.exists(), "env file must be written");
     let ttl = std::fs::read_to_string(&outcome.path).expect("read");
-    assert!(ttl.contains("a dec:VerificationEnvironment"));
+    assert!(ttl.contains("a dec:VerificationBench"));
     assert!(ttl.contains("\"ephemeral-tempdir\""));
 }
 
@@ -150,13 +150,13 @@ fn mcp_happy_path_creates_env_file_with_structured_response() {
     let out = invoke_mcp_tool(
         tmp.path(),
         json!({
-            "env_type": "ephemeral-tempdir",
+            "bench_type": "ephemeral-tempdir",
             "safety_class": "isolated",
             "allowed_ops": ["shell", "filesystem"],
         }),
     )
     .expect("mcp env new");
-    assert_eq!(out.id, "ENV-002");
+    assert_eq!(out.id, "BNCH-002");
     assert!(out.path.exists());
 }
 
@@ -166,9 +166,9 @@ fn mcp_happy_path_creates_env_file_with_structured_response() {
 fn cli_and_mcp_produce_byte_equal_turtle_modulo_id() {
     let cli_tmp = init_workdir("byte-cli");
     let mcp_tmp = init_workdir("byte-mcp");
-    let req = EnvNewRequest {
+    let req = BenchNewRequest {
         id: None,
-        env_type: "ephemeral-tempdir".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         safety_class: "isolated".to_string(),
         allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
         setup: None,
@@ -181,13 +181,13 @@ fn cli_and_mcp_produce_byte_equal_turtle_modulo_id() {
     let mcp_out = invoke_mcp_tool(
         mcp_tmp.path(),
         json!({
-            "env_type": "ephemeral-tempdir",
+            "bench_type": "ephemeral-tempdir",
             "safety_class": "isolated",
             "allowed_ops": ["shell", "filesystem"],
         }),
     )
     .expect("mcp");
-    // Both surfaces independently mint ENV-002 (seed = ENV-001).
+    // Both surfaces independently mint BNCH-002 (seed = BNCH-001).
     assert_eq!(cli_out.id, mcp_out.id);
     // Parse both files back to memory and compare structurally — the
     // canonical Turtle writer is deterministic, but we compare via the
@@ -215,9 +215,9 @@ fn missing_endpoint_on_remote_type_rejected_on_both_surfaces() {
     // same Error::InvalidArgument shape.
     let cli_err = invoke_cli(
         cli_tmp.path(),
-        EnvNewRequest {
+        BenchNewRequest {
             id: None,
-            env_type: "remote-http".to_string(),
+            bench_type: "remote-http".to_string(),
             safety_class: "shared-non-destructive".to_string(),
             allowed_ops: vec!["http".to_string()],
             setup: None,
@@ -231,7 +231,7 @@ fn missing_endpoint_on_remote_type_rejected_on_both_surfaces() {
     let mcp_err = invoke_mcp_tool(
         mcp_tmp.path(),
         json!({
-            "env_type": "remote-http",
+            "bench_type": "remote-http",
             "safety_class": "shared-non-destructive",
             "allowed_ops": ["http"],
         }),
@@ -263,9 +263,9 @@ fn caller_supplied_id_collision_fails_with_duplicate_id() {
     let tmp = init_workdir("collide");
     let first = invoke_cli(
         tmp.path(),
-        EnvNewRequest {
+        BenchNewRequest {
             id: Some("ENV-007".to_string()),
-            env_type: "ephemeral-tempdir".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             safety_class: "isolated".to_string(),
             allowed_ops: vec!["shell".to_string()],
             setup: None,
@@ -279,9 +279,9 @@ fn caller_supplied_id_collision_fails_with_duplicate_id() {
     assert_eq!(first.id, "ENV-007");
     let err = invoke_cli(
         tmp.path(),
-        EnvNewRequest {
+        BenchNewRequest {
             id: Some("ENV-007".to_string()),
-            env_type: "ephemeral-tempdir".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             safety_class: "isolated".to_string(),
             allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
             setup: None,
@@ -305,7 +305,7 @@ fn mcp_caller_supplied_id_collision_matches_cli_error() {
         tmp.path(),
         json!({
             "id": "ENV-007",
-            "env_type": "ephemeral-tempdir",
+            "bench_type": "ephemeral-tempdir",
             "safety_class": "isolated",
             "allowed_ops": ["shell"],
         }),
@@ -315,7 +315,7 @@ fn mcp_caller_supplied_id_collision_matches_cli_error() {
         tmp.path(),
         json!({
             "id": "ENV-007",
-            "env_type": "ephemeral-tempdir",
+            "bench_type": "ephemeral-tempdir",
             "safety_class": "isolated",
             "allowed_ops": ["filesystem"],
         }),
@@ -334,9 +334,9 @@ fn remote_env_with_endpoint_succeeds() {
     let tmp = init_workdir("remote-ok");
     let out = invoke_cli(
         tmp.path(),
-        EnvNewRequest {
+        BenchNewRequest {
             id: None,
-            env_type: "remote-http".to_string(),
+            bench_type: "remote-http".to_string(),
             safety_class: "shared-non-destructive".to_string(),
             allowed_ops: vec!["http".to_string()],
             setup: None,
@@ -349,6 +349,6 @@ fn remote_env_with_endpoint_succeeds() {
     .expect("remote with endpoint must succeed");
     assert!(out.path.exists());
     let env = from_turtle(&out.path).expect("parse");
-    assert_eq!(env.env_type, "remote-http");
+    assert_eq!(env.bench_type, "remote-http");
     assert_eq!(env.endpoint.as_deref(), Some("https://example.com"));
 }

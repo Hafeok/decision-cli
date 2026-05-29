@@ -9,7 +9,7 @@ use oxigraph::store::Store;
 use super::*;
 use crate::core::stream_writer::StreamWriter;
 use crate::core::vocab::{
-    feature_ref, IRI_DEC_ENVIRONMENT, IRI_DEC_GRAPH_AUTO_DISPATCH_LEDGER,
+    feature_ref, IRI_DEC_BENCH, IRI_DEC_GRAPH_AUTO_DISPATCH_LEDGER,
     IRI_DEC_VERIFY_GRAPH_AUTHOR_DISPATCH_EVENT,
 };
 
@@ -78,7 +78,7 @@ fn dispatch_event_carries_required_predicates() {
     let env_lit = store
         .quads_for_pattern(
             Some(oxigraph::model::Subject::NamedNode(ev.iri.clone()).as_ref()),
-            Some(NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT)),
+            Some(NamedNodeRef::new_unchecked(IRI_DEC_BENCH)),
             None,
             None,
         )

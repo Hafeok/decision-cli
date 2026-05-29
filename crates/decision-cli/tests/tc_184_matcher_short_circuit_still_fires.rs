@@ -90,7 +90,7 @@ fn tc_184_matcher_short_circuit_still_fires() {
     let _ = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-184".to_string()),
         verifies: feature_id.to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
     })
     .expect("seed graph");
@@ -116,7 +116,7 @@ fn tc_184_matcher_short_circuit_still_fires() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Interactive,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),

@@ -1,17 +1,17 @@
-//! Unit tests for `VerificationEnvironment` types, SHACL validation, and I/O.
+//! Unit tests for `VerificationBench` types, SHACL validation, and I/O.
 
 use std::path::PathBuf;
 
 use super::io::from_turtle_bytes;
 use super::shacl::validate_quads;
-use super::types::{SafetyClass, VerificationEnvironment};
+use super::types::{SafetyClass, VerificationBench};
 use super::write::to_canonical_turtle;
-use crate::core::vocab::verify_env_graph;
+use crate::core::vocab::verify_bench_graph;
 
-fn ephemeral_cli_env() -> VerificationEnvironment {
-    VerificationEnvironment {
-        id: "ENV-001-ephemeral-cli".to_string(),
-        env_type: "ephemeral-tempdir".to_string(),
+fn ephemeral_cli_env() -> VerificationBench {
+    VerificationBench {
+        id: "BNCH-001-ephemeral-cli".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         setup: Some("mkdir -p $TMPDIR && cd $TMPDIR".to_string()),
         teardown: Some("rm -rf $TMPDIR".to_string()),
         allowed_ops: vec![
@@ -39,27 +39,27 @@ fn safety_class_round_trips() {
 
 #[test]
 fn ephemeral_env_passes_shacl() {
-    let env = ephemeral_cli_env();
-    let quads = env.to_quads(verify_env_graph());
-    validate_quads(&quads).expect("ephemeral-cli env passes SHACL");
+    let bench = ephemeral_cli_env();
+    let quads = bench.to_quads(verify_bench_graph());
+    validate_quads(&quads).expect("ephemeral-cli bench passes SHACL");
 }
 
 #[test]
-fn missing_env_type_fails_shacl() {
-    let env = ephemeral_cli_env();
-    let mut quads = env.to_quads(verify_env_graph());
-    quads.retain(|q| q.predicate.as_str() != "https://decision-cli.dev/ns#envType");
+fn missing_bench_type_fails_shacl() {
+    let bench = ephemeral_cli_env();
+    let mut quads = bench.to_quads(verify_bench_graph());
+    quads.retain(|q| q.predicate.as_str() != "https://decision-cli.dev/ns#benchType");
     let err = validate_quads(&quads).expect_err("missing envType must fail");
     assert!(err.report.contains("envType"), "{}", err.report);
 }
 
 #[test]
 fn unknown_safety_class_fails_shacl() {
-    let env = VerificationEnvironment {
+    let bench = VerificationBench {
         safety_class: SafetyClass::Isolated,
         ..ephemeral_cli_env()
     };
-    let mut quads = env.to_quads(verify_env_graph());
+    let mut quads = bench.to_quads(verify_bench_graph());
     // Surgically replace the safety class literal with "yolo".
     for q in quads.iter_mut() {
         if q.predicate.as_str() == "https://decision-cli.dev/ns#safetyClass" {
@@ -75,63 +75,63 @@ fn unknown_safety_class_fails_shacl() {
 
 #[test]
 fn empty_allowed_ops_fails_shacl() {
-    let env = VerificationEnvironment {
+    let bench = VerificationBench {
         allowed_ops: Vec::new(),
         ..ephemeral_cli_env()
     };
-    let quads = env.to_quads(verify_env_graph());
+    let quads = bench.to_quads(verify_bench_graph());
     let err = validate_quads(&quads).expect_err("empty allowedOps must fail");
     assert!(err.report.contains("allowedOps"), "{}", err.report);
 }
 
 #[test]
 fn remote_env_without_endpoint_fails_shacl() {
-    let env = VerificationEnvironment {
-        env_type: "remote-http".to_string(),
+    let bench = VerificationBench {
+        bench_type: "remote-http".to_string(),
         endpoint: None,
         ..ephemeral_cli_env()
     };
-    let quads = env.to_quads(verify_env_graph());
-    let err = validate_quads(&quads).expect_err("remote env requires endpoint");
+    let quads = bench.to_quads(verify_bench_graph());
+    let err = validate_quads(&quads).expect_err("remote bench requires endpoint");
     assert!(err.report.contains("endpoint"), "{}", err.report);
 }
 
 #[test]
 fn remote_env_with_endpoint_passes_shacl() {
-    let env = VerificationEnvironment {
-        env_type: "remote-http".to_string(),
+    let bench = VerificationBench {
+        bench_type: "remote-http".to_string(),
         endpoint: Some("https://dev.decision-cli.dev".to_string()),
         ..ephemeral_cli_env()
     };
-    let quads = env.to_quads(verify_env_graph());
-    validate_quads(&quads).expect("remote env with endpoint passes");
+    let quads = bench.to_quads(verify_bench_graph());
+    validate_quads(&quads).expect("remote bench with endpoint passes");
 }
 
 #[test]
 fn local_env_with_endpoint_fails_shacl() {
-    let env = VerificationEnvironment {
-        env_type: "ephemeral-tempdir".to_string(),
+    let bench = VerificationBench {
+        bench_type: "ephemeral-tempdir".to_string(),
         endpoint: Some("https://example.com".to_string()),
         ..ephemeral_cli_env()
     };
-    let quads = env.to_quads(verify_env_graph());
-    let err = validate_quads(&quads).expect_err("local env must not carry endpoint");
+    let quads = bench.to_quads(verify_bench_graph());
+    let err = validate_quads(&quads).expect_err("local bench must not carry endpoint");
     assert!(err.report.contains("endpoint"), "{}", err.report);
 }
 
 #[test]
 fn canonical_turtle_round_trips() {
-    let env = ephemeral_cli_env();
-    let ttl = to_canonical_turtle(&env);
+    let bench = ephemeral_cli_env();
+    let ttl = to_canonical_turtle(&bench);
     let parsed =
         from_turtle_bytes(&PathBuf::from("test.ttl"), ttl.as_bytes()).expect("round-trip parse");
-    assert_eq!(parsed, env);
+    assert_eq!(parsed, bench);
 }
 
 #[test]
 fn canonical_turtle_is_deterministic() {
-    let env = ephemeral_cli_env();
-    let a = to_canonical_turtle(&env);
-    let b = to_canonical_turtle(&env);
+    let bench = ephemeral_cli_env();
+    let a = to_canonical_turtle(&bench);
+    let b = to_canonical_turtle(&bench);
     assert_eq!(a, b, "canonical Turtle must be byte-stable");
 }

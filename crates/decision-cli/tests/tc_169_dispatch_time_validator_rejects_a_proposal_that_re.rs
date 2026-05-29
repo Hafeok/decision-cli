@@ -79,7 +79,7 @@ fn proposal(steps: Vec<ProposedStep>) -> GraphProposal {
     GraphProposal::new_new(
         "bundle-hash-fixture",
         NewProposal {
-            environment: "ENV-001".to_string(),
+            environment: "BNCH-001".to_string(),
             steps,
             rationale: "TC-169 fixture proposal".to_string(),
             addressed_feedback_iris: Vec::new(),

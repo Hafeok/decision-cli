@@ -101,7 +101,7 @@ fn build_malformed_two_step_proposal(bundle_hash: &str) -> GraphProposal {
     GraphProposal::new_new(
         bundle_hash,
         NewProposal {
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             steps: vec![
                 ProposedStep {
                     step_type: "shell-command".to_string(),
@@ -135,7 +135,7 @@ fn tc_081_dec_verify_graph_generate_rolls_back_graph_when_an() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Accept,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),

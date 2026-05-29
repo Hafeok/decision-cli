@@ -188,7 +188,7 @@ pub struct VerificationGraph {
     pub id: GraphIri,
     /// The artifact the graph proves about — feature or TC (polymorphic).
     pub verifies: ArtifactRef,
-    /// The VerificationEnvironment this graph executes against.
+    /// The VerificationBench this graph executes against.
     pub environment: NamedNode,
     /// Ordered steps. May be empty during authoring (FT-036 §Outputs).
     pub steps: Vec<VerificationStep>,

@@ -1,6 +1,6 @@
 //! Id-minting + collision detection for `dec verify graph new` (FT-041).
 //!
-//! Mirrors `verify_env_new::mint` but for `VG-NNN[-suffix]` ids under
+//! Mirrors `verify_bench_new::mint` but for `VG-NNN[-suffix]` ids under
 //! `.dec/verify/graph/`. The next mint scans the directory for the
 //! highest existing `VG-NNN` prefix and returns the next integer.
 

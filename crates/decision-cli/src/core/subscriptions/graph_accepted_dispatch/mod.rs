@@ -344,11 +344,11 @@ fn resolve_target_envs(
     cfg: &GraphAcceptedDispatchConfig,
     graph: &VerificationGraph,
 ) -> Vec<ResolvedEnv> {
-    use crate::core::vocab::IRI_DEC_ENV_PREFIX;
+    use crate::core::vocab::IRI_DEC_BENCH_PREFIX;
     let env_iri = graph.environment.clone();
     let env_short = env_iri
         .as_str()
-        .strip_prefix(IRI_DEC_ENV_PREFIX)
+        .strip_prefix(IRI_DEC_BENCH_PREFIX)
         .unwrap_or(env_iri.as_str())
         .to_string();
     if cfg.envs_use_wildcard() {
@@ -478,7 +478,7 @@ pub fn build_dispatch_event_quads(
         ),
         Quad::new(
             event_iri.clone(),
-            NamedNodeRef::new_unchecked(crate::core::vocab::IRI_DEC_ENVIRONMENT).into_owned(),
+            NamedNodeRef::new_unchecked(crate::core::vocab::IRI_DEC_BENCH).into_owned(),
             env_iri.clone(),
             g.clone(),
         ),
@@ -537,7 +537,7 @@ pub fn build_session_quads(
     let status_pred = NamedNodeRef::new_unchecked(DEC_STATUS).into_owned();
     let role_pred = NamedNodeRef::new_unchecked(DEC_ROLE).into_owned();
     let feature_id_pred = NamedNodeRef::new_unchecked(DEC_FEATURE_ID).into_owned();
-    let env_pred = NamedNodeRef::new_unchecked(crate::core::vocab::IRI_DEC_ENVIRONMENT).into_owned();
+    let env_pred = NamedNodeRef::new_unchecked(crate::core::vocab::IRI_DEC_BENCH).into_owned();
     let prov_informed = NamedNodeRef::new_unchecked(IRI_PROV_WAS_INFORMED_BY).into_owned();
     let _ = in_stream();
 

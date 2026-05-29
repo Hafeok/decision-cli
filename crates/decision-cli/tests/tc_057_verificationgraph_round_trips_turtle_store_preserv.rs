@@ -23,7 +23,7 @@ fn tc_013() -> NamedNode {
 }
 
 fn env_ephemeral() -> NamedNode {
-    NamedNode::new_unchecked("https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli")
+    NamedNode::new_unchecked("https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli")
 }
 
 #[test]

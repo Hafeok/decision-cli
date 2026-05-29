@@ -26,8 +26,8 @@ pub const IRI_DEC_EVIDENCE_PROJECTION: &str = "https://decision-cli.dev/ns#Evide
 /// `dec:resultOf` predicate — result → VerificationGraph.
 pub const IRI_DEC_RESULT_OF: &str = "https://decision-cli.dev/ns#resultOf";
 
-/// `dec:ranInEnvironment` predicate — result → VerificationEnvironment.
-pub const IRI_DEC_RAN_IN_ENVIRONMENT: &str = "https://decision-cli.dev/ns#ranInEnvironment";
+/// `dec:ranOnBench` predicate — result → VerificationBench (renamed by FT-112).
+pub const IRI_DEC_RAN_ON_BENCH: &str = "https://decision-cli.dev/ns#ranOnBench";
 
 /// `dec:stepTraces` predicate — result → rdf:List of step trace IRIs.
 pub const IRI_DEC_STEP_TRACES: &str = "https://decision-cli.dev/ns#stepTraces";
@@ -115,8 +115,8 @@ pub fn result_of_pred() -> NamedNodeRef<'static> {
 }
 
 #[must_use]
-pub fn ran_in_environment_pred() -> NamedNodeRef<'static> {
-    NamedNodeRef::new_unchecked(IRI_DEC_RAN_IN_ENVIRONMENT)
+pub fn ran_on_bench_pred() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_RAN_ON_BENCH)
 }
 
 #[must_use]

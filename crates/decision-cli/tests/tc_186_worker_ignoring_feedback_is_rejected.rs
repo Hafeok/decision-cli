@@ -136,7 +136,7 @@ fn tc_186_worker_ignoring_feedback_is_rejected() {
     let _ = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-186-existing".to_string()),
         verifies: feature_id.to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
     })
     .expect("seed graph");
@@ -174,7 +174,7 @@ fn tc_186_worker_ignoring_feedback_is_rejected() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Interactive,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),

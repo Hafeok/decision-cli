@@ -472,23 +472,23 @@ dec:FeedbackShape a sh:NodeShape ;
         """
     ] .
 
-# --- VerificationEnvironment shape (FT-035 / ADR-028) -----------------------
-# Enforces ADR-028 §VerificationEnvironment invariants:
-#   - dec:envType is a non-empty string,
+# --- VerificationBench shape (FT-035 / ADR-028 / FT-112) --------------------
+# Enforces ADR-028 §VerificationBench invariants (renamed from VerificationEnvironment by FT-112):
+#   - dec:benchType is a non-empty string,
 #   - dec:safetyClass ∈ {isolated, shared-non-destructive, production-readonly},
 #   - dec:allowedOps is a non-empty rdf:List of operation tokens,
-#   - dec:endpoint required iff dec:envType matches the remote-type pattern.
+#   - dec:endpoint required iff dec:benchType matches the remote-type pattern.
 
-dec:VerificationEnvironmentShape a sh:NodeShape ;
-    sh:targetClass dec:VerificationEnvironment ;
+dec:VerificationBenchShape a sh:NodeShape ;
+    sh:targetClass dec:VerificationBench ;
 
     sh:property [
-        sh:path      dec:envType ;
+        sh:path      dec:benchType ;
         sh:datatype  xsd:string ;
         sh:minCount  1 ;
         sh:maxCount  1 ;
         sh:minLength 1 ;
-        sh:message   "dec:VerificationEnvironment requires exactly one non-empty dec:envType (string)."
+        sh:message   "dec:VerificationBench requires exactly one non-empty dec:benchType (string)."
     ] ;
 
     sh:property [
@@ -497,35 +497,35 @@ dec:VerificationEnvironmentShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:in       ( "isolated" "shared-non-destructive" "production-readonly" ) ;
-        sh:message  "dec:VerificationEnvironment requires exactly one dec:safetyClass from {isolated, shared-non-destructive, production-readonly}."
+        sh:message  "dec:VerificationBench requires exactly one dec:safetyClass from {isolated, shared-non-destructive, production-readonly}."
     ] ;
 
     sh:property [
         sh:path     dec:allowedOps ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:message  "dec:VerificationEnvironment requires exactly one dec:allowedOps rdf:List."
+        sh:message  "dec:VerificationBench requires exactly one dec:allowedOps rdf:List."
     ] ;
 
     sh:property [
         sh:path     dec:setup ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
-        sh:message  "dec:VerificationEnvironment carries at most one dec:setup (string)."
+        sh:message  "dec:VerificationBench carries at most one dec:setup (string)."
     ] ;
 
     sh:property [
         sh:path     dec:teardown ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
-        sh:message  "dec:VerificationEnvironment carries at most one dec:teardown (string)."
+        sh:message  "dec:VerificationBench carries at most one dec:teardown (string)."
     ] ;
 
     sh:property [
         sh:path     dec:endpoint ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
-        sh:message  "dec:VerificationEnvironment carries at most one dec:endpoint (string)."
+        sh:message  "dec:VerificationBench carries at most one dec:endpoint (string)."
     ] ;
 
     # FT-053 / ADR-032: optional repo-relative fixture path.
@@ -534,29 +534,29 @@ dec:VerificationEnvironmentShape a sh:NodeShape ;
         sh:datatype  xsd:string ;
         sh:maxCount  1 ;
         sh:minLength 1 ;
-        sh:message   "dec:VerificationEnvironment carries at most one non-empty dec:fixtureSource (string)."
+        sh:message   "dec:VerificationBench carries at most one non-empty dec:fixtureSource (string)."
     ] ;
 
-    # Remote env types (matching the remote-* prefix) must carry dec:endpoint.
+    # Remote bench types (matching the remote-* prefix) must carry dec:endpoint.
     sh:sparql [
-        sh:message "remote env types (envType starts with \"remote-\") require dec:endpoint" ;
+        sh:message "remote bench types (benchType starts with \"remote-\") require dec:endpoint" ;
         sh:select """
             PREFIX dec: <https://decision-cli.dev/ns#>
             SELECT $this WHERE {
-              $this dec:envType ?t .
+              $this dec:benchType ?t .
               FILTER(STRSTARTS(STR(?t), "remote-"))
               FILTER NOT EXISTS { $this dec:endpoint ?e }
             }
         """
     ] ;
 
-    # Local env types (envType does NOT start with "remote-") must NOT carry dec:endpoint.
+    # Local bench types (benchType does NOT start with "remote-") must NOT carry dec:endpoint.
     sh:sparql [
-        sh:message "local env types (envType does not start with \"remote-\") must NOT carry dec:endpoint" ;
+        sh:message "local bench types (benchType does not start with \"remote-\") must NOT carry dec:endpoint" ;
         sh:select """
             PREFIX dec: <https://decision-cli.dev/ns#>
             SELECT $this WHERE {
-              $this dec:envType ?t .
+              $this dec:benchType ?t .
               FILTER(!STRSTARTS(STR(?t), "remote-"))
               $this dec:endpoint ?e .
             }
@@ -575,9 +575,10 @@ dec:VerificationEnvironmentShape a sh:NodeShape ;
         """
     ] .
 
-# --- VerificationGraph shape (FT-036 / ADR-028) -----------------------------
-# Requires dec:verifies and dec:environment; dec:steps is an rdf:List
+# --- VerificationGraph shape (FT-036 / ADR-028 / FT-112) --------------------
+# Requires dec:verifies and dec:bench; dec:steps is an rdf:List
 # (may be empty during authoring per FT-036 §Outputs).
+# FT-112: renamed dec:environment to dec:bench.
 
 dec:VerificationGraphShape a sh:NodeShape ;
     sh:targetClass dec:VerificationGraph ;
@@ -591,11 +592,11 @@ dec:VerificationGraphShape a sh:NodeShape ;
     ] ;
 
     sh:property [
-        sh:path     dec:environment ;
+        sh:path     dec:bench ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:nodeKind sh:IRI ;
-        sh:message  "dec:VerificationGraph requires exactly one dec:environment (IRI of a VerificationEnvironment)."
+        sh:message  "dec:VerificationGraph requires exactly one dec:bench (IRI of a VerificationBench)."
     ] ;
 
     sh:property [

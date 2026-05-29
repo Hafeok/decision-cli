@@ -1,6 +1,6 @@
-//! SPARQL projection for `dec verify env list` (FT-039).
+//! SPARQL projection for `dec verify bench list` (FT-039).
 //!
-//! Reads the verify-env named graph that `dec init` and `dec verify env
+//! Reads the verify-bench named graph that `dec init` and `dec verify bench
 //! new` write into. The query applies filter predicates server-side so
 //! the handler ships only matching rows back to the caller.
 //!
@@ -8,7 +8,7 @@
 //! SPARQL `WHERE` treats `_:foo` as an existential variable rather
 //! than a specific identifier, so walking the list goes through
 //! `quads_for_pattern` (which preserves blank-node identity) rather
-//! than SPARQL — mirroring `core::ontology::verification_env::io`.
+//! than SPARQL — mirroring `core::ontology::verification_bench::io`.
 
 use std::path::Path;
 
@@ -20,9 +20,9 @@ use crate::core::handler::Error as HandlerError;
 use crate::core::sparql::{term_iri_string, term_literal_string};
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::vocab::{
-    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_ENV_PREFIX, IRI_DEC_ENV_TYPE,
-    IRI_DEC_FIXTURE_SOURCE, IRI_DEC_GRAPH_VERIFY_ENV, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP,
-    IRI_DEC_TEARDOWN, IRI_DEC_VERIFICATION_ENVIRONMENT,
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_BENCH_PREFIX, IRI_DEC_BENCH_TYPE,
+    IRI_DEC_FIXTURE_SOURCE, IRI_DEC_GRAPH_VERIFY_BENCH, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP,
+    IRI_DEC_TEARDOWN, IRI_DEC_VERIFICATION_BENCH,
 };
 
 use super::{EnvRowError, EnvSummary};
@@ -31,9 +31,9 @@ const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
 const RDF_NIL: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
 
-/// Load the orchestration store and project env summaries via SPARQL.
+/// Load the orchestration store and project bench summaries via SPARQL.
 ///
-/// Per-env failures (corrupt rdf:List, multiple `dec:allowedOps` heads,
+/// Per-bench failures (corrupt rdf:List, multiple `dec:allowedOps` heads,
 /// schema drift) DO NOT abort the listing — they surface as
 /// [`EnvSummary::error`] markers so an operator can triage from the
 /// list itself (TC-096). Only failures that prevent us from enumerating
@@ -42,27 +42,27 @@ const RDF_NIL: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
 pub(super) fn query_envs(
     workdir: &Path,
     safety_class: Option<&str>,
-    env_type: Option<&str>,
+    bench_type: Option<&str>,
 ) -> Result<Vec<EnvSummary>, HandlerError> {
     let store = open_store(workdir)?;
-    let q = build_query(safety_class, env_type);
+    let q = build_query(safety_class, bench_type);
     let results = store
         .query(q.as_str())
         .map_err(|e| HandlerError::Internal {
-            detail: format!("env-list SPARQL: {e}"),
+            detail: format!("bench-list SPARQL: {e}"),
         })?;
     let QueryResults::Solutions(sols) = results else {
         return Err(HandlerError::Internal {
-            detail: "env-list: unexpected SPARQL result shape".to_string(),
+            detail: "bench-list: unexpected SPARQL result shape".to_string(),
         });
     };
     let mut out: Vec<EnvSummary> = Vec::new();
     for sol_res in sols {
         let sol = sol_res.map_err(|e| HandlerError::Internal {
-            detail: format!("env-list SPARQL row: {e}"),
+            detail: format!("bench-list SPARQL row: {e}"),
         })?;
-        let env_iri = sol.get("env").map(term_iri_string).unwrap_or_default();
-        let Some(id) = env_iri.strip_prefix(IRI_DEC_ENV_PREFIX).map(str::to_string) else {
+        let env_iri = sol.get("bench").map(term_iri_string).unwrap_or_default();
+        let Some(id) = env_iri.strip_prefix(IRI_DEC_BENCH_PREFIX).map(str::to_string) else {
             continue;
         };
         let (allowed_ops, row_error) = read_allowed_ops_resilient(&store, &env_iri);
@@ -99,7 +99,7 @@ fn summary_from_solution(
     allowed_ops: Vec<String>,
     row_error: Option<EnvRowError>,
 ) -> EnvSummary {
-    let env_type = sol.get("type").map(term_literal_string).unwrap_or_default();
+    let bench_type = sol.get("type").map(term_literal_string).unwrap_or_default();
     let safety_class = sol
         .get("safety")
         .map(term_literal_string)
@@ -110,7 +110,7 @@ fn summary_from_solution(
     let fixture_source = optional_literal(sol, "fixture_source");
     EnvSummary {
         id,
-        env_type,
+        bench_type,
         safety_class,
         endpoint,
         allowed_ops,
@@ -129,29 +129,29 @@ fn optional_literal(sol: &oxigraph::sparql::QuerySolution, name: &str) -> Option
         .filter(|s| !s.is_empty())
 }
 
-/// SPARQL SELECT for env summaries with optional filters.
+/// SPARQL SELECT for bench summaries with optional filters.
 ///
 /// The FILTER predicates collapse to no-ops when the corresponding
 /// option is `None`; conjunctive when both are `Some`.
-fn build_query(safety_class: Option<&str>, env_type: Option<&str>) -> String {
+fn build_query(safety_class: Option<&str>, bench_type: Option<&str>) -> String {
     let safety_filter = filter_clause("safety", safety_class);
-    let type_filter = filter_clause("type", env_type);
+    let type_filter = filter_clause("type", bench_type);
     format!(
-        "SELECT ?env ?type ?safety ?endpoint ?setup ?teardown ?fixture_source WHERE {{\n  \
+        "SELECT ?bench ?type ?safety ?endpoint ?setup ?teardown ?fixture_source WHERE {{\n  \
          GRAPH <{graph}> {{\n    \
-         ?env a <{cls}> ;\n         \
+         ?bench a <{cls}> ;\n         \
          <{p_type}> ?type ;\n         \
          <{p_safety}> ?safety .\n\
          {safety_filter}{type_filter}    \
-         OPTIONAL {{ ?env <{p_endpoint}> ?endpoint }}\n    \
-         OPTIONAL {{ ?env <{p_setup}> ?setup }}\n    \
-         OPTIONAL {{ ?env <{p_teardown}> ?teardown }}\n    \
-         OPTIONAL {{ ?env <{p_fixture_source}> ?fixture_source }}\n  \
+         OPTIONAL {{ ?bench <{p_endpoint}> ?endpoint }}\n    \
+         OPTIONAL {{ ?bench <{p_setup}> ?setup }}\n    \
+         OPTIONAL {{ ?bench <{p_teardown}> ?teardown }}\n    \
+         OPTIONAL {{ ?bench <{p_fixture_source}> ?fixture_source }}\n  \
          }}\n\
-         }} ORDER BY ?env",
-        graph = IRI_DEC_GRAPH_VERIFY_ENV,
-        cls = IRI_DEC_VERIFICATION_ENVIRONMENT,
-        p_type = IRI_DEC_ENV_TYPE,
+         }} ORDER BY ?bench",
+        graph = IRI_DEC_GRAPH_VERIFY_BENCH,
+        cls = IRI_DEC_VERIFICATION_BENCH,
+        p_type = IRI_DEC_BENCH_TYPE,
         p_safety = IRI_DEC_SAFETY_CLASS,
         p_endpoint = IRI_DEC_ENDPOINT,
         p_setup = IRI_DEC_SETUP,
@@ -188,8 +188,8 @@ fn escape_sparql_literal(s: &str) -> String {
     out
 }
 
-/// Pull the rdf:List value bound to `?env <dec:allowedOps> ...` for the
-/// given env IRI, tolerating per-env corruption.
+/// Pull the rdf:List value bound to `?bench <dec:allowedOps> ...` for the
+/// given bench IRI, tolerating per-bench corruption.
 ///
 /// Returns `(ops, error)` where `error` is `None` for healthy envs.
 /// Corruption modes flagged here (TC-096):
@@ -202,12 +202,12 @@ fn escape_sparql_literal(s: &str) -> String {
 /// - **Cyclic list / missing rdf:first or rdf:rest / unsupported term
 ///   shape** — surfaced as a generic `Corrupt` marker with the detail
 ///   string from the underlying walker.
-/// - **Malformed env IRI** — surfaced as `Corrupt`.
+/// - **Malformed bench IRI** — surfaced as `Corrupt`.
 fn read_allowed_ops_resilient(store: &Store, env_iri: &str) -> (Vec<String>, Option<EnvRowError>) {
     let env_node = match NamedNode::new(env_iri) {
         Ok(n) => n,
         Err(e) => {
-            let detail = format!("malformed env iri {env_iri:?}: {e}");
+            let detail = format!("malformed bench iri {env_iri:?}: {e}");
             return (Vec::new(), Some(EnvRowError::corrupt(detail)));
         }
     };
@@ -251,7 +251,7 @@ fn collect_allowed_ops_heads(store: &Store, env_node: NamedNode) -> Vec<Term> {
 /// `rdf:first` and `rdf:rest`. A cycle guard caps lookups so a
 /// malformed store never loops forever.
 ///
-/// Returns the parsed ops on success; on per-env corruption, returns
+/// Returns the parsed ops on success; on per-bench corruption, returns
 /// the failure mode as a human-readable detail string — the caller
 /// wraps it in an [`EnvRowError`].
 fn walk_list(store: &Store, head_term: Term) -> Result<Vec<String>, String> {
@@ -325,12 +325,12 @@ fn term_as_subject(t: &Term) -> Result<Subject, String> {
     }
 }
 
-/// Stable sort key for `ENV-NNN[-suffix]` ids: the numeric tail comes
-/// first so `ENV-2` orders before `ENV-10`; the original string sorts
+/// Stable sort key for `BNCH-NNN[-suffix]` ids: the numeric tail comes
+/// first so `BNCH-2` orders before `BNCH-10`; the original string sorts
 /// ids with identical numeric tails deterministically.
 #[must_use]
 pub(super) fn env_sort_key(id: &str) -> (u64, String) {
-    let tail = id.strip_prefix("ENV-").unwrap_or(id);
+    let tail = id.strip_prefix("BNCH-").unwrap_or(id);
     let digits: String = tail.chars().take_while(|c| c.is_ascii_digit()).collect();
     let n = digits.parse::<u64>().unwrap_or(u64::MAX);
     (n, id.to_string())
@@ -342,9 +342,9 @@ mod tests {
 
     #[test]
     fn sort_key_orders_numeric_tail() {
-        let mut ids = vec!["ENV-002", "ENV-010", "ENV-001-foo", "ENV-007"];
+        let mut ids = vec!["BNCH-002", "BNCH-010", "BNCH-001-foo", "BNCH-007"];
         ids.sort_by_key(|s| env_sort_key(s));
-        assert_eq!(ids, vec!["ENV-001-foo", "ENV-002", "ENV-007", "ENV-010"]);
+        assert_eq!(ids, vec!["BNCH-001-foo", "BNCH-002", "BNCH-007", "BNCH-010"]);
     }
 
     #[test]

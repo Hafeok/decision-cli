@@ -288,22 +288,22 @@ pub(super) fn finalise_orchestration_dir(
         .map_err(|e| InitError::PersistFailed(e.to_string()))?;
     fs::write(tmp_dec.join("init-metadata.json"), metadata_json)
         .map_err(|e| InitError::PersistFailed(e.to_string()))?;
-    seed_verify_env_files(&tmp_dec)?;
+    seed_verify_bench_files(&tmp_dec)?;
     fs::rename(&tmp_dec, dec_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
     Ok(())
 }
 
-/// FT-035 / ADR-028 — write the `.dec/verify/env/ENV-001-ephemeral-cli.ttl`
+/// FT-035 / ADR-028 — write the `.dec/verify/bench/BNCH-001-ephemeral-cli.ttl`
 /// seed file in canonical Turtle form. Byte-stable across runs so
 /// re-initialising in a fresh tempdir produces the same bytes.
-fn seed_verify_env_files(tmp_dec: &Path) -> Result<(), InitError> {
-    use crate::core::ontology::verification_env::{
+fn seed_verify_bench_files(tmp_dec: &Path) -> Result<(), InitError> {
+    use crate::core::ontology::verification_bench::{
         ephemeral_cli_env, to_canonical_turtle, EPHEMERAL_CLI_ENV_FILENAME,
     };
-    let env_dir = tmp_dec.join("verify").join("env");
-    fs::create_dir_all(&env_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
+    let bench_dir = tmp_dec.join("verify").join("bench");
+    fs::create_dir_all(&bench_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
     let ttl = to_canonical_turtle(&ephemeral_cli_env());
-    let target = env_dir.join(EPHEMERAL_CLI_ENV_FILENAME);
+    let target = bench_dir.join(EPHEMERAL_CLI_ENV_FILENAME);
     fs::write(&target, ttl.as_bytes()).map_err(|e| InitError::PersistFailed(e.to_string()))?;
     Ok(())
 }

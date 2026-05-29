@@ -68,7 +68,7 @@ fn tc_197_driver_max_iter_and_stuck() {
     let infinite_dispatch = vec![
         Action::DispatchVerifier {
             feature_id: "FT-T197".to_string(),
-            env_id: "ENV-002".to_string(),
+            env_id: "BNCH-002".to_string(),
         };
         10
     ];

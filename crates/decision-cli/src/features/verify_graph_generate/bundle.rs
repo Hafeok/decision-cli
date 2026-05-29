@@ -20,13 +20,13 @@ use sha2::{Digest, Sha256};
 
 use crate::core::dispatch::capability_resolver::ResolvedCapability;
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::{
-    from_turtle as env_from_turtle, VerificationEnvironment,
+use crate::core::ontology::verification_bench::{
+    from_turtle as bench_from_turtle, VerificationBench,
 };
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::verify::coverage::feature_resolver::{resolve_feature_tcs_short, tc_iri_for};
 use crate::core::verify::matcher::MatchReport;
-use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
 
 use super::enrichment::{
     assemble_enrichment, read_concrete_capabilities_from_turtle, EnrichmentFields,
@@ -116,10 +116,10 @@ pub struct TcRecord {
 /// Target environment record.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvRecord {
-    /// Short env id (e.g. `ENV-1` or `ENV-001-ephemeral-cli`).
+    /// Short env id (e.g. `ENV-1` or `BNCH-001-ephemeral-cli`).
     pub id: String,
     /// Env kind (e.g. `ephemeral-tempdir`).
-    pub env_type: String,
+    pub bench_type: String,
     /// Safety classification.
     #[serde(default)]
     pub safety_class: String,
@@ -230,16 +230,16 @@ pub fn assemble_bundle(
 
 /// Helper that builds the env struct for the enrichment query path.
 /// Mirrors [`load_env_record`] but returns the full
-/// `VerificationEnvironment` rather than the wire-shape record.
+/// `VerificationBench` rather than the wire-shape record.
 fn load_env_struct(
     workdir: &Path,
     env_short: &str,
-) -> Result<Option<VerificationEnvironment>, HandlerError> {
+) -> Result<Option<VerificationBench>, HandlerError> {
     let env_path = env_path_for(workdir, env_short);
     if !env_path.is_file() {
         return Ok(None);
     }
-    let env = env_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
+    let env = bench_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
         detail: format!("bundle: parsing env {p}: {e}", p = env_path.display()),
     })?;
     Ok(Some(env))
@@ -257,7 +257,7 @@ fn env_path_for(workdir: &Path, env_short: &str) -> std::path::PathBuf {
 /// The orchestration store is loaded from `<workdir>/.dec/store/`.
 pub fn assemble_enrichment_for(
     workdir: &Path,
-    env: Option<&VerificationEnvironment>,
+    env: Option<&VerificationBench>,
     env_short: &str,
 ) -> Result<EnrichmentFields, HandlerError> {
     let dump_path = orchestration_dump_path(workdir);
@@ -444,16 +444,16 @@ fn load_env_record(workdir: &Path, env_short: &str) -> Result<EnvRecord, Handler
     let env_path = env_dir.join(format!("{env_short}.ttl"));
     if !env_path.is_file() {
         return Err(HandlerError::ArtifactNotFound {
-            kind: "VerificationEnvironment".to_string(),
+            kind: "VerificationBench".to_string(),
             id: env_short.to_string(),
         });
     }
-    let env = env_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
+    let env = bench_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
         detail: format!("bundle: parsing env {p}: {e}", p = env_path.display()),
     })?;
     Ok(EnvRecord {
         id: env_short.to_string(),
-        env_type: env.env_type.clone(),
+        bench_type: env.bench_type.clone(),
         safety_class: env.safety_class.as_str().to_string(),
         allowed_ops: env.allowed_ops.clone(),
         endpoint: env.endpoint.clone(),
@@ -525,7 +525,7 @@ pub fn tc_short_to_iri(short: &str) -> String {
 /// input is an IRI, or the input verbatim otherwise.
 #[must_use]
 pub fn env_iri_to_short(iri: &str) -> String {
-    iri.strip_prefix(IRI_DEC_ENV_PREFIX)
+    iri.strip_prefix(IRI_DEC_BENCH_PREFIX)
         .unwrap_or(iri)
         .to_string()
 }

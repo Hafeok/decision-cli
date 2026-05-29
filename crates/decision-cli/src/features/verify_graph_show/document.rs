@@ -9,7 +9,7 @@ use oxigraph::model::NamedNode;
 use serde::{Deserialize, Serialize};
 
 use crate::core::ontology::verification_graph::{StepFields, VerificationGraph};
-use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
 
 /// IRI prefix for feature artifacts the graph's `dec:verifies` references.
 const IRI_FEATURE_PREFIX: &str = "https://decision-cli.dev/ns/feature/";
@@ -302,7 +302,7 @@ pub struct GraphDocument {
     /// (`FT-NNN` or `TC-NNN`). Unknown IRI prefixes pass through verbatim.
     pub verifies: String,
     /// Canonical short id of the environment the graph executes against
-    /// (e.g. `ENV-001-ephemeral-cli`). Unknown IRI prefixes pass through.
+    /// (e.g. `BNCH-001-ephemeral-cli`). Unknown IRI prefixes pass through.
     pub environment: String,
     /// Ordered step documents in `dec:steps` rdf:List order.
     pub steps: Vec<StepDocument>,
@@ -322,7 +322,7 @@ impl GraphDocument {
         let environment = graph
             .environment
             .as_str()
-            .strip_prefix(IRI_DEC_ENV_PREFIX)
+            .strip_prefix(IRI_DEC_BENCH_PREFIX)
             .unwrap_or(graph.environment.as_str())
             .to_string();
         let steps = graph

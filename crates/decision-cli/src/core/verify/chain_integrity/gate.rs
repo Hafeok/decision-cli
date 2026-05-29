@@ -99,14 +99,14 @@ fn render_next_actions(out: &mut String, feature: &str, known_envs: &[String]) {
         );
         let _ = writeln!(
             out,
-            "      dec verify graph generate {feature} --environment ENV-NNN"
+            "      dec verify graph generate {feature} --bench BNCH-NNN"
         );
         return;
     }
     for env in known_envs {
         let _ = writeln!(
             out,
-            "  * dec verify graph generate {feature} --environment {env}"
+            "  * dec verify graph generate {feature} --bench {env}"
         );
     }
 }
@@ -240,18 +240,18 @@ mod tests {
         let s = render_chain_integrity(
             "FT-U",
             &["TC-T2".to_string()],
-            &["ENV-001-ephemeral-cli".to_string()],
+            &["BNCH-001-ephemeral-cli".to_string()],
         );
         assert!(s.contains("Error::ChainIntegrity"));
         assert!(s.contains("FT-U"));
         assert!(s.contains("TC-T2"));
-        assert!(s.contains("dec verify graph generate FT-U --environment ENV-001-ephemeral-cli"));
+        assert!(s.contains("dec verify graph generate FT-U --bench BNCH-001-ephemeral-cli"));
         assert!(s.contains("--waive-coverage"));
     }
 
     #[test]
     fn render_when_no_known_envs_uses_placeholder_env() {
         let s = render_chain_integrity("FT-U", &["TC-T2".to_string()], &[]);
-        assert!(s.contains("dec verify graph generate FT-U --environment ENV-NNN"));
+        assert!(s.contains("dec verify graph generate FT-U --bench BNCH-NNN"));
     }
 }

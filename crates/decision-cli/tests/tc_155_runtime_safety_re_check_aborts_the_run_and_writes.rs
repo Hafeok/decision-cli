@@ -10,7 +10,7 @@ use std::process::Command;
 
 use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::core::verify::runner::{run_graph, RunGraphRequest, RunnerError, TriggerKind};
-use decision_cli::verify_env_new::{self, EnvNewRequest};
+use decision_cli::verify_bench_new::{self, BenchNewRequest};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
 use decision_cli::verify_step_add::{self, StepAddRequest};
 use oxigraph::model::NamedNode;
@@ -90,7 +90,7 @@ fn fields_of(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
         .collect()
 }
 
-const ENV_ID: &str = "ENV-9-tc155";
+const ENV_ID: &str = "BNCH-9-tc155";
 const VG_ID: &str = "VG-9-tc155";
 
 #[test]
@@ -98,9 +98,9 @@ fn tc_155_runtime_safety_re_check_aborts_the_run_and_writes() {
     let tmp = init_workdir("safety");
     // Initially: env permits http-readonly so the http-request step
     // passes the FT-037 authoring-time gate.
-    verify_env_new::run(&EnvNewRequest {
+    verify_bench_new::run(&BenchNewRequest {
         id: Some(ENV_ID.into()),
-        env_type: "ephemeral-tempdir".into(),
+        bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
         allowed_ops: vec!["http-readonly".into(), "filesystem".into()],
         setup: None,
@@ -142,7 +142,7 @@ fn tc_155_runtime_safety_re_check_aborts_the_run_and_writes() {
     let mutated = "@prefix dec: <https://decision-cli.dev/ns#> .\n\
                    @prefix dcterms: <http://purl.org/dc/terms/> .\n\
                    @prefix prov: <http://www.w3.org/ns/prov#> .\n\
-                   <https://decision-cli.dev/ns/env/ENV-9-tc155> a dec:VerificationEnvironment ;\n\
+                   <https://decision-cli.dev/ns/bench/BNCH-9-tc155> a dec:VerificationBench ;\n\
                        dec:envType        \"ephemeral-tempdir\" ;\n\
                        dec:safetyClass    \"isolated\" ;\n\
                        dec:allowedOps     ( \"filesystem\" ) .\n";
@@ -200,7 +200,7 @@ fn tc_155_runtime_safety_re_check_aborts_the_run_and_writes() {
     // Cross-check that the shared safety predicate produces the same
     // verdict — the runner's call site delegates to
     // `core::verify::safety::check_step_against_env`.
-    use decision_cli::core::ontology::verification_env::from_turtle as env_from_turtle;
+    use decision_cli::core::ontology::verification_bench::from_turtle as env_from_turtle;
     use decision_cli::core::ontology::verification_graph::from_turtle as graph_from_turtle;
     use decision_cli::core::verify::safety::{check_step_against_env, SafetyError};
     let env = env_from_turtle(&env_path).expect("re-parse env");

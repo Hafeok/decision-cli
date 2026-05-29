@@ -76,8 +76,8 @@ fn sentinel_bundle() -> VerifyGraphAuthorInputJson {
         feature_spec: "fixture spec body".to_string(),
         relevant_tcs: vec![],
         target_environment: EnvRecord {
-            id: "ENV-001-ephemeral-cli".to_string(),
-            env_type: "ephemeral-tempdir".to_string(),
+            id: "BNCH-001-ephemeral-cli".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             safety_class: "safe".to_string(),
             allowed_ops: vec!["fs-tempdir".to_string()],
             endpoint: None,

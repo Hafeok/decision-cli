@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::VerificationEnvironment;
+use crate::core::ontology::verification_bench::VerificationBench;
 use crate::core::vocab::IRI_DEC_GRAPH_CATALOG;
 
 /// Default `dec --version` the bundle assembler matches against when
@@ -150,7 +150,7 @@ impl EnvCapabilities {
 }
 
 /// Side-channel parse of the optional `dec:concreteCapabilities` block.
-/// The core `VerificationEnvironment` type does not carry this block —
+/// The core `VerificationBench` type does not carry this block —
 /// it's an FT-102 extension; rather than touching the core struct, the
 /// enrichment module reads it directly off the env's Turtle file.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -213,7 +213,7 @@ pub struct CatalogHashEntry {
 /// warning, not an error.
 pub fn assemble_enrichment(
     store: &Store,
-    env: Option<&VerificationEnvironment>,
+    env: Option<&VerificationBench>,
     concrete: Option<&ConcreteCapabilities>,
     dec_version: &str,
 ) -> Result<EnrichmentFields, HandlerError> {
@@ -520,7 +520,7 @@ pub fn w3c_whitelist() -> &'static [&'static str] {
 
 /// Per-env-type default for the store query surface. Lives in code per
 /// ADR-066 §The validator's whitelist (the env-type table is structural).
-fn derive_store_query_surface(env: Option<&VerificationEnvironment>) -> StoreQuerySurface {
+fn derive_store_query_surface(env: Option<&VerificationBench>) -> StoreQuerySurface {
     let Some(env) = env else {
         return StoreQuerySurface {
             kind: "local-oxigraph".to_string(),
@@ -549,7 +549,7 @@ fn derive_store_query_surface(env: Option<&VerificationEnvironment>) -> StoreQue
 /// (pre-FT-102, or operator-bootstrapping flows), leave `EnvCapabilities`
 /// empty so the validator stays lenient.
 fn derive_env_capabilities(
-    env: Option<&VerificationEnvironment>,
+    env: Option<&VerificationBench>,
     concrete: Option<&ConcreteCapabilities>,
     catalog_populated: bool,
     metadata: &mut BundleMetadata,
@@ -569,16 +569,16 @@ fn derive_env_capabilities(
     metadata.warnings.push(format!(
         "env {id} has no dec:concreteCapabilities block; using env-type default for {env_type}",
         id = env.id,
-        env_type = env.env_type,
+        env_type = env.bench_type,
     ));
-    default_env_capabilities_for(&env.env_type)
+    default_env_capabilities_for(&env.bench_type)
 }
 
 /// Per-env-type defaults shipped alongside the assembler. New env types
 /// must extend this table (and the SHACL shape) atomically.
 #[must_use]
-pub fn default_env_capabilities_for(env_type: &str) -> EnvCapabilities {
-    match env_type {
+pub fn default_env_capabilities_for(bench_type: &str) -> EnvCapabilities {
+    match bench_type {
         "ephemeral-tempdir" => EnvCapabilities {
             binaries_on_path: vec!["dec".to_string(), "bash".to_string(), "jq".to_string()],
             writable_paths: vec!["$DEC_VERIFY_TMP".to_string(), "./".to_string()],
@@ -609,7 +609,7 @@ pub fn default_env_capabilities_for(env_type: &str) -> EnvCapabilities {
 
 fn query_exemplars(
     store: &Store,
-    env: Option<&VerificationEnvironment>,
+    env: Option<&VerificationBench>,
     metadata: &mut BundleMetadata,
 ) -> Result<Vec<ExemplarRecord>, HandlerError> {
     let safety_class = env
@@ -716,7 +716,7 @@ pub fn read_concrete_capabilities_from_turtle(
         "PREFIX dec: <https://decision-cli.dev/ns#> \
          SELECT ?cc WHERE {{ \
              GRAPH <{g}> {{ \
-                 ?env a dec:VerificationEnvironment ; \
+                 ?env a dec:VerificationBench ; \
                       dec:concreteCapabilities ?cc \
              }} \
          }}",

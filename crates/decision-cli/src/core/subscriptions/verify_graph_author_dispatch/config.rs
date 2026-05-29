@@ -5,7 +5,7 @@
 //! ```toml
 //! [verify_graph_author]
 //! auto_dispatch = true
-//! envs = ["ENV-001-ephemeral-cli"]
+//! envs = ["BNCH-001-ephemeral-cli"]
 //! dedup_ttl_seconds = 3600
 //! ```
 //!
@@ -30,7 +30,7 @@ pub struct AutoDispatchConfig {
     /// Master switch. When `false`, the handler is a no-op.
     pub auto_dispatch: bool,
     /// Envs to propose against. `["*"]` means "every isolated env in
-    /// the catalog"; an explicit list (`["ENV-001-ephemeral-cli"]`)
+    /// the catalog"; an explicit list (`["BNCH-001-ephemeral-cli"]`)
     /// scopes the subscription to that subset.
     pub envs: Vec<String>,
     /// Dedup TTL in seconds. `0` disables dedup (testing only — see
@@ -184,11 +184,11 @@ mod tests {
     fn parser_round_trips_keys() {
         let body = "[verify_graph_author]\n\
                     auto_dispatch = true\n\
-                    envs = [\"ENV-001-ephemeral-cli\"]\n\
+                    envs = [\"BNCH-001-ephemeral-cli\"]\n\
                     dedup_ttl_seconds = 7200\n";
         let cfg = parse_from_str(body).expect("parsed");
         assert!(cfg.auto_dispatch);
-        assert_eq!(cfg.envs, vec!["ENV-001-ephemeral-cli".to_string()]);
+        assert_eq!(cfg.envs, vec!["BNCH-001-ephemeral-cli".to_string()]);
         assert_eq!(cfg.dedup_ttl_seconds, 7200);
     }
 

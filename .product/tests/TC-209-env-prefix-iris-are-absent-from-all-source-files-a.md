@@ -2,7 +2,7 @@
 id: TC-209
 title: ENV-prefix IRIs are absent from all source files after rename
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-112
@@ -14,6 +14,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-209-env-iri-absent.sh
 runner-timeout: 30
+last-run: 2026-05-29T13:41:32.311273790+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description

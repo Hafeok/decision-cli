@@ -59,8 +59,8 @@ fn verify_graph_author_role_quads(role: &NamedNode, g: &GraphName) -> Vec<Quad> 
     let role_in = NamedNodeRef::new_unchecked(ROLE_INPUT_TYPE_IRI).into_owned();
     let feature_spec = NamedNode::new_unchecked("https://decision-cli.dev/ns#FeatureSpec");
     let test_criterion = NamedNode::new_unchecked("https://decision-cli.dev/ns#TestCriterion");
-    let verification_env =
-        NamedNode::new_unchecked("https://decision-cli.dev/ns#VerificationEnvironment");
+    let verification_bench =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns#VerificationBench");
     quads.push(Quad::new(
         role.clone(),
         role_in.clone(),
@@ -73,7 +73,7 @@ fn verify_graph_author_role_quads(role: &NamedNode, g: &GraphName) -> Vec<Quad> 
         test_criterion,
         g.clone(),
     ));
-    quads.push(Quad::new(role.clone(), role_in, verification_env, g.clone()));
+    quads.push(Quad::new(role.clone(), role_in, verification_bench, g.clone()));
     // Output is the proposal artifact; no authority link (ADR-030 §7
     // makes Level-3 review the only acceptance path, so the
     // verify-graph-author role does not carry an authority declaration).

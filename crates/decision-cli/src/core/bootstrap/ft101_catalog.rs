@@ -429,7 +429,7 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
     {"kind": "file_written", "path_pattern": ".dec/store/orchestration.nq"},
     {"kind": "file_written", "path_pattern": ".dec/definition.ttl"},
     {"kind": "file_written", "path_pattern": ".dec/init-metadata.json"},
-    {"kind": "file_written", "path_pattern": ".dec/verify/env/ENV-001-ephemeral-cli.ttl"}
+    {"kind": "file_written", "path_pattern": ".dec/verify/env/BNCH-001-ephemeral-cli.ttl"}
   ],
   "common_invocations": [
     "dec init --template engineering-development",
@@ -486,7 +486,7 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
   "required_flags": ["--verifies", "--environment"],
   "flags": [
     {"name": "--verifies", "value_kind": "string", "required": true, "description": "FT-NNN or TC-NNN id this graph verifies."},
-    {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id (e.g. ENV-001-ephemeral-cli)."},
+    {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id (e.g. BNCH-001-ephemeral-cli)."},
     {"name": "--id", "value_kind": "string", "required": false, "description": "Caller-supplied VG-NNN id; omitted → mints the next free VG-NNN."}
   ],
   "positionals": [],
@@ -517,7 +517,7 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
   "synopsis": "Propose a graph for a feature in an environment (worker-driven).",
   "required_flags": ["--environment"],
   "flags": [
-    {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id (e.g. ENV-001-ephemeral-cli)."},
+    {"name": "--environment", "value_kind": "string", "required": true, "description": "Env id (e.g. BNCH-001-ephemeral-cli)."},
     {"name": "--accept", "value_kind": "boolean", "required": false, "description": "Persist without prompting."},
     {"name": "--print-only", "value_kind": "boolean", "required": false, "description": "Show the proposal, never persist."}
   ],
@@ -547,7 +547,7 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
   "command": "dec verify feature",
   "synopsis": "Verify a feature by running every covering VerificationGraph and aggregating verdicts.",
   "flags": [
-    {"name": "--environment", "value_kind": "string", "required": false, "description": "Filter to one environment (ENV-NNN[-suffix])."},
+    {"name": "--environment", "value_kind": "string", "required": false, "description": "Filter to one environment (BNCH-NNN[-suffix])."},
     {"name": "--no-feedback", "value_kind": "boolean", "required": false, "description": "Skip Feedback emission."},
     {"name": "--include-stale", "value_kind": "boolean", "required": false, "description": "Consider VGRs older than the freshness window."},
     {"name": "--dry-run", "value_kind": "boolean", "required": false, "description": "Enumerate which graphs would run; do not execute."}
@@ -558,16 +558,16 @@ const BAKED_CAPABILITIES: &[BakedCapability] = &[
     },
     BakedCapability {
         id: "CR-VERIFY-ENV-NEW",
-        command: "dec verify env new",
+        command: "dec verify bench new",
         body: r#"{
-  "command": "dec verify env new",
-  "synopsis": "Author a new dec:VerificationEnvironment artifact.",
+  "command": "dec verify bench new",
+  "synopsis": "Author a new dec:VerificationBench artifact.",
   "required_flags": ["--type", "--safety-class", "--allowed-ops"],
   "flags": [
     {"name": "--type", "value_kind": "string", "required": true, "description": "Env kind (e.g. ephemeral-tempdir | repo-path | remote-http)."},
     {"name": "--safety-class", "value_kind": "string", "required": true, "description": "isolated | shared-non-destructive | production-readonly."},
     {"name": "--allowed-ops", "value_kind": "csv", "required": true, "description": "Comma-separated operation tokens (e.g. 'shell,filesystem')."},
-    {"name": "--id", "value_kind": "string", "required": false, "description": "Caller-supplied ENV-NNN id."},
+    {"name": "--id", "value_kind": "string", "required": false, "description": "Caller-supplied BNCH-NNN id."},
     {"name": "--setup", "value_kind": "string", "required": false, "description": "Optional setup shell snippet."},
     {"name": "--teardown", "value_kind": "string", "required": false, "description": "Optional teardown shell snippet."}
   ],
@@ -647,7 +647,7 @@ const ONTOLOGY_BODY: &str = r#"{
      "predicates": [
        {"local_name": "validates", "range": "dec:Feature | dec:ADR"}
      ]},
-    {"local_name": "VerificationEnvironment", "iri": "https://decision-cli.dev/ns#VerificationEnvironment",
+    {"local_name": "VerificationBench", "iri": "https://decision-cli.dev/ns#VerificationBench",
      "predicates": [
        {"local_name": "envType", "range": "xsd:string"},
        {"local_name": "safetyClass", "range": "xsd:string (isolated | shared-non-destructive | production-readonly)"},
@@ -660,7 +660,7 @@ const ONTOLOGY_BODY: &str = r#"{
     {"local_name": "VerificationGraph", "iri": "https://decision-cli.dev/ns#VerificationGraph",
      "predicates": [
        {"local_name": "verifies", "range": "dec:Feature | dec:TC"},
-       {"local_name": "environment", "range": "dec:VerificationEnvironment"},
+       {"local_name": "environment", "range": "dec:VerificationBench"},
        {"local_name": "steps", "range": "rdf:List of dec:VerificationStep"}
      ]},
     {"local_name": "VerificationStep", "iri": "https://decision-cli.dev/ns#VerificationStep",

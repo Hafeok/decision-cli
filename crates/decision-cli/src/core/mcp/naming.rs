@@ -1,7 +1,7 @@
 //! Tool-name validation for `dec_<noun>_<verb>` (ADR-029).
 //!
 //! ADR-029 mandates every MCP tool name follow `dec_<noun>_<verb>`,
-//! e.g. `dec_verify_env_new`. The registry enforces the rule at
+//! e.g. `dec_verify_bench_new`. The registry enforces the rule at
 //! registration so a malformed descriptor fails startup rather than
 //! reaching the MCP wire. The check is performed by [`validate_tool_name`]
 //! and returns a structured [`NamingError`] when the name is rejected.
@@ -39,8 +39,8 @@ pub enum NamingError {
 /// groups where each `<segment>` is `[a-z0-9]+`. Examples:
 ///
 /// * `dec_health_check` — accepted (one noun, one verb).
-/// * `dec_verify_env_new` — accepted (noun-noun-verb is permitted).
-/// * `verify_env_new` — rejected, missing `dec_` prefix.
+/// * `dec_verify_bench_new` — accepted (noun-noun-verb is permitted).
+/// * `verify_bench_new` — rejected, missing `dec_` prefix.
 /// * `dec_` — rejected, no segment after the prefix.
 /// * `dec_Foo_bar` — rejected, uppercase.
 /// * `dec_foo bar` — rejected, contains a space.
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn accepts_canonical_names() {
         validate_tool_name("dec_mcp_ping").expect("two-segment name");
-        validate_tool_name("dec_verify_env_new").expect("three-segment name");
+        validate_tool_name("dec_verify_bench_new").expect("three-segment name");
         validate_tool_name("dec_health_check").expect("simple noun_verb");
         validate_tool_name("dec_feature1_list").expect("digit in segment");
     }
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn rejects_missing_prefix() {
         assert!(matches!(
-            validate_tool_name("verify_env_new"),
+            validate_tool_name("verify_bench_new"),
             Err(NamingError::MissingPrefix(_))
         ));
         assert!(matches!(
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn rejects_dashes_and_dots() {
         assert!(matches!(
-            validate_tool_name("dec_verify-env-new"),
+            validate_tool_name("dec_verify-bench-new"),
             Err(NamingError::InvalidCharacters(_))
         ));
         assert!(matches!(

@@ -14,7 +14,7 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_ENVIRONMENT, IRI_DEC_PROVIDES_EVIDENCE_FOR, IRI_DEC_STEPS, IRI_DEC_STEP_TYPE,
+    IRI_DEC_BENCH, IRI_DEC_PROVIDES_EVIDENCE_FOR, IRI_DEC_STEPS, IRI_DEC_STEP_TYPE,
     IRI_DEC_VERIFICATION_GRAPH, IRI_DEC_VERIFIES, IRI_DEC_VERIFY_GRAPH_PREFIX,
 };
 
@@ -165,10 +165,10 @@ fn extract_graph(
             detail: "missing dec:verifies".to_string(),
         }
     })?;
-    let environment = single_iri(store, subject, IRI_DEC_ENVIRONMENT, path)?.ok_or_else(|| {
+    let environment = single_iri(store, subject, IRI_DEC_BENCH, path)?.ok_or_else(|| {
         GraphIoError::MalformedShape {
             path: path.to_path_buf(),
-            detail: "missing dec:environment".to_string(),
+            detail: "missing dec:bench".to_string(),
         }
     })?;
     let steps = read_steps_list(store, subject, path)?;

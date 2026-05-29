@@ -21,8 +21,8 @@ pub const IRI_DEC_VERIFICATION_STEP: &str = "https://decision-cli.dev/ns#Verific
 /// `dec:verifies` predicate — graph → feature or TC (polymorphic).
 pub const IRI_DEC_VERIFIES: &str = "https://decision-cli.dev/ns#verifies";
 
-/// `dec:environment` predicate — graph → VerificationEnvironment.
-pub const IRI_DEC_ENVIRONMENT: &str = "https://decision-cli.dev/ns#environment";
+/// `dec:bench` predicate — graph → VerificationBench (renamed from environment by FT-112).
+pub const IRI_DEC_BENCH: &str = "https://decision-cli.dev/ns#bench";
 
 /// `dec:steps` predicate — graph → rdf:List head of ordered steps.
 pub const IRI_DEC_STEPS: &str = "https://decision-cli.dev/ns#steps";
@@ -144,8 +144,8 @@ pub fn verifies_pred() -> NamedNodeRef<'static> {
 }
 
 #[must_use]
-pub fn environment_pred() -> NamedNodeRef<'static> {
-    NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT)
+pub fn bench_pred() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_BENCH)
 }
 
 #[must_use]

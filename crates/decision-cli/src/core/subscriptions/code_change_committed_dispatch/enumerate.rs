@@ -13,7 +13,7 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX};
 
 const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
@@ -57,7 +57,7 @@ pub fn enumerate_covering_tuples(
         .map_err(|e| EnumerateError::Store(format!("loading store: {e:#}")))?;
     let mut tuples = collect_tuples(&store, feature_iri, tcs)?;
     if let Some(env) = env_filter {
-        let env_iri = format!("{IRI_DEC_ENV_PREFIX}{env}");
+        let env_iri = format!("{IRI_DEC_BENCH_PREFIX}{env}");
         tuples.retain(|t| t.env_iri == env_iri || t.env_short == env);
     }
     tuples.sort_by(|a, b| graph_sort_key(&a.graph_short).cmp(&graph_sort_key(&b.graph_short)));
@@ -154,7 +154,7 @@ fn run_select_tuples(
                 .unwrap_or(&graph)
                 .to_string();
             let env_short = env
-                .strip_prefix(IRI_DEC_ENV_PREFIX)
+                .strip_prefix(IRI_DEC_BENCH_PREFIX)
                 .unwrap_or(&env)
                 .to_string();
             let tuple = GraphTuple {

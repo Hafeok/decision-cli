@@ -8,7 +8,7 @@ use anyhow::Context as AnyhowContext;
 use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
 use crate::core::ontology::verdict::Verdict;
-use crate::core::ontology::verification_env::VerificationEnvironment;
+use crate::core::ontology::verification_bench::VerificationBench;
 use crate::core::ontology::verification_graph::VerificationGraph;
 use crate::core::ontology::verification_result::{
     to_canonical_turtle, EvidenceProjection, StepOutcome, VerificationGraphResult,
@@ -27,7 +27,7 @@ use super::request::RunnerError;
 pub(crate) fn write_result(
     workdir: &Path,
     graph: &VerificationGraph,
-    env: &VerificationEnvironment,
+    env: &VerificationBench,
     traces: &[StepRunTrace],
     verdict: Verdict,
     rationale: String,

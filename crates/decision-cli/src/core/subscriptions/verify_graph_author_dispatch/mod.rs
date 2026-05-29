@@ -68,7 +68,7 @@ pub struct VerifyGraphAuthorDispatchEvent {
     pub iri: NamedNode,
     /// Short feature id literal (e.g. `FT-050`).
     pub feature: String,
-    /// Short env id literal (e.g. `ENV-001-ephemeral-cli`).
+    /// Short env id literal (e.g. `BNCH-001-ephemeral-cli`).
     pub env: String,
     /// SHA-256 hex of the bundle.
     pub bundle_hash: String,
@@ -105,7 +105,7 @@ impl From<LedgerError> for AutoDispatchError {
 pub struct AutoDispatchSeed {
     /// Short feature id (e.g. `FT-K`).
     pub feature: String,
-    /// Short env id (e.g. `ENV-001-ephemeral-cli`).
+    /// Short env id (e.g. `BNCH-001-ephemeral-cli`).
     pub env: String,
     /// IRI of the originating feature create/update event.
     pub triggered_by_event_id: String,

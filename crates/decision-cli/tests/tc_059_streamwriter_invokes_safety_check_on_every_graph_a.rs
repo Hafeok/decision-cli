@@ -9,11 +9,11 @@
 
 use std::sync::Arc;
 
-use decision_cli::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
+use decision_cli::core::ontology::verification_bench::{SafetyClass, VerificationBench};
 use decision_cli::core::ontology::verification_graph::{
     ArtifactRef, StepFields, VerificationGraph, VerificationStep,
 };
-use decision_cli::vocab::{verify_env_graph, verify_graph_named_graph};
+use decision_cli::vocab::{verify_bench_graph, verify_graph_named_graph};
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
 use oxigraph::model::{NamedNode, Quad};
@@ -28,10 +28,10 @@ fn writer() -> (Arc<Store>, StreamWriter) {
     (store, w)
 }
 
-fn ephemeral_env() -> VerificationEnvironment {
-    VerificationEnvironment {
-        id: "ENV-001-ephemeral-cli".to_string(),
-        env_type: "ephemeral-tempdir".to_string(),
+fn ephemeral_env() -> VerificationBench {
+    VerificationBench {
+        id: "BNCH-001-ephemeral-cli".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         setup: Some("mkdir -p $TMPDIR".to_string()),
         teardown: Some("rm -rf $TMPDIR".to_string()),
         allowed_ops: vec![
@@ -45,10 +45,10 @@ fn ephemeral_env() -> VerificationEnvironment {
     }
 }
 
-fn prod_readonly_env() -> VerificationEnvironment {
-    VerificationEnvironment {
-        id: "ENV-002-prod-readonly".to_string(),
-        env_type: "remote-http".to_string(),
+fn prod_readonly_env() -> VerificationBench {
+    VerificationBench {
+        id: "BNCH-002-prod-readonly".to_string(),
+        bench_type: "remote-http".to_string(),
         setup: None,
         teardown: None,
         allowed_ops: vec!["http-readonly".to_string()],
@@ -101,7 +101,7 @@ fn graph_commit_invokes_graph_level_safety_check() {
     let (store, w) = writer();
     // Seed env in store first.
     let env = prod_readonly_env();
-    commit_quads(&w, env.to_quads(verify_env_graph())).expect("env commits cleanly");
+    commit_quads(&w, env.to_quads(verify_bench_graph())).expect("env commits cleanly");
 
     // Build a graph that references env and has an http-POST step.
     let g = VerificationGraph::new(
@@ -143,7 +143,7 @@ fn step_append_invokes_per_step_safety_check() {
     // append must abort.
     let (store, w) = writer();
     let env = prod_readonly_env();
-    commit_quads(&w, env.to_quads(verify_env_graph())).expect("env commits");
+    commit_quads(&w, env.to_quads(verify_bench_graph())).expect("env commits");
 
     // Original graph: empty steps so it commits cleanly.
     let g = VerificationGraph::new("VG-tc059-b", ft_001(), env.iri(), vec![]);
@@ -180,7 +180,7 @@ fn empty_graph_passes_trivially_through_writer() {
     // unconditionally — even against prod-readonly.
     let (_store, w) = writer();
     let env = prod_readonly_env();
-    commit_quads(&w, env.to_quads(verify_env_graph())).expect("env commits");
+    commit_quads(&w, env.to_quads(verify_bench_graph())).expect("env commits");
 
     let empty = VerificationGraph::new("VG-tc059-c", ft_001(), env.iri(), vec![]);
     commit_quads(&w, empty.to_quads(verify_graph_named_graph()))
@@ -194,7 +194,7 @@ fn safety_runs_before_shacl_distinct_error() {
     // SHACL pass). Both error variants must exist and be reachable.
     let (_store, w) = writer();
     let env = prod_readonly_env();
-    commit_quads(&w, env.to_quads(verify_env_graph())).expect("env commits");
+    commit_quads(&w, env.to_quads(verify_bench_graph())).expect("env commits");
 
     // Graph violating safety (http-POST against prod-readonly) AND
     // valid SHACL (well-formed graph + step structure).
@@ -213,7 +213,7 @@ fn safety_runs_before_shacl_distinct_error() {
     // the *isolated* env (so safety would pass), but with a step
     // missing `dec:command` — SHACL must catch it.
     let iso_env = ephemeral_env();
-    commit_quads(&w, iso_env.to_quads(verify_env_graph())).expect("iso env commits");
+    commit_quads(&w, iso_env.to_quads(verify_bench_graph())).expect("iso env commits");
 
     let mut malformed = VerificationGraph::new(
         "VG-tc059-e",
@@ -358,7 +358,7 @@ fn safety_check_aborts_before_shacl_runs() {
     // independence.
     let (_store, w) = writer();
     let env = prod_readonly_env();
-    commit_quads(&w, env.to_quads(verify_env_graph())).expect("env commits");
+    commit_quads(&w, env.to_quads(verify_bench_graph())).expect("env commits");
 
     // Build a graph: http-POST (violates safety) AND missing
     // dec:method (would violate SHACL). Safety must trigger first.

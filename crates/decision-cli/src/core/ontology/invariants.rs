@@ -30,7 +30,7 @@ const REQUIRED_ONTOLOGY_CLASSES: &[&str] = &[
     "DispatchGroup",
     "VerificationVerdict",
     "Feedback",
-    "VerificationEnvironment",
+    "VerificationBench",
     "VerificationGraph",
     "VerificationStep",
     "Capability",
@@ -123,14 +123,14 @@ const FEEDBACK_PROPS: &[&str] = &[
 ];
 
 const VERIFICATION_ENV_PROPS: &[&str] = &[
-    "https://decision-cli.dev/ns#envType",
+    "https://decision-cli.dev/ns#benchType",
     "https://decision-cli.dev/ns#safetyClass",
     "https://decision-cli.dev/ns#allowedOps",
 ];
 
 const VERIFICATION_GRAPH_PROPS: &[&str] = &[
     "https://decision-cli.dev/ns#verifies",
-    "https://decision-cli.dev/ns#environment",
+    "https://decision-cli.dev/ns#bench",
     "https://decision-cli.dev/ns#steps",
 ];
 
@@ -175,7 +175,7 @@ const ROLE_CLASS: &str = "https://decision-cli.dev/ns#Role";
 const VERIFICATION_VERDICT_CLASS: &str = "https://decision-cli.dev/ns#VerificationVerdict";
 const DISPATCH_GROUP_CLASS: &str = "https://decision-cli.dev/ns#DispatchGroup";
 const FEEDBACK_CLASS: &str = "https://decision-cli.dev/ns#Feedback";
-const VERIFICATION_ENV_CLASS: &str = "https://decision-cli.dev/ns#VerificationEnvironment";
+const VERIFICATION_ENV_CLASS: &str = "https://decision-cli.dev/ns#VerificationBench";
 const VERIFICATION_GRAPH_CLASS: &str = "https://decision-cli.dev/ns#VerificationGraph";
 const VERIFICATION_STEP_CLASS: &str = "https://decision-cli.dev/ns#VerificationStep";
 const CAPABILITY_CLASS: &str = "https://decision-cli.dev/ns#Capability";

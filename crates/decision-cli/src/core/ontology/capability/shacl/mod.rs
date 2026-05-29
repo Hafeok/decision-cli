@@ -1,6 +1,6 @@
 //! Write-side SHACL validation for `dec:Capability` (FT-054 / ADR-033).
 //!
-//! Mirrors the verdict / verification_env validator pattern: every
+//! Mirrors the verdict / verification_bench validator pattern: every
 //! `dec:Capability` subject declared in the candidate quad set is
 //! checked against the ADR-033 §schema invariants. Violations are
 //! returned as structured records so the caller can surface a

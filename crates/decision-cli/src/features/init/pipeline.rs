@@ -203,7 +203,7 @@ pub(super) fn build_orchestration_store(
 
     seed_bootstrap_subscriptions(&orchestration).map_err(|e| InitError::Internal(e.to_string()))?;
     seed_role_catalog(&orchestration)?;
-    seed_verification_envs(&orchestration)?;
+    seed_verification_benchs(&orchestration)?;
     seed_query_templates(&orchestration)?;
 
     Ok(orchestration)
@@ -228,15 +228,15 @@ fn seed_query_templates(orchestration: &Store) -> Result<(), InitError> {
 }
 
 /// FT-035 / ADR-028 — project the seeded `ephemeral-cli` env into the
-/// `dec:graph/verify-env` named graph alongside the role catalog and
+/// `dec:graph/verify-bench` named graph alongside the role catalog and
 /// subscription seeds. The on-disk `.dec/verify/env/*.ttl` files are
 /// authoritative; this projection keeps reads single-source within the
 /// orchestration store.
-fn seed_verification_envs(orchestration: &Store) -> Result<(), InitError> {
-    use crate::core::ontology::verification_env::ephemeral_cli_env;
-    use crate::core::vocab::verify_env_graph;
+fn seed_verification_benchs(orchestration: &Store) -> Result<(), InitError> {
+    use crate::core::ontology::verification_bench::ephemeral_cli_env;
+    use crate::core::vocab::verify_bench_graph;
     let env = ephemeral_cli_env();
-    let quads = env.to_quads(verify_env_graph());
+    let quads = env.to_quads(verify_bench_graph());
     orchestration
         .transaction(|mut tx| {
             for q in &quads {

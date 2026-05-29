@@ -1,7 +1,7 @@
 //! Graph enumeration for `dec verify feature` (FT-099).
 //!
 //! Returns the deterministic ordered set of `(VerificationGraph,
-//! VerificationEnvironment)` tuples that cover the supplied feature:
+//! VerificationBench)` tuples that cover the supplied feature:
 //! every graph whose `dec:verifies` matches the feature or any of its
 //! TCs, optionally filtered to a single env id. Tuples are sorted by
 //! the graph's VG-NNN numeric tail to make the runner's sequential
@@ -15,7 +15,7 @@ use oxigraph::store::Store;
 
 use crate::core::handler::Error as HandlerError;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX};
 
 const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
@@ -29,7 +29,7 @@ pub struct GraphTuple {
     pub graph_short: String,
     /// Environment IRI.
     pub env_iri: String,
-    /// Environment short id (`ENV-NNN[-suffix]`).
+    /// Environment short id (`BNCH-NNN[-suffix]`).
     pub env_short: String,
 }
 
@@ -55,7 +55,7 @@ pub(super) fn enumerate_runnable_tuples(
     })?;
     let mut tuples = collect_tuples(&store, feature_iri, tcs)?;
     if let Some(env) = env_filter {
-        let env_iri = format!("{IRI_DEC_ENV_PREFIX}{env}");
+        let env_iri = format!("{IRI_DEC_BENCH_PREFIX}{env}");
         tuples.retain(|t| t.env_iri == env_iri || t.env_short == env);
     }
     tuples.sort_by(|a, b| graph_sort_key(&a.graph_short).cmp(&graph_sort_key(&b.graph_short)));
@@ -172,7 +172,7 @@ fn run_select_tuples(
                 .strip_prefix(IRI_DEC_VERIFY_GRAPH_PREFIX)
                 .unwrap_or(&graph)
                 .to_string();
-            let env_short = env.strip_prefix(IRI_DEC_ENV_PREFIX).unwrap_or(&env).to_string();
+            let env_short = env.strip_prefix(IRI_DEC_BENCH_PREFIX).unwrap_or(&env).to_string();
             let tuple = GraphTuple {
                 graph_iri: graph,
                 graph_short,

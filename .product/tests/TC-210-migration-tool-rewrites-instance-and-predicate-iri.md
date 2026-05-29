@@ -2,7 +2,7 @@
 id: TC-210
 title: Migration tool rewrites instance and predicate IRIs in store atomically
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-112
@@ -13,6 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_210_migration_rewrites_instance_and_predicate_iris
 runner-timeout: 60
+last-run: 2026-05-29T13:41:32.311273790+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description

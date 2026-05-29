@@ -30,7 +30,7 @@ pub type ToolHandler = Arc<dyn Fn(Request) -> Result<Response, HandlerError> + S
 /// the routing layer in [`super::server`].
 #[derive(Clone)]
 pub struct ToolDescriptor {
-    /// Tool name, e.g. `dec_verify_env_new`. Must satisfy
+    /// Tool name, e.g. `dec_verify_bench_new`. Must satisfy
     /// [`validate_tool_name`]; the registry refuses to accept a
     /// descriptor whose name is malformed.
     pub name: String,
@@ -216,7 +216,7 @@ mod tests {
             RegisterError::Naming(NamingError::MissingPrefix(_))
         ));
         // TC-051 AC #1: a name missing the `dec_` prefix is rejected.
-        let err = reg.register(descriptor("verify_env_new")).unwrap_err();
+        let err = reg.register(descriptor("verify_bench_new")).unwrap_err();
         assert!(matches!(
             err,
             RegisterError::Naming(NamingError::MissingPrefix(_))

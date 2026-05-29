@@ -13,7 +13,7 @@ pub const IRI_DEC_CAPABILITY: &str = "https://decision-cli.dev/ns#Capability";
 
 /// `dec:capability_id` predicate — stable tag for role lookup.
 pub const IRI_DEC_CAPABILITY_ID: &str = "https://decision-cli.dev/ns#capability_id";
-// NB: `dec:endpoint` predicate IRI is shared with verify_env's
+// NB: `dec:endpoint` predicate IRI is shared with verify_bench's
 // `IRI_DEC_ENDPOINT` (the same predicate name with different semantics
 // per domain class). Capability-side helpers below alias the same IRI
 // string to keep the read sites scoped to capability vocabulary.

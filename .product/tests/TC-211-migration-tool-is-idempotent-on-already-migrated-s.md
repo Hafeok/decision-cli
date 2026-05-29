@@ -2,7 +2,7 @@
 id: TC-211
 title: Migration tool is idempotent on already-migrated store
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-112
@@ -13,6 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_211_migration_is_idempotent
 runner-timeout: 60
+last-run: 2026-05-29T13:41:32.311273790+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

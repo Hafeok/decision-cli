@@ -63,7 +63,7 @@ fn fixture_graph() -> VerificationGraph {
         ),
     ];
     let feature = NamedNode::new_unchecked("https://decision-cli.dev/ns/feature/FT-097");
-    let env = NamedNode::new_unchecked("https://decision-cli.dev/ns/env/ENV-001");
+    let env = NamedNode::new_unchecked("https://decision-cli.dev/ns/bench/BNCH-001");
     VerificationGraph::new(id, ArtifactRef(feature), env, steps)
 }
 

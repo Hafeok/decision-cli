@@ -1,14 +1,14 @@
-//! `dec verify env list` — single-handler implementation (FT-039 / ADR-029).
+//! `dec verify bench list` — single-handler implementation (FT-039 / ADR-029).
 //!
-//! Read-only listing of `dec:VerificationEnvironment` artifacts. One
+//! Read-only listing of `dec:VerificationBench` artifacts. One
 //! handler, two surfaces: the clap-driven CLI in
 //! `crates/decision-cli/src/cli/verify.rs` and the MCP tool descriptor
-//! in [`tool_descriptor`] both construct an [`EnvListRequest`] and
+//! in [`tool_descriptor`] both construct an [`BenchListRequest`] and
 //! route it through [`run`].
 //!
-//! Behaviour mirrors FT-039 §Behaviour: query the verify-env named
-//! graph via SPARQL, apply optional safety-class / env-type filters,
-//! return env summaries in ascending `ENV-NNN` order.
+//! Behaviour mirrors FT-039 §Behaviour: query the verify-bench named
+//! graph via SPARQL, apply optional safety-class / bench-type filters,
+//! return bench summaries in ascending `BNCH-NNN` order.
 
 mod query;
 mod render;
@@ -21,7 +21,7 @@ use serde_json::{json, Value};
 
 use crate::core::handler::{Error as HandlerError, Request, Response};
 use crate::core::mcp::{ToolDescriptor, ToolHandler};
-use crate::core::ontology::verification_env::SafetyClass;
+use crate::core::ontology::verification_bench::SafetyClass;
 use crate::core::vocab::{
     SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
@@ -29,7 +29,7 @@ use crate::core::vocab::{
 pub use render::{render_json, render_stderr_warnings, render_table};
 
 /// MCP tool name — referenced by `cli::verify` for the parity TC.
-pub const TOOL_NAME: &str = "dec_verify_env_list";
+pub const TOOL_NAME: &str = "dec_verify_bench_list";
 
 /// Output format selector for the CLI surface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -61,13 +61,13 @@ impl OutputFormat {
 
 /// Structured request the single handler consumes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct EnvListRequest {
+pub struct BenchListRequest {
     /// Optional safety-class filter — one of the three controlled values.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub safety_class: Option<String>,
-    /// Optional env-type filter (e.g. `ephemeral-tempdir`, `remote-http`).
+    /// Optional bench-type filter (e.g. `ephemeral-tempdir`, `remote-http`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub env_type: Option<String>,
+    pub bench_type: Option<String>,
     /// Output format. Defaults to `Table` for CLI rendering.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<OutputFormat>,
@@ -79,10 +79,10 @@ pub struct EnvListRequest {
 /// One row of the listing — matches the spec's `EnvSummary`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EnvSummary {
-    /// `ENV-NNN[-suffix]` identifier.
+    /// `BNCH-NNN[-suffix]` identifier.
     pub id: String,
-    /// `dec:envType` value.
-    pub env_type: String,
+    /// `dec:benchType` value.
+    pub bench_type: String,
     /// `dec:safetyClass` value.
     pub safety_class: String,
     /// `dec:endpoint` value (omitted when absent).
@@ -102,7 +102,7 @@ pub struct EnvSummary {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fixture_source: Option<String>,
     /// Structured per-row error marker (TC-096). Absent for healthy envs;
-    /// present when the row could not be fully projected — e.g. an env
+    /// present when the row could not be fully projected — e.g. an bench
     /// with two `dec:allowedOps` heads from a write-path bug or a manual
     /// store edit. The listing surfaces the row anyway so an operator
     /// can triage rather than seeing the whole command abort.
@@ -110,7 +110,7 @@ pub struct EnvSummary {
     pub error: Option<EnvRowError>,
 }
 
-/// Structured per-row error marker for corrupt env entries (TC-096).
+/// Structured per-row error marker for corrupt bench entries (TC-096).
 ///
 /// Carries enough information for an operator to identify what went
 /// wrong: the discriminant lives on `kind`, and `detail` is a human-
@@ -133,13 +133,13 @@ pub struct EnvRowError {
 impl EnvRowError {
     /// Build a `MultipleAllowedOpsHeads` marker. Used when the SPARQL
     /// projection observes more than one `dec:allowedOps` triple bound
-    /// to the same env subject.
+    /// to the same bench subject.
     #[must_use]
     pub fn multiple_allowed_ops_heads(count: usize) -> Self {
         Self {
             kind: "MultipleAllowedOpsHeads".to_string(),
             count: Some(count),
-            detail: format!("env declares {count} dec:allowedOps heads"),
+            detail: format!("bench declares {count} dec:allowedOps heads"),
         }
     }
 
@@ -158,18 +158,18 @@ impl EnvRowError {
 /// Structured response — surfaced verbatim by MCP, rendered as text or
 /// JSON by the CLI per `req.format`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct EnvListResponse {
-    /// Ordered list of env summaries (ascending `ENV-NNN` numeric tail).
+pub struct BenchListResponse {
+    /// Ordered list of bench summaries (ascending `BNCH-NNN` numeric tail).
     pub envs: Vec<EnvSummary>,
 }
 
-/// Parse the structured `Request` envelope into [`EnvListRequest`].
-pub fn parse_request(req: &Request) -> Result<EnvListRequest, HandlerError> {
-    let mut parsed: EnvListRequest =
+/// Parse the structured `Request` envelope into [`BenchListRequest`].
+pub fn parse_request(req: &Request) -> Result<BenchListRequest, HandlerError> {
+    let mut parsed: BenchListRequest =
         serde_json::from_value(req.arguments.clone()).map_err(|e| {
             HandlerError::InvalidArgument {
                 field: "arguments".to_string(),
-                detail: format!("malformed dec_verify_env_list arguments: {e}"),
+                detail: format!("malformed dec_verify_bench_list arguments: {e}"),
             }
         })?;
     if parsed.workdir.is_none() {
@@ -183,14 +183,14 @@ pub fn parse_request(req: &Request) -> Result<EnvListRequest, HandlerError> {
 pub fn tool_descriptor() -> ToolDescriptor {
     ToolDescriptor::new(
         TOOL_NAME,
-        "List dec:VerificationEnvironment artifacts (FT-039 / ADR-028).",
+        "List dec:VerificationBench artifacts (FT-039 / ADR-028).",
         input_schema(),
         tool_handler(),
     )
     .with_output_schema(output_schema())
 }
 
-/// MCP handler closure — builds an [`EnvListRequest`] from the wire
+/// MCP handler closure — builds an [`BenchListRequest`] from the wire
 /// envelope and renders the response back as a structured Value.
 fn tool_handler() -> ToolHandler {
     Arc::new(|req: Request| {
@@ -222,10 +222,10 @@ fn output_schema() -> Value {
 fn env_summary_schema() -> Value {
     json!({
         "type": "object",
-        "required": ["id", "env_type", "safety_class", "allowed_ops"],
+        "required": ["id", "bench_type", "safety_class", "allowed_ops"],
         "properties": {
             "id": { "type": "string" },
-            "env_type": { "type": "string" },
+            "bench_type": { "type": "string" },
             "safety_class": { "type": "string" },
             "endpoint": { "type": "string" },
             "allowed_ops": {
@@ -263,7 +263,7 @@ pub fn input_schema() -> Value {
                     SAFETY_PRODUCTION_READONLY,
                 ],
             },
-            "env_type": { "type": "string", "minLength": 1 },
+            "bench_type": { "type": "string", "minLength": 1 },
             "format": { "type": "string", "enum": ["table", "json"] },
             "workdir": { "type": "string" },
         },
@@ -272,7 +272,7 @@ pub fn input_schema() -> Value {
 
 /// Validate filter inputs ahead of the SPARQL query so unknown filter
 /// values surface as `InvalidArgument` (exit 2 on the CLI).
-fn validate(req: &EnvListRequest) -> Result<(), HandlerError> {
+fn validate(req: &BenchListRequest) -> Result<(), HandlerError> {
     if let Some(sc) = &req.safety_class {
         if SafetyClass::parse(sc).is_none() {
             return Err(HandlerError::InvalidArgument {
@@ -286,11 +286,11 @@ fn validate(req: &EnvListRequest) -> Result<(), HandlerError> {
             });
         }
     }
-    if let Some(t) = &req.env_type {
+    if let Some(t) = &req.bench_type {
         if t.trim().is_empty() {
             return Err(HandlerError::InvalidArgument {
-                field: "env_type".to_string(),
-                detail: "env-type filter must be a non-empty string".to_string(),
+                field: "bench_type".to_string(),
+                detail: "bench-type filter must be a non-empty string".to_string(),
             });
         }
     }
@@ -298,7 +298,7 @@ fn validate(req: &EnvListRequest) -> Result<(), HandlerError> {
 }
 
 /// Single handler — both CLI and MCP surfaces invoke this.
-pub fn run(req: &EnvListRequest) -> Result<EnvListResponse, HandlerError> {
+pub fn run(req: &BenchListRequest) -> Result<BenchListResponse, HandlerError> {
     validate(req)?;
     let workdir = req
         .workdir
@@ -311,10 +311,10 @@ pub fn run(req: &EnvListRequest) -> Result<EnvListResponse, HandlerError> {
     let mut envs = query::query_envs(
         workdir,
         req.safety_class.as_deref(),
-        req.env_type.as_deref(),
+        req.bench_type.as_deref(),
     )?;
     envs.sort_by(|a, b| query::env_sort_key(&a.id).cmp(&query::env_sort_key(&b.id)));
-    Ok(EnvListResponse { envs })
+    Ok(BenchListResponse { envs })
 }
 
 #[cfg(test)]
@@ -335,20 +335,20 @@ mod tests {
 
     #[test]
     fn request_roundtrips_through_json() {
-        let req = EnvListRequest {
+        let req = BenchListRequest {
             safety_class: Some(SAFETY_ISOLATED.to_string()),
-            env_type: Some("ephemeral-tempdir".to_string()),
+            bench_type: Some("ephemeral-tempdir".to_string()),
             format: Some(OutputFormat::Json),
             workdir: None,
         };
         let v = serde_json::to_value(&req).expect("ser");
-        let back: EnvListRequest = serde_json::from_value(v).expect("de");
+        let back: BenchListRequest = serde_json::from_value(v).expect("de");
         assert_eq!(req, back);
     }
 
     #[test]
     fn validate_rejects_unknown_safety_class() {
-        let req = EnvListRequest {
+        let req = BenchListRequest {
             safety_class: Some("yolo".to_string()),
             ..Default::default()
         };
@@ -361,19 +361,19 @@ mod tests {
 
     #[test]
     fn validate_accepts_empty_filters() {
-        let req = EnvListRequest::default();
+        let req = BenchListRequest::default();
         validate(&req).expect("no filters should pass validation");
     }
 
     #[test]
-    fn validate_rejects_blank_env_type() {
-        let req = EnvListRequest {
-            env_type: Some("   ".to_string()),
+    fn validate_rejects_blank_bench_type() {
+        let req = BenchListRequest {
+            bench_type: Some("   ".to_string()),
             ..Default::default()
         };
-        let err = validate(&req).expect_err("blank env_type must fail");
+        let err = validate(&req).expect_err("blank bench_type must fail");
         match err {
-            HandlerError::InvalidArgument { field, .. } => assert_eq!(field, "env_type"),
+            HandlerError::InvalidArgument { field, .. } => assert_eq!(field, "bench_type"),
             other => panic!("expected InvalidArgument, got {other:?}"),
         }
     }
@@ -386,7 +386,7 @@ mod tests {
             .and_then(|v| v.as_object())
             .expect("props");
         assert!(props.contains_key("safety_class"));
-        assert!(props.contains_key("env_type"));
+        assert!(props.contains_key("bench_type"));
         assert!(props.contains_key("format"));
     }
 }

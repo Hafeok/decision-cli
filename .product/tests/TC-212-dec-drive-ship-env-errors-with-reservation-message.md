@@ -2,7 +2,7 @@
 id: TC-212
 title: dec drive ship --env errors with reservation message and exits non-zero
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-112
@@ -14,6 +14,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-212-env-flag-reserved.sh
 runner-timeout: 30
+last-run: 2026-05-29T13:41:32.311273790+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

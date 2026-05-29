@@ -2,7 +2,7 @@
 id: TC-208
 title: 'Vocab module rename: verify_env -> verify_bench compiles with renamed identifiers'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-112
@@ -14,6 +14,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-208-vocab-rename-compiles.sh
 runner-timeout: 180
+last-run: 2026-05-29T13:41:32.311273790+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

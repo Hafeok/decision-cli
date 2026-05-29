@@ -163,7 +163,7 @@ fn tc_185_accept_transitions_consumed_feedback() {
     let _ = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-185-existing".to_string()),
         verifies: feature_id.to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(wd.path().to_path_buf()),
     })
     .expect("seed graph");
@@ -204,7 +204,7 @@ fn tc_185_accept_transitions_consumed_feedback() {
         Ok(GraphProposal::new_new(
             bundle.bundle_hash.clone(),
             NewProposal {
-                environment: "ENV-001-ephemeral-cli".to_string(),
+                environment: "BNCH-001-ephemeral-cli".to_string(),
                 steps: vec![ProposedStep {
                     step_type: "shell-command".to_string(),
                     fields,
@@ -218,7 +218,7 @@ fn tc_185_accept_transitions_consumed_feedback() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Accept,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),

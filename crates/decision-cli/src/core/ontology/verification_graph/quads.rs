@@ -6,7 +6,7 @@ use oxigraph::model::{
 };
 
 use crate::core::vocab::{
-    environment_pred, provides_evidence_for_pred, step_type_pred, steps_pred,
+    bench_pred, provides_evidence_for_pred, step_type_pred, steps_pred,
     verification_graph_class, verification_step_class, verifies_pred, IRI_DEC_BIND_AS,
     IRI_DEC_CAPTURE_OUTPUT, IRI_DEC_COMMAND, IRI_DEC_CONDITION, IRI_DEC_EXPECT_CONTENT,
     IRI_DEC_EXPECT_EXIT_CODE, IRI_DEC_EXPECT_HASH, IRI_DEC_EXPECT_ROWS, IRI_DEC_EXPECT_STATUS,
@@ -71,7 +71,7 @@ impl VerificationGraph {
         ));
         quads.push(Quad::new(
             self.id.clone(),
-            environment_pred().into_owned(),
+            bench_pred().into_owned(),
             self.environment.clone(),
             g.clone(),
         ));

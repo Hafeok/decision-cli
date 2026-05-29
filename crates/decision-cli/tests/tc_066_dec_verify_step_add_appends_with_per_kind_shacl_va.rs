@@ -95,7 +95,7 @@ fn dec_binary() -> PathBuf {
 }
 
 /// Bootstrap a working directory with `dec init` + a single empty graph
-/// `VG-001` referencing the seeded `ENV-001-ephemeral-cli`.
+/// `VG-001` referencing the seeded `BNCH-001-ephemeral-cli`.
 fn init_workdir_with_graph(tag: &str) -> (TmpDir, String) {
     let tmp = TmpDir::new(tag);
     write_seed(tmp.path());
@@ -115,7 +115,7 @@ fn init_workdir_with_graph(tag: &str) -> (TmpDir, String) {
     let out = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-001".to_string()),
         verifies: "FT-001".to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(tmp.path().to_path_buf()),
     })
     .expect("seed graph");

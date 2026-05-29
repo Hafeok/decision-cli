@@ -26,7 +26,7 @@ use crate::core::verify::safety::SafetyViolation;
 /// constructs the same object from its parsed clap args.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Request {
-    /// Tool name (e.g. `dec_verify_env_new`). Carried so handlers that
+    /// Tool name (e.g. `dec_verify_bench_new`). Carried so handlers that
     /// share an implementation across related tools can branch on it.
     pub tool: String,
     /// JSON object containing the structured arguments. By convention
@@ -103,7 +103,7 @@ pub enum Error {
     /// (unknown id, missing file). Carries kind + id for renderers.
     #[error("not found: {kind} '{id}'")]
     ArtifactNotFound {
-        /// Artifact kind, e.g. `VerificationEnvironment`.
+        /// Artifact kind, e.g. `VerificationBench`.
         kind: String,
         /// Id the caller supplied.
         id: String,

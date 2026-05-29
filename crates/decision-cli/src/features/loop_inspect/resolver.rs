@@ -74,7 +74,7 @@ pub fn short_for_tc(iri: &str) -> String {
 /// Extract the emission timestamp embedded in a runner activity IRI.
 ///
 /// The verify-graph-runner mints session-activity IRIs of the form
-/// `https://decision-cli.dev/ns/activity/verify-graph-run/VG-NNN/[ENV-NNN/]ts-<unix-nanos>`.
+/// `https://decision-cli.dev/ns/activity/verify-graph-run/VG-NNN/[BNCH-NNN/]ts-<unix-nanos>`.
 /// The suffix is monotonic and equal-precision with the per-run end
 /// time, so it's a reliable "when was this feedback emitted" stamp
 /// when `dec:routedAt` is unset (feedback that never got picked up by

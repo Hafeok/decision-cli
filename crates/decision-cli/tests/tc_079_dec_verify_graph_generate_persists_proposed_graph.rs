@@ -98,7 +98,7 @@ fn build_three_step_proposal(bundle_hash: &str, tcs: &[&str]) -> GraphProposal {
     GraphProposal::new_new(
         bundle_hash,
         NewProposal {
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             steps,
             rationale: "TC-079 mock: each step covers one TC via providesEvidenceFor".to_string(),
             addressed_feedback_iris: Vec::new(),
@@ -130,7 +130,7 @@ fn tc_079_dec_verify_graph_generate_persists_proposed_graph() {
 
     let req = GenerateRequest {
         feature_id: feature_id.to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Accept,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),
@@ -193,7 +193,7 @@ fn tc_079_handler_error_on_unknown_feature() {
 
     let req = GenerateRequest {
         feature_id: "FT-DoesNotExist".to_string(),
-        environment_id: "ENV-001-ephemeral-cli".to_string(),
+        environment_id: "BNCH-001-ephemeral-cli".to_string(),
         mode: GenerateMode::Accept,
         workdir: Some(wd.path().to_path_buf()),
         product_root: Some(wd.path().to_path_buf()),

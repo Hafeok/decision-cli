@@ -6,9 +6,9 @@
 //! Each acceptance criterion lives in its own `#[test]` exercising the
 //! pure check functions in `core::verify::safety` against
 //! programmatically constructed `VerificationGraph` and
-//! `VerificationEnvironment` values. No on-disk I/O.
+//! `VerificationBench` values. No on-disk I/O.
 
-use decision_cli::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
+use decision_cli::core::ontology::verification_bench::{SafetyClass, VerificationBench};
 use decision_cli::core::ontology::verification_graph::{
     ArtifactRef, StepFields, StepIri, VerificationGraph, VerificationStep,
 };
@@ -24,17 +24,17 @@ fn ft_001_ref() -> ArtifactRef {
     ))
 }
 
-fn env(id: &str, allowed: &[&str], class: SafetyClass) -> VerificationEnvironment {
-    let (env_type, endpoint) = match class {
+fn env(id: &str, allowed: &[&str], class: SafetyClass) -> VerificationBench {
+    let (bench_type, endpoint) = match class {
         SafetyClass::ProductionReadonly => (
             "remote-http".to_string(),
             Some("https://example.com".to_string()),
         ),
         _ => ("ephemeral-tempdir".to_string(), None),
     };
-    VerificationEnvironment {
+    VerificationBench {
         id: id.to_string(),
-        env_type,
+        bench_type,
         setup: None,
         teardown: None,
         allowed_ops: allowed.iter().map(|s| (*s).to_string()).collect(),
@@ -72,7 +72,7 @@ fn graph_for(env_id: &str, steps: Vec<VerificationStep>) -> VerificationGraph {
     VerificationGraph::new(
         "VG-tc058",
         ft_001_ref(),
-        NamedNode::new_unchecked(format!("https://decision-cli.dev/ns/env/{env_id}")),
+        NamedNode::new_unchecked(format!("https://decision-cli.dev/ns/bench/{env_id}")),
         steps,
     )
 }

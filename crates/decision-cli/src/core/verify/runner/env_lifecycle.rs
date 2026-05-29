@@ -8,7 +8,7 @@
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::core::ontology::verification_env::VerificationEnvironment;
+use crate::core::ontology::verification_bench::VerificationBench;
 
 /// Result of Phase-2 setup — the resolved working directory and a flag
 /// telling Phase-4 whether to clean it up.
@@ -22,8 +22,8 @@ pub(crate) struct EnvHandle {
 
 /// Resolve the env's runtime working directory. No I/O for `remote-*`
 /// envs; `mkdir_all` for `ephemeral-tempdir`; join for `repo-path`.
-pub(crate) fn setup(workdir: &std::path::Path, env: &VerificationEnvironment) -> EnvHandle {
-    match env.env_type.as_str() {
+pub(crate) fn setup(workdir: &std::path::Path, env: &VerificationBench) -> EnvHandle {
+    match env.bench_type.as_str() {
         "ephemeral-tempdir" => {
             let dec_workdir = mint_tempdir(env);
             let _ = std::fs::create_dir_all(&dec_workdir);
@@ -64,7 +64,7 @@ pub(crate) fn teardown(handle: &EnvHandle) {
     let _ = std::fs::remove_dir_all(&handle.dec_workdir);
 }
 
-fn mint_tempdir(env: &VerificationEnvironment) -> PathBuf {
+fn mint_tempdir(env: &VerificationBench) -> PathBuf {
     let base = std::env::var_os("DEC_TMP")
         .map(PathBuf::from)
         .unwrap_or_else(|| std::env::temp_dir().join("dec-verify"));

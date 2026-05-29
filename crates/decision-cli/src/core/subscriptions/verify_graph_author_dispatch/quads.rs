@@ -10,7 +10,7 @@ use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 use crate::core::vocab::{
     bundle_hash_pred, emitted_at, event_class, feature_ref, orchestration_graph, target_role,
     triggered_by_event_id, verify_graph_author_dispatch_event_class,
-    EVENT_CLASS_VERIFY_GRAPH_AUTHOR_DISPATCH, IRI_DEC_ENVIRONMENT, IRI_DEC_EVENT,
+    EVENT_CLASS_VERIFY_GRAPH_AUTHOR_DISPATCH, IRI_DEC_BENCH, IRI_DEC_EVENT,
     VERIFY_GRAPH_AUTHOR_TARGET_ROLE,
 };
 
@@ -23,7 +23,7 @@ pub struct DispatchEventQuadInput<'a> {
     pub event_iri: &'a NamedNode,
     /// Short feature id (e.g. `FT-050`).
     pub feature_short: &'a str,
-    /// Short env id (e.g. `ENV-001-ephemeral-cli`).
+    /// Short env id (e.g. `BNCH-001-ephemeral-cli`).
     pub env_short: &'a str,
     /// SHA-256 hex of the assembled bundle.
     pub bundle_hash: &'a str,
@@ -69,7 +69,7 @@ fn build_event_payload_quads(input: &DispatchEventQuadInput<'_>, g: &GraphName) 
 }
 
 fn build_event_role_quads(input: &DispatchEventQuadInput<'_>, g: &GraphName) -> Vec<Quad> {
-    let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT).into_owned();
+    let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_BENCH).into_owned();
     vec![
         Quad::new(
             input.event_iri.clone(),

@@ -2,7 +2,7 @@
 id: FT-112
 title: 'decision-cli: rename verification ENV-NNN to BNCH-NNN, free --env for deployment target'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs: []
 tests:
@@ -17,8 +17,8 @@ domains:
 - api
 - data-model
 domains-acknowledged:
-  data-model: Renames IRI vocab and rewrites the orchestration store; preserves semantic content of every quad. The data-model-domain ADRs govern the migration discipline (single SPARQL UPDATE transaction, idempotent) without a new decision.
   api: Rename touches the CLI surface (--env → --bench, verify env → verify bench) but introduces no new API contract; the api-domain ADRs (slice+adapter, etc.) constrain the call-site updates without independent decision.
+  data-model: Renames IRI vocab and rewrites the orchestration store; preserves semantic content of every quad. The data-model-domain ADRs govern the migration discipline (single SPARQL UPDATE transaction, idempotent) without a new decision.
 ---
 
 ## Description

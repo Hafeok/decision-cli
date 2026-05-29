@@ -47,11 +47,11 @@ cd "$WORKDIR"
 # list. Two heads bound to the same env subject is the canonical
 # corruption shape FT-039's list handler must tolerate (TC-096 AC #3/#4).
 cat >>.dec/store/orchestration.nq <<'NQUADS'
-_:corrupt-broken-1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <https://decision-cli.dev/ns/graph/verify-env> .
-_:corrupt-broken-1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "sparql-local" <https://decision-cli.dev/ns/graph/verify-env> .
-_:corrupt-broken-0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:corrupt-broken-1 <https://decision-cli.dev/ns/graph/verify-env> .
-_:corrupt-broken-0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "http" <https://decision-cli.dev/ns/graph/verify-env> .
-<https://decision-cli.dev/ns/env/ENV-BROKEN> <https://decision-cli.dev/ns#allowedOps> _:corrupt-broken-0 <https://decision-cli.dev/ns/graph/verify-env> .
+_:corrupt-broken-1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <https://decision-cli.dev/ns/graph/verify-bench> .
+_:corrupt-broken-1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "sparql-local" <https://decision-cli.dev/ns/graph/verify-bench> .
+_:corrupt-broken-0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:corrupt-broken-1 <https://decision-cli.dev/ns/graph/verify-bench> .
+_:corrupt-broken-0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "http" <https://decision-cli.dev/ns/graph/verify-bench> .
+<https://decision-cli.dev/ns/bench/ENV-BROKEN> <https://decision-cli.dev/ns#allowedOps> _:corrupt-broken-0 <https://decision-cli.dev/ns/graph/verify-bench> .
 NQUADS
 
 # The invariant: list must not abort. It may return 0 or a documented

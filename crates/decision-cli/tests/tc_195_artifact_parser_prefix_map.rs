@@ -12,8 +12,8 @@ fn tc_195_artifact_parser_prefix_map() {
         ("FT-019", ArtifactKind::Feature),
         ("TC-027", ArtifactKind::TestCriterion),
         ("VG-100", ArtifactKind::VerificationGraph),
-        ("ENV-002", ArtifactKind::Environment),
-        ("ENV-001-ephemeral-cli", ArtifactKind::Environment),
+        ("BNCH-002", ArtifactKind::Environment),
+        ("BNCH-001-ephemeral-cli", ArtifactKind::Environment),
         ("ADR-066", ArtifactKind::Adr),
     ];
     for (s, expected) in happy {

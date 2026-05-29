@@ -13,7 +13,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use decision_cli::core::ontology::verification_env::{
+use decision_cli::core::ontology::verification_bench::{
     from_turtle, EPHEMERAL_CLI_ENV_FILENAME, EPHEMERAL_CLI_ENV_ID,
 };
 use decision_cli::init::{run as init_run, DefinitionSource};
@@ -59,8 +59,8 @@ impl Drop for WorkdirGuard {
 const STREAM_TTL: &str =
     include_str!("../src/core/bundled/assets/streams/engineering-development.ttl");
 
-const ENV_CLASS_IRI: &str = "https://decision-cli.dev/ns#VerificationEnvironment";
-const EXPECTED_ENV_IRI: &str = "https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli";
+const ENV_CLASS_IRI: &str = "https://decision-cli.dev/ns#VerificationBench";
+const EXPECTED_ENV_IRI: &str = "https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli";
 
 fn write_seed_definition(dir: &Path) -> PathBuf {
     let p = dir.join("stream.ttl");
@@ -99,10 +99,10 @@ fn ephemeral_cli_env_seed_exists_after_init() {
     let target = env_file_path(workdir);
     assert!(target.exists(), "{target:?} should exist after dec init");
 
-    // File parses as Turtle and yields a VerificationEnvironment.
+    // File parses as Turtle and yields a VerificationBench.
     let env = from_turtle(&target).expect("seed parses as Turtle");
     assert_eq!(env.id, EPHEMERAL_CLI_ENV_ID);
-    assert_eq!(env.env_type, "ephemeral-tempdir");
+    assert_eq!(env.bench_type, "ephemeral-tempdir");
     assert_eq!(env.safety_class.as_str(), "isolated");
     assert_eq!(
         env.allowed_ops,
@@ -192,7 +192,7 @@ fn store_projection_contains_exactly_one_env() {
     run_init(workdir);
 
     // Load the persisted store dump and run a SPARQL query against the
-    // verify-env named graph.
+    // verify-bench named graph.
     let dump_path = workdir.join(".dec").join("store").join("orchestration.nq");
     let bytes = fs::read(&dump_path).expect("read store dump");
     let store = Store::new().expect("in-memory store");
@@ -218,7 +218,7 @@ fn store_projection_contains_exactly_one_env() {
     assert_eq!(
         found.len(),
         1,
-        "store must project exactly one VerificationEnvironment; found: {found:?}"
+        "store must project exactly one VerificationBench; found: {found:?}"
     );
     assert_eq!(found[0], EXPECTED_ENV_IRI);
 }

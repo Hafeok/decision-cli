@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use decision_cli::core::verify::runner::{run_graph, RunGraphRequest, TriggerKind};
-use decision_cli::verify_env_new::{self, EnvNewRequest};
+use decision_cli::verify_bench_new::{self, BenchNewRequest};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
 use decision_cli::verify_step_add::{self, StepAddRequest};
 use oxigraph::model::NamedNode;
@@ -110,15 +110,15 @@ fn fields_of(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
         .collect()
 }
 
-const ENV_ID: &str = "ENV-9-tc156";
+const ENV_ID: &str = "BNCH-9-tc156";
 const VG_ID: &str = "VG-9-tc156";
 
 #[test]
 fn tc_156_failed_evidence_bearing_step_emits_one_dec_feedbac() {
     let tmp = init_workdir("fb");
-    verify_env_new::run(&EnvNewRequest {
+    verify_bench_new::run(&BenchNewRequest {
         id: Some(ENV_ID.into()),
-        env_type: "ephemeral-tempdir".into(),
+        bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
         allowed_ops: vec![
             "shell".into(),

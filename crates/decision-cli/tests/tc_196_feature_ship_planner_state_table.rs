@@ -51,7 +51,7 @@ fn classify(verdict: FeatureVerdict, impl_c: usize, vga_c: usize) -> Action {
         impl_count: impl_c,
         vga_count: vga_c,
     });
-    planner.classify("FT-T196", "ENV-002").expect("classify ok")
+    planner.classify("FT-T196", "BNCH-002").expect("classify ok")
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn tc_196_feature_ship_planner_state_table() {
         match action {
             Action::DispatchVerifyGraphAuthor { feature_id, env_id } => {
                 assert_eq!(feature_id, "FT-T196");
-                assert_eq!(env_id, "ENV-002");
+                assert_eq!(env_id, "BNCH-002");
             }
             other => panic!("{verdict:?} 0 3 should be DispatchVerifyGraphAuthor; got {other:?}"),
         }
@@ -109,7 +109,7 @@ fn tc_196_feature_ship_planner_state_table() {
     match action {
         Action::DispatchVerifier { feature_id, env_id } => {
             assert_eq!(feature_id, "FT-T196");
-            assert_eq!(env_id, "ENV-002");
+            assert_eq!(env_id, "BNCH-002");
         }
         other => panic!("expected DispatchVerifier; got {other:?}"),
     }
@@ -124,7 +124,7 @@ fn tc_196_feature_ship_planner_state_table() {
         match action {
             Action::DispatchVerifier { feature_id, env_id } => {
                 assert_eq!(feature_id, "FT-T196");
-                assert_eq!(env_id, "ENV-002");
+                assert_eq!(env_id, "BNCH-002");
             }
             other => panic!("{verdict:?} 0 0 should be DispatchVerifier; got {other:?}"),
         }

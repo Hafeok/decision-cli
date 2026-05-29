@@ -99,7 +99,7 @@ pub struct VerificationGraphResult {
     pub id: String,
     /// IRI of the `VerificationGraph` this run executed.
     pub result_of: String,
-    /// IRI of the `VerificationEnvironment` this run ran in.
+    /// IRI of the `VerificationBench` this run ran in.
     pub ran_in_environment: String,
     /// Per-graph verdict.
     pub verdict: Verdict,

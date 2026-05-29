@@ -15,7 +15,7 @@ use decision_cli::core::verify::coverage::feature_resolver::{
     feature_iri_for, graph_iri_for, tc_iri_for,
 };
 use decision_cli::core::verify::matcher::{best_matching_graphs, MatchKind};
-use decision_cli::vocab::{verify_graph_named_graph, IRI_DEC_ENV_PREFIX};
+use decision_cli::vocab::{verify_graph_named_graph, IRI_DEC_BENCH_PREFIX};
 use oxigraph::model::{NamedNode, NamedNodeRef, Quad, QuadRef};
 use oxigraph::store::Store;
 
@@ -74,17 +74,17 @@ fn insert_quads(store: &Store, quads: &[Quad]) {
 }
 
 fn seed_env(store: &Store, env_iri: &str) {
-    let verify_env_graph =
-        NamedNodeRef::new_unchecked("https://decision-cli.dev/ns/graph/verify-env");
+    let verify_bench_graph =
+        NamedNodeRef::new_unchecked("https://decision-cli.dev/ns/graph/verify-bench");
     let env = NamedNode::new_unchecked(env_iri.to_string());
     let rdf_type = NamedNode::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-    let env_class = NamedNode::new_unchecked("https://decision-cli.dev/ns#VerificationEnvironment");
-    let q = QuadRef::new(&env, &rdf_type, &env_class, verify_env_graph);
+    let env_class = NamedNode::new_unchecked("https://decision-cli.dev/ns#VerificationBench");
+    let q = QuadRef::new(&env, &rdf_type, &env_class, verify_bench_graph);
     store.insert(q).expect("insert env type");
 }
 
 fn env_iri(short: &str) -> String {
-    format!("{IRI_DEC_ENV_PREFIX}{short}")
+    format!("{IRI_DEC_BENCH_PREFIX}{short}")
 }
 
 /// Build a graph with one step per TC it covers, all in `env_iri`.

@@ -160,11 +160,11 @@ mod tests {
     fn parser_round_trip() {
         let body = "[verify_graph_runner.on_graph_accepted]\n\
                     enabled = false\n\
-                    envs = [\"ENV-001\"]\n\
+                    envs = [\"BNCH-001\"]\n\
                     dedup_ttl_seconds = 5\n";
         let cfg = parse_from_str(body).expect("parsed");
         assert!(!cfg.enabled);
-        assert_eq!(cfg.envs, vec!["ENV-001".to_string()]);
+        assert_eq!(cfg.envs, vec!["BNCH-001".to_string()]);
         assert_eq!(cfg.dedup_ttl_seconds, 5);
     }
 

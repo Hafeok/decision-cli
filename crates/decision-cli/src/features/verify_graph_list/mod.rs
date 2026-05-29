@@ -62,7 +62,7 @@ pub struct GraphListRequest {
     /// Optional `verifies` filter — `FT-NNN` or `TC-NNN`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verifies: Option<String>,
-    /// Optional environment filter (e.g. `ENV-001-ephemeral-cli`).
+    /// Optional environment filter (e.g. `BNCH-001-ephemeral-cli`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub environment: Option<String>,
     /// Output format. Defaults to `Table` for CLI rendering.
@@ -80,7 +80,7 @@ pub struct GraphSummary {
     pub id: String,
     /// `dec:verifies` reference (canonical `FT-NNN` or `TC-NNN`).
     pub verifies: String,
-    /// `dec:environment` reference (canonical `ENV-NNN[-suffix]`).
+    /// `dec:environment` reference (canonical `BNCH-NNN[-suffix]`).
     pub environment: String,
     /// Count of `dec:VerificationStep`s the graph contains.
     pub step_count: u64,
@@ -257,7 +257,7 @@ mod tests {
     fn request_roundtrips_through_json() {
         let req = GraphListRequest {
             verifies: Some("FT-001".to_string()),
-            environment: Some("ENV-001-ephemeral-cli".to_string()),
+            environment: Some("BNCH-001-ephemeral-cli".to_string()),
             format: Some(OutputFormat::Json),
             workdir: None,
         };
@@ -302,7 +302,7 @@ mod tests {
     fn validate_accepts_well_formed_filters() {
         let req = GraphListRequest {
             verifies: Some("FT-001".to_string()),
-            environment: Some("ENV-001-ephemeral-cli".to_string()),
+            environment: Some("BNCH-001-ephemeral-cli".to_string()),
             ..Default::default()
         };
         validate(&req).expect("valid filters should pass");

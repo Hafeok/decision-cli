@@ -1,70 +1,70 @@
-//! Canonical Turtle writer for `dec:VerificationEnvironment` (ADR-028).
+//! Canonical Turtle writer for `dec:VerificationBench` (ADR-028).
 //!
 //! Byte-deterministic by construction — TC-055 relies on this output
 //! being identical for the same input.
 
-use crate::core::vocab::IRI_DEC_ENV_PREFIX;
+use crate::core::vocab::IRI_DEC_BENCH_PREFIX;
 
-use super::types::VerificationEnvironment;
+use super::types::VerificationBench;
 
 /// Serialise an environment to its canonical Turtle form.
 ///
 /// The byte layout is fixed so seed reproducibility (TC-055) does not
 /// depend on an external serialiser's whims. Order of properties is
-/// fixed: `a`, `dec:envType`, `dec:safetyClass`, `dec:allowedOps`,
+/// fixed: `a`, `dec:benchType`, `dec:safetyClass`, `dec:allowedOps`,
 /// `dec:setup`, `dec:teardown`, `dec:endpoint`, `dec:fixtureSource`.
 #[must_use]
-pub fn to_canonical_turtle(env: &VerificationEnvironment) -> String {
+pub fn to_canonical_turtle(bench: &VerificationBench) -> String {
     let mut out = String::new();
-    write_env_header(&mut out, env);
-    write_env_required_fields(&mut out, env);
-    write_env_optional_fields(&mut out, env);
+    write_env_header(&mut out, bench);
+    write_env_required_fields(&mut out, bench);
+    write_env_optional_fields(&mut out, bench);
     finalise_turtle_statement(&mut out);
     out
 }
 
-fn write_env_header(out: &mut String, env: &VerificationEnvironment) {
+fn write_env_header(out: &mut String, bench: &VerificationBench) {
     use std::fmt::Write;
-    out.push_str("# decision-cli VerificationEnvironment artifact.\n");
+    out.push_str("# decision-cli VerificationBench artifact.\n");
     out.push_str("# Authored by FT-035 / ADR-028. On-disk Turtle is authoritative.\n\n");
     out.push_str("@prefix dec: <https://decision-cli.dev/ns#> .\n\n");
     let _ = writeln!(
         out,
         "<{prefix}{id}>",
-        prefix = IRI_DEC_ENV_PREFIX,
-        id = env.id
+        prefix = IRI_DEC_BENCH_PREFIX,
+        id = bench.id
     );
-    out.push_str("    a dec:VerificationEnvironment ;\n");
+    out.push_str("    a dec:VerificationBench ;\n");
 }
 
-fn write_env_required_fields(out: &mut String, env: &VerificationEnvironment) {
+fn write_env_required_fields(out: &mut String, bench: &VerificationBench) {
     use std::fmt::Write;
     let _ = writeln!(
         out,
-        "    dec:envType {value} ;",
-        value = turtle_string(&env.env_type)
+        "    dec:benchType {value} ;",
+        value = turtle_string(&bench.bench_type)
     );
     let _ = writeln!(
         out,
         "    dec:safetyClass {value} ;",
-        value = turtle_string(env.safety_class.as_str())
+        value = turtle_string(bench.safety_class.as_str())
     );
-    let ops_list = format_allowed_ops_list(&env.allowed_ops);
+    let ops_list = format_allowed_ops_list(&bench.allowed_ops);
     let _ = writeln!(out, "    dec:allowedOps {ops_list} ;");
 }
 
-fn write_env_optional_fields(out: &mut String, env: &VerificationEnvironment) {
+fn write_env_optional_fields(out: &mut String, bench: &VerificationBench) {
     use std::fmt::Write;
-    if let Some(s) = &env.setup {
+    if let Some(s) = &bench.setup {
         let _ = writeln!(out, "    dec:setup {value} ;", value = turtle_string(s));
     }
-    if let Some(s) = &env.teardown {
+    if let Some(s) = &bench.teardown {
         let _ = writeln!(out, "    dec:teardown {value} ;", value = turtle_string(s));
     }
-    if let Some(s) = &env.endpoint {
+    if let Some(s) = &bench.endpoint {
         let _ = writeln!(out, "    dec:endpoint {value} ;", value = turtle_string(s));
     }
-    if let Some(s) = &env.fixture_source {
+    if let Some(s) = &bench.fixture_source {
         let _ = writeln!(
             out,
             "    dec:fixtureSource {value} ;",

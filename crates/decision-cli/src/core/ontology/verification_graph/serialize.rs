@@ -29,7 +29,7 @@ fn write_graph_header(out: &mut String, graph: &VerificationGraph) {
     let _ = writeln!(out, "    dec:verifies <{}> ;", graph.verifies.0.as_str());
     let _ = writeln!(
         out,
-        "    dec:environment <{}> ;",
+        "    dec:bench <{}> ;",
         graph.environment.as_str()
     );
     if graph.steps.is_empty() {

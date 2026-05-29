@@ -1,4 +1,4 @@
-//! rdf:List traversal helpers used by the verification-env SHACL checks.
+//! rdf:List traversal helpers used by the verification-bench SHACL checks.
 
 use std::collections::BTreeSet;
 

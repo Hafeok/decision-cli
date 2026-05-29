@@ -1,14 +1,14 @@
-//! `dec verify env show` — single-handler implementation (FT-040 / ADR-029).
+//! `dec verify bench show` — single-handler implementation (FT-040 / ADR-029).
 //!
-//! Read-only detail view of a single `dec:VerificationEnvironment`. One
+//! Read-only detail view of a single `dec:VerificationBench`. One
 //! handler, two surfaces: the clap-driven CLI in
 //! `crates/decision-cli/src/cli/verify.rs` and the MCP tool descriptor
-//! in [`tool_descriptor`] both construct an [`EnvShowRequest`] and route
+//! in [`tool_descriptor`] both construct an [`BenchShowRequest`] and route
 //! it through [`run`].
 //!
 //! Behaviour mirrors FT-040 §Behaviour: parse the id, locate the
-//! on-disk env file under `.dec/verify/env/<id>.ttl`, reconstruct the
-//! full `VerificationEnvironment` value, and return its document plus
+//! on-disk bench file under `.dec/verify/bench/<id>.ttl`, reconstruct the
+//! full `VerificationBench` value, and return its document plus
 //! the resolved path. Unknown ids surface as
 //! [`HandlerError::ArtifactNotFound`]; malformed ids surface as
 //! [`HandlerError::InvalidArgument`].
@@ -22,13 +22,13 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::core::handler::{Error as HandlerError, Request};
-use crate::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
+use crate::core::ontology::verification_bench::{SafetyClass, VerificationBench};
 
 pub use render::{render_json, render_text};
 pub use schema::{input_schema, tool_descriptor};
 
 /// MCP tool name — referenced by `cli::verify` for the parity TC.
-pub const TOOL_NAME: &str = "dec_verify_env_show";
+pub const TOOL_NAME: &str = "dec_verify_bench_show";
 
 /// Output format selector for the CLI surface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -60,8 +60,8 @@ impl OutputFormat {
 
 /// Structured request the single handler consumes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct EnvShowRequest {
-    /// Identifier of the env to show (e.g. `ENV-001-ephemeral-cli`).
+pub struct BenchShowRequest {
+    /// Identifier of the bench to show (e.g. `BNCH-001-ephemeral-cli`).
     pub id: String,
     /// Output format. Defaults to `Text` for CLI rendering.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -71,14 +71,14 @@ pub struct EnvShowRequest {
     pub workdir: Option<PathBuf>,
 }
 
-/// Full env document — every property of a `VerificationEnvironment`,
+/// Full bench document — every property of a `VerificationBench`,
 /// optional fields omitted when absent.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EnvDocument {
-    /// `ENV-NNN[-suffix]` identifier.
+    /// `BNCH-NNN[-suffix]` identifier.
     pub id: String,
-    /// `dec:envType` value.
-    pub env_type: String,
+    /// `dec:benchType` value.
+    pub bench_type: String,
     /// `dec:safetyClass` value.
     pub safety_class: String,
     /// `dec:endpoint` value (omitted when absent).
@@ -98,36 +98,36 @@ pub struct EnvDocument {
 }
 
 impl EnvDocument {
-    /// Project a [`VerificationEnvironment`] into its on-the-wire shape.
+    /// Project a [`VerificationBench`] into its on-the-wire shape.
     #[must_use]
-    pub fn from_env(env: &VerificationEnvironment) -> Self {
+    pub fn from_env(bench: &VerificationBench) -> Self {
         Self {
-            id: env.id.clone(),
-            env_type: env.env_type.clone(),
-            safety_class: env.safety_class.as_str().to_string(),
-            endpoint: env.endpoint.clone(),
-            allowed_ops: env.allowed_ops.clone(),
-            setup: env.setup.clone(),
-            teardown: env.teardown.clone(),
-            fixture_source: env.fixture_source.clone(),
+            id: bench.id.clone(),
+            bench_type: bench.bench_type.clone(),
+            safety_class: bench.safety_class.as_str().to_string(),
+            endpoint: bench.endpoint.clone(),
+            allowed_ops: bench.allowed_ops.clone(),
+            setup: bench.setup.clone(),
+            teardown: bench.teardown.clone(),
+            fixture_source: bench.fixture_source.clone(),
         }
     }
 
-    /// Reconstruct a [`VerificationEnvironment`] from the document. The
+    /// Reconstruct a [`VerificationBench`] from the document. The
     /// id and safety class are validated; unknown safety values surface
     /// as `HandlerError::Internal` (they would have failed SHACL on the
     /// write path, so seeing them here is a graph-corruption signal).
-    pub fn to_env(&self) -> Result<VerificationEnvironment, HandlerError> {
+    pub fn to_env(&self) -> Result<VerificationBench, HandlerError> {
         let safety =
             SafetyClass::parse(&self.safety_class).ok_or_else(|| HandlerError::Internal {
                 detail: format!(
-                    "unknown safety class {got:?} in env document",
+                    "unknown safety class {got:?} in bench document",
                     got = self.safety_class,
                 ),
             })?;
-        Ok(VerificationEnvironment {
+        Ok(VerificationBench {
             id: self.id.clone(),
-            env_type: self.env_type.clone(),
+            bench_type: self.bench_type.clone(),
             setup: self.setup.clone(),
             teardown: self.teardown.clone(),
             allowed_ops: self.allowed_ops.clone(),
@@ -141,20 +141,20 @@ impl EnvDocument {
 /// Structured response — surfaced verbatim by MCP, rendered as text or
 /// JSON by the CLI per `req.format`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct EnvShowResponse {
-    /// Full env document.
-    pub env: EnvDocument,
-    /// Absolute path of the on-disk `.dec/verify/env/<id>.ttl` file.
+pub struct BenchShowResponse {
+    /// Full bench document.
+    pub bench: EnvDocument,
+    /// Absolute path of the on-disk `.dec/verify/bench/<id>.ttl` file.
     pub path: PathBuf,
 }
 
-/// Parse the structured `Request` envelope into [`EnvShowRequest`].
-pub fn parse_request(req: &Request) -> Result<EnvShowRequest, HandlerError> {
-    let mut parsed: EnvShowRequest =
+/// Parse the structured `Request` envelope into [`BenchShowRequest`].
+pub fn parse_request(req: &Request) -> Result<BenchShowRequest, HandlerError> {
+    let mut parsed: BenchShowRequest =
         serde_json::from_value(req.arguments.clone()).map_err(|e| {
             HandlerError::InvalidArgument {
                 field: "arguments".to_string(),
-                detail: format!("malformed dec_verify_env_show arguments: {e}"),
+                detail: format!("malformed dec_verify_bench_show arguments: {e}"),
             }
         })?;
     if parsed.workdir.is_none() {
@@ -169,32 +169,32 @@ pub fn parse_request(req: &Request) -> Result<EnvShowRequest, HandlerError> {
 /// malformed ids surface as `InvalidArgument { field: "id" }` (exit 2),
 /// distinct from missing ids which surface as `ArtifactNotFound` (exit 1).
 fn validate_id(id: &str) -> Result<(), HandlerError> {
-    if !id.starts_with("ENV-") {
+    if !id.starts_with("BNCH-") {
         return Err(HandlerError::InvalidArgument {
             field: "id".to_string(),
-            detail: format!("env id must start with 'ENV-', got {id:?}"),
+            detail: format!("bench id must start with 'BNCH-', got {id:?}"),
         });
     }
     if id.len() < 5 {
         return Err(HandlerError::InvalidArgument {
             field: "id".to_string(),
-            detail: format!("env id {id:?} is too short (expected ENV-NNN[-suffix])"),
+            detail: format!("bench id {id:?} is too short (expected BNCH-NNN[-suffix])"),
         });
     }
-    // The tail immediately after "ENV-" must start with a digit so
-    // bare prefixes ("ENV-foo") never resolve to a file.
+    // The tail immediately after "BNCH-" must start with a digit so
+    // bare prefixes ("BNCH-foo") never resolve to a file.
     let tail = &id[4..];
     if !tail.chars().next().is_some_and(|c| c.is_ascii_digit()) {
         return Err(HandlerError::InvalidArgument {
             field: "id".to_string(),
-            detail: format!("env id {id:?} must match ENV-NNN[-suffix]"),
+            detail: format!("bench id {id:?} must match BNCH-NNN[-suffix]"),
         });
     }
     Ok(())
 }
 
 /// Single handler — both CLI and MCP surfaces invoke this.
-pub fn run(req: &EnvShowRequest) -> Result<EnvShowResponse, HandlerError> {
+pub fn run(req: &BenchShowRequest) -> Result<BenchShowResponse, HandlerError> {
     validate_id(&req.id)?;
     let workdir = req
         .workdir
@@ -204,10 +204,10 @@ pub fn run(req: &EnvShowRequest) -> Result<EnvShowResponse, HandlerError> {
             detail: "no working directory available; run from a `dec init`-bootstrapped tree"
                 .to_string(),
         })?;
-    let env_dir = workdir.join(".dec").join("verify").join("env");
-    let (path, env) = resolve::load_env(&env_dir, &req.id)?;
-    Ok(EnvShowResponse {
-        env: EnvDocument::from_env(&env),
+    let bench_dir = workdir.join(".dec").join("verify").join("bench");
+    let (path, bench) = resolve::load_env(&bench_dir, &req.id)?;
+    Ok(BenchShowResponse {
+        bench: EnvDocument::from_env(&bench),
         path: path.canonicalize().unwrap_or(path),
     })
 }
@@ -230,13 +230,13 @@ mod tests {
 
     #[test]
     fn request_roundtrips_through_json() {
-        let req = EnvShowRequest {
-            id: "ENV-001".to_string(),
+        let req = BenchShowRequest {
+            id: "BNCH-001".to_string(),
             format: Some(OutputFormat::Json),
             workdir: None,
         };
         let v = serde_json::to_value(&req).expect("ser");
-        let back: EnvShowRequest = serde_json::from_value(v).expect("de");
+        let back: BenchShowRequest = serde_json::from_value(v).expect("de");
         assert_eq!(req, back);
     }
 
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn validate_id_rejects_short_id() {
-        let err = validate_id("ENV-").expect_err("short id must fail");
+        let err = validate_id("BNCH-").expect_err("short id must fail");
         match err {
             HandlerError::InvalidArgument { field, .. } => assert_eq!(field, "id"),
             other => panic!("expected InvalidArgument, got {other:?}"),
@@ -271,7 +271,7 @@ mod tests {
 
     #[test]
     fn validate_id_rejects_non_numeric_tail() {
-        let err = validate_id("ENV-foo").expect_err("non-numeric tail must fail");
+        let err = validate_id("BNCH-foo").expect_err("non-numeric tail must fail");
         match err {
             HandlerError::InvalidArgument { field, .. } => assert_eq!(field, "id"),
             other => panic!("expected InvalidArgument, got {other:?}"),
@@ -280,19 +280,19 @@ mod tests {
 
     #[test]
     fn validate_id_accepts_plain_env_nnn() {
-        validate_id("ENV-007").expect("ENV-007 should be a valid id format");
+        validate_id("BNCH-007").expect("BNCH-007 should be a valid id format");
     }
 
     #[test]
     fn validate_id_accepts_env_nnn_with_suffix() {
-        validate_id("ENV-001-ephemeral-cli").expect("suffixed id should be valid");
+        validate_id("BNCH-001-ephemeral-cli").expect("suffixed id should be valid");
     }
 
     #[test]
     fn env_document_round_trips_to_env() {
-        let env = VerificationEnvironment {
-            id: "ENV-007".to_string(),
-            env_type: "ephemeral-tempdir".to_string(),
+        let bench = VerificationBench {
+            id: "BNCH-007".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             setup: Some("echo hi".to_string()),
             teardown: None,
             allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
@@ -300,17 +300,17 @@ mod tests {
             endpoint: None,
             fixture_source: None,
         };
-        let doc = EnvDocument::from_env(&env);
+        let doc = EnvDocument::from_env(&bench);
         let back = doc.to_env().expect("to_env");
-        assert_eq!(env, back);
+        assert_eq!(bench, back);
     }
 
     /// FT-053: EnvDocument round-trips with a non-None fixture_source.
     #[test]
     fn env_document_round_trips_with_fixture_source() {
-        let env = VerificationEnvironment {
-            id: "ENV-008".to_string(),
-            env_type: "ephemeral-tempdir".to_string(),
+        let bench = VerificationBench {
+            id: "BNCH-008".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             setup: None,
             teardown: None,
             allowed_ops: vec!["shell".to_string()],
@@ -318,9 +318,9 @@ mod tests {
             endpoint: None,
             fixture_source: Some("tests/fixtures/dec-implement-basic".to_string()),
         };
-        let doc = EnvDocument::from_env(&env);
+        let doc = EnvDocument::from_env(&bench);
         let back = doc.to_env().expect("to_env");
-        assert_eq!(env, back);
+        assert_eq!(bench, back);
         assert_eq!(
             doc.fixture_source.as_deref(),
             Some("tests/fixtures/dec-implement-basic"),

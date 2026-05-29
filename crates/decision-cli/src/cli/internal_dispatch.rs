@@ -159,7 +159,7 @@ fn run_ledger_graph(workdir: &Path, args: &LedgerGraphAcceptedArgs) -> ExitCode 
         graph = args.graph_id
     );
     let env_iri = format!(
-        "https://decision-cli.dev/ns/env/{env}",
+        "https://decision-cli.dev/ns/bench/{env}",
         env = args.env
     );
     match subscriptions::graph_accepted_dispatch::ledger::get_entry(

@@ -15,7 +15,7 @@ use crate::core::handler::Error as HandlerError;
 use crate::core::sparql::term_iri_string;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::vocab::{
-    environment_pred, steps_pred, verification_graph_class, verifies_pred, IRI_DEC_ENV_PREFIX,
+    bench_pred, steps_pred, verification_graph_class, verifies_pred, IRI_DEC_BENCH_PREFIX,
     IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX,
 };
 
@@ -87,7 +87,7 @@ fn solution_to_summary(sol: &QuerySolution) -> Option<GraphSummary> {
     let verifies_iri = sol.get("verifies").map(term_iri_string).unwrap_or_default();
     let environment_iri = sol.get("env").map(term_iri_string).unwrap_or_default();
     let environment_short = environment_iri
-        .strip_prefix(IRI_DEC_ENV_PREFIX)
+        .strip_prefix(IRI_DEC_BENCH_PREFIX)
         .unwrap_or(environment_iri.as_str())
         .to_string();
     let step_count = sol
@@ -143,7 +143,7 @@ fn build_query(verifies: Option<&str>, environment: Option<&str>) -> String {
         graph_iri = IRI_DEC_GRAPH_VERIFY_GRAPH,
         cls = verification_graph_class().as_str(),
         p_verifies = verifies_pred().as_str(),
-        p_env = environment_pred().as_str(),
+        p_env = bench_pred().as_str(),
         p_steps = steps_pred().as_str(),
         rdf_rest = RDF_REST,
         rdf_first = RDF_FIRST,
@@ -163,7 +163,7 @@ fn build_verifies_filter(verifies: Option<&str>) -> String {
 
 fn build_env_filter(environment: Option<&str>) -> String {
     environment
-        .map(|e| format!("    FILTER(?env = <{IRI_DEC_ENV_PREFIX}{e}>)\n"))
+        .map(|e| format!("    FILTER(?env = <{IRI_DEC_BENCH_PREFIX}{e}>)\n"))
         .unwrap_or_default()
 }
 
@@ -217,16 +217,16 @@ mod tests {
 
     #[test]
     fn build_query_inlines_env_filter() {
-        let q = build_query(None, Some("ENV-001-ephemeral-cli"));
+        let q = build_query(None, Some("BNCH-001-ephemeral-cli"));
         assert!(
-            q.contains("FILTER(?env = <https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli>)")
+            q.contains("FILTER(?env = <https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli>)")
         );
         assert!(!q.contains("FILTER(?verifies"));
     }
 
     #[test]
     fn build_query_inlines_both_filters() {
-        let q = build_query(Some("FT-001"), Some("ENV-001-ephemeral-cli"));
+        let q = build_query(Some("FT-001"), Some("BNCH-001-ephemeral-cli"));
         assert!(q.contains("FILTER(?verifies"));
         assert!(q.contains("FILTER(?env"));
     }

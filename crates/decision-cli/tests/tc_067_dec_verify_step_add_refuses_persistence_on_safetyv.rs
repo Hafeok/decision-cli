@@ -17,7 +17,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use decision_cli::core::handler::{Error as HandlerError, Request};
-use decision_cli::verify_env_new::{self, EnvNewRequest};
+use decision_cli::verify_bench_new::{self, BenchNewRequest};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
 use decision_cli::verify_step_add::{self, StepAddRequest, StepAddResponse};
 use serde_json::json;
@@ -78,8 +78,8 @@ fn dec_binary() -> PathBuf {
 }
 
 /// Bootstrap a workdir, then author:
-///   * `ENV-002-prod` (production-readonly, `http-readonly` only)
-///   * `VG-100-prod` referencing `ENV-002-prod`
+///   * `BNCH-002-prod` (production-readonly, `http-readonly` only)
+///   * `VG-100-prod` referencing `BNCH-002-prod`
 /// Returns the workdir and the graph id.
 fn workdir_with_prod_env_and_graph(tag: &str) -> (TmpDir, String) {
     let tmp = TmpDir::new(tag);
@@ -98,9 +98,9 @@ fn workdir_with_prod_env_and_graph(tag: &str) -> (TmpDir, String) {
         "unexpected dec init exit: {status:?}"
     );
     // Author production-readonly env.
-    let env = verify_env_new::run(&EnvNewRequest {
-        id: Some("ENV-002-prod".to_string()),
-        env_type: "remote-http".to_string(),
+    let env = verify_bench_new::run(&BenchNewRequest {
+        id: Some("BNCH-002-prod".to_string()),
+        bench_type: "remote-http".to_string(),
         safety_class: "production-readonly".to_string(),
         allowed_ops: vec!["http-readonly".to_string()],
         setup: None,
@@ -110,12 +110,12 @@ fn workdir_with_prod_env_and_graph(tag: &str) -> (TmpDir, String) {
         workdir: Some(tmp.path().to_path_buf()),
     })
     .expect("env new");
-    assert_eq!(env.id, "ENV-002-prod");
+    assert_eq!(env.id, "BNCH-002-prod");
     // Author graph referencing the prod env.
     let graph = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-100-prod".to_string()),
         verifies: "FT-001".to_string(),
-        environment: "ENV-002-prod".to_string(),
+        environment: "BNCH-002-prod".to_string(),
         workdir: Some(tmp.path().to_path_buf()),
     })
     .expect("graph new");
@@ -173,7 +173,7 @@ fn http_post_against_readonly_env_returns_safety_violation() {
                 v.missing_ops.iter().any(|m| m == "http-mutating"),
                 "missing_ops should include http-mutating; got {v:?}"
             );
-            assert!(v.env_id.contains("ENV-002-prod"), "env_id: {}", v.env_id);
+            assert!(v.env_id.contains("BNCH-002-prod"), "env_id: {}", v.env_id);
             assert_eq!(v.env_safety_class, "production-readonly");
             assert!(
                 v.env_allowed_ops.iter().any(|a| a == "http-readonly"),
@@ -323,7 +323,7 @@ fn subsequent_allowed_step_succeeds_in_isolated_env() {
     let iso = verify_graph_new::run(&GraphNewRequest {
         id: Some("VG-002-iso".to_string()),
         verifies: "FT-001".to_string(),
-        environment: "ENV-001-ephemeral-cli".to_string(),
+        environment: "BNCH-001-ephemeral-cli".to_string(),
         workdir: Some(tmp.path().to_path_buf()),
     })
     .expect("iso graph");

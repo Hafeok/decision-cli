@@ -11,7 +11,7 @@ use oxigraph::model::NamedNode;
 use crate::core::ontology::verification_graph::{
     step_iri_for, ArtifactRef, StepFields, VerificationGraph, VerificationStep,
 };
-use crate::core::vocab::{IRI_DEC_ENV_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX};
 
 use super::document::{GraphDocument, StepDocument};
 
@@ -43,7 +43,7 @@ pub fn document_to_graph(doc: &GraphDocument) -> Result<VerificationGraph, Recon
     let graph_iri = build_prefixed_iri(IRI_DEC_VERIFY_GRAPH_PREFIX, &doc.id, "graph IRI")?;
     let verifies_iri = restore_verifies_iri(&doc.verifies)?;
     let environment_iri =
-        build_prefixed_iri(IRI_DEC_ENV_PREFIX, &doc.environment, "environment IRI")?;
+        build_prefixed_iri(IRI_DEC_BENCH_PREFIX, &doc.environment, "environment IRI")?;
     let steps = reconstruct_steps(doc)?;
     Ok(VerificationGraph {
         id: graph_iri,
@@ -212,7 +212,7 @@ mod tests {
         let doc = GraphDocument {
             id: "VG-001".to_string(),
             verifies: "FT-001".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             steps: vec![StepDocument::ShellCommand {
                 command: "true".to_string(),
                 expect_exit_code: Some(0),

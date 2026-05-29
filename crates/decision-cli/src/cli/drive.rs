@@ -24,8 +24,11 @@ pub struct DriveArgs {
     /// Bail out after N planner iterations. Default 5.
     #[arg(long)]
     pub max_iter: Option<usize>,
-    /// Env override passed to dispatch actions that need one.
-    #[arg(long, value_name = "ENV-NNN")]
+    /// Bench override passed to dispatch actions that need one (renamed from --env by FT-112).
+    #[arg(long, value_name = "BNCH-NNN")]
+    pub bench: Option<String>,
+    /// RESERVED: --env is reserved for future deployment-target use; use --bench instead (FT-112).
+    #[arg(long, value_name = "ENV-NNN", hide = true)]
     pub env: Option<String>,
     /// Override the product-cli root (default: same as `--workdir`).
     #[arg(long, value_name = "PATH")]
@@ -45,6 +48,12 @@ pub struct DriveArgs {
 }
 
 pub fn run(workdir: &Path, args: DriveArgs) -> ExitCode {
+    // FT-112: --env is reserved for future deployment-target use
+    if args.env.is_some() {
+        eprintln!("dec drive: --env is reserved for future deployment-target use; use --bench BNCH-NNN instead");
+        return ExitCode::from(2);
+    }
+
     // Route to sweep if --all is set
     if args.all {
         return run_sweep_all(workdir, args);
@@ -70,7 +79,7 @@ pub fn run(workdir: &Path, args: DriveArgs) -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    let ctx = match PlanContext::open(workdir.to_path_buf(), args.product_root, args.env) {
+    let ctx = match PlanContext::open(workdir.to_path_buf(), args.product_root, args.bench) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("dec drive: {e}");
@@ -167,7 +176,7 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     // Run sweep
     let sweep_input = SweepInput {
         features,
-        env_id: args.env,
+        env_id: args.bench,
         max_iter: args.max_iter.unwrap_or(6), // FT-111 default is 6, not 5
         per_item_timeout: Duration::from_secs(args.per_feature_timeout),
     };

@@ -1,27 +1,27 @@
-//! Pre-write input validation for `dec verify env new` (FT-038).
+//! Pre-write input validation for `dec verify bench new` (FT-038).
 //!
-//! Mirrors FT-038 §Behaviour step 2: env-type non-empty, safety-class
+//! Mirrors FT-038 §Behaviour step 2: bench-type non-empty, safety-class
 //! in the controlled list, allowed-ops non-empty, endpoint required iff
-//! the env-type matches `remote-*`, caller-supplied ids well-formed.
+//! the bench-type matches `remote-*`, caller-supplied ids well-formed.
 //!
 //! Each failure maps to [`HandlerError::InvalidArgument`] naming the
 //! offending field so the CLI can exit with code 2 (usage error) and
 //! the MCP surface returns a structured error.
 
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::{SafetyClass, REMOTE_ENV_TYPE_PREFIX};
+use crate::core::ontology::verification_bench::{SafetyClass, REMOTE_BENCH_TYPE_PREFIX};
 use crate::core::vocab::{
     SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 
-use super::EnvNewRequest;
+use super::BenchNewRequest;
 
 /// Validate the request before any I/O.
-pub(super) fn pre_validate(req: &EnvNewRequest) -> Result<(), HandlerError> {
-    validate_env_type(&req.env_type)?;
+pub(super) fn pre_validate(req: &BenchNewRequest) -> Result<(), HandlerError> {
+    validate_bench_type(&req.bench_type)?;
     validate_safety_class(&req.safety_class)?;
     validate_allowed_ops(&req.allowed_ops)?;
-    validate_endpoint(&req.env_type, req.endpoint.as_deref())?;
+    validate_endpoint(&req.bench_type, req.endpoint.as_deref())?;
     validate_fixture_source(req.fixture_source.as_deref(), req.workdir.as_deref())?;
     if let Some(id) = &req.id {
         validate_id_format(id)?;
@@ -75,12 +75,12 @@ fn invalid_fixture_source(detail: impl Into<String>) -> HandlerError {
     }
 }
 
-/// `env-type` must be a non-empty string (whitespace doesn't count).
-fn validate_env_type(env_type: &str) -> Result<(), HandlerError> {
-    if env_type.trim().is_empty() {
+/// `bench-type` must be a non-empty string (whitespace doesn't count).
+fn validate_bench_type(bench_type: &str) -> Result<(), HandlerError> {
+    if bench_type.trim().is_empty() {
         return Err(HandlerError::InvalidArgument {
-            field: "env_type".to_string(),
-            detail: "env-type must be a non-empty string".to_string(),
+            field: "bench_type".to_string(),
+            detail: "bench-type must be a non-empty string".to_string(),
         });
     }
     Ok(())
@@ -121,15 +121,15 @@ fn validate_allowed_ops(ops: &[String]) -> Result<(), HandlerError> {
     Ok(())
 }
 
-/// `--endpoint` is required for `remote-*` env types, forbidden otherwise.
-fn validate_endpoint(env_type: &str, endpoint: Option<&str>) -> Result<(), HandlerError> {
-    let is_remote = env_type.starts_with(REMOTE_ENV_TYPE_PREFIX);
+/// `--endpoint` is required for `remote-*` bench types, forbidden otherwise.
+fn validate_endpoint(bench_type: &str, endpoint: Option<&str>) -> Result<(), HandlerError> {
+    let is_remote = bench_type.starts_with(REMOTE_BENCH_TYPE_PREFIX);
     let endpoint_present = endpoint.is_some_and(|s| !s.is_empty());
     if is_remote && !endpoint_present {
         return Err(HandlerError::InvalidArgument {
             field: "endpoint".to_string(),
             detail: format!(
-                "remote env types (env-type starts with {REMOTE_ENV_TYPE_PREFIX:?}) require --endpoint"
+                "remote bench types (bench-type starts with {REMOTE_BENCH_TYPE_PREFIX:?}) require --endpoint"
             ),
         });
     }
@@ -137,7 +137,7 @@ fn validate_endpoint(env_type: &str, endpoint: Option<&str>) -> Result<(), Handl
         return Err(HandlerError::InvalidArgument {
             field: "endpoint".to_string(),
             detail: format!(
-                "local env types (env-type does not start with {REMOTE_ENV_TYPE_PREFIX:?}) must NOT carry --endpoint"
+                "local bench types (bench-type does not start with {REMOTE_BENCH_TYPE_PREFIX:?}) must NOT carry --endpoint"
             ),
         });
     }
@@ -145,16 +145,16 @@ fn validate_endpoint(env_type: &str, endpoint: Option<&str>) -> Result<(), Handl
 }
 
 fn validate_id_format(id: &str) -> Result<(), HandlerError> {
-    if !id.starts_with("ENV-") {
+    if !id.starts_with("BNCH-") {
         return Err(HandlerError::InvalidArgument {
             field: "id".to_string(),
-            detail: format!("env id must start with 'ENV-', got {id:?}"),
+            detail: format!("bench id must start with 'BNCH-', got {id:?}"),
         });
     }
-    if id.len() < 5 {
+    if id.len() < 6 {
         return Err(HandlerError::InvalidArgument {
             field: "id".to_string(),
-            detail: format!("env id {id:?} is too short (expected ENV-NNN[-suffix])"),
+            detail: format!("bench id {id:?} is too short (expected BNCH-NNN[-suffix])"),
         });
     }
     Ok(())
@@ -164,10 +164,10 @@ fn validate_id_format(id: &str) -> Result<(), HandlerError> {
 mod tests {
     use super::*;
 
-    fn ephemeral_req() -> EnvNewRequest {
-        EnvNewRequest {
+    fn ephemeral_req() -> BenchNewRequest {
+        BenchNewRequest {
             id: None,
-            env_type: "ephemeral-tempdir".to_string(),
+            bench_type: "ephemeral-tempdir".to_string(),
             safety_class: SAFETY_ISOLATED.to_string(),
             allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
             setup: None,
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn rejects_remote_without_endpoint() {
         let mut req = ephemeral_req();
-        req.env_type = "remote-http".to_string();
+        req.bench_type = "remote-http".to_string();
         req.safety_class = SAFETY_SHARED_NON_DESTRUCTIVE.to_string();
         req.allowed_ops = vec!["http".to_string()];
         let err = pre_validate(&req).expect_err("remote without endpoint must fail");
@@ -327,7 +327,7 @@ mod tests {
     #[test]
     fn accepts_remote_with_endpoint() {
         let mut req = ephemeral_req();
-        req.env_type = "remote-http".to_string();
+        req.bench_type = "remote-http".to_string();
         req.safety_class = SAFETY_SHARED_NON_DESTRUCTIVE.to_string();
         req.allowed_ops = vec!["http".to_string()];
         req.endpoint = Some("https://example.com".to_string());
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn rejects_malformed_id() {
         let mut req = ephemeral_req();
-        req.id = Some("ENV".to_string());
+        req.id = Some("BNCH".to_string());
         let err = pre_validate(&req).expect_err("malformed id must fail");
         match err {
             HandlerError::InvalidArgument { field, .. } => assert_eq!(field, "id"),

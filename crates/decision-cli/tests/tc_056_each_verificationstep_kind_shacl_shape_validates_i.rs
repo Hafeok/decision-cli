@@ -46,7 +46,7 @@ fn ft_001() -> NamedNode {
 }
 
 fn env_iri() -> NamedNode {
-    NamedNode::new_unchecked("https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli")
+    NamedNode::new_unchecked("https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli")
 }
 
 fn graph_with(step: VerificationStep) -> VerificationGraph {

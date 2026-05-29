@@ -136,7 +136,7 @@ fn empty_graph_happy_path_writes_file_and_returns_id() {
         GraphNewRequest {
             id: None,
             verifies: "FT-001".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )
@@ -157,7 +157,7 @@ fn empty_graph_happy_path_writes_file_and_returns_id() {
         "must reference FT-001 IRI"
     );
     assert!(
-        ttl.contains("ns/env/ENV-001-ephemeral-cli"),
+        ttl.contains("ns/env/BNCH-001-ephemeral-cli"),
         "must reference env IRI"
     );
 }
@@ -173,7 +173,7 @@ fn mcp_happy_path_writes_structurally_equivalent_file() {
         GraphNewRequest {
             id: None,
             verifies: "FT-001".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )
@@ -182,7 +182,7 @@ fn mcp_happy_path_writes_structurally_equivalent_file() {
         mcp_tmp.path(),
         json!({
             "verifies": "FT-001",
-            "environment": "ENV-001-ephemeral-cli",
+            "environment": "BNCH-001-ephemeral-cli",
         }),
     )
     .expect("mcp ok");
@@ -214,7 +214,7 @@ fn dangling_verifies_returns_dangling_ref_and_writes_no_file() {
         GraphNewRequest {
             id: None,
             verifies: "FT-999".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )
@@ -260,14 +260,14 @@ fn dangling_environment_returns_dangling_ref_and_writes_no_file() {
         GraphNewRequest {
             id: None,
             verifies: "FT-001".to_string(),
-            environment: "ENV-999".to_string(),
+            environment: "BNCH-999".to_string(),
             workdir: None,
         },
     )
     .expect_err("must fail");
     match err {
         HandlerError::DanglingRef { reference, kind } => {
-            assert_eq!(reference, "ENV-999");
+            assert_eq!(reference, "BNCH-999");
             assert_eq!(kind, "environment");
         }
         other => panic!("expected DanglingRef, got {other:?}"),
@@ -296,7 +296,7 @@ fn verifies_accepts_tc_reference() {
         GraphNewRequest {
             id: None,
             verifies: "TC-013".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )
@@ -316,7 +316,7 @@ fn caller_supplied_id_collision_fails_with_duplicate_id() {
         GraphNewRequest {
             id: Some("VG-007".to_string()),
             verifies: "FT-001".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )
@@ -327,7 +327,7 @@ fn caller_supplied_id_collision_fails_with_duplicate_id() {
         GraphNewRequest {
             id: Some("VG-007".to_string()),
             verifies: "TC-013".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )
@@ -353,7 +353,7 @@ fn shacl_failure_leaves_no_file_on_disk() {
         GraphNewRequest {
             id: Some("VG-099".to_string()),
             verifies: "FT-XX-not-real".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         },
     )

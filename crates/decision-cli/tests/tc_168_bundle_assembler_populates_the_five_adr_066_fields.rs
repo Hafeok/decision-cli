@@ -194,8 +194,8 @@ fn write_env_with_concrete(workdir: &Path, env_id: &str) -> PathBuf {
     let body = format!(
         r#"@prefix dec: <https://decision-cli.dev/ns#> .
 
-<https://decision-cli.dev/ns/env/{env_id}>
-    a dec:VerificationEnvironment ;
+<https://decision-cli.dev/ns/bench/{env_id}>
+    a dec:VerificationBench ;
     dec:envType "ephemeral-tempdir" ;
     dec:safetyClass "isolated" ;
     dec:allowedOps ( "shell" "filesystem" "sparql-local" ) ;
@@ -222,8 +222,8 @@ fn write_env_without_concrete(workdir: &Path, env_id: &str) -> PathBuf {
     let body = format!(
         r#"@prefix dec: <https://decision-cli.dev/ns#> .
 
-<https://decision-cli.dev/ns/env/{env_id}>
-    a dec:VerificationEnvironment ;
+<https://decision-cli.dev/ns/bench/{env_id}>
+    a dec:VerificationBench ;
     dec:envType "ephemeral-tempdir" ;
     dec:safetyClass "isolated" ;
     dec:allowedOps ( "shell" "filesystem" "sparql-local" ) ;
@@ -242,14 +242,14 @@ fn tc_168_bundle_assembler_populates_the_five_adr_066_fields() {
     init_run(wd.path(), DefinitionSource::File(seed)).expect("dec init");
 
     seed_catalog(wd.path());
-    let _env_path = write_env_with_concrete(wd.path(), "ENV-001");
-    let env = decision_cli::core::ontology::verification_env::from_turtle(
+    let _env_path = write_env_with_concrete(wd.path(), "BNCH-001");
+    let env = decision_cli::core::ontology::verification_bench::from_turtle(
         &wd.path()
-            .join(".dec/verify/env/ENV-001.ttl"),
+            .join(".dec/verify/env/BNCH-001.ttl"),
     )
     .expect("load env");
 
-    let enrichment = assemble_enrichment_for(wd.path(), Some(&env), "ENV-001")
+    let enrichment = assemble_enrichment_for(wd.path(), Some(&env), "BNCH-001")
         .expect("assemble enrichment");
 
     // cli_surface — three commands, version 0.3.0, dec_subcommands list.
@@ -364,13 +364,13 @@ fn tc_168_scenario_b_env_without_concrete_capabilities_falls_back() {
     init_run(wd.path(), DefinitionSource::File(seed)).expect("dec init");
 
     seed_catalog(wd.path());
-    let _env_path = write_env_without_concrete(wd.path(), "ENV-002");
-    let env = decision_cli::core::ontology::verification_env::from_turtle(
-        &wd.path().join(".dec/verify/env/ENV-002.ttl"),
+    let _env_path = write_env_without_concrete(wd.path(), "BNCH-002");
+    let env = decision_cli::core::ontology::verification_bench::from_turtle(
+        &wd.path().join(".dec/verify/env/BNCH-002.ttl"),
     )
     .expect("load env");
 
-    let enrichment = assemble_enrichment_for(wd.path(), Some(&env), "ENV-002")
+    let enrichment = assemble_enrichment_for(wd.path(), Some(&env), "BNCH-002")
         .expect("assemble enrichment");
 
     // env_capabilities populated from the ephemeral-tempdir default.
@@ -387,7 +387,7 @@ fn tc_168_scenario_b_env_without_concrete_capabilities_falls_back() {
     // Warnings includes the fallback notice.
     let joined = enrichment.bundle_metadata.warnings.join(" | ");
     assert!(
-        joined.contains("ENV-002") && joined.contains("concreteCapabilities"),
+        joined.contains("BNCH-002") && joined.contains("concreteCapabilities"),
         "warnings should mention env id + concreteCapabilities; got {joined:?}",
     );
 
@@ -404,14 +404,14 @@ fn tc_168_scenario_d_replay_determinism_via_bundle_hash() {
     init_run(wd.path(), DefinitionSource::File(seed)).expect("dec init");
 
     seed_catalog(wd.path());
-    let _env_path = write_env_with_concrete(wd.path(), "ENV-001");
-    let env = decision_cli::core::ontology::verification_env::from_turtle(
-        &wd.path().join(".dec/verify/env/ENV-001.ttl"),
+    let _env_path = write_env_with_concrete(wd.path(), "BNCH-001");
+    let env = decision_cli::core::ontology::verification_bench::from_turtle(
+        &wd.path().join(".dec/verify/env/BNCH-001.ttl"),
     )
     .expect("load env");
 
-    let first = assemble_enrichment_for(wd.path(), Some(&env), "ENV-001").expect("first");
-    let second = assemble_enrichment_for(wd.path(), Some(&env), "ENV-001").expect("second");
+    let first = assemble_enrichment_for(wd.path(), Some(&env), "BNCH-001").expect("first");
+    let second = assemble_enrichment_for(wd.path(), Some(&env), "BNCH-001").expect("second");
 
     // Same catalog state ⇒ same enrichment ⇒ same metadata hashes.
     assert_eq!(

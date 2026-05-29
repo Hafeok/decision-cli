@@ -9,7 +9,7 @@ use oxigraph::model::{
 
 use crate::core::vocab::{
     ended_at_pred, error_message_pred, evidence_for_pred, evidence_projection_class,
-    exit_code_pred, outcome_pred, ran_in_environment_pred, rationale, result_of_pred,
+    exit_code_pred, outcome_pred, ran_on_bench_pred, rationale, result_of_pred,
     started_at_pred, stderr_excerpt_pred, stdout_excerpt_pred, step_traces_pred, tc_pred,
     traces_step_pred, verdict, verification_graph_result_class, verification_step_trace_class,
 };
@@ -79,7 +79,7 @@ impl VerificationGraphResult {
                 g.clone(),
             ),
             iri_quad(&id, result_of_pred(), &self.result_of, &g),
-            iri_quad(&id, ran_in_environment_pred(), &self.ran_in_environment, &g),
+            iri_quad(&id, ran_on_bench_pred(), &self.ran_in_environment, &g),
             literal_quad(&id, verdict(), self.verdict.as_str(), &g),
             datetime_quad(&id, started_at_pred(), &self.started_at, &g),
             datetime_quad(&id, ended_at_pred(), &self.ended_at, &g),

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use decision_cli::core::verify::runner::{run_graph, RunGraphRequest, TriggerKind};
-use decision_cli::verify_env_new::{self, EnvNewRequest};
+use decision_cli::verify_bench_new::{self, BenchNewRequest};
 use decision_cli::verify_graph_new::{self, GraphNewRequest};
 use decision_cli::verify_step_add::{self, StepAddRequest};
 use oxigraph::model::NamedNode;
@@ -128,9 +128,9 @@ fn tc_187_runner_splits_feedback_by_verdict() {
     // ----- Scenario A: rejected verdict → defects target implementer -----
     let tmp_a = init_workdir("rejected");
     write_tc_fixtures(tmp_a.path(), &["TC-R1"]);
-    verify_env_new::run(&EnvNewRequest {
+    verify_bench_new::run(&BenchNewRequest {
         id: Some("ENV-T187a".into()),
-        env_type: "ephemeral-tempdir".into(),
+        bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
         allowed_ops: vec!["shell".into(), "filesystem".into()],
         setup: None,
@@ -182,9 +182,9 @@ fn tc_187_runner_splits_feedback_by_verdict() {
     // ----- Scenario B: amendment-required → defects target verifier -----
     let tmp_b = init_workdir("amendment");
     write_tc_fixtures(tmp_b.path(), &["TC-AR1"]);
-    verify_env_new::run(&EnvNewRequest {
+    verify_bench_new::run(&BenchNewRequest {
         id: Some("ENV-T187b".into()),
-        env_type: "ephemeral-tempdir".into(),
+        bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
         allowed_ops: vec!["shell".into(), "filesystem".into()],
         setup: None,

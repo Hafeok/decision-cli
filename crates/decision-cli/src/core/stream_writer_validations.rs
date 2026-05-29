@@ -10,7 +10,7 @@ use crate::core::ontology::catalog::validate_quads_with_store as validate_catalo
 use crate::core::ontology::coverage_waiver::validate_quads as validate_waiver_quads;
 use crate::core::ontology::role_binding::validate_quads as validate_role_binding_quads;
 use crate::core::ontology::verdict::validate_quads as validate_verdict_quads;
-use crate::core::ontology::verification_env::validate_quads as validate_env_quads;
+use crate::core::ontology::verification_bench::validate_quads as validate_env_quads;
 use crate::core::ontology::verification_graph::validate_quads as validate_graph_quads;
 use crate::core::ontology::verification_result::validate_quads_with_store as validate_result_quads_with_store;
 use oxigraph::store::Store;
@@ -35,7 +35,7 @@ pub(super) fn validate_feedback(quads: &[Quad]) -> Result<()> {
         .map_err(|err| anyhow!("SHACL violation: feedback mutation refused\n{}", err.report))
 }
 
-/// SHACL-validate every `dec:VerificationEnvironment` subject present in
+/// SHACL-validate every `dec:VerificationBench` subject present in
 /// `quads` (FT-035 / ADR-028).
 pub(super) fn validate_envs(quads: &[Quad]) -> Result<()> {
     validate_env_quads(quads).map_err(|err| {

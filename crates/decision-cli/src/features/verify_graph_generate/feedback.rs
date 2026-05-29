@@ -6,7 +6,7 @@
 //! was the natural home for the missing fact:
 //!
 //! - `Binary` / `FilePath` / `HttpHost` / `CaptureSource` →
-//!   `dec:VerificationEnvironment`.
+//!   `dec:VerificationBench`.
 //! - `DecSubcommand` → `dec:CapabilityReference` category.
 //! - `SparqlNamespace` → `dec:OntologyDescription` category.
 //!
@@ -166,7 +166,7 @@ fn recommendation_for(target: UpstreamTarget) -> String {
              the missing namespace, then re-run `dec verify graph generate`."
                 .to_string()
         }
-        UpstreamTarget::VerificationEnvironment => {
+        UpstreamTarget::VerificationBench => {
             "Extend the target env's dec:concreteCapabilities block to \
              include the referenced binary / path / host / variable, then \
              re-run `dec verify graph generate`."

@@ -15,7 +15,7 @@
 //! - Records' targets resolve to the natural catalog artifact category:
 //!   `dec_subcommand` → CapabilityReference, `sparql_namespace` →
 //!   OntologyDescription, `file_path` / `http_host` / `binary` →
-//!   VerificationEnvironment.
+//!   VerificationBench.
 
 use decision_cli::verify_graph_generate::feedback::{
     drain_captured, emit_gap_feedback, with_capture,
@@ -95,7 +95,7 @@ fn scenario_c_multi_category_violations_one_per_target() {
     let targets: Vec<&str> = records.iter().map(|r| r.target.as_str()).collect();
     assert!(targets.contains(&UpstreamTarget::CapabilityReference.as_str()));
     assert!(targets.contains(&UpstreamTarget::OntologyDescription.as_str()));
-    assert!(targets.contains(&UpstreamTarget::VerificationEnvironment.as_str()));
+    assert!(targets.contains(&UpstreamTarget::VerificationBench.as_str()));
     for r in &records {
         assert_eq!(r.class, "gap");
         assert_eq!(r.target_role, "bundle-assembler");

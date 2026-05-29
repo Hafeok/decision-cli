@@ -51,14 +51,14 @@ EOF
 
 # Two graphs both targeting FT-CC, each covering one TC.
 "$DEC" verify graph new --id VG-201 --verifies FT-CC \
-  --environment ENV-001-ephemeral-cli >/dev/null
+  --environment BNCH-001-ephemeral-cli >/dev/null
 "$DEC" verify step add VG-201 --type shell-command \
   --field command="echo ok" \
   --field expect-exit-code=0 \
   --provides-evidence-for TC-CC-A >/dev/null
 
 "$DEC" verify graph new --id VG-202 --verifies FT-CC \
-  --environment ENV-001-ephemeral-cli >/dev/null
+  --environment BNCH-001-ephemeral-cli >/dev/null
 "$DEC" verify step add VG-202 --type shell-command \
   --field command="echo ok" \
   --field expect-exit-code=0 \
@@ -104,7 +104,7 @@ cat >.dec/verify/graph/VG-202.ttl <<'EOF'
 <https://decision-cli.dev/ns/graph/VG-202>
     rdf:type           dec:VerificationGraph ;
     dec:verifies       <https://decision-cli.dev/ns/feature/FT-CC> ;
-    dec:environment    <https://decision-cli.dev/ns/env/ENV-001-ephemeral-cli> ;
+    dec:environment    <https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli> ;
     dec:steps          ( <https://decision-cli.dev/ns/step/VG-202/0> ) .
 
 <https://decision-cli.dev/ns/step/VG-202/0>

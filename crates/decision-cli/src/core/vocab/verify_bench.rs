@@ -1,4 +1,4 @@
-//! FT-035 / ADR-028 — `dec:VerificationEnvironment` vocabulary.
+//! FT-112 / ADR-028 — `dec:VerificationBench` vocabulary (renamed from Environment).
 //!
 //! Split out of `core::vocab` (mod.rs) to keep the per-file size within
 //! the ADR-013 400-line ceiling. Re-exported from the parent module so
@@ -8,12 +8,12 @@
 
 use oxigraph::model::NamedNodeRef;
 
-/// Class IRI for `dec:VerificationEnvironment` (ADR-028).
-pub const IRI_DEC_VERIFICATION_ENVIRONMENT: &str =
-    "https://decision-cli.dev/ns#VerificationEnvironment";
+/// Class IRI for `dec:VerificationBench` (ADR-028, renamed by FT-112).
+pub const IRI_DEC_VERIFICATION_BENCH: &str =
+    "https://decision-cli.dev/ns#VerificationBench";
 
-/// `dec:envType` predicate.
-pub const IRI_DEC_ENV_TYPE: &str = "https://decision-cli.dev/ns#envType";
+/// `dec:benchType` predicate (renamed from envType by FT-112).
+pub const IRI_DEC_BENCH_TYPE: &str = "https://decision-cli.dev/ns#benchType";
 /// `dec:safetyClass` predicate.
 pub const IRI_DEC_SAFETY_CLASS: &str = "https://decision-cli.dev/ns#safetyClass";
 /// `dec:allowedOps` predicate (rdf:List head).
@@ -27,11 +27,11 @@ pub const IRI_DEC_ENDPOINT: &str = "https://decision-cli.dev/ns#endpoint";
 /// `dec:fixtureSource` predicate (FT-053 / ADR-032).
 pub const IRI_DEC_FIXTURE_SOURCE: &str = "https://decision-cli.dev/ns#fixtureSource";
 
-/// Named graph holding the verification-environment projections (ADR-028 §State).
-pub const IRI_DEC_GRAPH_VERIFY_ENV: &str = "https://decision-cli.dev/ns/graph/verify-env";
+/// Named graph holding the verification-bench projections (ADR-028 §State, renamed by FT-112).
+pub const IRI_DEC_GRAPH_VERIFY_BENCH: &str = "https://decision-cli.dev/ns/graph/verify-bench";
 
-/// IRI prefix for minted environment IRIs (`https://decision-cli.dev/ns/env/<id>`).
-pub const IRI_DEC_ENV_PREFIX: &str = "https://decision-cli.dev/ns/env/";
+/// IRI prefix for minted bench IRIs (`https://decision-cli.dev/ns/bench/<id>`), renamed by FT-112.
+pub const IRI_DEC_BENCH_PREFIX: &str = "https://decision-cli.dev/ns/bench/";
 
 /// Safety class literal — sandboxed; failure does not affect other systems.
 pub const SAFETY_ISOLATED: &str = "isolated";
@@ -41,13 +41,13 @@ pub const SAFETY_SHARED_NON_DESTRUCTIVE: &str = "shared-non-destructive";
 pub const SAFETY_PRODUCTION_READONLY: &str = "production-readonly";
 
 #[must_use]
-pub fn verification_environment_class() -> NamedNodeRef<'static> {
-    NamedNodeRef::new_unchecked(IRI_DEC_VERIFICATION_ENVIRONMENT)
+pub fn verification_bench_class() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_VERIFICATION_BENCH)
 }
 
 #[must_use]
-pub fn env_type() -> NamedNodeRef<'static> {
-    NamedNodeRef::new_unchecked(IRI_DEC_ENV_TYPE)
+pub fn bench_type() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_BENCH_TYPE)
 }
 
 #[must_use]
@@ -81,6 +81,6 @@ pub fn fixture_source_pred() -> NamedNodeRef<'static> {
 }
 
 #[must_use]
-pub fn verify_env_graph() -> NamedNodeRef<'static> {
-    NamedNodeRef::new_unchecked(IRI_DEC_GRAPH_VERIFY_ENV)
+pub fn verify_bench_graph() -> NamedNodeRef<'static> {
+    NamedNodeRef::new_unchecked(IRI_DEC_GRAPH_VERIFY_BENCH)
 }

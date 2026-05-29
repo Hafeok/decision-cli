@@ -107,7 +107,7 @@ pub enum RunnerError {
     /// The graph or env IRI does not resolve in the on-disk catalog.
     #[error("artifact not found: {kind} <{id}>")]
     ArtifactNotFound {
-        /// Artifact kind (`VerificationGraph`, `VerificationEnvironment`).
+        /// Artifact kind (`VerificationGraph`, `VerificationBench`).
         kind: String,
         /// The id or IRI we tried to load.
         id: String,

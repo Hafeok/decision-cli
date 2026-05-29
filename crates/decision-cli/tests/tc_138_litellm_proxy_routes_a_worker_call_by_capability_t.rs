@@ -372,7 +372,7 @@ async fn tc_138_litellm_proxy_routes_a_worker_call_by_capability_t() {
     assert!(cb_body.contains("/llm-call-telemetry"));
     assert!(cb_body.contains("async def async_log_success_event"));
 
-    // 3. The bootstrap script targets /key/generate and writes workers.env.
+    // 3. The bootstrap script targets /key/generate and writes workers.bench.
     let bs_body = std::fs::read_to_string(bootstrap_script_path())
         .expect("bootstrap_litellm_virtual_key.py must exist");
     assert!(bs_body.contains("/key/generate"));

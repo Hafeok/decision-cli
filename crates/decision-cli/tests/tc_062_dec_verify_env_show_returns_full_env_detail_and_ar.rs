@@ -1,7 +1,7 @@
 //! TC-062 — `dec verify env show` returns full env detail and
 //!          ArtifactNotFound on unknown id (FT-040 / ADR-029 / ADR-028).
 //!
-//! Spec: `.product/tests/TC-062-dec-verify-env-show-returns-full-env-detail-and-ar.md`
+//! Spec: `.product/tests/TC-062-dec-verify-bench-show-returns-full-env-detail-and-ar.md`
 //! Validates: FT-040 — CLI surface, MCP twin, single handler.
 //!
 //! The six acceptance criteria map onto six `#[test]` functions that
@@ -13,10 +13,10 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use decision_cli::core::handler::{Error as HandlerError, Request};
-use decision_cli::core::ontology::verification_env::to_canonical_turtle;
-use decision_cli::verify_env_new::{self, EnvNewRequest};
-use decision_cli::verify_env_show::{
-    self, EnvDocument, EnvShowRequest, EnvShowResponse, OutputFormat,
+use decision_cli::core::ontology::verification_bench::to_canonical_turtle;
+use decision_cli::verify_bench_new::{self, BenchNewRequest};
+use decision_cli::verify_bench_show::{
+    self, EnvDocument, BenchShowRequest, BenchShowResponse, OutputFormat,
 };
 use serde_json::{json, Value};
 
@@ -90,9 +90,9 @@ fn init_workdir(tag: &str) -> TmpDir {
 /// Author one extra env on top of the seed so the fixture matches
 /// TC-062's "dec init plus one additional env authored via FT-038".
 fn seed_extra_env(workdir: &Path) {
-    verify_env_new::run(&EnvNewRequest {
+    verify_bench_new::run(&BenchNewRequest {
         id: Some("ENV-007".to_string()),
-        env_type: "remote-http".to_string(),
+        bench_type: "remote-http".to_string(),
         safety_class: "shared-non-destructive".to_string(),
         allowed_ops: vec!["http".to_string()],
         setup: None,
@@ -104,22 +104,22 @@ fn seed_extra_env(workdir: &Path) {
     .expect("env new must succeed for fixture");
 }
 
-fn run_show(workdir: &Path, req: EnvShowRequest) -> Result<EnvShowResponse, HandlerError> {
+fn run_show(workdir: &Path, req: BenchShowRequest) -> Result<BenchShowResponse, HandlerError> {
     let mut req = req;
     if req.workdir.is_none() {
         req.workdir = Some(workdir.to_path_buf());
     }
-    verify_env_show::run(&req)
+    verify_bench_show::run(&req)
 }
 
-fn mcp_invoke(workdir: &Path, args: Value) -> Result<EnvShowResponse, HandlerError> {
+fn mcp_invoke(workdir: &Path, args: Value) -> Result<BenchShowResponse, HandlerError> {
     let mut obj = args;
     obj.as_object_mut()
         .expect("args is object")
         .insert("workdir".to_string(), json!(workdir.to_string_lossy()));
-    let req = Request::new(verify_env_show::TOOL_NAME, obj);
-    let parsed = verify_env_show::parse_request(&req)?;
-    verify_env_show::run(&parsed)
+    let req = Request::new(verify_bench_show::TOOL_NAME, obj);
+    let parsed = verify_bench_show::parse_request(&req)?;
+    verify_bench_show::run(&parsed)
 }
 
 // --- AC #1: show seeded env via text format --------------------------------
@@ -128,15 +128,15 @@ fn mcp_invoke(workdir: &Path, args: Value) -> Result<EnvShowResponse, HandlerErr
 fn ac1_show_seeded_env_returns_full_text_render() {
     let tmp = init_workdir("ac1");
     seed_extra_env(tmp.path());
-    let req = EnvShowRequest {
-        id: "ENV-001-ephemeral-cli".to_string(),
+    let req = BenchShowRequest {
+        id: "BNCH-001-ephemeral-cli".to_string(),
         format: Some(OutputFormat::Text),
         workdir: Some(tmp.path().to_path_buf()),
     };
     let resp = run_show(tmp.path(), req).expect("show seed");
-    let text = verify_env_show::render_text(&resp);
+    let text = verify_bench_show::render_text(&resp);
     // id, env-type, safety-class
-    assert!(text.contains("ENV-001-ephemeral-cli"), "id missing: {text}");
+    assert!(text.contains("BNCH-001-ephemeral-cli"), "id missing: {text}");
     assert!(text.contains("ephemeral-tempdir"), "type missing: {text}");
     assert!(text.contains("isolated"), "safety missing: {text}");
     // each of the seed's allowed ops
@@ -149,7 +149,7 @@ fn ac1_show_seeded_env_returns_full_text_render() {
     // trailing path footer
     assert!(text.contains("Path:"), "path footer missing: {text}");
     assert!(
-        text.contains("ENV-001-ephemeral-cli.ttl"),
+        text.contains("BNCH-001-ephemeral-cli.ttl"),
         "on-disk filename missing: {text}"
     );
 }
@@ -161,17 +161,17 @@ fn ac2_json_format_emits_full_env_document() {
     let tmp = init_workdir("ac2");
     seed_extra_env(tmp.path());
     // Show the extra env (no setup / teardown — those keys must be absent).
-    let req = EnvShowRequest {
+    let req = BenchShowRequest {
         id: "ENV-007".to_string(),
         format: Some(OutputFormat::Json),
         workdir: Some(tmp.path().to_path_buf()),
     };
     let resp = run_show(tmp.path(), req).expect("show env-007");
-    let s = verify_env_show::render_json(&resp);
+    let s = verify_bench_show::render_json(&resp);
     let v: Value = serde_json::from_str(&s).expect("json");
     assert!(v.is_object(), "expected object, got {s}");
     assert_eq!(v["id"], "ENV-007");
-    assert_eq!(v["env_type"], "remote-http");
+    assert_eq!(v["bench_type"], "remote-http");
     assert_eq!(v["safety_class"], "shared-non-destructive");
     assert_eq!(v["endpoint"], "https://dev.example.com");
     let ops = v["allowed_ops"].as_array().expect("array");
@@ -191,15 +191,15 @@ fn ac2_json_format_emits_full_env_document() {
 fn ac3_json_round_trips_back_to_canonical_turtle() {
     let tmp = init_workdir("ac3");
     seed_extra_env(tmp.path());
-    let req = EnvShowRequest {
-        id: "ENV-001-ephemeral-cli".to_string(),
+    let req = BenchShowRequest {
+        id: "BNCH-001-ephemeral-cli".to_string(),
         format: Some(OutputFormat::Json),
         workdir: Some(tmp.path().to_path_buf()),
     };
     let resp = run_show(tmp.path(), req).expect("show seed");
     // Parse the JSON back into an `EnvDocument`, project to env, render
     // canonical Turtle. The result must match the on-disk Turtle byte-for-byte.
-    let s = verify_env_show::render_json(&resp);
+    let s = verify_bench_show::render_json(&resp);
     let doc: EnvDocument = serde_json::from_str(&s).expect("doc");
     let env = doc.to_env().expect("to_env");
     let rendered = to_canonical_turtle(&env);
@@ -219,7 +219,7 @@ fn ac4_mcp_parity_with_cli_json_output() {
     // CLI path: render the env document as JSON.
     let cli = run_show(
         tmp.path(),
-        EnvShowRequest {
+        BenchShowRequest {
             id: "ENV-007".to_string(),
             format: Some(OutputFormat::Json),
             workdir: Some(tmp.path().to_path_buf()),
@@ -227,7 +227,7 @@ fn ac4_mcp_parity_with_cli_json_output() {
     )
     .expect("cli ok");
     let cli_json: Value =
-        serde_json::from_str(&verify_env_show::render_json(&cli)).expect("cli json");
+        serde_json::from_str(&verify_bench_show::render_json(&cli)).expect("cli json");
     // MCP path: same input via `parse_request` / `run`.
     let mcp = mcp_invoke(
         tmp.path(),
@@ -237,13 +237,13 @@ fn ac4_mcp_parity_with_cli_json_output() {
         }),
     )
     .expect("mcp ok");
-    let mcp_json = serde_json::to_value(&mcp.env).expect("ser mcp env");
+    let mcp_json = serde_json::to_value(&mcp.bench).expect("ser mcp env");
     assert_eq!(
         cli_json, mcp_json,
         "CLI JSON output must equal MCP env object"
     );
     // Sanity: both produced the same envelope env value.
-    assert_eq!(cli.env, mcp.env);
+    assert_eq!(cli.bench, mcp.bench);
 }
 
 // --- AC #5: unknown id surfaces ArtifactNotFound --------------------------
@@ -254,8 +254,8 @@ fn ac5_unknown_id_returns_artifact_not_found() {
     seed_extra_env(tmp.path());
     let err = run_show(
         tmp.path(),
-        EnvShowRequest {
-            id: "ENV-999".to_string(),
+        BenchShowRequest {
+            id: "BNCH-999".to_string(),
             format: None,
             workdir: Some(tmp.path().to_path_buf()),
         },
@@ -263,18 +263,18 @@ fn ac5_unknown_id_returns_artifact_not_found() {
     .expect_err("missing id must fail");
     match err {
         HandlerError::ArtifactNotFound { kind, id } => {
-            assert_eq!(kind, "VerificationEnvironment");
-            assert_eq!(id, "ENV-999");
+            assert_eq!(kind, "VerificationBench");
+            assert_eq!(id, "BNCH-999");
         }
         other => panic!("expected ArtifactNotFound, got {other:?}"),
     }
     // MCP surface returns the same structured error.
-    let mcp_err = mcp_invoke(tmp.path(), json!({"id": "ENV-999"}))
+    let mcp_err = mcp_invoke(tmp.path(), json!({"id": "BNCH-999"}))
         .expect_err("mcp must also fail with ArtifactNotFound");
     match mcp_err {
         HandlerError::ArtifactNotFound { kind, id } => {
-            assert_eq!(kind, "VerificationEnvironment");
-            assert_eq!(id, "ENV-999");
+            assert_eq!(kind, "VerificationBench");
+            assert_eq!(id, "BNCH-999");
         }
         other => panic!("expected ArtifactNotFound, got {other:?}"),
     }
@@ -284,10 +284,10 @@ fn ac5_unknown_id_returns_artifact_not_found() {
         .arg("verify")
         .arg("env")
         .arg("show")
-        .arg("ENV-999")
+        .arg("BNCH-999")
         .current_dir(tmp.path())
         .output()
-        .expect("spawn dec verify env show ENV-999");
+        .expect("spawn dec verify env show BNCH-999");
     assert_eq!(
         output.status.code(),
         Some(1),
@@ -295,10 +295,10 @@ fn ac5_unknown_id_returns_artifact_not_found() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("VerificationEnvironment"),
+        stderr.contains("VerificationBench"),
         "stderr must name kind: {stderr}"
     );
-    assert!(stderr.contains("ENV-999"), "stderr must name id: {stderr}");
+    assert!(stderr.contains("BNCH-999"), "stderr must name id: {stderr}");
 }
 
 // --- AC #6: malformed id surfaces InvalidArgument -------------------------
@@ -309,7 +309,7 @@ fn ac6_malformed_id_returns_invalid_argument() {
     seed_extra_env(tmp.path());
     let err = run_show(
         tmp.path(),
-        EnvShowRequest {
+        BenchShowRequest {
             id: "not-an-id".to_string(),
             format: None,
             workdir: Some(tmp.path().to_path_buf()),
@@ -351,7 +351,7 @@ fn malformed_format_exits_with_invalid_argument() {
         .arg("verify")
         .arg("env")
         .arg("show")
-        .arg("ENV-001-ephemeral-cli")
+        .arg("BNCH-001-ephemeral-cli")
         .arg("--format")
         .arg("yaml")
         .current_dir(tmp.path())
@@ -373,14 +373,14 @@ fn binary_cli_text_format_smoke() {
         .arg("verify")
         .arg("env")
         .arg("show")
-        .arg("ENV-001-ephemeral-cli")
+        .arg("BNCH-001-ephemeral-cli")
         .current_dir(tmp.path())
         .output()
         .expect("spawn dec verify env show");
     assert!(output.status.success(), "non-zero exit: {output:?}");
     let stdout = String::from_utf8(output.stdout).expect("utf8");
     assert!(
-        stdout.contains("ENV-001-ephemeral-cli"),
+        stdout.contains("BNCH-001-ephemeral-cli"),
         "expected id in stdout: {stdout}"
     );
     assert!(stdout.contains("ephemeral-tempdir"));
@@ -394,7 +394,7 @@ fn binary_cli_json_format_outputs_object() {
         .arg("verify")
         .arg("env")
         .arg("show")
-        .arg("ENV-001-ephemeral-cli")
+        .arg("BNCH-001-ephemeral-cli")
         .arg("--format")
         .arg("json")
         .current_dir(tmp.path())
@@ -404,5 +404,5 @@ fn binary_cli_json_format_outputs_object() {
     let stdout = String::from_utf8(output.stdout).expect("utf8");
     let v: Value = serde_json::from_str(stdout.trim()).expect("json");
     assert!(v.is_object());
-    assert_eq!(v["id"], "ENV-001-ephemeral-cli");
+    assert_eq!(v["id"], "BNCH-001-ephemeral-cli");
 }

@@ -1,12 +1,12 @@
-//! In-memory `VerificationEnvironment` shape + RDF serialisation (ADR-028).
+//! In-memory `VerificationBench` shape + RDF serialisation (ADR-028).
 
 use oxigraph::model::{
     BlankNode, GraphName, Literal, NamedNode, NamedNodeRef, Quad, Subject, Term,
 };
 
 use crate::core::vocab::{
-    allowed_ops, endpoint_pred, env_type, fixture_source_pred, safety_class, setup_pred,
-    teardown_pred, verification_environment_class, IRI_DEC_ENV_PREFIX, SAFETY_ISOLATED,
+    allowed_ops, endpoint_pred, bench_type, fixture_source_pred, safety_class, setup_pred,
+    teardown_pred, verification_bench_class, IRI_DEC_BENCH_PREFIX, SAFETY_ISOLATED,
     SAFETY_PRODUCTION_READONLY, SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 
@@ -15,7 +15,7 @@ pub(super) const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#f
 pub(super) const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
 pub(super) const RDF_NIL: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
 
-/// Safety classification per ADR-028 §VerificationEnvironment.
+/// Safety classification per ADR-028 §VerificationBench.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SafetyClass {
     /// Sandboxed; failure does not affect other systems.
@@ -51,16 +51,16 @@ impl SafetyClass {
     }
 }
 
-/// In-memory `dec:VerificationEnvironment` artifact.
+/// In-memory `dec:VerificationBench` artifact.
 ///
-/// Identity is the `id` field (e.g. `ENV-001-ephemeral-cli`); the
-/// canonical IRI is `https://decision-cli.dev/ns/env/<id>`.
+/// Identity is the `id` field (e.g. `BNCH-001-ephemeral-cli`); the
+/// canonical IRI is `https://decision-cli.dev/ns/bench/<id>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VerificationEnvironment {
-    /// Identifier — e.g. `ENV-001-ephemeral-cli`.
+pub struct VerificationBench {
+    /// Identifier — e.g. `BNCH-001-ephemeral-cli`.
     pub id: String,
     /// Environment type tag (e.g. `ephemeral-tempdir`, `remote-http`).
-    pub env_type: String,
+    pub bench_type: String,
     /// Optional shell snippet run before any step.
     pub setup: Option<String>,
     /// Optional shell snippet run after step execution.
@@ -69,27 +69,27 @@ pub struct VerificationEnvironment {
     pub allowed_ops: Vec<String>,
     /// Safety classification.
     pub safety_class: SafetyClass,
-    /// Required for remote env types; forbidden for local types.
+    /// Required for remote bench types; forbidden for local types.
     pub endpoint: Option<String>,
     /// Repo-relative path to a fixture tree materialised before steps
-    /// execute (FT-053 / ADR-032). `None` when the env carries no fixture.
+    /// execute (FT-053 / ADR-032). `None` when the bench carries no fixture.
     pub fixture_source: Option<String>,
 }
 
-impl VerificationEnvironment {
+impl VerificationBench {
     /// Construct the canonical IRI for this environment.
     #[must_use]
     pub fn iri(&self) -> NamedNode {
-        NamedNode::new_unchecked(format!("{IRI_DEC_ENV_PREFIX}{id}", id = self.id))
+        NamedNode::new_unchecked(format!("{IRI_DEC_BENCH_PREFIX}{id}", id = self.id))
     }
 
-    /// True iff this env's `env_type` is "remote-*" (ADR-028 §SHACL conditional).
+    /// True iff this bench's `bench_type` is "remote-*" (ADR-028 §SHACL conditional).
     #[must_use]
     pub fn is_remote(&self) -> bool {
-        self.env_type.starts_with("remote-")
+        self.bench_type.starts_with("remote-")
     }
 
-    /// Serialise the env to RDF quads in the supplied named graph.
+    /// Serialise the bench to RDF quads in the supplied named graph.
     ///
     /// `allowed_ops` is serialised as an rdf:List of plain-string
     /// literals; an empty list collapses to `dec:allowedOps rdf:nil`,
@@ -106,10 +106,10 @@ impl VerificationEnvironment {
 
     fn header_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
         let rdf_type = NamedNodeRef::new_unchecked(RDF_TYPE);
-        let cls = verification_environment_class();
+        let cls = verification_bench_class();
         vec![
             Quad::new(subject.clone(), rdf_type, cls, g.clone()),
-            literal_quad(subject, env_type(), &self.env_type, g),
+            literal_quad(subject, bench_type(), &self.bench_type, g),
             literal_quad(subject, safety_class(), self.safety_class.as_str(), g),
         ]
     }

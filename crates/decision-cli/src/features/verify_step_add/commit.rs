@@ -17,13 +17,13 @@ use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
 
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::{
-    from_turtle as env_from_turtle, VerificationEnvironment,
+use crate::core::ontology::verification_bench::{
+    from_turtle as bench_from_turtle, VerificationBench,
 };
 use crate::core::ontology::verification_graph::{from_turtle, VerificationGraph};
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
-use crate::core::vocab::{verify_graph_named_graph, IRI_DEC_ENV_PREFIX};
+use crate::core::vocab::{verify_graph_named_graph, IRI_DEC_BENCH_PREFIX};
 use crate::core::StreamWriter;
 
 use super::store_diff;
@@ -102,11 +102,11 @@ fn not_found(id: &str) -> HandlerError {
 pub(super) fn load_env_for_graph(
     workdir: &Path,
     graph: &VerificationGraph,
-) -> Result<VerificationEnvironment, HandlerError> {
+) -> Result<VerificationBench, HandlerError> {
     let env_iri = graph.environment.as_str();
     let env_id =
         env_iri
-            .strip_prefix(IRI_DEC_ENV_PREFIX)
+            .strip_prefix(IRI_DEC_BENCH_PREFIX)
             .ok_or_else(|| HandlerError::Internal {
                 detail: format!("graph references non-canonical env IRI {env_iri:?}"),
             })?;
@@ -118,7 +118,7 @@ pub(super) fn load_env_for_graph(
             kind: "environment".to_string(),
         });
     }
-    env_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
+    bench_from_turtle(&env_path).map_err(|e| HandlerError::Internal {
         detail: format!("parsing env file {p}: {e}", p = env_path.display()),
     })
 }

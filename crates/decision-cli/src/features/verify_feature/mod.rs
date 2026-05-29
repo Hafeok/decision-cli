@@ -61,7 +61,7 @@ impl OutputFormat {
 pub struct FeatureVerifyRequest {
     /// `FT-NNN` short id (or full IRI) of the feature.
     pub feature_id: String,
-    /// Optional environment filter (`ENV-NNN[-suffix]`).
+    /// Optional environment filter (`BNCH-NNN[-suffix]`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub environment_id: Option<String>,
     /// Skip Feedback emission for failing evidence-bearing steps.

@@ -12,7 +12,7 @@ use oxigraph::model::{NamedNode, Quad, Term};
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_BIND_AS, IRI_DEC_COMMAND, IRI_DEC_CONDITION, IRI_DEC_ENVIRONMENT, IRI_DEC_METHOD,
+    IRI_DEC_BIND_AS, IRI_DEC_COMMAND, IRI_DEC_CONDITION, IRI_DEC_BENCH, IRI_DEC_METHOD,
     IRI_DEC_PATH, IRI_DEC_QUERY, IRI_DEC_STEPS, IRI_DEC_STEP_TYPE, IRI_DEC_TARGET, IRI_DEC_TIMEOUT,
     IRI_DEC_URL, IRI_DEC_VERIFICATION_GRAPH, IRI_DEC_VERIFICATION_STEP, IRI_DEC_VERIFIES,
     SEED_STEP_KINDS, STEP_KIND_CAPTURE, STEP_KIND_FILE_ASSERTION, STEP_KIND_HTTP_REQUEST,
@@ -101,7 +101,7 @@ fn type_subjects(quads: &[Quad], class_iri: &str) -> Vec<NamedNode> {
 fn validate_graph_subject(quads: &[Quad], subject: &NamedNode) -> Vec<GraphViolation> {
     let mut violations = Vec::new();
     check_single_iri(quads, subject, IRI_DEC_VERIFIES, &mut violations);
-    check_single_iri(quads, subject, IRI_DEC_ENVIRONMENT, &mut violations);
+    check_single_iri(quads, subject, IRI_DEC_BENCH, &mut violations);
     check_steps_present(quads, subject, &mut violations);
     violations
 }

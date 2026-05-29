@@ -2,7 +2,7 @@
 id: TC-213
 title: dec verify bench list returns post-migration BNCH-NNN ids identical to pre-migration ENV-NNN
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-112
@@ -13,6 +13,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-213-bench-list-roundtrip.sh
 runner-timeout: 60
+last-run: 2026-05-29T13:41:32.311273790+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

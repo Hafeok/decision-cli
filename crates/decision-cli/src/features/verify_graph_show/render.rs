@@ -101,7 +101,7 @@ mod tests {
             graph: GraphDocument {
                 id: "VG-001".to_string(),
                 verifies: "FT-001".to_string(),
-                environment: "ENV-001-ephemeral-cli".to_string(),
+                environment: "BNCH-001-ephemeral-cli".to_string(),
                 steps: vec![
                     StepDocument::ShellCommand {
                         command: "echo hi".to_string(),
@@ -129,7 +129,7 @@ mod tests {
         assert!(s.contains("Verifies:"));
         assert!(s.contains("FT-001"));
         assert!(s.contains("Environment:"));
-        assert!(s.contains("ENV-001-ephemeral-cli"));
+        assert!(s.contains("BNCH-001-ephemeral-cli"));
         assert!(s.contains("safety: isolated"));
         assert!(s.contains("Steps:"));
         assert!(s.contains("  1. shell-command"));
@@ -148,7 +148,7 @@ mod tests {
         let mut r = sample_response();
         r.environment_safety = None;
         let s = render_text(&r);
-        assert!(s.contains("Environment: ENV-001-ephemeral-cli"));
+        assert!(s.contains("Environment: BNCH-001-ephemeral-cli"));
         assert!(!s.contains("safety:"), "safety must be omitted: {s}");
     }
 
@@ -168,7 +168,7 @@ mod tests {
         assert!(v.is_object());
         assert_eq!(v["id"], "VG-001");
         assert_eq!(v["verifies"], "FT-001");
-        assert_eq!(v["environment"], "ENV-001-ephemeral-cli");
+        assert_eq!(v["environment"], "BNCH-001-ephemeral-cli");
         assert!(v["steps"].is_array());
         // path / safety are NOT part of the graph document JSON.
         assert!(v.get("path").is_none());

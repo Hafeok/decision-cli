@@ -12,7 +12,7 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::core::ontology::verification_env::VerificationEnvironment;
+use crate::core::ontology::verification_bench::VerificationBench;
 use crate::core::ontology::verification_graph::{
     StepFields, StepIri, StepKind, VerificationGraph, VerificationStep,
 };
@@ -203,7 +203,7 @@ fn http_op_for_method(method: &str) -> &'static str {
 /// declares a token outside the controlled vocabulary.
 pub fn check_step_against_env(
     step: &VerificationStep,
-    env: &VerificationEnvironment,
+    env: &VerificationBench,
 ) -> Result<(), SafetyError> {
     validate_op_vocabulary(env)?;
     let required = required_ops_for(step);
@@ -233,7 +233,7 @@ pub fn check_step_against_env(
 /// See [`check_step_against_env`]; surfaces the first failing step.
 pub fn check_graph_against_env(
     graph: &VerificationGraph,
-    env: &VerificationEnvironment,
+    env: &VerificationBench,
 ) -> Result<(), SafetyError> {
     validate_op_vocabulary(env)?;
     for step in &graph.steps {
@@ -253,7 +253,7 @@ pub fn check_graph_against_env(
 /// [`SafetyError::UnknownOp`].
 pub fn check_graph_against_env_all(
     graph: &VerificationGraph,
-    env: &VerificationEnvironment,
+    env: &VerificationBench,
 ) -> Result<(), Vec<SafetyError>> {
     if let Err(e) = validate_op_vocabulary(env) {
         return Err(vec![e]);
@@ -271,7 +271,7 @@ pub fn check_graph_against_env_all(
     }
 }
 
-fn validate_op_vocabulary(env: &VerificationEnvironment) -> Result<(), SafetyError> {
+fn validate_op_vocabulary(env: &VerificationBench) -> Result<(), SafetyError> {
     for op in &env.allowed_ops {
         if !is_known_op(op) {
             return Err(SafetyError::UnknownOp {

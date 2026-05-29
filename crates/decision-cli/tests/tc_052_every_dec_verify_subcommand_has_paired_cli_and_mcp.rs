@@ -6,7 +6,7 @@
 //!
 //! The four halves of the TC map onto four tests:
 //!
-//!   1. Surface symmetry (`cli verify env new` ⇔ `dec_verify_env_new`).
+//!   1. Surface symmetry (`cli verify env new` ⇔ `dec_verify_bench_new`).
 //!   2. Single handler — no parallel implementations.
 //!   3. Identical `Request` shape across surfaces.
 //!   4. Identical `Response` / `Error` shape across surfaces.
@@ -83,12 +83,12 @@ fn init_workdir(tag: &str) -> TmpDir {
 /// in-memory `ToolRegistry` value directly.
 fn build_production_registry(_workdir: &Path) -> ToolRegistry {
     let mut reg = ToolRegistry::new();
-    reg.register(decision_cli::verify_env_new::tool_descriptor())
-        .expect("register verify_env_new");
-    reg.register(decision_cli::verify_env_list::tool_descriptor())
-        .expect("register verify_env_list");
-    reg.register(decision_cli::verify_env_show::tool_descriptor())
-        .expect("register verify_env_show");
+    reg.register(decision_cli::verify_bench_new::tool_descriptor())
+        .expect("register verify_bench_new");
+    reg.register(decision_cli::verify_bench_list::tool_descriptor())
+        .expect("register verify_bench_list");
+    reg.register(decision_cli::verify_bench_show::tool_descriptor())
+        .expect("register verify_bench_show");
     reg.register(decision_cli::verify_graph_new::tool_descriptor())
         .expect("register verify_graph_new");
     reg.register(decision_cli::verify_graph_list::tool_descriptor())
@@ -136,20 +136,20 @@ fn every_dec_verify_subcommand_has_an_mcp_tool() {
 /// because the parity property is structural.
 fn decision_cli_cli_paired_tool_names() -> &'static [&'static str] {
     // Re-export read from the CLI binary's surface module. The list
-    // is `&["dec_verify_env_new"]` in slice 2.5; new subcommands
+    // is `&["dec_verify_bench_new"]` in slice 2.5; new subcommands
     // extend it.
     PAIRED_TOOL_NAMES
 }
 
 // The CLI module is private to the binary crate (lives in main.rs's
 // `mod cli;`), so we hard-code the same value here. The unit test
-// `core::tests::descriptor_uses_canonical_name` in features/verify_env_new
+// `core::tests::descriptor_uses_canonical_name` in features/verify_bench_new
 // already catches drift from the MCP side; this constant catches drift
 // from the CLI side.
 const PAIRED_TOOL_NAMES: &[&str] = &[
-    "dec_verify_env_list",
-    "dec_verify_env_new",
-    "dec_verify_env_show",
+    "dec_verify_bench_list",
+    "dec_verify_bench_new",
+    "dec_verify_bench_show",
     "dec_verify_graph_list",
     "dec_verify_graph_new",
     "dec_verify_graph_show",
@@ -159,15 +159,15 @@ const PAIRED_TOOL_NAMES: &[&str] = &[
 
 #[test]
 fn cli_and_mcp_route_through_the_same_handler() {
-    // Pure structural check: the verify_env_new feature module exports
+    // Pure structural check: the verify_bench_new feature module exports
     // exactly one `pub fn run`. The CLI in `cli::verify::run_env_new`
-    // and the MCP descriptor in `verify_env_new::tool_descriptor`
+    // and the MCP descriptor in `verify_bench_new::tool_descriptor`
     // both reference it. We assert via a grep over the feature
     // module source: it must not contain a `cli_handle` / `mcp_handle`
     // split.
     let src = std::fs::read_to_string(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/features/verify_env_new/mod.rs"
+        "/src/features/verify_bench_new/mod.rs"
     ))
     .expect("read feature source");
     assert!(
@@ -187,9 +187,9 @@ fn cli_and_mcp_produce_identical_request_shapes() {
     // CLI: build the request via the same path `cli::verify::run_env_new`
     // uses, with a representative input.
     let workdir = PathBuf::from("/tmp/dec-tc052-stub");
-    let cli_req = decision_cli::verify_env_new::EnvNewRequest {
+    let cli_req = decision_cli::verify_bench_new::BenchNewRequest {
         id: None,
-        env_type: "ephemeral-tempdir".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         safety_class: "isolated".to_string(),
         allowed_ops: vec!["shell".to_string(), "filesystem".to_string()],
         setup: None,
@@ -201,13 +201,13 @@ fn cli_and_mcp_produce_identical_request_shapes() {
     // MCP: build the matching JSON args, parse them through the same
     // entry point the MCP descriptor uses.
     let raw = serde_json::json!({
-        "env_type": "ephemeral-tempdir",
+        "bench_type": "ephemeral-tempdir",
         "safety_class": "isolated",
         "allowed_ops": ["shell", "filesystem"],
         "workdir": workdir.to_string_lossy(),
     });
-    let mcp_req = decision_cli::verify_env_new::parse_request(&Request::new(
-        decision_cli::verify_env_new::TOOL_NAME,
+    let mcp_req = decision_cli::verify_bench_new::parse_request(&Request::new(
+        decision_cli::verify_bench_new::TOOL_NAME,
         raw,
     ))
     .expect("parse mcp");
@@ -222,9 +222,9 @@ fn cli_and_mcp_produce_identical_request_shapes() {
 #[test]
 fn cli_and_mcp_produce_identical_response_values() {
     let tmp = init_workdir("response");
-    let req = decision_cli::verify_env_new::EnvNewRequest {
+    let req = decision_cli::verify_bench_new::BenchNewRequest {
         id: Some("ENV-013".to_string()),
-        env_type: "ephemeral-tempdir".to_string(),
+        bench_type: "ephemeral-tempdir".to_string(),
         safety_class: "isolated".to_string(),
         allowed_ops: vec!["shell".to_string()],
         setup: None,
@@ -233,23 +233,23 @@ fn cli_and_mcp_produce_identical_response_values() {
         fixture_source: None,
         workdir: Some(tmp.path().to_path_buf()),
     };
-    let cli = decision_cli::verify_env_new::run(&req).expect("cli ok");
+    let cli = decision_cli::verify_bench_new::run(&req).expect("cli ok");
     // Force a duplicate-id error on a second invocation so we can
     // compare the structured error shape between paths.
-    let cli_err = decision_cli::verify_env_new::run(&req).expect_err("duplicate must fail");
+    let cli_err = decision_cli::verify_bench_new::run(&req).expect_err("duplicate must fail");
 
-    let mcp_req = decision_cli::verify_env_new::parse_request(&Request::new(
-        decision_cli::verify_env_new::TOOL_NAME,
+    let mcp_req = decision_cli::verify_bench_new::parse_request(&Request::new(
+        decision_cli::verify_bench_new::TOOL_NAME,
         serde_json::json!({
             "id": "ENV-013",
-            "env_type": "ephemeral-tempdir",
+            "bench_type": "ephemeral-tempdir",
             "safety_class": "isolated",
             "allowed_ops": ["shell"],
             "workdir": tmp.path().to_string_lossy(),
         }),
     ))
     .expect("parse");
-    let mcp_err = decision_cli::verify_env_new::run(&mcp_req).expect_err("duplicate must fail");
+    let mcp_err = decision_cli::verify_bench_new::run(&mcp_req).expect_err("duplicate must fail");
 
     assert_eq!(cli_err, mcp_err, "errors must match byte-for-byte");
     // And: the successful response's structured payload must round-trip

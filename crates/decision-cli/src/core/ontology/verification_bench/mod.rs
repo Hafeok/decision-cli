@@ -1,11 +1,11 @@
-//! VerificationEnvironment artifact type per FT-035 / ADR-028.
+//! VerificationBench artifact type per FT-035 / ADR-028.
 //!
 //! Per the slice-level SDP convention in `CLAUDE.md`, every consumer
-//! (FT-037 safety enforcement, FT-038/039/040 env CLI subcommands)
+//! (FT-037 safety enforcement, FT-038/039/040 bench CLI subcommands)
 //! imports from this module — no consumer imports from sibling features.
 //!
 //! Scope of FT-035 is intentionally the schema substrate: the in-memory
-//! shape (`SafetyClass`, `VerificationEnvironment`), RDF serialisation
+//! shape (`SafetyClass`, `VerificationBench`), RDF serialisation
 //! (`to_quads`), on-disk Turtle round-trip (`from_turtle`,
 //! `to_canonical_turtle`), and the ADR-028 SHACL shape
 //! (`validate_quads`). Safety enforcement (FT-037), CLI subcommands
@@ -23,6 +23,6 @@ mod tests;
 
 pub use io::{from_turtle, from_turtle_bytes, EnvIoError};
 pub use seed::{ephemeral_cli_env, EPHEMERAL_CLI_ENV_FILENAME, EPHEMERAL_CLI_ENV_ID};
-pub use shacl::{validate_quads, EnvShaclError, EnvViolation, REMOTE_ENV_TYPE_PREFIX};
-pub use types::{SafetyClass, VerificationEnvironment};
+pub use shacl::{validate_quads, EnvShaclError, EnvViolation, REMOTE_BENCH_TYPE_PREFIX};
+pub use types::{SafetyClass, VerificationBench};
 pub use write::to_canonical_turtle;

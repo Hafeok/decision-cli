@@ -18,7 +18,7 @@ use thiserror::Error;
 
 use crate::core::stream_writer::StreamWriter;
 use crate::core::vocab::{
-    orchestration_graph, proposal_document, IRI_DEC_ENVIRONMENT, IRI_DEC_SESSION, IRI_DEC_VERIFIES,
+    orchestration_graph, proposal_document, IRI_DEC_BENCH, IRI_DEC_SESSION, IRI_DEC_VERIFIES,
     SESSION_STATUS_PENDING_REVIEW,
 };
 
@@ -44,7 +44,7 @@ pub enum PendingReviewError {
 pub struct PendingReviewInput<'a> {
     /// Short feature id (e.g. `FT-J`).
     pub feature: &'a str,
-    /// Short env id (e.g. `ENV-001-ephemeral-cli`).
+    /// Short env id (e.g. `BNCH-001-ephemeral-cli`).
     pub env: &'a str,
     /// JSON string of the `GraphProposal` payload returned by the worker.
     pub proposal_document_json: &'a str,
@@ -173,7 +173,7 @@ fn session_artifact_quads(
     input: &PendingReviewInput<'_>,
     g: &GraphName,
 ) -> Vec<Quad> {
-    let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_ENVIRONMENT).into_owned();
+    let environment_pred = NamedNodeRef::new_unchecked(IRI_DEC_BENCH).into_owned();
     let at_time = NamedNodeRef::new_unchecked(PROV_AT_TIME).into_owned();
     vec![
         Quad::new(

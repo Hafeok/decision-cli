@@ -77,7 +77,7 @@ impl ViolationKind {
             Self::Binary
             | Self::HttpHost
             | Self::FilePath
-            | Self::CaptureSource => UpstreamTarget::VerificationEnvironment,
+            | Self::CaptureSource => UpstreamTarget::VerificationBench,
         }
     }
 }
@@ -90,8 +90,8 @@ pub enum UpstreamTarget {
     CapabilityReference,
     /// `dec:OntologyDescription` category.
     OntologyDescription,
-    /// `dec:VerificationEnvironment` (the target env that was queried).
-    VerificationEnvironment,
+    /// `dec:VerificationBench` (the target env that was queried).
+    VerificationBench,
 }
 
 impl UpstreamTarget {
@@ -101,7 +101,7 @@ impl UpstreamTarget {
         match self {
             Self::CapabilityReference => "capability-reference",
             Self::OntologyDescription => "ontology-description",
-            Self::VerificationEnvironment => "verification-environment",
+            Self::VerificationBench => "verification-environment",
         }
     }
 }
@@ -647,7 +647,7 @@ mod tests {
     fn upstream_target_mapping_is_stable() {
         assert_eq!(
             ViolationKind::Binary.upstream_target(),
-            UpstreamTarget::VerificationEnvironment
+            UpstreamTarget::VerificationBench
         );
         assert_eq!(
             ViolationKind::DecSubcommand.upstream_target(),

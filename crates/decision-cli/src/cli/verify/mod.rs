@@ -1,7 +1,7 @@
-//! `dec verify {env, graph, ...}` — CLI adapter for the verification surface.
+//! `dec verify {bench, graph, ...}` — CLI adapter for the verification surface.
 //!
 //! Top-level dispatch only. Per-noun args and per-leaf run handlers live
-//! under [`env`] and [`graph`] submodules so this file stays well under
+//! under [`bench`] and [`graph`] submodules so this file stays well under
 //! the ADR-013 §Rule 1 hard limit.
 //!
 //! Per ADR-029, every leaf clap subcommand is paired with an MCP tool of
@@ -9,7 +9,7 @@
 //! handler function exported by the corresponding `features/verify_*`
 //! module.
 
-pub mod env;
+pub mod bench;
 pub mod feature;
 pub mod graph;
 pub mod step;
@@ -22,9 +22,9 @@ use clap::Subcommand;
 use decision_cli::core::handler::Error as HandlerError;
 
 #[allow(unused_imports)]
-pub use env::{
-    env_list_request, env_new_request, env_show_request, EnvCmd, EnvListArgs, EnvNewArgs,
-    EnvShowArgs,
+pub use bench::{
+    bench_list_request, bench_new_request, bench_show_request, BenchCmd, BenchListArgs, BenchNewArgs,
+    BenchShowArgs,
 };
 #[allow(unused_imports)]
 pub use graph::{
@@ -40,9 +40,9 @@ pub use step::{step_add_request, StepAddArgs, StepCmd};
 /// (grep over this file) can confirm one entry per leaf subcommand.
 #[allow(dead_code)]
 pub const PAIRED_TOOL_NAMES: &[&str] = &[
-    "dec_verify_env_list",
-    "dec_verify_env_new",
-    "dec_verify_env_show",
+    "dec_verify_bench_list",
+    "dec_verify_bench_new",
+    "dec_verify_bench_show",
     "dec_verify_feature",
     "dec_verify_graph_accept",
     "dec_verify_graph_generate",
@@ -55,9 +55,9 @@ pub const PAIRED_TOOL_NAMES: &[&str] = &[
 
 #[derive(Debug, Subcommand)]
 pub enum VerifyCmd {
-    /// Manage `dec:VerificationEnvironment` artifacts.
+    /// Manage `dec:VerificationBench` artifacts.
     #[command(subcommand)]
-    Env(EnvCmd),
+    Bench(BenchCmd),
     /// Manage `dec:VerificationGraph` artifacts.
     #[command(subcommand)]
     Graph(GraphCmd),
@@ -71,7 +71,7 @@ pub enum VerifyCmd {
 
 pub fn run(workdir: &Path, cmd: VerifyCmd) -> ExitCode {
     match cmd {
-        VerifyCmd::Env(c) => env::run(workdir, c),
+        VerifyCmd::Bench(c) => bench::run(workdir, c),
         VerifyCmd::Graph(c) => graph::run(workdir, c),
         VerifyCmd::Step(c) => step::run(workdir, c),
         VerifyCmd::Feature(args) => feature::run_feature(workdir, args),

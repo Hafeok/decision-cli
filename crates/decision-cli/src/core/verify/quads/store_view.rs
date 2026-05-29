@@ -1,6 +1,6 @@
 //! Quad-and-store inspection helpers used by the FT-037 safety
 //! integration: reconstructs typed `VerificationStep` and
-//! `VerificationEnvironment` views from the union of an in-flight
+//! `VerificationBench` views from the union of an in-flight
 //! insert quad-set and the store's current contents.
 
 use std::collections::BTreeMap;
@@ -8,11 +8,11 @@ use std::collections::BTreeMap;
 use oxigraph::model::{NamedNode, Quad, Subject, Term};
 use oxigraph::store::Store;
 
-use crate::core::ontology::verification_env::{SafetyClass, VerificationEnvironment};
+use crate::core::ontology::verification_bench::{SafetyClass, VerificationBench};
 use crate::core::ontology::verification_graph::{StepFields, StepKind, VerificationStep};
 use crate::core::vocab::{
     IRI_DEC_ALLOWED_OPS, IRI_DEC_BIND_AS, IRI_DEC_COMMAND, IRI_DEC_CONDITION, IRI_DEC_ENDPOINT,
-    IRI_DEC_ENV_TYPE, IRI_DEC_FIXTURE_SOURCE, IRI_DEC_METHOD, IRI_DEC_PATH, IRI_DEC_QUERY,
+    IRI_DEC_BENCH_TYPE, IRI_DEC_FIXTURE_SOURCE, IRI_DEC_METHOD, IRI_DEC_PATH, IRI_DEC_QUERY,
     IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_STEP_TYPE, IRI_DEC_TARGET, IRI_DEC_TEARDOWN,
     IRI_DEC_TIMEOUT, IRI_DEC_URL,
 };
@@ -115,14 +115,14 @@ pub(super) fn load_env(
     inserts: &[Quad],
     store: &Store,
     env_iri: &NamedNode,
-) -> Option<VerificationEnvironment> {
+) -> Option<VerificationBench> {
     let id = env_iri
         .as_str()
         .rsplit('/')
         .next()
         .unwrap_or("ENV-unknown")
         .to_string();
-    let env_type = literal_for(inserts, store, env_iri, IRI_DEC_ENV_TYPE)?;
+    let bench_type = literal_for(inserts, store, env_iri, IRI_DEC_BENCH_TYPE)?;
     let safety_class = literal_for(inserts, store, env_iri, IRI_DEC_SAFETY_CLASS)
         .and_then(|s| SafetyClass::parse(&s))?;
     let setup = literal_for(inserts, store, env_iri, IRI_DEC_SETUP);
@@ -130,9 +130,9 @@ pub(super) fn load_env(
     let endpoint = literal_for(inserts, store, env_iri, IRI_DEC_ENDPOINT);
     let fixture_source = literal_for(inserts, store, env_iri, IRI_DEC_FIXTURE_SOURCE);
     let allowed_ops = list_for(inserts, store, env_iri, IRI_DEC_ALLOWED_OPS);
-    Some(VerificationEnvironment {
+    Some(VerificationBench {
         id,
-        env_type,
+        bench_type,
         setup,
         teardown,
         allowed_ops,

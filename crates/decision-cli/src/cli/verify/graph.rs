@@ -54,9 +54,9 @@ pub struct GraphNewArgs {
     /// Feature or TC the graph proves about (e.g. `FT-001`, `TC-013`).
     #[arg(long)]
     pub verifies: String,
-    /// VerificationEnvironment the graph executes against (e.g. `ENV-001-ephemeral-cli`).
+    /// VerificationBench the graph executes against (e.g. `BNCH-001-ephemeral-cli`), renamed from --environment by FT-112.
     #[arg(long)]
-    pub environment: String,
+    pub bench: String,
 }
 
 #[derive(Debug, clap::Args)]
@@ -64,9 +64,9 @@ pub struct GraphListArgs {
     /// Optional filter — `FT-NNN` or `TC-NNN` reference.
     #[arg(long)]
     pub verifies: Option<String>,
-    /// Optional environment filter (e.g. `ENV-001-ephemeral-cli`).
+    /// Optional bench filter (e.g. `BNCH-001-ephemeral-cli`), renamed from --environment by FT-112.
     #[arg(long)]
-    pub environment: Option<String>,
+    pub bench: Option<String>,
     /// Output format. Defaults to `table`.
     #[arg(long, value_name = "FORMAT", default_value = "table")]
     pub format: String,
@@ -85,9 +85,12 @@ pub struct GraphShowArgs {
 pub struct GraphGenerateArgs {
     /// Feature id (e.g. `FT-049`).
     pub feature_id: String,
-    /// Environment id (e.g. `ENV-001-ephemeral-cli`).
+    /// Bench id (e.g. `BNCH-001-ephemeral-cli`), renamed from --environment by FT-112.
     #[arg(long)]
-    pub environment: String,
+    pub bench: String,
+    /// RESERVED: --env is reserved for future deployment-target use; use --bench instead (FT-112).
+    #[arg(long, value_name = "ENV-NNN", hide = true)]
+    pub env: Option<String>,
     /// Persist the proposal without prompting.
     #[arg(long, conflicts_with = "print_only")]
     pub accept: bool,
@@ -108,7 +111,7 @@ pub fn graph_generate_request(args: &GraphGenerateArgs, workdir: &Path) -> Gener
     };
     GenerateRequest {
         feature_id: args.feature_id.clone(),
-        environment_id: args.environment.clone(),
+        environment_id: args.bench.clone(),
         mode,
         workdir: Some(workdir.to_path_buf()),
         product_root: None,
@@ -130,7 +133,7 @@ pub fn graph_list_request(
         })?;
     Ok(GraphListRequest {
         verifies: args.verifies.clone(),
-        environment: args.environment.clone(),
+        environment: args.bench.clone(),
         format: Some(format),
         workdir: Some(workdir.to_path_buf()),
     })
@@ -143,7 +146,7 @@ pub fn graph_new_request(args: &GraphNewArgs, workdir: &Path) -> GraphNewRequest
     GraphNewRequest {
         id: args.id.clone(),
         verifies: args.verifies.clone(),
-        environment: args.environment.clone(),
+        environment: args.bench.clone(),
         workdir: Some(workdir.to_path_buf()),
     }
 }
@@ -243,6 +246,12 @@ fn run_graph_run(workdir: &Path, args: GraphRunArgs) -> ExitCode {
 }
 
 fn run_graph_generate(workdir: &Path, args: GraphGenerateArgs) -> ExitCode {
+    // FT-112: --env is reserved for future deployment-target use
+    if args.env.is_some() {
+        eprintln!("dec verify graph generate: --env is reserved for future deployment-target use; use --bench BNCH-NNN instead");
+        return ExitCode::from(2);
+    }
+
     let req = graph_generate_request(&args, workdir);
     match verify_graph_generate::run_generate(&req) {
         Ok(outcome) => {

@@ -47,7 +47,7 @@ pub struct GraphNewRequest {
     pub id: Option<String>,
     /// Feature or TC reference (`FT-NNN` / `TC-NNN`).
     pub verifies: String,
-    /// Environment reference (`ENV-NNN[-suffix]`).
+    /// Environment reference (`BNCH-NNN[-suffix]`).
     pub environment: String,
     /// Working directory the handler runs against. Surface adapters set
     /// this; the MCP server overrides any client-supplied value with its
@@ -321,7 +321,7 @@ mod tests {
         let req = GraphNewRequest {
             id: Some("VG-042".to_string()),
             verifies: "FT-001".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             workdir: None,
         };
         let v = serde_json::to_value(&req).expect("ser");

@@ -1,13 +1,13 @@
-//! `dec verify env new` — single-handler implementation (FT-038 / ADR-029).
+//! `dec verify bench new` — single-handler implementation (FT-038 / ADR-029).
 //!
 //! One handler, two surfaces: the clap-driven CLI in
 //! `crates/decision-cli/src/cli/verify.rs` and the MCP tool descriptor
-//! in [`tool_descriptor`] both construct an [`EnvNewRequest`] and route
+//! in [`tool_descriptor`] both construct an [`BenchNewRequest`] and route
 //! it through [`run`]. Business logic lives exclusively here per ADR-029
 //! §Single-handler discipline.
 //!
 //! Behaviour mirrors FT-038 §Behaviour: validate inputs, mint or accept
-//! an `ENV-NNN` id, build the `VerificationEnvironment`, commit through
+//! a `BNCH-NNN` id, build the `VerificationBench`, commit through
 //! `StreamWriter` (SHACL chokepoint), write the canonical Turtle file.
 
 pub mod mint;
@@ -26,29 +26,29 @@ use serde_json::{json, Value};
 
 use crate::core::handler::{Error as HandlerError, Request, Response};
 use crate::core::mcp::{ToolDescriptor, ToolHandler};
-use crate::core::ontology::verification_env::{
-    to_canonical_turtle, SafetyClass, VerificationEnvironment,
+use crate::core::ontology::verification_bench::{
+    to_canonical_turtle, SafetyClass, VerificationBench,
 };
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use crate::core::vocab::{
-    verify_env_graph, IRI_DEC_ENV_PREFIX, IRI_DEC_GRAPH_VERIFY_ENV,
-    IRI_DEC_VERIFICATION_ENVIRONMENT, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY,
+    verify_bench_graph, IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_BENCH,
+    IRI_DEC_VERIFICATION_BENCH, SAFETY_ISOLATED, SAFETY_PRODUCTION_READONLY,
     SAFETY_SHARED_NON_DESTRUCTIVE,
 };
 use crate::core::StreamWriter;
 
 /// MCP tool name — referenced by `cli::verify::run` for the parity TC.
-pub const TOOL_NAME: &str = "dec_verify_env_new";
+pub const TOOL_NAME: &str = "dec_verify_bench_new";
 
 /// Structured request the single handler consumes (both surfaces produce this).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct EnvNewRequest {
-    /// Caller-supplied id (e.g. `ENV-007`). `None` mints the next free id.
+pub struct BenchNewRequest {
+    /// Caller-supplied id (e.g. `BNCH-007`). `None` mints the next free id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    /// Environment type tag — e.g. `ephemeral-tempdir`, `remote-http`.
-    pub env_type: String,
+    /// Bench type tag — e.g. `ephemeral-tempdir`, `remote-http`.
+    pub bench_type: String,
     /// Safety class — one of the three controlled values.
     pub safety_class: String,
     /// Ordered list of operation tokens permitted in the environment.
@@ -63,7 +63,7 @@ pub struct EnvNewRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
     /// Optional repo-relative path to a fixture tree materialised before
-    /// steps execute (FT-053 / ADR-032). `None` when the env carries no
+    /// steps execute (FT-053 / ADR-032). `None` when the bench carries no
     /// fixture.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fixture_source: Option<String>,
@@ -76,22 +76,22 @@ pub struct EnvNewRequest {
 
 /// Structured response — surfaced verbatim by MCP, rendered as text on CLI.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct EnvNewResponse {
-    /// Minted (or echoed) `ENV-NNN[-...]` id.
+pub struct BenchNewResponse {
+    /// Minted (or echoed) `BNCH-NNN[-...]` id.
     pub id: String,
-    /// Absolute path to the persisted `.dec/verify/env/<id>.ttl` file.
+    /// Absolute path to the persisted `.dec/verify/bench/<id>.ttl` file.
     pub path: PathBuf,
 }
 
-/// Parse the structured `Request` envelope into [`EnvNewRequest`].
+/// Parse the structured `Request` envelope into [`BenchNewRequest`].
 ///
 /// MCP delivers a `Value::Object` matching the input schema; the CLI
 /// builds the same object from clap args. Both paths land here.
-pub fn parse_request(req: &Request) -> Result<EnvNewRequest, HandlerError> {
-    let mut parsed: EnvNewRequest = serde_json::from_value(req.arguments.clone()).map_err(|e| {
+pub fn parse_request(req: &Request) -> Result<BenchNewRequest, HandlerError> {
+    let mut parsed: BenchNewRequest = serde_json::from_value(req.arguments.clone()).map_err(|e| {
         HandlerError::InvalidArgument {
             field: "arguments".to_string(),
-            detail: format!("malformed dec_verify_env_new arguments: {e}"),
+            detail: format!("malformed dec_verify_bench_new arguments: {e}"),
         }
     })?;
     if parsed.workdir.is_none() {
@@ -105,7 +105,7 @@ pub fn parse_request(req: &Request) -> Result<EnvNewRequest, HandlerError> {
 pub fn tool_descriptor() -> ToolDescriptor {
     ToolDescriptor::new(
         TOOL_NAME,
-        "Create a new dec:VerificationEnvironment artifact (FT-038 / ADR-028).",
+        "Create a new dec:VerificationBench artifact (FT-038 / ADR-028).",
         input_schema(),
         tool_handler(),
     )
@@ -118,7 +118,7 @@ fn tool_handler() -> ToolHandler {
         let parsed = parse_request(&req)?;
         let outcome = run(&parsed)?;
         let summary = format!(
-            "created env {id} at {path}",
+            "created bench {id} at {path}",
             id = outcome.id,
             path = outcome.path.display()
         );
@@ -149,11 +149,11 @@ fn output_schema() -> Value {
 pub fn input_schema() -> Value {
     json!({
         "type": "object",
-        "required": ["env_type", "safety_class", "allowed_ops"],
+        "required": ["bench_type", "safety_class", "allowed_ops"],
         "additionalProperties": false,
         "properties": {
             "id": { "type": "string" },
-            "env_type": { "type": "string", "minLength": 1 },
+            "bench_type": { "type": "string", "minLength": 1 },
             "safety_class": {
                 "type": "string",
                 "enum": [SAFETY_ISOLATED, SAFETY_SHARED_NON_DESTRUCTIVE, SAFETY_PRODUCTION_READONLY],
@@ -173,7 +173,7 @@ pub fn input_schema() -> Value {
 }
 
 /// Single handler — both CLI and MCP surfaces invoke this.
-pub fn run(req: &EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
+pub fn run(req: &BenchNewRequest) -> Result<BenchNewResponse, HandlerError> {
     let workdir = req
         .workdir
         .as_deref()
@@ -183,44 +183,44 @@ pub fn run(req: &EnvNewRequest) -> Result<EnvNewResponse, HandlerError> {
                 .to_string(),
         })?;
     validate::pre_validate(req)?;
-    let env_dir = workdir.join(".dec").join("verify").join("env");
-    let id = resolve_id(req, workdir, &env_dir)?;
-    let env = build_env(&id, req)?;
-    write_through_writer(workdir, &env)?;
-    let path = persist::write_env_file(&env_dir, &id, &env)?;
-    Ok(EnvNewResponse {
+    let bench_dir = workdir.join(".dec").join("verify").join("bench");
+    let id = resolve_id(req, workdir, &bench_dir)?;
+    let bench = build_bench(&id, req)?;
+    write_through_writer(workdir, &bench)?;
+    let path = persist::write_bench_file(&bench_dir, &id, &bench)?;
+    Ok(BenchNewResponse {
         id,
         path: path.canonicalize().unwrap_or(path),
     })
 }
 
-/// Resolve the env id, consulting both the on-disk `.ttl` directory and
+/// Resolve the bench id, consulting both the on-disk `.ttl` directory and
 /// the orchestration store. Per TC-094 / FT-038 §Invariants, duplicate
 /// detection must consult the **store** (the authoritative source) and
 /// not just the on-disk `.ttl` file. Disk/store drift (a missing `.ttl`
 /// with the artifact still in the store — e.g. after `rm`, a gitignore
 /// mismatch, or test cleanup) used to slip past file-only detection and
-/// silently appended a second `dec:allowedOps` head, corrupting the env.
-fn resolve_id(req: &EnvNewRequest, workdir: &Path, env_dir: &Path) -> Result<String, HandlerError> {
+/// silently appended a second `dec:allowedOps` head, corrupting the bench.
+fn resolve_id(req: &BenchNewRequest, workdir: &Path, bench_dir: &Path) -> Result<String, HandlerError> {
     match &req.id {
         Some(id) => {
-            let file_dup = mint::id_exists(env_dir, id).map_err(io_err)?;
-            let store_dup = env_exists_in_store(workdir, id)?;
+            let file_dup = mint::id_exists(bench_dir, id).map_err(io_err)?;
+            let store_dup = bench_exists_in_store(workdir, id)?;
             if file_dup || store_dup {
                 Err(HandlerError::DuplicateId { id: id.clone() })
             } else {
                 Ok(id.clone())
             }
         }
-        None => mint::mint_next_id(env_dir).map_err(io_err),
+        None => mint::mint_next_id(bench_dir).map_err(io_err),
     }
 }
 
 /// True iff the orchestration store already contains a
-/// `dec:VerificationEnvironment` whose IRI is `<env-prefix><id>`. Used
-/// alongside the on-disk check so drift between `.dec/verify/env/` and
-/// the store cannot produce a silent multi-headed env (TC-094).
-fn env_exists_in_store(workdir: &Path, id: &str) -> Result<bool, HandlerError> {
+/// `dec:VerificationBench` whose IRI is `<bench-prefix><id>`. Used
+/// alongside the on-disk check so drift between `.dec/verify/bench/` and
+/// the store cannot produce a silent multi-headed bench (TC-094).
+fn bench_exists_in_store(workdir: &Path, id: &str) -> Result<bool, HandlerError> {
     let dump_path = orchestration_dump_path(workdir);
     if !dump_path.exists() {
         return Ok(false);
@@ -228,39 +228,39 @@ fn env_exists_in_store(workdir: &Path, id: &str) -> Result<bool, HandlerError> {
     let store = load_store_from_dump(&dump_path).map_err(|e| HandlerError::Internal {
         detail: format!("loading orchestration store: {e}"),
     })?;
-    env_iri_exists(&store, id)
+    bench_iri_exists(&store, id)
 }
 
-/// SPARQL ASK helper: true iff `<env-prefix><id>` is typed
-/// `dec:VerificationEnvironment` in the verify-env named graph.
-fn env_iri_exists(store: &Store, id: &str) -> Result<bool, HandlerError> {
+/// SPARQL ASK helper: true iff `<bench-prefix><id>` is typed
+/// `dec:VerificationBench` in the verify-bench named graph.
+fn bench_iri_exists(store: &Store, id: &str) -> Result<bool, HandlerError> {
     let q = format!(
         "ASK {{ GRAPH <{graph}> {{ <{prefix}{id}> a <{cls}> }} }}",
-        graph = IRI_DEC_GRAPH_VERIFY_ENV,
-        prefix = IRI_DEC_ENV_PREFIX,
-        cls = IRI_DEC_VERIFICATION_ENVIRONMENT,
+        graph = IRI_DEC_GRAPH_VERIFY_BENCH,
+        prefix = IRI_DEC_BENCH_PREFIX,
+        cls = IRI_DEC_VERIFICATION_BENCH,
     );
     match store
         .query(q.as_str())
         .map_err(|e| HandlerError::Internal {
-            detail: format!("env-exists ASK: {e}"),
+            detail: format!("bench-exists ASK: {e}"),
         })? {
         QueryResults::Boolean(b) => Ok(b),
         _ => Err(HandlerError::Internal {
-            detail: "env-exists ASK returned non-boolean result".to_string(),
+            detail: "bench-exists ASK returned non-boolean result".to_string(),
         }),
     }
 }
 
-fn build_env(id: &str, req: &EnvNewRequest) -> Result<VerificationEnvironment, HandlerError> {
+fn build_bench(id: &str, req: &BenchNewRequest) -> Result<VerificationBench, HandlerError> {
     let safety_class =
         SafetyClass::parse(&req.safety_class).ok_or_else(|| HandlerError::InvalidArgument {
             field: "safety_class".to_string(),
             detail: format!("unknown safety class {got:?}", got = req.safety_class),
         })?;
-    Ok(VerificationEnvironment {
+    Ok(VerificationBench {
         id: id.to_string(),
-        env_type: req.env_type.clone(),
+        bench_type: req.bench_type.clone(),
         setup: req.setup.clone().filter(|s| !s.is_empty()),
         teardown: req.teardown.clone().filter(|s| !s.is_empty()),
         allowed_ops: req.allowed_ops.clone(),
@@ -270,9 +270,9 @@ fn build_env(id: &str, req: &EnvNewRequest) -> Result<VerificationEnvironment, H
     })
 }
 
-/// Project the env into the persisted orchestration store through
+/// Project the bench into the persisted orchestration store through
 /// `StreamWriter` (SHACL chokepoint) and persist the dump back to disk.
-fn write_through_writer(workdir: &Path, env: &VerificationEnvironment) -> Result<(), HandlerError> {
+fn write_through_writer(workdir: &Path, bench: &VerificationBench) -> Result<(), HandlerError> {
     let scope = ActiveScope::load(workdir).map_err(|e| HandlerError::Internal {
         detail: format!("loading active scope: {e}"),
     })?;
@@ -288,7 +288,7 @@ fn write_through_writer(workdir: &Path, env: &VerificationEnvironment) -> Result
         StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| HandlerError::Internal {
             detail: format!("opening stream writer: {e}"),
         })?;
-    let quads = env.to_quads(verify_env_graph());
+    let quads = bench.to_quads(verify_bench_graph());
     writer.commit(Mutation::insert(quads)).map_err(|e| {
         let msg = format!("{e:#}");
         if msg.contains("SHACL violation") {
@@ -313,8 +313,8 @@ fn io_err(e: std::io::Error) -> HandlerError {
 /// the parity test in TC-060 — both surfaces produce byte-identical
 /// Turtle once the id is held constant.
 #[must_use]
-pub fn canonical_turtle(env: &VerificationEnvironment) -> String {
-    to_canonical_turtle(env)
+pub fn canonical_turtle(bench: &VerificationBench) -> String {
+    to_canonical_turtle(bench)
 }
 
 #[cfg(test)]
@@ -329,9 +329,9 @@ mod tests {
 
     #[test]
     fn request_round_trips_through_json() {
-        let req = EnvNewRequest {
-            id: Some("ENV-042".to_string()),
-            env_type: "ephemeral-tempdir".to_string(),
+        let req = BenchNewRequest {
+            id: Some("BNCH-042".to_string()),
+            bench_type: "ephemeral-tempdir".to_string(),
             safety_class: SAFETY_ISOLATED.to_string(),
             allowed_ops: vec!["shell".to_string()],
             setup: Some("echo hi".to_string()),
@@ -341,7 +341,7 @@ mod tests {
             workdir: None,
         };
         let v = serde_json::to_value(&req).expect("ser");
-        let back: EnvNewRequest = serde_json::from_value(v).expect("de");
+        let back: BenchNewRequest = serde_json::from_value(v).expect("de");
         assert_eq!(req, back);
     }
 
@@ -353,28 +353,28 @@ mod tests {
             .and_then(|v| v.as_array())
             .expect("required array");
         let names: Vec<&str> = required.iter().filter_map(|v| v.as_str()).collect();
-        assert!(names.contains(&"env_type"));
+        assert!(names.contains(&"bench_type"));
         assert!(names.contains(&"safety_class"));
         assert!(names.contains(&"allowed_ops"));
     }
 
-    /// TC-094: an env that exists only in the store (file removed)
-    /// must still be detected by [`env_iri_exists`]. Empty store
+    /// TC-094: a bench that exists only in the store (file removed)
+    /// must still be detected by [`bench_iri_exists`]. Empty store
     /// returns false; a typed subject returns true.
     #[test]
-    fn env_iri_exists_consults_store_not_disk() {
+    fn bench_iri_exists_consults_store_not_disk() {
         let store = Store::new().expect("store");
-        // Empty store: no env known.
-        assert!(!env_iri_exists(&store, "ENV-T").expect("empty"));
+        // Empty store: no bench known.
+        assert!(!bench_iri_exists(&store, "BNCH-T").expect("empty"));
 
-        // Seed a `dec:VerificationEnvironment` typed subject directly
-        // into the verify-env named graph — mirrors what
-        // `StreamWriter::commit(env_to_quads)` would persist.
-        let iri = NamedNode::new(format!("{IRI_DEC_ENV_PREFIX}ENV-T")).expect("iri");
+        // Seed a `dec:VerificationBench` typed subject directly
+        // into the verify-bench named graph — mirrors what
+        // `StreamWriter::commit(bench_to_quads)` would persist.
+        let iri = NamedNode::new(format!("{IRI_DEC_BENCH_PREFIX}BNCH-T")).expect("iri");
         let rdf_type =
             NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("rdf:type");
-        let cls = NamedNode::new(IRI_DEC_VERIFICATION_ENVIRONMENT).expect("cls");
-        let graph = NamedNode::new(IRI_DEC_GRAPH_VERIFY_ENV).expect("graph");
+        let cls = NamedNode::new(IRI_DEC_VERIFICATION_BENCH).expect("cls");
+        let graph = NamedNode::new(IRI_DEC_GRAPH_VERIFY_BENCH).expect("graph");
         let quad = oxigraph::model::Quad::new(
             iri,
             rdf_type,
@@ -384,7 +384,7 @@ mod tests {
         store
             .transaction(|mut tx| tx.insert(quad.as_ref()).map(|_| ()))
             .expect("insert");
-        assert!(env_iri_exists(&store, "ENV-T").expect("seeded"));
-        assert!(!env_iri_exists(&store, "ENV-U").expect("other id"));
+        assert!(bench_iri_exists(&store, "BNCH-T").expect("seeded"));
+        assert!(!bench_iri_exists(&store, "BNCH-U").expect("other id"));
     }
 }

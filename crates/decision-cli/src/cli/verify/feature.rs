@@ -18,9 +18,12 @@ use super::exit_code_for;
 pub struct FeatureArgs {
     /// Feature id (e.g. `FT-099`).
     pub feature_id: String,
-    /// Filter to one environment (`ENV-NNN[-suffix]`).
+    /// Filter to one bench (`BNCH-NNN[-suffix]`), renamed from --environment by FT-112.
     #[arg(long)]
-    pub environment: Option<String>,
+    pub bench: Option<String>,
+    /// RESERVED: --env is reserved for future deployment-target use; use --bench instead (FT-112).
+    #[arg(long, value_name = "ENV-NNN", hide = true)]
+    pub env: Option<String>,
     /// Output format. Defaults to `text`.
     #[arg(long, value_name = "FORMAT", default_value = "text")]
     pub format: String,
@@ -49,7 +52,7 @@ pub fn feature_verify_request(
     })?;
     Ok(FeatureVerifyRequest {
         feature_id: args.feature_id.clone(),
-        environment_id: args.environment.clone(),
+        environment_id: args.bench.clone(),
         no_feedback: args.no_feedback,
         include_stale: args.include_stale,
         dry_run: args.dry_run,
@@ -58,6 +61,12 @@ pub fn feature_verify_request(
 }
 
 pub fn run_feature(workdir: &Path, args: FeatureArgs) -> ExitCode {
+    // FT-112: --env is reserved for future deployment-target use
+    if args.env.is_some() {
+        eprintln!("dec verify feature: --env is reserved for future deployment-target use; use --bench BNCH-NNN instead");
+        return ExitCode::from(2);
+    }
+
     let format_requested = args.format.clone();
     let req = match feature_verify_request(&args, workdir) {
         Ok(r) => r,

@@ -11,7 +11,7 @@
 //! Keeping the predicate centralised in `core::verify::safety` is what TC-155
 //! §Acceptance requires.
 
-use crate::core::ontology::verification_env::VerificationEnvironment;
+use crate::core::ontology::verification_bench::VerificationBench;
 use crate::core::ontology::verification_graph::VerificationGraph;
 use crate::core::verify::safety::{check_step_against_env, SafetyError};
 
@@ -21,7 +21,7 @@ use super::request::RunnerError;
 /// violation aborts the run with [`RunnerError::SafetyViolation`].
 pub(crate) fn check(
     graph: &VerificationGraph,
-    env: &VerificationEnvironment,
+    env: &VerificationBench,
 ) -> Result<(), RunnerError> {
     for step in &graph.steps {
         match check_step_against_env(step, env) {

@@ -15,7 +15,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::core::handler::Error as HandlerError;
-use crate::core::ontology::verification_env::from_turtle as from_env_turtle;
+use crate::core::ontology::verification_bench::from_turtle as from_env_turtle;
 use crate::core::ontology::verification_graph::{from_turtle, VerificationGraph};
 
 const ARTIFACT_KIND: &str = "VerificationGraph";
@@ -229,7 +229,7 @@ mod tests {
         let dir = TmpDir::new("env-none");
         let env_dir = dir.path().join("does-not-exist");
         assert_eq!(
-            load_environment_safety(&env_dir, "ENV-001-ephemeral-cli"),
+            load_environment_safety(&env_dir, "BNCH-001-ephemeral-cli"),
             None
         );
     }

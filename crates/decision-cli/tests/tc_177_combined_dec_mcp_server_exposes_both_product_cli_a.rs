@@ -57,9 +57,9 @@ fn tc_177_combined_dec_mcp_server_exposes_both_product_cli_a() {
     // namespace overlap at the source level even if registration
     // somehow accepted both.
     let dec_names: Vec<&str> = vec![
-        "dec_verify_env_new",
-        "dec_verify_env_list",
-        "dec_verify_env_show",
+        "dec_verify_bench_new",
+        "dec_verify_bench_list",
+        "dec_verify_bench_show",
         "dec_verify_graph_new",
         "dec_verify_graph_list",
         "dec_verify_graph_show",

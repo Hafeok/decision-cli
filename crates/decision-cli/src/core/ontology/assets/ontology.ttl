@@ -310,43 +310,43 @@ dec:dispositionRationale a rdf:Property ;
     rdfs:range  xsd:string ;
     rdfs:comment "Operator-facing rationale for dec:dispositionOverride." .
 
-# --- FT-035 / ADR-028: VerificationEnvironment ------------------------------
+# --- FT-035 / ADR-028 / FT-112: VerificationBench (renamed from VerificationEnvironment) -
 
-dec:VerificationEnvironment a rdfs:Class ;
-    rdfs:label "VerificationEnvironment" ;
-    rdfs:comment "A typed execution context for verification graphs (ADR-028 §VerificationEnvironment). Carries an envType, safetyClass, allowedOps list, optional setup/teardown, and (for remote types) an endpoint." .
+dec:VerificationBench a rdfs:Class ;
+    rdfs:label "VerificationBench" ;
+    rdfs:comment "A typed execution context for verification graphs (ADR-028 §VerificationBench, renamed by FT-112). Carries a benchType, safetyClass, allowedOps list, optional setup/teardown, and (for remote types) an endpoint." .
 
-dec:envType a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
+dec:benchType a rdf:Property ;
+    rdfs:domain dec:VerificationBench ;
     rdfs:range  xsd:string ;
-    rdfs:comment "Environment type tag (e.g. \"ephemeral-tempdir\", \"remote-http\")." .
+    rdfs:comment "Bench type tag (e.g. \"ephemeral-tempdir\", \"remote-http\"), renamed from envType by FT-112." .
 
 dec:safetyClass a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:domain dec:VerificationBench ;
     rdfs:range  xsd:string ;
     rdfs:comment "Safety classification — one of {isolated, shared-non-destructive, production-readonly}." .
 
 dec:allowedOps a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
-    rdfs:comment "Non-empty rdf:List of operation tokens permitted by this environment (ADR-028)." .
+    rdfs:domain dec:VerificationBench ;
+    rdfs:comment "Non-empty rdf:List of operation tokens permitted by this bench (ADR-028, updated by FT-112)." .
 
 dec:setup a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:domain dec:VerificationBench ;
     rdfs:range  xsd:string ;
-    rdfs:comment "Optional shell snippet executed before any step runs against the environment." .
+    rdfs:comment "Optional shell snippet executed before any step runs against the bench." .
 
 dec:teardown a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:domain dec:VerificationBench ;
     rdfs:range  xsd:string ;
     rdfs:comment "Optional shell snippet executed after step execution." .
 
 dec:endpoint a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:domain dec:VerificationBench ;
     rdfs:range  xsd:string ;
-    rdfs:comment "Required for remote environment types (e.g. remote-http); URL of the target endpoint. Local environment types MUST NOT carry an endpoint (SHACL conditional)." .
+    rdfs:comment "Required for remote bench types (e.g. remote-http); URL of the target endpoint. Local bench types MUST NOT carry an endpoint (SHACL conditional)." .
 
 dec:fixtureSource a rdf:Property ;
-    rdfs:domain dec:VerificationEnvironment ;
+    rdfs:domain dec:VerificationBench ;
     rdfs:range  xsd:string ;
     rdfs:comment "Optional repo-relative path to a fixture tree materialised before steps execute (FT-053 / ADR-032). Per ADR-032, by convention fixtures live under tests/fixtures/<name>/." .
 
@@ -364,10 +364,10 @@ dec:verifies a rdf:Property ;
     rdfs:domain dec:VerificationGraph ;
     rdfs:comment "The artifact the graph proves about — a feature_spec (dec:Feature) or a test criterion (dec:TC). Polymorphic per ADR-028." .
 
-dec:environment a rdf:Property ;
+dec:bench a rdf:Property ;
     rdfs:domain dec:VerificationGraph ;
-    rdfs:range  dec:VerificationEnvironment ;
-    rdfs:comment "The VerificationEnvironment this graph executes against (ADR-028)." .
+    rdfs:range  dec:VerificationBench ;
+    rdfs:comment "The VerificationBench this graph executes against (ADR-028, renamed from dec:environment by FT-112)." .
 
 dec:steps a rdf:Property ;
     rdfs:domain dec:VerificationGraph ;

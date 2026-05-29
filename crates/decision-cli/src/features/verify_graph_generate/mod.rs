@@ -80,7 +80,7 @@ impl Default for GenerateMode {
 pub struct GenerateRequest {
     /// Short feature id (e.g. `FT-049`).
     pub feature_id: String,
-    /// Short env id (e.g. `ENV-001-ephemeral-cli`).
+    /// Short env id (e.g. `BNCH-001-ephemeral-cli`).
     pub environment_id: String,
     /// Persistence mode (defaults to `Interactive`).
     #[serde(default)]
@@ -567,7 +567,7 @@ mod tests {
     fn generate_request_round_trips() {
         let r = GenerateRequest {
             feature_id: "FT-049".to_string(),
-            environment_id: "ENV-001-ephemeral-cli".to_string(),
+            environment_id: "BNCH-001-ephemeral-cli".to_string(),
             mode: GenerateMode::Accept,
             workdir: Some(PathBuf::from("/tmp")),
             product_root: None,

@@ -82,7 +82,7 @@ mod tests {
         GraphSummary {
             id: "VG-001".to_string(),
             verifies: "FT-001".to_string(),
-            environment: "ENV-001-ephemeral-cli".to_string(),
+            environment: "BNCH-001-ephemeral-cli".to_string(),
             step_count: 3,
         }
     }
@@ -106,7 +106,7 @@ mod tests {
         assert!(s.contains("STEPS"));
         assert!(s.contains("VG-001"));
         assert!(s.contains("FT-001"));
-        assert!(s.contains("ENV-001-ephemeral-cli"));
+        assert!(s.contains("BNCH-001-ephemeral-cli"));
         assert!(s.contains("3"));
     }
 
@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["id"], "VG-001");
         assert_eq!(arr[0]["verifies"], "FT-001");
-        assert_eq!(arr[0]["environment"], "ENV-001-ephemeral-cli");
+        assert_eq!(arr[0]["environment"], "BNCH-001-ephemeral-cli");
         assert_eq!(arr[0]["step_count"], 3);
     }
 

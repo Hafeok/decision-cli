@@ -25,9 +25,9 @@ use decision_cli::core::handler::{Error as HandlerError, Request, Response};
 use decision_cli::core::mcp::{RegisterError, ToolDescriptor, ToolHandler, ToolRegistry};
 use decision_cli::mcp;
 use decision_cli::product_cmd;
-use decision_cli::verify_env_list;
-use decision_cli::verify_env_new;
-use decision_cli::verify_env_show;
+use decision_cli::verify_bench_list;
+use decision_cli::verify_bench_new;
+use decision_cli::verify_bench_show;
 use decision_cli::verify_graph_list;
 use decision_cli::verify_graph_new;
 use decision_cli::verify_graph_show;
@@ -86,9 +86,9 @@ fn build_production_registry(workdir: &Path) -> Result<ToolRegistry, RegisterErr
         mcp::McpError::Register(r) => r,
         mcp::McpError::Serve(_) => unreachable!("build_registry never returns Serve"),
     })?;
-    register_verify_env_new(&mut registry, workdir)?;
-    register_verify_env_list(&mut registry, workdir)?;
-    register_verify_env_show(&mut registry, workdir)?;
+    register_verify_bench_new(&mut registry, workdir)?;
+    register_verify_bench_list(&mut registry, workdir)?;
+    register_verify_bench_show(&mut registry, workdir)?;
     register_verify_graph_new(&mut registry, workdir)?;
     register_verify_graph_list(&mut registry, workdir)?;
     register_verify_graph_show(&mut registry, workdir)?;
@@ -282,21 +282,21 @@ fn verify_graph_new_response(outcome: &verify_graph_new::GraphNewResponse) -> Re
     )
 }
 
-/// FT-038: register `dec_verify_env_new`. Future verify subcommands
+/// FT-038: register `dec_verify_bench_new`. Future verify subcommands
 /// add their own register-* call here.
-fn register_verify_env_new(
+fn register_verify_bench_new(
     registry: &mut ToolRegistry,
     workdir: &Path,
 ) -> Result<(), RegisterError> {
-    let base = verify_env_new::tool_descriptor();
+    let base = verify_bench_new::tool_descriptor();
     let workdir_owned: PathBuf = workdir.to_path_buf();
     let bound: ToolHandler = Arc::new(move |req: Request| {
-        let mut parsed = verify_env_new::parse_request(&req)?;
+        let mut parsed = verify_bench_new::parse_request(&req)?;
         if parsed.workdir.is_none() {
             parsed.workdir = Some(workdir_owned.clone());
         }
-        let outcome = verify_env_new::run(&parsed)?;
-        Ok(verify_env_new_response(&outcome))
+        let outcome = verify_bench_new::run(&parsed)?;
+        Ok(verify_bench_new_response(&outcome))
     });
     let mut descriptor = ToolDescriptor::new(
         base.name.clone(),
@@ -311,21 +311,21 @@ fn register_verify_env_new(
     Ok(())
 }
 
-/// FT-039: register `dec_verify_env_list`. Same workdir-binding pattern
-/// as FT-038's `dec_verify_env_new`.
-fn register_verify_env_list(
+/// FT-039: register `dec_verify_bench_list`. Same workdir-binding pattern
+/// as FT-038's `dec_verify_bench_new`.
+fn register_verify_bench_list(
     registry: &mut ToolRegistry,
     workdir: &Path,
 ) -> Result<(), RegisterError> {
-    let base = verify_env_list::tool_descriptor();
+    let base = verify_bench_list::tool_descriptor();
     let workdir_owned: PathBuf = workdir.to_path_buf();
     let bound: ToolHandler = Arc::new(move |req: Request| {
-        let mut parsed = verify_env_list::parse_request(&req)?;
+        let mut parsed = verify_bench_list::parse_request(&req)?;
         if parsed.workdir.is_none() {
             parsed.workdir = Some(workdir_owned.clone());
         }
-        let outcome = verify_env_list::run(&parsed)?;
-        Ok(verify_env_list_response(&outcome))
+        let outcome = verify_bench_list::run(&parsed)?;
+        Ok(verify_bench_list_response(&outcome))
     });
     let mut descriptor = ToolDescriptor::new(
         base.name.clone(),
@@ -340,7 +340,7 @@ fn register_verify_env_list(
     Ok(())
 }
 
-fn verify_env_list_response(outcome: &verify_env_list::EnvListResponse) -> Response {
+fn verify_bench_list_response(outcome: &verify_bench_list::BenchListResponse) -> Response {
     let summary = format!("listed {n} environment(s)", n = outcome.envs.len());
     Response::with_summary(
         json!({
@@ -350,21 +350,21 @@ fn verify_env_list_response(outcome: &verify_env_list::EnvListResponse) -> Respo
     )
 }
 
-/// FT-040: register `dec_verify_env_show`. Workdir binding mirrors the
+/// FT-040: register `dec_verify_bench_show`. Workdir binding mirrors the
 /// list and new patterns above.
-fn register_verify_env_show(
+fn register_verify_bench_show(
     registry: &mut ToolRegistry,
     workdir: &Path,
 ) -> Result<(), RegisterError> {
-    let base = verify_env_show::tool_descriptor();
+    let base = verify_bench_show::tool_descriptor();
     let workdir_owned: PathBuf = workdir.to_path_buf();
     let bound: ToolHandler = Arc::new(move |req: Request| {
-        let mut parsed = verify_env_show::parse_request(&req)?;
+        let mut parsed = verify_bench_show::parse_request(&req)?;
         if parsed.workdir.is_none() {
             parsed.workdir = Some(workdir_owned.clone());
         }
-        let outcome = verify_env_show::run(&parsed)?;
-        Ok(verify_env_show_response(&outcome))
+        let outcome = verify_bench_show::run(&parsed)?;
+        Ok(verify_bench_show_response(&outcome))
     });
     let mut descriptor = ToolDescriptor::new(
         base.name.clone(),
@@ -379,22 +379,22 @@ fn register_verify_env_show(
     Ok(())
 }
 
-fn verify_env_show_response(outcome: &verify_env_show::EnvShowResponse) -> Response {
+fn verify_bench_show_response(outcome: &verify_bench_show::BenchShowResponse) -> Response {
     let summary = format!(
-        "showed env {id} from {path}",
-        id = outcome.env.id,
+        "showed bench {id} from {path}",
+        id = outcome.bench.id,
         path = outcome.path.display()
     );
     Response::with_summary(
         json!({
-            "env": outcome.env,
+            "bench": outcome.bench,
             "path": outcome.path,
         }),
         summary,
     )
 }
 
-fn verify_env_new_response(outcome: &verify_env_new::EnvNewResponse) -> Response {
+fn verify_bench_new_response(outcome: &verify_bench_new::BenchNewResponse) -> Response {
     let summary = format!(
         "created env {id} at {path}",
         id = outcome.id,

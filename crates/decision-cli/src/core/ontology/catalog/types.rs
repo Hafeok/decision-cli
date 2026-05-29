@@ -23,7 +23,7 @@ pub(super) const SUPERSEDED_BY: &str = "https://decision-cli.dev/ns#supersededBy
 
 /// Safety-class tag accepted by [`ExemplarGraph`] (ADR-028's controlled
 /// vocabulary; duplicated here to keep the catalog types decoupled from
-/// the verification_env enum's `Display` impl).
+/// the verification_bench enum's `Display` impl).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SafetyClassTag {
     Isolated,
