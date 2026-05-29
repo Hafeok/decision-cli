@@ -1,0 +1,55 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-561>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-017> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-29T07:00:37.707Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-29T07:00:37.711Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-561/step/0> <https://decision-cli.dev/ns/result/VGR-561/step/1> ) ;
+    dec:rationale "all 2 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-051> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-561/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-053> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-561/step/1>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-040/VG-017/ts-1780038037703462001> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-29T07:00:37.711Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-561/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-017/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-29T07:00:37.707Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-29T07:00:37.709Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "decision-cli — orchestration system for Decision-Driven Design\n\nUsage: dec [OPTIONS] <COMMAND>\n\nCommands:\n  init       Initialise the orchestration store from a ValueStream definition\n  status     Report the active value stream's bootstrap provenance\n  implement  Implement a feature end-to-end (FT-011 + FT-013)\n  preflight  Feature-coverage report sourced from the internal product-cli graph projection (FT-052 / TC-087). Reads `.product/graph/index.ttl`; does not re-parse markdown\n  health     Liveness check (FT-012). Runs outside an initialised working tree\n  doctor     Worker preflight audit (FT-016 / TC-047)\n  events     Inspect persisted events (FT-012; FT-005 replay, FT-004 SSE tail)\n  session    Session inspection commands (FT-012)\n  feedback   Feedback inspection commands (FT-029 / FT-033)\n  mcp        MCP server (FT-034 / ADR-029)\n  verify     Verification artifact management (FT-038 / ADR-028 / ADR-029)\n  migrate    Provenance migration tooling (FT-074 / ADR-042)\n  product    Absorbed product-cli surface (FT-105 / ADR-067)\n  query      QueryTemplate catalog inspection (FT-075 / ADR-043)\n  loop       Audit-trail views over the verify → re-fix loop (FT-109)\n  drive      Pluggable artifact+goal orchestrator (FT-110)\n  workers    Worker container lifecycle (FT-095 — slice 1: `run` only)\n  help       Print this message or the help of the given subcommand(s)\n\nOptions:\n      --workdir <WORKDIR>  Override the working directory (defaults to CWD; ADR-012 walk-up not yet implemented)\n  -h, --help               Print help\n  -V, --version            Print version\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-040/VG-017/ts-1780038037703462001> .
+
+<https://decision-cli.dev/ns/result/VGR-561/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-017/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-29T07:00:37.709Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-29T07:00:37.711Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "Run the MCP server over stdio\n\nUsage: dec mcp serve [OPTIONS]\n\nOptions:\n      --workdir <WORKDIR>  Override the working directory (defaults to CWD; ADR-012 walk-up not yet implemented)\n  -h, --help               Print help\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-040/VG-017/ts-1780038037703462001> .

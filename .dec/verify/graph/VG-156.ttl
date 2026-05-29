@@ -1,0 +1,32 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-156>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-101> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-156/0> <https://decision-cli.dev/ns/step/VG-156/1> <https://decision-cli.dev/ns/step/VG-156/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-156/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-165> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_165_capabilityreference_enforces_active_set_command_un" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-156/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-166> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_166_ontologydescription_enforces_single_active_invaria" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-156/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-167> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_167_exemplargraph_promotion_requires_a_backing_approve" ;
+    dec:expectExitCode 0 .

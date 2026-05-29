@@ -1,0 +1,39 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-157>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-102> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-157/0> <https://decision-cli.dev/ns/step/VG-157/1> <https://decision-cli.dev/ns/step/VG-157/2> <https://decision-cli.dev/ns/step/VG-157/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-157/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-168> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_168_bundle_assembler_populates_the_five_adr_066_fields" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-157/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-169> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_169_dispatch_time_validator_rejects_a_proposal_that_re" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-157/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-170> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_170_validator_emits_one_dec_feedback_with_class_gap_ta" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-157/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-171> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_171_bundle_assembler_returns_catalogincomplete_error_w" ;
+    dec:expectExitCode 0 .

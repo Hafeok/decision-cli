@@ -1,0 +1,46 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-163>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-110> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-163/0> <https://decision-cli.dev/ns/step/VG-163/1> <https://decision-cli.dev/ns/step/VG-163/2> <https://decision-cli.dev/ns/step/VG-163/3> <https://decision-cli.dev/ns/step/VG-163/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-163/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-195> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_195_artifact_parser_prefix_map" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-163/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-196> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_196_feature_ship_planner_state_table" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-163/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-197> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_197_driver_max_iter_and_stuck" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-163/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-198> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_198_driver_done_short_circuits" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-163/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-199> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_199_verdict_demotes_on_graph_fault_exit" ;
+    dec:expectExitCode 0 .

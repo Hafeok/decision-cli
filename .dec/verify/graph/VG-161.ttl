@@ -1,0 +1,39 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-161>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-108> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-161/0> <https://decision-cli.dev/ns/step/VG-161/1> <https://decision-cli.dev/ns/step/VG-161/2> <https://decision-cli.dev/ns/step/VG-161/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-161/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-187> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_187_runner_splits_feedback_by_verdict" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-161/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-188> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_188_dispatch_payload_carries_defect_feedback" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-161/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-189> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_189_dispatch_transitions_consumed_feedback" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-161/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-190> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_190_implement_gate_falls_through_on_outstanding_feedback" ;
+    dec:expectExitCode 0 .

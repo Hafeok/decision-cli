@@ -1,0 +1,38 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-526>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-152> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-28T20:24:00.129Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:24:04.376Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-526/step/0> ) ;
+    dec:rationale "all 1 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-146> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-526/step/0>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-152/ENV-002/ts-1779999840121547792> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T20:24:04.376Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-526/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-152/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T20:24:00.130Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:24:04.376Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\ncollecting ... collected 12 items\n\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_capability_tag_resolves_and_returns_pydantic_instance PASSED [  8%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_synchronous_telemetry_captures_tokens_model_provider_retries PASSED [ 16%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_telemetry_merges_into_session_completion_payload PASSED [ 25%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_metadata_threaded_through_for_callback_correlation PASSED [ 33%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_passthrough_kwargs_reach_litellm PASSED [ 41%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_default_endpoint_matches_adr_053 PASSED [ 50%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_env_overrides_base_url_and_api_key PASSED [ 58%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_env_override_propagates_to_litellm_call PASSED [ 66%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_structured_fn_path_returns_pydantic_directly PASSED [ 75%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_provider_surface_exposed_from_package_root PASSED [ 83%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_no_per_provider_methods_on_provider_surface PASSED [ 91%]\nworkers/pipeline-worker-sdk/tests/test_tc_146_provider_capability_dispatch.py::test_invalid_json_response_raises_validation_error PASSED [100%]\n\n============================== 12 passed in 0.21s ==============================\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-152/ENV-002/ts-1779999840121547792> .

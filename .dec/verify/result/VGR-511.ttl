@@ -1,0 +1,38 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-511>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-145> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-28T20:06:06.993Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:06:07.393Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-511/step/0> ) ;
+    dec:rationale "all 1 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-041> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-511/step/0>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-031/VG-145/ts-1779998766989586569> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T20:06:07.393Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-511/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-145/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T20:06:06.993Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:06:07.393Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli/workers/_shared\nconfigfile: pyproject.toml\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 8 items\n\nworkers/_shared/tests/test_emit_feedback.py ........                     [100%]\n\n============================== 8 passed in 0.10s ===============================\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-feature/FT-031/VG-145/ts-1779998766989586569> .

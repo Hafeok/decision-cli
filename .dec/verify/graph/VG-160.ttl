@@ -1,0 +1,39 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-160>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-107> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-160/0> <https://decision-cli.dev/ns/step/VG-160/1> <https://decision-cli.dev/ns/step/VG-160/2> <https://decision-cli.dev/ns/step/VG-160/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-160/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-183> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_183_defect_feedback_bundle_field_is_populated" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-160/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-184> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_184_matcher_short_circuit_still_fires" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-160/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-185> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_185_accept_transitions_consumed_feedback" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-160/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-186> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_186_worker_ignoring_feedback_is_rejected" ;
+    dec:expectExitCode 0 .

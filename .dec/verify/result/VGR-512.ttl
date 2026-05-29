@@ -1,0 +1,55 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-512>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-146> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:verdict "approved" ;
+    dec:startedAt "2026-05-28T20:06:23.802Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:06:24.371Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-512/step/0> <https://decision-cli.dev/ns/result/VGR-512/step/1> ) ;
+    dec:rationale "all 2 steps passed; the run produced approved evidence for every linked TC" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-036> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-512/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-037> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-512/step/1>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-146/ENV-002/ts-1779998783798091311> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-05-28T20:06:24.371Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-512/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-146/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T20:06:23.802Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:06:24.076Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "OK: blocking feedback pauses the emitting dispatch (FT-032 TC-036)\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-146/ENV-002/ts-1779998783798091311> .
+
+<https://decision-cli.dev/ns/result/VGR-512/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-146/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-05-28T20:06:24.076Z"^^xsd:dateTime ;
+    dec:endedAt "2026-05-28T20:06:24.371Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "OK: paused dispatch resumes only after blocking feedback is terminal (FT-032 TC-037)\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-146/ENV-002/ts-1779998783798091311> .

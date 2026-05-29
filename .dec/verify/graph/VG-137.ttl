@@ -1,0 +1,25 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-137>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-018> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-137/0> <https://decision-cli.dev/ns/step/VG-137/1> ) .
+
+<https://decision-cli.dev/ns/step/VG-137/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-020> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/vertical-slice-layout.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-137/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-021> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/vertical-slice-imports.sh" ;
+    dec:expectExitCode 0 .
