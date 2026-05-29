@@ -17,13 +17,13 @@ role_bindings:
     escalation_steps:
       - capability: code-writer-heavy
         triggers:
-          - prior_attempts_ge_3
-          - audit_fail
           - feedback_unimplementable_critical
+          - audit_fail
+          - prior_attempts_ge_3
       - capability: deep-reasoning
         triggers:
-          - stakes_foundational
           - prior_attempts_ge_5
+          - stakes_foundational
     version: 1
     active: true
 
@@ -32,12 +32,12 @@ role_bindings:
     escalation_steps:
       - capability: standard-reasoning-frontier
         triggers:
-          - confidence_below_0.7
           - audit_fail
+          - confidence_below_0.7
       - capability: deep-reasoning
         triggers:
-          - stakes_foundational
           - confidence_below_0.5
+          - stakes_foundational
     version: 1
     active: true
 
@@ -46,12 +46,12 @@ role_bindings:
     escalation_steps:
       - capability: standard-reasoning-frontier
         triggers:
-          - stakes_elevated
           - audit_fail
+          - stakes_elevated
       - capability: deep-reasoning
         triggers:
-          - stakes_foundational
           - prior_attempts_ge_3
+          - stakes_foundational
     version: 1
     active: true
 
@@ -77,5 +77,5 @@ role_bindings:
   - role_id: verify-graph-author
     default_capability: verify-graph-author
     escalation_steps: []
-    version: 6
+    version: 7
     active: true
