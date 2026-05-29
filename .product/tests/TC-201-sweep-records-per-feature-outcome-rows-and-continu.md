@@ -2,7 +2,7 @@
 id: TC-201
 title: Sweep records per-feature outcome rows and continues past per-item failures
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-111
@@ -13,6 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_201_sweep_continues_past_per_item_failures
 runner-timeout: 30
+last-run: 2026-05-29T09:21:58.939546097+00:00
+last-run-duration: 0.8s
 ---
 
 ## Description

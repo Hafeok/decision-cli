@@ -2,7 +2,7 @@
 id: TC-203
 title: Tally is derived from rows and matches outcome bucket counts
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-111
@@ -13,6 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_203_tally_matches_row_bucket_counts
 runner-timeout: 30
+last-run: 2026-05-29T09:21:58.939546097+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

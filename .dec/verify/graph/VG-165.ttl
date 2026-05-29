@@ -1,0 +1,67 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-165>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-111> ;
+    dec:environment <https://decision-cli.dev/ns/env/ENV-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-165/0> <https://decision-cli.dev/ns/step/VG-165/1> <https://decision-cli.dev/ns/step/VG-165/2> <https://decision-cli.dev/ns/step/VG-165/3> <https://decision-cli.dev/ns/step/VG-165/4> <https://decision-cli.dev/ns/step/VG-165/5> <https://decision-cli.dev/ns/step/VG-165/6> <https://decision-cli.dev/ns/step/VG-165/7> ) .
+
+<https://decision-cli.dev/ns/step/VG-165/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-200> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_200_sweep_resolves_features_in_numeric_suffix_order" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-201> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_201_sweep_continues_past_per_item_failures" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-202> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_202_per_feature_timeout_yields_timeout_outcome" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-203> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_203_tally_matches_row_bucket_counts" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-204> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_204_json_format_stable_shape" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-205> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_205_filter_intersects_and_validates" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-206> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_206_retire_failing_graphs_pre_pass" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-165/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-207> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-207-drive-ship-all-exit-code.sh" ;
+    dec:expectExitCode 0 .

@@ -50,6 +50,7 @@ reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-feature
 # axum router from inside-process tests via `tower::ServiceExt::oneshot`).
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
+tempfile = "3"
 
 # Internal
 oxi-events = { path = "crates/oxi-events" }

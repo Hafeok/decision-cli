@@ -2,7 +2,7 @@
 id: TC-206
 title: Retire-failing-graphs pre-pass supersedes non-approved covering graphs only when flag set
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-111
@@ -14,6 +14,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_206_retire_failing_graphs_pre_pass
 runner-timeout: 60
+last-run: 2026-05-29T09:21:58.939546097+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

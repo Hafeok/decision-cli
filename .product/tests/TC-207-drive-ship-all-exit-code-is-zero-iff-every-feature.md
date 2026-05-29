@@ -2,7 +2,7 @@
 id: TC-207
 title: Drive ship --all exit code is zero iff every feature outcome is Done
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-111
@@ -13,6 +13,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-207-drive-ship-all-exit-code.sh
 runner-timeout: 120
+last-run: 2026-05-29T09:21:58.939546097+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description

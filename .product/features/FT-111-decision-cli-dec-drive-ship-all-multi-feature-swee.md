@@ -2,7 +2,7 @@
 id: FT-111
 title: 'decision-cli: dec drive ship --all multi-feature sweep'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-110
 - FT-112
