@@ -453,7 +453,7 @@ def _runner_to_step_hint(runner: str, args: str) -> str:
 def _render_env(env: EnvRecord) -> str:
     parts = [
         f"- id: {env.id}",
-        f"- env_type: {env.env_type}",
+        f"- bench_type: {env.bench_type}",
     ]
     if env.safety_class:
         parts.append(f"- safety_class: {env.safety_class}")

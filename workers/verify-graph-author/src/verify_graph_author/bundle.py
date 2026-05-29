@@ -37,10 +37,10 @@ class TcRecord(BaseModel):
 class EnvRecord(BaseModel):
     """The target verification environment for this proposal."""
 
-    id: str = Field(..., description="Environment identifier, e.g. 'ENV-1'.")
-    env_type: str = Field(
+    id: str = Field(..., description="Bench identifier, e.g. 'BNCH-001'.")
+    bench_type: str = Field(
         ...,
-        description="Environment kind label (e.g. 'ephemeral-tempdir', 'http-endpoint').",
+        description="Bench kind label (e.g. 'ephemeral-tempdir', 'http-endpoint').",
     )
     safety_class: str = Field(
         default="",
