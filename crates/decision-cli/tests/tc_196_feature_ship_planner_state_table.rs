@@ -34,6 +34,15 @@ impl GraphInspector for StubInspector {
     fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
         Ok(true)
     }
+    fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut h = DefaultHasher::new();
+        format!("{:?}", self.verdict).hash(&mut h);
+        self.impl_count.hash(&mut h);
+        self.vga_count.hash(&mut h);
+        Ok(h.finish())
+    }
 }
 
 fn classify(verdict: FeatureVerdict, impl_c: usize, vga_c: usize) -> Action {

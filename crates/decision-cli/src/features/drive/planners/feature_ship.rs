@@ -11,11 +11,19 @@
 //! | `Rejected` / `Amendment` | `0` | `0` | `Stuck` |
 
 use std::cell::RefCell;
+use std::collections::VecDeque;
 
 use crate::core::drive::{Action, ArtifactKind, ArtifactRef, PlanContext, Planner};
 use crate::core::drive::planner::PlanError;
 
 use super::super::inspect::{FeatureVerdict, GraphInspector};
+
+/// How many prior state-hashes to keep in the ring buffer for
+/// graph-theoretic cycle detection. Catches cycles of period ≤ N
+/// before they bleed off into the iteration cap. Eight is enough
+/// for the realistic cases (verifier ↔ implementer ↔ vga ↔ defect
+/// rotation) without dragging RAM or comparison cost.
+const STATE_HASH_BUFFER_LEN: usize = 8;
 
 /// Planner for `dec drive ship FT-XXX`.
 ///
@@ -29,6 +37,24 @@ pub struct FeatureShipPlanner<I: GraphInspector> {
     /// open-feedback count for the role we just dispatched, we are
     /// stuck and should escalate rather than spin.
     last_seen: RefCell<Option<LastSeen>>,
+    /// Ring buffer of recent state hashes (per feature). When a fresh
+    /// classify observes a hash already in the buffer, the loop is in
+    /// a cycle: the same (verdict, open-feedback-set, active-graph-set)
+    /// can only produce the same dispatch decision by construction.
+    /// Catches multi-step oscillations the pairwise prev/intended
+    /// detector misses.
+    recent_hashes: RefCell<RecentHashes>,
+}
+
+/// Per-feature ring buffer. We only track one feature at a time —
+/// `dec drive ship FT-XXX` is single-feature — but we still keep the
+/// feature id so a stale buffer from a prior driver invocation (in
+/// process reuse, tests) doesn't false-positive on a different
+/// feature.
+#[derive(Debug, Default)]
+struct RecentHashes {
+    feature_id: String,
+    hashes: VecDeque<u64>,
 }
 
 /// Snapshot of the planner's observed state from a prior classify
@@ -54,6 +80,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         Self {
             inspector,
             last_seen: RefCell::new(None),
+            recent_hashes: RefCell::new(RecentHashes::default()),
         }
     }
 
@@ -167,7 +194,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             .filter(|p| p.feature_id == feature_id)
             .map_or(false, |p| p.escalated_in_chain);
 
-        let final_action = match self
+        let mut final_action = match self
             .detect_no_progress(feature_id, verdict, impl_open, vga_open, &intended)
         {
             Some(NoProgress::Stuck { reason }) => Action::Stuck { reason },
@@ -180,6 +207,40 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             },
             None => intended.clone(),
         };
+
+        // Graph-theoretic cycle backstop. The pairwise no-progress
+        // detector above catches two-in-a-row repeats; this catches
+        // longer rotations (verifier → vga → implementer → verifier …
+        // re-entering the same state-hash) the pairwise check can't
+        // see. Every round records the hash so the buffer stays
+        // continuous across escalations and settling rounds, but the
+        // override only fires when the pairwise detector didn't
+        // already decide — its diagnostic is more specific. Done is
+        // already terminal.
+        let cycle_period = self.detect_state_hash_cycle(feature_id)?;
+        let pairwise_decided = matches!(
+            final_action,
+            Action::Stuck { .. }
+                | Action::EscalateVgaToImplementer { .. }
+                | Action::EscalateImplementerToVga { .. }
+                | Action::Done
+        );
+        if !pairwise_decided {
+            if let Some(cycle_len) = cycle_period {
+                final_action = Action::Stuck {
+                    reason: format!(
+                        "feature {feature_id}: state-hash cycle of period \
+                         {cycle_len} detected. The planner re-observed a \
+                         (verdict, open-feedback-set, active-graph-set) \
+                         state it saw earlier in this run, so the same \
+                         dispatch will repeat by construction. The TC \
+                         likely describes a real spec gap that needs \
+                         spec-author attention. Inspect `dec loop show \
+                         {feature_id}` for the chain."
+                    ),
+                };
+            }
+        }
 
         let now_escalated = matches!(
             final_action,
@@ -196,6 +257,42 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         });
 
         Ok(final_action)
+    }
+
+    /// Compute the current state hash, check it against the ring
+    /// buffer. Returns `Some(period)` when the hash already appears
+    /// (period 1 = immediate repeat, 2 = AB cycle, 3 = ABC cycle, …).
+    /// On miss, the hash is appended; the buffer is trimmed to
+    /// `STATE_HASH_BUFFER_LEN`.
+    ///
+    /// Buffer is per-feature: a stale buffer from an earlier
+    /// classify on a different feature is cleared on the first call
+    /// for the new feature.
+    fn detect_state_hash_cycle(
+        &self,
+        feature_id: &str,
+    ) -> Result<Option<usize>, PlanError> {
+        let hash = self
+            .inspector
+            .state_hash_for_feature(feature_id)
+            .map_err(|e| PlanError::Store {
+                detail: format!("{e}"),
+            })?;
+        let mut buf = self.recent_hashes.borrow_mut();
+        if buf.feature_id != feature_id {
+            buf.feature_id = feature_id.to_string();
+            buf.hashes.clear();
+        }
+        // Newest-first: position 0 = previous classify, 1 = two ago,
+        // so period = position + 1.
+        if let Some(idx) = buf.hashes.iter().position(|&h| h == hash) {
+            return Ok(Some(idx + 1));
+        }
+        buf.hashes.push_front(hash);
+        while buf.hashes.len() > STATE_HASH_BUFFER_LEN {
+            buf.hashes.pop_back();
+        }
+        Ok(None)
     }
 
     /// Compare the current observed state against the prior snapshot.
@@ -387,6 +484,21 @@ mod tests {
             // graphs-do-not-exist test overrides this via the mutable stub.
             Ok(true)
         }
+        fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
+            Ok(stub_hash(self.verdict, self.impl_count, self.vga_count))
+        }
+    }
+
+    /// Cheap state-hash for the stubs. Mirrors the production hash by
+    /// using the same input dimensions (verdict, impl count, vga count).
+    fn stub_hash(verdict: FeatureVerdict, impl_c: usize, vga_c: usize) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut h = DefaultHasher::new();
+        format!("{verdict:?}").hash(&mut h);
+        impl_c.hash(&mut h);
+        vga_c.hash(&mut h);
+        h.finish()
     }
 
     fn run_case(verdict: FeatureVerdict, impl_count: usize, vga_count: usize) -> Action {
@@ -537,6 +649,13 @@ mod tests {
         }
         fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
             Ok(self.graphs_exist.get())
+        }
+        fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
+            Ok(stub_hash(
+                self.verdict.get(),
+                self.impl_count.get(),
+                self.vga_count.get(),
+            ))
         }
     }
 
@@ -761,5 +880,125 @@ mod tests {
         planner.inspector.impl_count.set(5);
         let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
         assert!(matches!(a2, Action::DispatchImplementer { .. }));
+    }
+
+    // -----------------------------------------------------------------
+    // State-hash cycle detection: graph-theoretic backstop for the
+    // multi-step rotations the pairwise no-progress detector misses.
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn period_two_cycle_between_impl_and_vga_returns_stuck() {
+        // A: impl=2, vga=0 → DispatchImplementer
+        // B: impl=0, vga=2 → DispatchVGA  (worker bounced defects)
+        // back to A: impl=2, vga=0 → CYCLE detected (period 2)
+        //
+        // Pairwise can't see this because consecutive rounds dispatch
+        // different roles, so its prev/intended pattern match fails.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 2, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let a1 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a1, Action::DispatchImplementer { .. }));
+        planner.inspector.impl_count.set(0);
+        planner.inspector.vga_count.set(2);
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        assert!(matches!(a2, Action::DispatchVerifyGraphAuthor { .. }));
+        // Worker bounced back: same hash as round 1.
+        planner.inspector.impl_count.set(2);
+        planner.inspector.vga_count.set(0);
+        let a3 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a3 {
+            Action::Stuck { reason } => {
+                assert!(
+                    reason.contains("state-hash cycle"),
+                    "reason: {reason}"
+                );
+                assert!(reason.contains("period 2"), "reason: {reason}");
+            }
+            other => panic!("expected Stuck from cycle detector, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn period_three_cycle_returns_stuck_with_period_three() {
+        // Three distinct states rotated:
+        //   A: impl=1, vga=0    → DispatchImplementer
+        //   B: impl=0, vga=1    → DispatchVGA
+        //   C: impl=2, vga=2    → DispatchImplementer (impl wins)
+        // then back to A: impl=1, vga=0 → cycle of period 3.
+        //
+        // Each consecutive pair is impl→vga, vga→impl, impl→impl —
+        // the impl→impl pair (C → A) drops impl_open (2 → 1), so the
+        // pairwise detector treats that as progress and returns None.
+        // Only the hash detector catches the rotation.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 1, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap(); // A
+        planner.inspector.impl_count.set(0);
+        planner.inspector.vga_count.set(1);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap(); // B
+        planner.inspector.impl_count.set(2);
+        planner.inspector.vga_count.set(2);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap(); // C
+        planner.inspector.impl_count.set(1);
+        planner.inspector.vga_count.set(0);
+        let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match a4 {
+            Action::Stuck { reason } => {
+                assert!(
+                    reason.contains("state-hash cycle"),
+                    "reason: {reason}"
+                );
+                assert!(reason.contains("period 3"), "reason: {reason}");
+            }
+            other => panic!("expected Stuck from cycle detector, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn unique_state_every_round_does_not_false_positive() {
+        // Strictly-decreasing impl count: each round observes a new
+        // hash, so the cycle detector must stay quiet across the full
+        // ring-buffer length and beyond.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 12, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        for round in (1..=12).rev() {
+            planner.inspector.impl_count.set(round);
+            let action = planner.classify("FT-TEST", "ENV-002").unwrap();
+            assert!(
+                matches!(action, Action::DispatchImplementer { .. }),
+                "round impl={round} got {action:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn cycle_detector_defers_to_pairwise_diagnostic_when_pairwise_decides() {
+        // Same state twice in a row dispatching the same role: the
+        // pairwise detector decides first (escalation, or terminal
+        // stuck on verifier). Cycle override should NOT replace its
+        // more specific reason.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 3, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let _ = planner.classify("FT-TEST", "ENV-002").unwrap();
+        let a2 = planner.classify("FT-TEST", "ENV-002").unwrap();
+        // Pairwise wins: this is escalation, not "state-hash cycle".
+        match a2 {
+            Action::EscalateImplementerToVga { .. } => {}
+            other => panic!(
+                "expected pairwise EscalateImplementerToVga, got {other:?}"
+            ),
+        }
+    }
+
+    #[test]
+    fn cycle_detector_resets_buffer_on_feature_id_change() {
+        // A buffer left over from a different feature must not
+        // false-positive on the new feature's first observation.
+        let inspector = MutableStubInspector::new(FeatureVerdict::Rejected, 2, 0);
+        let planner = FeatureShipPlanner::new(inspector);
+        let _ = planner.classify("FT-A", "ENV-002").unwrap();
+        let action = planner.classify("FT-B", "ENV-002").unwrap();
+        assert!(matches!(action, Action::DispatchImplementer { .. }));
     }
 }

@@ -51,6 +51,17 @@ pub trait GraphInspector {
     /// former wants a verifier dispatch, the latter wants a
     /// verify-graph-author dispatch to author one first.
     fn graphs_exist_for_feature(&self, feature_id: &str) -> Result<bool, InspectError>;
+
+    /// Deterministic hash of the feature's full state: verdict, the
+    /// sorted set of open defect-feedback IRIs (for both roles, after
+    /// the supersession filter), and the sorted set of active
+    /// (non-superseded) covering graph IRIs. Two classify rounds
+    /// observing the same hash are visiting the same state — by
+    /// construction, the same planner table inputs produce the same
+    /// dispatch, so a repeated hash means the loop is in a cycle.
+    /// Returns `0` only when an inspector error would otherwise have
+    /// been raised — callers may treat `0` as "unknown / no signal."
+    fn state_hash_for_feature(&self, feature_id: &str) -> Result<u64, InspectError>;
 }
 
 /// Inspector errors. Kept generic so planners can propagate
@@ -304,6 +315,111 @@ SELECT ?verdict WHERE {{
             })
             .count();
         Ok(count)
+    }
+
+    fn state_hash_for_feature(&self, feature_id: &str) -> Result<u64, InspectError> {
+        use crate::core::feedback::read::list_by_class;
+        use crate::core::ontology::verification_graph::io::from_turtle;
+        use crate::core::store::{load_store_from_dump, orchestration_dump_path};
+        use crate::core::verify::coverage::feature_resolver::{
+            resolve_feature_tcs_short, tc_iri_for,
+        };
+        use std::collections::hash_map::DefaultHasher;
+        use std::collections::BTreeSet;
+        use std::hash::{Hash, Hasher};
+
+        let verdict = self.aggregate_verdict_for_feature(feature_id)?;
+
+        let tc_shorts =
+            resolve_feature_tcs_short(self.product_root(), feature_id).map_err(|e| {
+                InspectError::Store {
+                    detail: format!("resolve TCs for {feature_id}: {e}"),
+                }
+            })?;
+        let tc_iris: std::collections::HashSet<String> =
+            tc_shorts.iter().map(|s| tc_iri_for(s)).collect();
+
+        let dump = orchestration_dump_path(self.workdir());
+        let store = load_store_from_dump(&dump).map_err(|e| InspectError::Store {
+            detail: format!("opening store at {p}: {e:#}", p = dump.display()),
+        })?;
+        let superseded = superseded_graph_shorts(&store);
+
+        // The set of open feedback IRIs (after the supersession
+        // filter) — BTreeSet keeps the iteration order deterministic
+        // so the hash is reproducible across runs that see the same
+        // store state.
+        let defects = list_by_class(&store, "defect").map_err(|e| InspectError::Store {
+            detail: format!("listing defect feedback: {e}"),
+        })?;
+        let open_iris: BTreeSet<String> = defects
+            .into_iter()
+            .filter(|fb| {
+                matches!(fb.lifecycle_state.as_str(), "produced" | "routed" | "received")
+            })
+            .filter(|fb| {
+                fb.source_artifact
+                    .as_ref()
+                    .map(|src| tc_iris.contains(src.as_str()))
+                    .unwrap_or(false)
+            })
+            .filter(|fb| {
+                let short =
+                    extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
+                short.is_empty() || !superseded.contains(&short)
+            })
+            .map(|fb| fb.iri.as_str().to_string())
+            .collect();
+
+        // The set of active (non-superseded, on-disk) graph IRIs that
+        // cover the feature. Two trajectories that pass through the
+        // same defect-set AND the same graph-set are visiting the
+        // identical planning state.
+        let graph_dir = self.workdir().join(".dec").join("verify").join("graph");
+        let mut active_graphs: BTreeSet<String> = BTreeSet::new();
+        if let Ok(read) = std::fs::read_dir(&graph_dir) {
+            for entry in read.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|e| e.to_str()) != Some("ttl") {
+                    continue;
+                }
+                let Ok(graph) = from_turtle(&path) else {
+                    continue;
+                };
+                let short = graph
+                    .id
+                    .as_str()
+                    .split('/')
+                    .last()
+                    .unwrap_or_default()
+                    .to_string();
+                if superseded.contains(&short) {
+                    continue;
+                }
+                let covers_feature = tc_iris.contains(graph.verifies.0.as_str())
+                    || graph.steps.iter().any(|s| {
+                        s.provides_evidence_for
+                            .iter()
+                            .any(|tc| tc_iris.contains(tc.as_str()))
+                    });
+                if covers_feature {
+                    active_graphs.insert(graph.id.as_str().to_string());
+                }
+            }
+        }
+
+        let mut h = DefaultHasher::new();
+        format!("{verdict:?}").hash(&mut h);
+        for iri in &open_iris {
+            iri.hash(&mut h);
+        }
+        // Separator so a graph IRI can't accidentally collide with a
+        // feedback IRI in the hash stream.
+        "::graphs::".hash(&mut h);
+        for iri in &active_graphs {
+            iri.hash(&mut h);
+        }
+        Ok(h.finish())
     }
 }
 

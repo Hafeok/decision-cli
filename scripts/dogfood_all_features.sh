@@ -3,7 +3,9 @@
 # drive-ship it. Records verdicts to /tmp/dogfood-results-<ts>.tsv.
 #
 # Limits:
-#   --max-iter 3 keeps each drive bounded to ~10 min worst case.
+#   --max-iter 6 gives the state-hash cycle detector room to spot
+#     cycles of period ≤ 5 before the cap fires; period-≤-2 cycles
+#     are still caught by the pairwise no-progress detector first.
 #   timeout 600 backstops a hung verify pass per feature.
 
 set -u
@@ -61,7 +63,7 @@ for ft in $FEATURES; do
   retired=$(retire_failing_graphs_for_feature "$ft")
   echo "retired $retired failing graphs" | tee -a "$DETAIL"
 
-  out=$(timeout 600 dec --workdir "$WORKDIR" drive ship "$ft" --env "$ENV_ID" --max-iter 3 2>&1)
+  out=$(timeout 600 dec --workdir "$WORKDIR" drive ship "$ft" --env "$ENV_ID" --max-iter 6 2>&1)
   rc=$?
   echo "$out" | tee -a "$DETAIL"
 
