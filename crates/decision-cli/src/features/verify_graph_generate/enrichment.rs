@@ -580,11 +580,41 @@ fn derive_env_capabilities(
 pub fn default_env_capabilities_for(bench_type: &str) -> EnvCapabilities {
     match bench_type {
         "ephemeral-tempdir" => EnvCapabilities {
-            binaries_on_path: vec!["dec".to_string(), "bash".to_string(), "jq".to_string()],
+            // Expanded from the slice-1 minimal set (`dec`, `bash`, `jq`)
+            // to include the dev-tool basics every TC runner needs. The
+            // ephemeral-tempdir bench is the default for orchestrator
+            // self-tests; every TC runner the operator-facing
+            // `runner: cargo-test | pytest | bash | …` set names must
+            // appear here, otherwise the validator rejects every step
+            // that lifts those runners (see TC-208…TC-252 for the
+            // typical inputs). A future ADR should make this list
+            // bench-extensible from the TTL so operators can tighten
+            // per-bench without a code change.
+            binaries_on_path: vec![
+                "dec".to_string(),
+                "bash".to_string(),
+                "sh".to_string(),
+                "jq".to_string(),
+                "cargo".to_string(),
+                "python".to_string(),
+                "python3".to_string(),
+                "pytest".to_string(),
+                "uv".to_string(),
+                "git".to_string(),
+                "grep".to_string(),
+                "find".to_string(),
+                "make".to_string(),
+                "ls".to_string(),
+                "diff".to_string(),
+                "sed".to_string(),
+                "awk".to_string(),
+                "cat".to_string(),
+            ],
             writable_paths: vec!["$DEC_VERIFY_TMP".to_string(), "./".to_string()],
             allowed_hosts: Vec::new(),
             environment_variables: vec![
                 "DEC_VERIFY_TMP".to_string(),
+                "DEC_PROJECT_ROOT".to_string(),
                 "PATH".to_string(),
                 "HOME".to_string(),
             ],
