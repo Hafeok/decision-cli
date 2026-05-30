@@ -14,7 +14,7 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-228-init-idempotent.sh
 runner-timeout: 60
-last-run: 2026-05-30T16:18:34.825784156+00:00
+last-run: 2026-05-30T16:21:02.175212108+00:00
 last-run-duration: 0.5s
 ---
 
