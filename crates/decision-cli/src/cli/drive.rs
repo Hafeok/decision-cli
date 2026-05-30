@@ -23,8 +23,6 @@ pub enum DriveCmd {
 
 #[derive(Debug, clap::Args)]
 pub struct ShipArgs {
-    /// Goal: `ship`, `verify`, `accept`, `cover`, or `approve`.
-    pub goal: String,
     /// Artifact short id (e.g. `FT-019`, `TC-027`). Mutually exclusive with --all.
     #[arg(conflicts_with = "all")]
     pub artifact: Option<String>,
@@ -106,13 +104,8 @@ fn run_ship(workdir: &Path, args: ShipArgs) -> ExitCode {
         return ExitCode::from(2);
     };
 
-    let goal = match Goal::parse(&args.goal) {
-        Ok(g) => g,
-        Err(e) => {
-            eprintln!("dec drive ship: {e}");
-            return ExitCode::from(2);
-        }
-    };
+    // Goal is implicit from the subcommand (TC-259)
+    let goal = Goal::Ship;
     let artifact = match ArtifactRef::parse(&artifact_str) {
         Ok(a) => a,
         Err(e) => {
@@ -166,11 +159,8 @@ fn run_ship(workdir: &Path, args: ShipArgs) -> ExitCode {
 }
 
 fn run_sweep_all(workdir: &Path, args: ShipArgs) -> ExitCode {
-    // Validate goal is ship
-    if args.goal != "ship" {
-        eprintln!("dec drive ship --all: only 'ship' goal is currently supported");
-        return ExitCode::from(2);
-    }
+    // Goal is implicit from the subcommand (TC-259)
+    // No validation needed - ship is the only goal for this command
 
     // Parse format
     let format = match Format::parse(&args.format) {

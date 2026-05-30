@@ -1,0 +1,60 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-180>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-113> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-180/0> <https://decision-cli.dev/ns/step/VG-180/1> <https://decision-cli.dev/ns/step/VG-180/2> <https://decision-cli.dev/ns/step/VG-180/3> <https://decision-cli.dev/ns/step/VG-180/4> <https://decision-cli.dev/ns/step/VG-180/5> <https://decision-cli.dev/ns/step/VG-180/6> ) .
+
+<https://decision-cli.dev/ns/step/VG-180/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-215> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_215_reader_groups_into_chronological_rounds" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-180/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-216> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_216_empty_history_renders_empty_state" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-180/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-217> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_217_renderer_is_pure_and_deterministic" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-180/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-218> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_218_json_format_stable_shape" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-180/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-219> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_219_watch_loop_polls_and_exits_on_sigint" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-180/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-220> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_220_bench_filter_isolates_single_drive" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-180/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-221> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-221-drive-show-unknown-feature.sh" ;
+    dec:expectExitCode 0 .

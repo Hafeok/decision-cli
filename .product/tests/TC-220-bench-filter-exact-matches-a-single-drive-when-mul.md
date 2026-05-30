@@ -13,7 +13,7 @@ phase: 4
 runner: cargo-test
 runner-args: tc_220_bench_filter_isolates_single_drive
 runner-timeout: 30
-last-run: 2026-05-30T15:40:39.135545566+00:00
+last-run: 2026-05-30T16:17:17.787515385+00:00
 last-run-duration: 0.5s
 ---
 
