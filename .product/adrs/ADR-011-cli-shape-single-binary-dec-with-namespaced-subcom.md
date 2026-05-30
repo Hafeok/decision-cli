@@ -4,6 +4,7 @@ title: 'CLI shape: single-binary dec with namespaced subcommands'
 status: accepted
 features:
 - FT-052
+- FT-119
 supersedes: []
 superseded-by: []
 domains: []

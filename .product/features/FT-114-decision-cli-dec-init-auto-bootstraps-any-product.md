@@ -2,7 +2,7 @@
 id: FT-114
 title: 'decision-cli: dec init auto-bootstraps any product-cli repo, with .env safety'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-068

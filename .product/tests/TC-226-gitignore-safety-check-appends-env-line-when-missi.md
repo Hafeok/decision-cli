@@ -2,7 +2,7 @@
 id: TC-226
 title: Gitignore safety check appends .env line when missing in TTY mode with --yes
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-114
@@ -13,6 +13,9 @@ phase: 4
 runner: cargo-test
 runner-args: tc_226_gitignore_safety_check_appends_or_preserves
 runner-timeout: 30
+last-run: 2026-05-30T05:23:42.111484491+00:00
+last-run-duration: 0.5s
+failure-message: "No #[test] fn matching 'tc_226_gitignore_safety_check_appends_or_preserves' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

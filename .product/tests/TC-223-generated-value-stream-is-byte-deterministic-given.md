@@ -2,7 +2,7 @@
 id: TC-223
 title: Generated value-stream is byte-deterministic given identical .product/ inputs
 type: invariant
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-114
@@ -13,6 +13,9 @@ phase: 4
 runner: cargo-test
 runner-args: tc_223_generated_value_stream_is_deterministic
 runner-timeout: 30
+last-run: 2026-05-30T05:23:42.111484491+00:00
+last-run-duration: 0.8s
+failure-message: "No #[test] fn matching 'tc_223_generated_value_stream_is_deterministic' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

@@ -2,7 +2,8 @@
 id: ADR-030
 title: Verify-graph-author role and graph-proposal output
 status: accepted
-features: []
+features:
+- FT-119
 supersedes: []
 superseded-by: []
 domains: []

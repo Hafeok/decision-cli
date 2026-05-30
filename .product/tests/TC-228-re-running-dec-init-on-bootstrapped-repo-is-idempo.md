@@ -2,7 +2,7 @@
 id: TC-228
 title: Re-running dec init on bootstrapped repo is idempotent and does not corrupt store
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-114
@@ -14,6 +14,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-228-init-idempotent.sh
 runner-timeout: 60
+last-run: 2026-05-30T05:23:42.111484491+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description
