@@ -14,7 +14,7 @@ phase: 4
 runner: cargo-test
 runner-args: tc_219_watch_loop_polls_and_exits_on_sigint
 runner-timeout: 30
-last-run: 2026-05-30T15:07:13.666786708+00:00
+last-run: 2026-05-30T15:30:51.265294838+00:00
 last-run-duration: 0.4s
 ---
 

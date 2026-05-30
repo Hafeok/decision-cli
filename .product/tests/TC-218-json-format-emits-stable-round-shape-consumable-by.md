@@ -13,7 +13,7 @@ phase: 4
 runner: cargo-test
 runner-args: tc_218_json_format_stable_shape
 runner-timeout: 30
-last-run: 2026-05-30T15:07:13.666786708+00:00
+last-run: 2026-05-30T15:30:51.265294838+00:00
 last-run-duration: 0.4s
 ---
 

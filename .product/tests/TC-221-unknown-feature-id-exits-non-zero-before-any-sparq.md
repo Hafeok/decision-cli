@@ -14,7 +14,7 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-221-drive-show-unknown-feature.sh
 runner-timeout: 30
-last-run: 2026-05-30T15:07:13.666786708+00:00
+last-run: 2026-05-30T15:30:51.265294838+00:00
 last-run-duration: 0.0s
 ---
 
