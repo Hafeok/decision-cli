@@ -438,14 +438,28 @@ SELECT ?verdict WHERE {{
         // can record the work. When the implementer's commit flips
         // product verify from fail to pass, the hash changes and the
         // planner correctly proceeds to Done; when it stays failing,
-        // the hash repeats and the cycle detector terminates as
-        // intended.
+        // the head-sha fold below still keeps successive implementer
+        // commits distinct so the cycle detector doesn't bail after
+        // one round of broken-code commits.
         let product_verify_passes = self
             .product_verify_passes_for_feature(feature_id)
             .unwrap_or(true);
+        // Include the most recent `[FT-XXX]` commit SHA. A productive
+        // implementer dispatch lands a new commit, so the SHA changes
+        // even when verdict/defects/active-graphs are stable. Witnessed
+        // on FT-115: the implementer's first commit had broken imports
+        // (cli/worktree.rs used `crate::core::*` instead of
+        // `decision_cli::core::*`) so product verify kept failing —
+        // without this fold the cycle detector tripped after one
+        // round and starved the loop of further repair attempts.
+        // A non-progressing dispatch (worker error, no commit) leaves
+        // the SHA unchanged, so the cycle detector still terminates
+        // correctly when the implementer truly can't move.
+        let head_sha = latest_feature_commit_sha(self.workdir(), feature_id);
         let mut h = DefaultHasher::new();
         format!("{verdict:?}").hash(&mut h);
         product_verify_passes.hash(&mut h);
+        head_sha.hash(&mut h);
         for iri in &open_iris {
             iri.hash(&mut h);
         }
@@ -517,6 +531,37 @@ fn which_on_path(bin: &str) -> Option<std::path::PathBuf> {
         }
     }
     None
+}
+
+/// Most-recent `[FT-XXX]`-tagged commit SHA, or an empty string when
+/// `git` is not on $PATH or no such commit exists. Used by the state
+/// hash to distinguish successive productive implementer dispatches
+/// (each lands a new commit and hence flips the SHA) from a stuck
+/// dispatcher (worker keeps failing to commit). When no commit yet
+/// exists for the feature, the empty-string sentinel still maps to a
+/// stable hash, so the cycle detector behaves as before.
+fn latest_feature_commit_sha(repo_root: &Path, feature_id: &str) -> String {
+    use std::process::Command;
+    if which_on_path("git").is_none() {
+        return String::new();
+    }
+    let needle = format!("[{feature_id}]");
+    let escaped = needle.replace('[', "\\[").replace(']', "\\]");
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(repo_root)
+        .arg("log")
+        .arg("--all")
+        .arg("--format=%H")
+        .arg("-n")
+        .arg("1")
+        .arg(format!("--grep={escaped}"))
+        .arg("--extended-regexp")
+        .output();
+    match out {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).trim().to_string(),
+        _ => String::new(),
+    }
 }
 
 /// Set of graph short ids (`VG-NNN`) in the store with a
