@@ -20,8 +20,8 @@ domains:
 - api
 - storage
 domains-acknowledged:
-  api: Extends the dec init CLI surface (no-arg discovery, --yes, --no-env-check); preserves the existing --from path bit-identically. No new API contracts beyond the documented flags + console output shape.
   storage: Writes a generated value-stream .ttl under .dec/streams/ and a .env.example at the repo root; checks .gitignore. All writes are atomic and append-only per the existing fileops discipline; no schema migration.
+  api: Extends the dec init CLI surface (no-arg discovery, --yes, --no-env-check); preserves the existing --from path bit-identically. No new API contracts beyond the documented flags + console output shape.
 ---
 
 ## Description

@@ -15,8 +15,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_238_strict_parser_rejects_invalid_config
 runner-timeout: 30
-last-run: 2026-05-30T16:21:42.181107422+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-30T16:41:05.759016390+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
