@@ -13,8 +13,8 @@ runner-args: features::ft_116_retract_stale_defects::tests::tc_240_failing_tc_le
 runner-timeout: 30
 observes:
 - graph
-last-run: 2026-05-30T11:19:08.836590639+00:00
-last-run-duration: 0.4s
+last-run: 2026-05-30T11:20:24.875643969+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
