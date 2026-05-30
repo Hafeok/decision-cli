@@ -2,18 +2,21 @@
 id: TC-236
 title: Two concurrent implementer dispatches into separate worktrees do not interfere with each other
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-115
   adrs: []
+phase: 4
+runner: cargo-test
+runner-args: tc_236_concurrent_worktrees_no_interference
+runner-timeout: 120
 observes:
 - file
 - graph
-phase: 4
-runner: cargo-test
-runner-args: tc_236_two_concurrent_dispatches_do_not_interfere
-runner-timeout: 60
+last-run: 2026-05-30T12:06:40.684205971+00:00
+failure-message: "warning: field `tc_iri` is never read\n  --> crates/decision-cli/src/features/ft_116_retract_stale_defects/query.rs:15:9\n   |\n11 | pub struct StaleDefect {\n   |            ----------- field in this struct\n...\n15 |     pub tc_iri: String,\n   |         ^^^^^^\n   |\n   = note: `StaleDefect` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `han"
+last-run-duration: 1.2s
 ---
 
 ## Description

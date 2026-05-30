@@ -1,0 +1,67 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-177>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-115> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-177/0> <https://decision-cli.dev/ns/step/VG-177/1> <https://decision-cli.dev/ns/step/VG-177/2> <https://decision-cli.dev/ns/step/VG-177/3> <https://decision-cli.dev/ns/step/VG-177/4> <https://decision-cli.dev/ns/step/VG-177/5> <https://decision-cli.dev/ns/step/VG-177/6> <https://decision-cli.dev/ns/step/VG-177/7> ) .
+
+<https://decision-cli.dev/ns/step/VG-177/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-229> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_229_worktree_created_at_dispatch_start" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-230> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_230_worker_edits_isolated_to_worktree" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-231> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_231_successful_dispatch_fast_forwards_and_cleans" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-232> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_232_failed_dispatch_leaves_main_untouched" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-233> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_233_orchestration_store_shared" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-234> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_234_cherry_pick_fallback_when_main_moved" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-235> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_235_orphan_worktrees_pruned_at_start" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-177/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-236> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_236_two_concurrent_dispatches_do_not_interfere" ;
+    dec:expectExitCode 0 .

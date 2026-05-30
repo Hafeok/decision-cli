@@ -27,3 +27,4 @@ pub mod supersede_graph;
 pub mod supersede_misrouted;
 pub mod verify;
 pub mod workers;
+pub mod worktree;

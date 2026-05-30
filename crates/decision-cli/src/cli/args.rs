@@ -23,7 +23,7 @@ use super::{
     seed_ft101_catalog::SeedFt101CatalogArgs, session, session::SessionCmd, sparql,
     sparql::SparqlArgs, status, supersede_graph, supersede_graph::SupersedeGraphArgs,
     supersede_misrouted, supersede_misrouted::SupersedeMisroutedArgs, verify,
-    verify::VerifyCmd, workers, workers::WorkersCmd,
+    verify::VerifyCmd, workers, workers::WorkersCmd, worktree, worktree::WorktreeCmd,
 };
 
 #[derive(Debug, Parser)]
@@ -136,6 +136,9 @@ pub enum Command {
     /// Hidden helper (FT-100 tests): drive subscription dispatch handlers.
     #[command(name = "_dispatch", hide = true, subcommand)]
     InternalDispatch(InternalDispatchCmd),
+    /// Hidden helper (FT-115): worktree diagnostic commands.
+    #[command(name = "_worktree", hide = true, subcommand)]
+    Worktree(WorktreeCmd),
 }
 
 /// Route a parsed `Command` into the matching feature module. The
@@ -170,5 +173,6 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::Drive(args) => drive::run(workdir, args),
         Command::Workers(cmd) => workers::run(workdir, cmd),
         Command::InternalDispatch(cmd) => internal_dispatch::run(workdir, cmd),
+        Command::Worktree(cmd) => worktree::run(workdir, cmd),
     }
 }

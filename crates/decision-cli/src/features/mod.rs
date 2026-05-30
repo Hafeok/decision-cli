@@ -12,6 +12,7 @@ pub mod finalize;
 pub mod ft_074_migrate_provenance;
 pub mod ft_104_default_ack;
 pub mod ft_111_drive_ship_all;
+pub mod ft_115_implementer_worktree;
 pub mod ft_116_retract_stale_defects;
 pub mod ft_117_migrate_env_to_bench;
 pub mod health;

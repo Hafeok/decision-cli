@@ -2,7 +2,7 @@
 id: FT-115
 title: 'decision-cli: implementer dispatch runs in a per-session git worktree'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs: []
 tests:
@@ -18,8 +18,8 @@ domains:
 - api
 - storage
 domains-acknowledged:
-  storage: Manages .dec/worktrees/ as ephemeral source-tree copies; orchestration store stays single-instance in main and is shared by absolute path. Worker binary install loop is the only shared-resource contention.
   api: Adds worktree lifecycle and the bundle field rename (repo_root → worker_workdir); no new operator-facing CLI surface beyond the hidden _worktree list/prune diagnostics.
+  storage: Manages .dec/worktrees/ as ephemeral source-tree copies; orchestration store stays single-instance in main and is shared by absolute path. Worker binary install loop is the only shared-resource contention.
 ---
 
 ## Description
