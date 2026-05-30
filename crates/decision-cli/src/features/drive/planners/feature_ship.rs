@@ -1,23 +1,25 @@
 //! `FeatureShipPlanner` — the FT+Ship planner.
 //!
-//! Classifier table:
+//! Classifier table (primary signal: `product verify FT-XXX`):
 //!
-//! | aggregate verdict | impl-open | vga-open | `product verify` | Action |
+//! | `product verify` | aggregate verdict | impl-open | vga-open | Action |
 //! |---|---|---|---|---|
-//! | `Approved` | any | any | passes | `Done` |
-//! | `Approved` | any | any | fails | `DispatchImplementer` |
-//! | any | `> 0` | any | n/a | `DispatchImplementer` |
-//! | any | `0` | `> 0` | n/a | `DispatchVerifyGraphAuthor` |
-//! | `NeverRun` | `0` | `0` | n/a | `DispatchVerifier` |
-//! | `Rejected` / `Amendment` | `0` | `0` | n/a | `Stuck` |
+//! | passes | any | any | any | `Done` |
+//! | fails | `Approved` | any | any | `DispatchImplementer` |
+//! | fails | any | `> 0` | any | `DispatchImplementer` |
+//! | fails | any | `0` | `> 0` | `DispatchVerifyGraphAuthor` |
+//! | fails | `NeverRun` | `0` | `0` | `DispatchVerifier` |
+//! | fails | `Rejected` / `Amendment` | `0` | `0` | `Stuck` |
 //!
-//! The `product verify` column gates the `Done` row: even an
-//! Approved aggregate verdict is rejected when the strict TC
-//! runners declared in `.product/tests/*.md` don't pass. This
-//! prevents a VGA whose authored graph fooled the verifier
-//! (e.g., shell-command `cargo test <name>` exiting 0 on
-//! zero-match) from false-positiving Done. The check is lazy —
-//! only invoked on the Approved branch, so cost is bounded.
+//! `product verify FT-XXX` is the authoritative completion
+//! criterion per CLAUDE.md "Definition of done." When it passes,
+//! the planner classifies Done regardless of VG verdict — VG
+//! state is corroborating evidence at best and routinely lags
+//! (witnessed: FT-113's drive marked TCs passing while a stale
+//! VG-178/VG-179 run still emitted the rejected aggregate). When
+//! it fails, VG-derived open defects route the workers via the
+//! existing classifier table; the worst-VG-verdict signal stops
+//! being the deciding criterion.
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -143,53 +145,54 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             true
         };
 
-        let intended = match (verdict, impl_open > 0, vga_open > 0) {
-            (FeatureVerdict::Approved, _, _) => {
-                // Ground-truth gate: even when the aggregate VG verdict
-                // is Approved, classify Done only if `product verify
-                // FT-XXX` also exits 0. This is the authoritative
-                // completion criterion per CLAUDE.md "Definition of
-                // done." Without this gate, a VGA that authored a
-                // graph whose runners exit 0 without strictly executing
-                // the TCs (e.g., `cargo test <name>` matching zero
-                // tests by substring) can false-positive Done.
-                let product_verify_passes = self
-                    .inspector
-                    .product_verify_passes_for_feature(feature_id)
-                    .map_err(|e| PlanError::Store {
-                        detail: format!("{e}"),
-                    })?;
-                if product_verify_passes {
-                    Action::Done
-                } else {
-                    // VG says approved but product verify says no —
-                    // the VG's evidence is bogus. Drop back to
-                    // dispatching the implementer; on the next iter,
-                    // a fresh VGA may also be required, but that's
-                    // the planner's normal escalation path.
-                    Action::DispatchImplementer {
-                        feature_id: feature_id.to_string(),
-                    }
+        // Ground-truth gate: `product verify FT-XXX` is the
+        // authoritative completion criterion per CLAUDE.md
+        // "Definition of done." It is also the primary classifier —
+        // when it passes, the feature is done regardless of VG
+        // verdict (which can lag behind: a stale rejected VGR from
+        // before the fix isn't auto-superseded yet, but the strict
+        // TC runners agree the code is correct). When it fails,
+        // VG-derived open defects route the implementer / VGA via
+        // the existing table; the worst-VG-verdict aggregate stops
+        // being the deciding signal.
+        let product_verify_passes = self
+            .inspector
+            .product_verify_passes_for_feature(feature_id)
+            .map_err(|e| PlanError::Store {
+                detail: format!("{e}"),
+            })?;
+        let intended = match (product_verify_passes, verdict, impl_open > 0, vga_open > 0) {
+            (true, _, _, _) => Action::Done,
+            (false, FeatureVerdict::Approved, _, _) => {
+                // Aggregate VG approved but product verify still
+                // fails. The VG's runners passed without strictly
+                // exercising the TCs (witnessed: shell-command
+                // `cargo test <name>` exits 0 on zero-match). Drop
+                // back to dispatching the implementer; a fresh VGA
+                // may be needed too, but that comes via normal
+                // escalation.
+                Action::DispatchImplementer {
+                    feature_id: feature_id.to_string(),
                 }
             }
-            (_, true, _) => Action::DispatchImplementer {
+            (false, _, true, _) => Action::DispatchImplementer {
                 feature_id: feature_id.to_string(),
             },
-            (_, _, true) => Action::DispatchVerifyGraphAuthor {
+            (false, _, _, true) => Action::DispatchVerifyGraphAuthor {
                 feature_id: feature_id.to_string(),
                 env_id: default_env_id.to_string(),
             },
-            (FeatureVerdict::NeverRun, false, false) if !graphs_exist => {
+            (false, FeatureVerdict::NeverRun, false, false) if !graphs_exist => {
                 Action::DispatchVerifyGraphAuthor {
                     feature_id: feature_id.to_string(),
                     env_id: default_env_id.to_string(),
                 }
             }
-            (FeatureVerdict::NeverRun, false, false) => Action::DispatchVerifier {
+            (false, FeatureVerdict::NeverRun, false, false) => Action::DispatchVerifier {
                 feature_id: feature_id.to_string(),
                 env_id: default_env_id.to_string(),
             },
-            (FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false)
+            (false, FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false)
                 if !graphs_exist =>
             {
                 // Verdict says failing but no evidence-emitting
@@ -203,7 +206,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
                     env_id: default_env_id.to_string(),
                 }
             }
-            (FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false) => {
+            (false, FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired, false, false) => {
                 // Verdict is failing but no defect feedback is open
                 // — either everything was previously addressed
                 // (lifecycle transitions ate the evidence) or the
@@ -548,12 +551,77 @@ mod tests {
             .expect("classification succeeds")
     }
 
+    /// The primary classifier: when `product verify FT-XXX` passes,
+    /// the planner returns `Done` regardless of verdict / open
+    /// defects / VG state. Per CLAUDE.md "Definition of done", that
+    /// command is the authoritative signal; the VG-derived verdict
+    /// is corroborating evidence at best and frequently lags
+    /// (stale rejected VGRs not yet auto-superseded). The pre-gate
+    /// rule "Approved → Done" was a strict subset of this new rule
+    /// in the happy path: Approved + product-verify-passes still
+    /// → Done. The change matters in the verdict=Rejected case,
+    /// witnessed on FT-113's drive: product verify reported every
+    /// TC PASS while the aggregate VG verdict was Rejected from a
+    /// stale VG-178 / VG-179 run — pre-gate the planner stalled
+    /// chasing the stale defects; post-gate it correctly classifies
+    /// Done.
     #[test]
-    fn approved_returns_done() {
-        for impl_c in [0, 1, 5] {
-            for vga_c in [0, 1, 5] {
-                let action = run_case(FeatureVerdict::Approved, impl_c, vga_c);
-                assert!(matches!(action, Action::Done), "{impl_c} {vga_c}");
+    fn product_verify_passes_returns_done_regardless_of_verdict() {
+        struct PassesStub {
+            verdict: FeatureVerdict,
+            impl_count: usize,
+            vga_count: usize,
+        }
+        impl GraphInspector for PassesStub {
+            fn aggregate_verdict_for_feature(
+                &self,
+                _: &str,
+            ) -> Result<FeatureVerdict, InspectError> {
+                Ok(self.verdict)
+            }
+            fn open_defect_feedback_count(
+                &self,
+                _: &str,
+                role_id: &str,
+            ) -> Result<usize, InspectError> {
+                Ok(match role_id {
+                    "implementer" => self.impl_count,
+                    "verifier" => self.vga_count,
+                    _ => 0,
+                })
+            }
+            fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
+                Ok(true)
+            }
+            fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
+                Ok(stub_hash(self.verdict, self.impl_count, self.vga_count))
+            }
+            fn product_verify_passes_for_feature(
+                &self,
+                _: &str,
+            ) -> Result<bool, InspectError> {
+                Ok(true)
+            }
+        }
+        for verdict in [
+            FeatureVerdict::Approved,
+            FeatureVerdict::Rejected,
+            FeatureVerdict::AmendmentRequired,
+            FeatureVerdict::NeverRun,
+        ] {
+            for impl_c in [0, 1, 5] {
+                for vga_c in [0, 1, 5] {
+                    let planner = FeatureShipPlanner::new(PassesStub {
+                        verdict,
+                        impl_count: impl_c,
+                        vga_count: vga_c,
+                    });
+                    let action = planner.classify("FT-TEST", "ENV-002").unwrap();
+                    assert!(
+                        matches!(action, Action::Done),
+                        "verdict={verdict:?} impl={impl_c} vga={vga_c} → {action:?}"
+                    );
+                }
             }
         }
     }

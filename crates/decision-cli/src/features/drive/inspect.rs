@@ -66,22 +66,21 @@ pub trait GraphInspector {
     /// Ground-truth completion gate: shells out to
     /// `product verify FT-XXX --root <product_root>` and returns
     /// whether it exits 0. Per CLAUDE.md "Definition of done", this
-    /// is the authoritative completion criterion — VGs are
-    /// corroborating evidence but cannot mark a feature done when the
-    /// strict TC runners declared in `.product/tests/*.md` say it
-    /// isn't. The planner consults this before classifying `Done` so
-    /// an Approved aggregate VG verdict from a graph that bypassed
-    /// strict execution (e.g., shell-command `cargo test <name>` that
-    /// exits 0 on zero-match) cannot false-positive.
+    /// is the authoritative completion criterion — when it passes,
+    /// the feature is done regardless of VG verdict (which can lag:
+    /// a stale rejected VGR from before the fix isn't auto-superseded
+    /// yet). When it fails, VG-derived open defects route the worker
+    /// via the existing classifier table.
     ///
-    /// Default impl returns `Ok(true)` — tests with stub inspectors
-    /// that don't care about this dimension keep their existing
-    /// expectations. Production overrides shell out to `product`.
+    /// Default impl returns `Ok(false)` — stub inspectors that don't
+    /// supply this dimension drop through to verdict/open-feedback
+    /// classification, preserving the pre-gate test expectations.
+    /// Production overrides shell out to `product`.
     fn product_verify_passes_for_feature(
         &self,
         _feature_id: &str,
     ) -> Result<bool, InspectError> {
-        Ok(true)
+        Ok(false)
     }
 }
 
