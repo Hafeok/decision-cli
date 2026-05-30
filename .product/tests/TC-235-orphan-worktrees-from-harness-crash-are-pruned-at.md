@@ -2,7 +2,7 @@
 id: TC-235
 title: Orphan worktrees from harness crash are pruned at next start
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-115
@@ -13,9 +13,8 @@ runner-args: tc_235_orphan_pruning
 runner-timeout: 120
 observes:
 - file
-last-run: 2026-05-30T12:06:40.684205971+00:00
-failure-message: "warning: field `tc_iri` is never read\n  --> crates/decision-cli/src/features/ft_116_retract_stale_defects/query.rs:15:9\n   |\n11 | pub struct StaleDefect {\n   |            ----------- field in this struct\n...\n15 |     pub tc_iri: String,\n   |         ^^^^^^\n   |\n   = note: `StaleDefect` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `han"
-last-run-duration: 1.2s
+last-run: 2026-05-30T12:17:03.882540613+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
