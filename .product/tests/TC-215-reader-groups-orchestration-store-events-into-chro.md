@@ -2,7 +2,7 @@
 id: TC-215
 title: Reader groups orchestration store events into chronological per-round records
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-113
@@ -13,6 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_215_reader_groups_into_chronological_rounds
 runner-timeout: 60
+last-run: 2026-05-30T15:07:13.666786708+00:00
+last-run-duration: 69.4s
 ---
 
 ## Description

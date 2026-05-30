@@ -27,6 +27,7 @@ thiserror = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 clap = { workspace = true }
+ctrlc = { workspace = true }
 reqwest = { workspace = true }
 sha2 = { workspace = true }
 

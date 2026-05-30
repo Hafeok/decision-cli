@@ -2,7 +2,7 @@
 id: FT-113
 title: 'decision-cli: dec drive show — per-round narrative renderer for a feature drive'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-110
 - FT-112

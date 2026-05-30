@@ -1,18 +1,28 @@
-//! `dec drive <goal> <artifact>` — pluggable artifact+goal orchestrator
-//! (FT-110, FT-111).
+//! `dec drive {ship,show}` — pluggable artifact+goal orchestrator
+//! and drive history viewer (FT-110, FT-111, FT-113).
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Duration;
 
+use clap::Subcommand;
 use decision_cli::core::drive::{ArtifactRef, Goal, PlanContext};
 use decision_cli::drive::{run as drive_run, DriveError, RunArgs, DEFAULT_MAX_ITER};
 use decision_cli::ft_111_drive_ship_all::{
     apply_filter, render, resolve_features, run_sweep, Format, SweepInput,
 };
+use decision_cli::ft_113_drive_show;
+
+#[derive(Debug, Subcommand)]
+pub enum DriveCmd {
+    /// Run a goal-driven dispatch loop (FT-110, FT-111).
+    Ship(ShipArgs),
+    /// Show per-round narrative for a feature drive (FT-113).
+    Show(ShowArgs),
+}
 
 #[derive(Debug, clap::Args)]
-pub struct DriveArgs {
+pub struct ShipArgs {
     /// Goal: `ship`, `verify`, `accept`, `cover`, or `approve`.
     pub goal: String,
     /// Artifact short id (e.g. `FT-019`, `TC-027`). Mutually exclusive with --all.
@@ -47,10 +57,41 @@ pub struct DriveArgs {
     pub retire_failing_graphs: bool,
 }
 
-pub fn run(workdir: &Path, args: DriveArgs) -> ExitCode {
+#[derive(Debug, clap::Args)]
+pub struct ShowArgs {
+    /// Feature ID (e.g. FT-113).
+    pub feature_id: String,
+    /// Filter to drives on a specific bench.
+    #[arg(long, value_name = "BNCH-NNN")]
+    pub bench: Option<String>,
+    /// Re-render every N seconds with screen clear (default 2s).
+    #[arg(long)]
+    pub watch: bool,
+    /// Poll interval for --watch mode in seconds (default 2, range 1-60).
+    #[arg(long, requires = "watch")]
+    pub interval: Option<u64>,
+    /// Start at round N (useful when drive is long).
+    #[arg(long)]
+    pub since: Option<u32>,
+    /// Output format: text or json (default text).
+    #[arg(long, default_value = "text")]
+    pub format: String,
+    /// Show all drives instead of just the most recent.
+    #[arg(long)]
+    pub all_drives: bool,
+}
+
+pub fn run(workdir: &Path, cmd: DriveCmd) -> ExitCode {
+    match cmd {
+        DriveCmd::Ship(args) => run_ship(workdir, args),
+        DriveCmd::Show(args) => run_show(workdir, args),
+    }
+}
+
+fn run_ship(workdir: &Path, args: ShipArgs) -> ExitCode {
     // FT-112: --env is reserved for future deployment-target use
     if args.env.is_some() {
-        eprintln!("dec drive: --env is reserved for future deployment-target use; use --bench BNCH-NNN instead");
+        eprintln!("dec drive ship: --env is reserved for future deployment-target use; use --bench BNCH-NNN instead");
         return ExitCode::from(2);
     }
 
@@ -61,28 +102,28 @@ pub fn run(workdir: &Path, args: DriveArgs) -> ExitCode {
 
     // Single-artifact drive
     let Some(artifact_str) = args.artifact else {
-        eprintln!("dec drive: artifact required (or use --all for sweep)");
+        eprintln!("dec drive ship: artifact required (or use --all for sweep)");
         return ExitCode::from(2);
     };
 
     let goal = match Goal::parse(&args.goal) {
         Ok(g) => g,
         Err(e) => {
-            eprintln!("dec drive: {e}");
+            eprintln!("dec drive ship: {e}");
             return ExitCode::from(2);
         }
     };
     let artifact = match ArtifactRef::parse(&artifact_str) {
         Ok(a) => a,
         Err(e) => {
-            eprintln!("dec drive: {e}");
+            eprintln!("dec drive ship: {e}");
             return ExitCode::from(2);
         }
     };
     let ctx = match PlanContext::open(workdir.to_path_buf(), args.product_root, args.bench) {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("dec drive: {e}");
+            eprintln!("dec drive ship: {e}");
             return ExitCode::from(2);
         }
     };
@@ -118,16 +159,16 @@ pub fn run(workdir: &Path, args: DriveArgs) -> ExitCode {
             ExitCode::from(3)
         }
         Err(other) => {
-            eprintln!("dec drive: {other}");
+            eprintln!("dec drive ship: {other}");
             ExitCode::from(1)
         }
     }
 }
 
-fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
+fn run_sweep_all(workdir: &Path, args: ShipArgs) -> ExitCode {
     // Validate goal is ship
     if args.goal != "ship" {
-        eprintln!("dec drive --all: only 'ship' goal is currently supported");
+        eprintln!("dec drive ship --all: only 'ship' goal is currently supported");
         return ExitCode::from(2);
     }
 
@@ -135,7 +176,7 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     let format = match Format::parse(&args.format) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("dec drive --all: {e}");
+            eprintln!("dec drive ship --all: {e}");
             return ExitCode::from(2);
         }
     };
@@ -149,7 +190,7 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     let resolved = match resolve_features(&product_root) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("dec drive --all: {e}");
+            eprintln!("dec drive ship --all: {e}");
             return ExitCode::from(2);
         }
     };
@@ -158,19 +199,19 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     let features = match apply_filter(resolved, args.filter) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("dec drive --all: {e}");
+            eprintln!("dec drive ship --all: {e}");
             return ExitCode::from(2);
         }
     };
 
     if features.is_empty() {
-        eprintln!("dec drive --all: no features match filter");
+        eprintln!("dec drive ship --all: no features match filter");
         return ExitCode::from(2);
     }
 
     // TODO: implement retire-failing-graphs pre-pass when args.retire_failing_graphs is true
     if args.retire_failing_graphs {
-        eprintln!("dec drive --all: --retire-failing-graphs not yet implemented");
+        eprintln!("dec drive ship --all: --retire-failing-graphs not yet implemented");
     }
 
     // Run sweep
@@ -184,7 +225,7 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     let runtime = match tokio::runtime::Runtime::new() {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("dec drive --all: failed to create async runtime: {e}");
+            eprintln!("dec drive ship --all: failed to create async runtime: {e}");
             return ExitCode::from(1);
         }
     };
@@ -192,7 +233,7 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     let (rows, tally) = match runtime.block_on(run_sweep(workdir.to_path_buf(), sweep_input)) {
         Ok(result) => result,
         Err(e) => {
-            eprintln!("dec drive --all: {e}");
+            eprintln!("dec drive ship --all: {e}");
             return ExitCode::from(1);
         }
     };
@@ -207,4 +248,18 @@ fn run_sweep_all(workdir: &Path, args: DriveArgs) -> ExitCode {
     } else {
         ExitCode::from(1)
     }
+}
+
+fn run_show(workdir: &Path, args: ShowArgs) -> ExitCode {
+    let show_args = ft_113_drive_show::ShowArgs {
+        feature_id: args.feature_id,
+        bench: args.bench,
+        watch: args.watch,
+        interval: args.interval,
+        since: args.since,
+        format: args.format,
+        all_drives: args.all_drives,
+    };
+
+    ft_113_drive_show::run(workdir, show_args)
 }
