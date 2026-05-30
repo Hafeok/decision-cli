@@ -5,8 +5,8 @@ use std::process::ExitCode;
 
 use clap::Subcommand;
 
-use crate::core::store_io;
-use crate::features::ft_115_implementer_worktree::{handle_worktree_list, handle_worktree_prune};
+use decision_cli::core::store::{load_store_from_dump, orchestration_dump_path};
+use decision_cli::features::ft_115_implementer_worktree::{handle_worktree_list, handle_worktree_prune};
 
 #[derive(Debug, Subcommand)]
 pub enum WorktreeCmd {
@@ -17,7 +17,7 @@ pub enum WorktreeCmd {
 }
 
 pub fn run(workdir: &Path, cmd: WorktreeCmd) -> ExitCode {
-    let store = match store_io::load_store(workdir) {
+    let store = match load_store_from_dump(&orchestration_dump_path(workdir)) {
         Ok(s) => s,
         Err(e) => {
             eprintln!("error: failed to load orchestration store: {}", e);
