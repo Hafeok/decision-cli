@@ -238,6 +238,162 @@ fn scope_guard_bypasses_when_no_prior_feature_commits_exist() {
     );
 }
 
+/// Scope-guard bypass for the FT-114 shape: prior `[FT-XXX]`
+/// commits exist but only authored artifact-graph files
+/// (`.product/...` specs, ADRs, TCs). The legitimate first
+/// implementation modifying existing `crates/...` code must NOT be
+/// rejected — there is no "old implementation" to protect yet.
+/// Witnessed concretely on FT-114: two `[FT-114]` commits, both
+/// spec-only; round-1 defect dispatch wanted to modify
+/// `crates/decision-cli/src/features/init/*.rs` and the guard
+/// flagged every edit out-of-scope.
+#[test]
+fn scope_guard_bypasses_when_prior_commits_are_spec_only() {
+    use super::{finalize_run, FinalizeInput};
+    // Repo seeded with two `[FT-300]` commits that touch only
+    // .product/... — mirrors a spec-authored-but-unimplemented
+    // feature exactly. Implementation files exist in the tree
+    // (committed under a different feature tag).
+    let repo = scope_test_setup_repo(
+        "FT-other",
+        &["crates/decision-cli/src/features/init/mod.rs"],
+        "init shipped earlier under a different feature",
+    );
+    use std::process::Command;
+    let run = |args: &[&str]| {
+        Command::new("git")
+            .current_dir(&repo)
+            .args(args)
+            .output()
+            .expect("git command")
+    };
+    // First `[FT-300]` commit: spec authoring only.
+    std::fs::create_dir_all(repo.join(".product/features")).unwrap();
+    std::fs::write(
+        repo.join(".product/features/FT-300-spec.md"),
+        "# FT-300 spec\n",
+    )
+    .unwrap();
+    run(&["add", "-A"]);
+    Command::new("git")
+        .current_dir(&repo)
+        .args([
+            "commit",
+            "-m",
+            "[FT-300] author feature spec",
+            "--no-gpg-sign",
+        ])
+        .output()
+        .unwrap();
+    // Second `[FT-300]` commit: TCs added, still spec-only.
+    std::fs::create_dir_all(repo.join(".product/tests")).unwrap();
+    std::fs::write(repo.join(".product/tests/TC-700.md"), "# TC-700\n").unwrap();
+    run(&["add", "-A"]);
+    Command::new("git")
+        .current_dir(&repo)
+        .args([
+            "commit",
+            "-m",
+            "[FT-300] add TC-700 acceptance criterion",
+            "--no-gpg-sign",
+        ])
+        .output()
+        .unwrap();
+    // Worker (defect_scoped=true, round 1) writes its initial
+    // implementation: modifies the existing init module that
+    // FT-300 extends. Under the old bypass condition (allowlist
+    // non-empty) this would abort with ScopeViolation.
+    std::fs::write(
+        repo.join("crates/decision-cli/src/features/init/mod.rs"),
+        "// FT-300 initial implementation: auto-bootstrap\n",
+    )
+    .unwrap();
+    let input = FinalizeInput {
+        repo_root: &repo,
+        product_root: &repo,
+        feature_id: "FT-300",
+        session_iri: "s",
+        dispatch_iri: "d",
+        code_change_iri: "",
+        bundle_hash: "abc",
+        worker_summary: "initial impl after spec-only history",
+        defect_scoped: true,
+    };
+    let outcome =
+        finalize_run(&input).expect("finalize succeeds: spec-only history bypasses guard");
+    assert!(
+        outcome.commit_sha.is_some(),
+        "expected commit, got outcome: {outcome:?}"
+    );
+}
+
+/// `.dec/` and `.product/` modifications are always permitted under
+/// the scope guard, even when the guard is otherwise active. The
+/// orchestration store is harness output (not worker output) and
+/// must never be flagged. The artifact graph is touched by feature
+/// status transitions and cross-cutting work.
+#[test]
+fn scope_guard_permits_system_path_modifications() {
+    use super::{finalize_run, FinalizeInput};
+    // Active guard: a real `[FT-400]` code commit exists.
+    let repo = scope_test_setup_repo(
+        "FT-400",
+        &["crates/feature_400/lib.rs"],
+        "initial impl committed",
+    );
+    // Worker modifies the in-scope code file (allowed by
+    // allowlist), AND the harness mutates .dec/store and the
+    // artifact graph — the latter two must not be flagged.
+    std::fs::write(
+        repo.join("crates/feature_400/lib.rs"),
+        "// targeted defect fix\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(repo.join(".dec/store")).unwrap();
+    std::fs::write(
+        repo.join(".dec/store/orchestration.nq"),
+        "<a> <b> <c> <g> .\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(repo.join(".product/features")).unwrap();
+    std::fs::write(
+        repo.join(".product/features/FT-400-spec.md"),
+        "# FT-400\nstatus: complete\n",
+    )
+    .unwrap();
+    // Sanity check: those two files exist before finalize, were
+    // not in the prior commit, and would be flagged without the
+    // system-path exemption.
+    use std::process::Command;
+    let _ = Command::new("git")
+        .current_dir(&repo)
+        .args(["add", "-N", ".dec/store/orchestration.nq"])
+        .output()
+        .unwrap();
+    let _ = Command::new("git")
+        .current_dir(&repo)
+        .args(["add", "-N", ".product/features/FT-400-spec.md"])
+        .output()
+        .unwrap();
+    let input = FinalizeInput {
+        repo_root: &repo,
+        product_root: &repo,
+        feature_id: "FT-400",
+        session_iri: "s",
+        dispatch_iri: "d",
+        code_change_iri: "",
+        bundle_hash: "abc",
+        worker_summary: "in-scope fix plus harness bookkeeping",
+        defect_scoped: true,
+    };
+    let outcome = finalize_run(&input)
+        .expect("finalize succeeds: .dec/ and .product/ are system paths");
+    assert!(
+        outcome.commit_sha.is_some(),
+        "expected commit, got outcome: {outcome:?}"
+    );
+}
+
 /// Build a fresh git repo with one `[FT-XXX]` commit that touches
 /// `files`. Returns the repo path. Each file gets created with
 /// trivial contents so the commit succeeds.

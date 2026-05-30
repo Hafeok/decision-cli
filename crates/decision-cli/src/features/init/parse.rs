@@ -1,7 +1,7 @@
 //! Definition byte loading + Turtle parsing helpers.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use oxigraph::io::{RdfFormat, RdfParser};
 use oxigraph::model::{GraphName, NamedNode};
@@ -12,6 +12,7 @@ use crate::core::bundled;
 use super::{DefinitionSource, InitError};
 
 pub(super) fn read_definition_bytes(
+    workdir: &Path,
     source: &DefinitionSource,
 ) -> Result<(Vec<u8>, String, Option<String>), InitError> {
     match source {
@@ -34,6 +35,11 @@ pub(super) fn read_definition_bytes(
                 source,
             })?;
             Ok((bytes, source.label(), None))
+        }
+        DefinitionSource::AutoDiscover => {
+            // FT-114: Generate value stream from .product/ discovery
+            let ttl = super::generate::generate_value_stream(workdir)?;
+            Ok((ttl.into_bytes(), source.label(), None))
         }
     }
 }

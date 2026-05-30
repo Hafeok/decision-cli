@@ -14,7 +14,7 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-227-init-from-bit-identical.sh
 runner-timeout: 60
-last-run: 2026-05-30T05:23:42.111484491+00:00
+last-run: 2026-05-30T07:08:51.465092382+00:00
 last-run-duration: 0.3s
 ---
 

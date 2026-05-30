@@ -15,9 +15,12 @@
 //! Failure modes are structured via [`InitError`] so the CLI can name
 //! exactly which field / IRI / goal was wrong (ADR-006).
 
+pub mod config;
+mod generate;
 mod parse;
 mod persist;
 mod pipeline;
+pub mod safety;
 mod shacl;
 mod sparql;
 mod vocab;
@@ -33,19 +36,23 @@ use parse::read_definition_bytes;
 use persist::{finalise_orchestration_dir, json_escape, sha256_hex};
 use pipeline::{build_orchestration_store, stage_and_validate};
 
+pub use safety::GitignoreOutcome;
+
 /// IRI of the bootstrap session record (`dec:session/init-001`).
 pub const BOOTSTRAP_SESSION_IRI: &str = "https://decision-cli.dev/ns/session/init-001";
 
 /// Named graph used to hold the persisted orchestration state on init.
 pub const ORCHESTRATION_GRAPH_IRI: &str = "https://decision-cli.dev/ns/orchestration";
 
-/// Distinguishes the two `dec init` input shapes (ADR-006 §3.2).
+/// Distinguishes the `dec init` input shapes (ADR-006 §3.2, extended by FT-114).
 #[derive(Debug, Clone)]
 pub enum DefinitionSource {
     /// `dec init --template <name>` — bundled stream template.
     Template(String),
     /// `dec init --from <path>` — local Turtle file.
     File(PathBuf),
+    /// `dec init` (no args) — auto-discover from `.product/` (FT-114).
+    AutoDiscover,
 }
 
 impl DefinitionSource {
@@ -53,6 +60,7 @@ impl DefinitionSource {
         match self {
             Self::Template(n) => format!("template:{n}"),
             Self::File(p) => p.display().to_string(),
+            Self::AutoDiscover => "auto-discovered".to_string(),
         }
     }
 
@@ -60,6 +68,7 @@ impl DefinitionSource {
         match self {
             Self::Template(_) => "template",
             Self::File(_) => "file",
+            Self::AutoDiscover => "auto-discover",
         }
     }
 }
@@ -146,16 +155,27 @@ pub enum InitError {
 /// Run the full init pipeline against the supplied source, persisting
 /// the orchestration store under `<workdir>/.dec/store/`.
 ///
-/// Errors leave `workdir/.dec/` **absent** — no partial state on
-/// failure (TC-003 / TC-004 / TC-005).
+/// FT-114: Idempotent — re-running init refreshes the stream and re-seeds
+/// the store without wiping existing session/dispatch state.
 pub fn run(workdir: &Path, source: DefinitionSource) -> Result<InitOutcome, InitError> {
+    run_with_opts(workdir, source, false, false)
+}
+
+/// Run init with FT-114 options for .env and gitignore safety checks.
+pub fn run_with_opts(
+    workdir: &Path,
+    source: DefinitionSource,
+    auto_confirm: bool,
+    skip_env_check: bool,
+) -> Result<InitOutcome, InitError> {
     let dec_dir = workdir.join(".dec");
-    if dec_dir.exists() {
-        return Err(InitError::AlreadyInitialised(dec_dir));
-    }
+
+    // FT-114: If .dec/ exists, we're in idempotent mode.
+    // The store will be merged, not replaced.
+    let is_reinit = dec_dir.exists();
 
     let ontology = OntologyHandle::load()?;
-    let (definition_bytes, source_label, base_iri) = read_definition_bytes(&source)?;
+    let (definition_bytes, source_label, base_iri) = read_definition_bytes(workdir, &source)?;
     let definition_hash = sha256_hex(&definition_bytes);
     let staged = stage_and_validate(&definition_bytes, &source_label, base_iri.as_deref())?;
 
@@ -168,7 +188,14 @@ pub fn run(workdir: &Path, source: DefinitionSource) -> Result<InitOutcome, Init
         &definition_hash,
         &definition_bytes,
         ontology.version(),
+        is_reinit,
     )?;
+
+    // FT-114: Safety checks after store is persisted
+    if !skip_env_check {
+        safety::bootstrap_env_example(workdir)?;
+        safety::ensure_env_gitignored(workdir, auto_confirm)?;
+    }
 
     Ok(build_init_outcome(
         &dec_dir,
@@ -189,6 +216,7 @@ fn persist_init_artifacts(
     definition_hash: &str,
     definition_bytes: &[u8],
     ontology_version: &str,
+    is_reinit: bool,
 ) -> Result<(), InitError> {
     let now = Utc::now().to_rfc3339();
     let orchestration = build_orchestration_store(
@@ -213,6 +241,8 @@ fn persist_init_artifacts(
         &orchestration,
         definition_bytes,
         &metadata_json,
+        source,
+        is_reinit,
     )
 }
 

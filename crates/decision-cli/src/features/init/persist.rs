@@ -265,12 +265,16 @@ fn build_subscription_quads(
 /// Serialise the orchestration store to disk atomically: write a temp
 /// `.dec.tmp-init/` directory next to `workdir`, then rename it to
 /// `<workdir>/.dec/`.
+///
+/// FT-114: If `is_reinit` is true, merge with existing store instead of replacing.
 pub(super) fn finalise_orchestration_dir(
     workdir: &Path,
     dec_dir: &Path,
     store: &Store,
     definition_bytes: &[u8],
     metadata_json: &str,
+    source: &super::DefinitionSource,
+    is_reinit: bool,
 ) -> Result<(), InitError> {
     let tmp_dec = workdir.join(".dec.tmp-init");
     if tmp_dec.exists() {
@@ -278,9 +282,17 @@ pub(super) fn finalise_orchestration_dir(
     }
     fs::create_dir_all(tmp_dec.join("store"))
         .map_err(|e| InitError::PersistFailed(e.to_string()))?;
+
+    // FT-114: If re-initializing, merge with existing store
+    let final_store = if is_reinit {
+        merge_with_existing_store(dec_dir, store)?
+    } else {
+        store.clone()
+    };
+
     let tmp_dump = tmp_dec.join("store").join("orchestration.nq");
     let mut buf = Vec::new();
-    store
+    final_store
         .dump_to_writer(RdfFormat::NQuads, &mut buf)
         .map_err(|e| InitError::PersistFailed(e.to_string()))?;
     fs::write(&tmp_dump, &buf).map_err(|e| InitError::PersistFailed(e.to_string()))?;
@@ -289,8 +301,94 @@ pub(super) fn finalise_orchestration_dir(
     fs::write(tmp_dec.join("init-metadata.json"), metadata_json)
         .map_err(|e| InitError::PersistFailed(e.to_string()))?;
     seed_verify_bench_files(&tmp_dec)?;
+
+    // FT-114 / ADR-068: Bootstrap config.toml with defaults (only if doesn't exist)
+    super::config::bootstrap_config_toml(&tmp_dec)?;
+
+    // FT-114: Save generated stream to .dec/streams/ if auto-discovering
+    if let super::DefinitionSource::AutoDiscover = source {
+        save_generated_stream(&tmp_dec, definition_bytes, workdir)?;
+    }
+
+    if is_reinit {
+        // FT-114: Preserve config.toml if it exists
+        let existing_config = dec_dir.join("config.toml");
+        if existing_config.exists() {
+            let config_content = fs::read(&existing_config)
+                .map_err(|e| InitError::PersistFailed(format!("Failed to read existing config.toml: {}", e)))?;
+            fs::write(tmp_dec.join("config.toml"), config_content)
+                .map_err(|e| InitError::PersistFailed(format!("Failed to preserve config.toml: {}", e)))?;
+        }
+        // Remove old .dec and replace with new
+        fs::remove_dir_all(dec_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
+    }
     fs::rename(&tmp_dec, dec_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
     Ok(())
+}
+
+/// FT-114: Merge new init store with existing orchestration store to preserve sessions/dispatches.
+fn merge_with_existing_store(dec_dir: &Path, new_store: &Store) -> Result<Store, InitError> {
+    let existing_nq = dec_dir.join("store").join("orchestration.nq");
+    if !existing_nq.exists() {
+        return Ok(new_store.clone());
+    }
+
+    let merged = Store::new().map_err(|e| InitError::Internal(e.to_string()))?;
+
+    // Load existing store
+    let existing_bytes = fs::read(&existing_nq)
+        .map_err(|e| InitError::Internal(format!("Failed to read existing store: {}", e)))?;
+    merged
+        .load_from_reader(RdfFormat::NQuads, &existing_bytes[..])
+        .map_err(|e| InitError::Internal(format!("Failed to load existing store: {}", e)))?;
+
+    // Add new quads from new_store
+    for q in new_store.iter() {
+        let q = q.map_err(|e| InitError::Internal(e.to_string()))?;
+        merged.insert(&q).map_err(|e| InitError::Internal(e.to_string()))?;
+    }
+
+    Ok(merged)
+}
+
+/// FT-114: Save the generated stream file to .dec/streams/<repo-name>-development.ttl
+fn save_generated_stream(tmp_dec: &Path, definition_bytes: &[u8], workdir: &Path) -> Result<(), InitError> {
+    // Extract repo name from the generated TTL
+    let ttl_str = std::str::from_utf8(definition_bytes)
+        .map_err(|e| InitError::Internal(format!("Invalid UTF-8 in generated stream: {}", e)))?;
+
+    // Parse repo name from stream IRI in the TTL
+    let repo_name = extract_repo_name_from_ttl(ttl_str, workdir)?;
+
+    let streams_dir = tmp_dec.join("streams");
+    fs::create_dir_all(&streams_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
+
+    let stream_file = streams_dir.join(format!("{}-development.ttl", repo_name));
+    fs::write(&stream_file, definition_bytes)
+        .map_err(|e| InitError::PersistFailed(e.to_string()))?;
+
+    Ok(())
+}
+
+fn extract_repo_name_from_ttl(ttl: &str, workdir: &Path) -> Result<String, InitError> {
+    // Try to extract from the stream IRI in the TTL
+    for line in ttl.lines() {
+        if line.contains("/streams/") && line.contains("-development") {
+            if let Some(start) = line.find("/streams/") {
+                let after_streams = &line[start + 9..]; // "/streams/".len() = 9
+                if let Some(end) = after_streams.find("-development") {
+                    return Ok(after_streams[..end].to_string());
+                }
+            }
+        }
+    }
+
+    // Fallback: try to get from workdir
+    if let Some(dir_name) = workdir.file_name().and_then(|n| n.to_str()) {
+        return Ok(dir_name.to_string());
+    }
+
+    Ok("project".to_string())
 }
 
 /// FT-035 / ADR-028 — write the `.dec/verify/bench/BNCH-001-ephemeral-cli.ttl`

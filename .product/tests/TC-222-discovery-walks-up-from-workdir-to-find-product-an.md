@@ -2,7 +2,7 @@
 id: TC-222
 title: Discovery walks up from workdir to find .product/ and errors clearly when none found
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-114
@@ -15,9 +15,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_222_discovery_walks_up_or_errors
 runner-timeout: 30
-last-run: 2026-05-30T05:23:42.111484491+00:00
-last-run-duration: 77.2s
-failure-message: "No #[test] fn matching 'tc_222_discovery_walks_up_or_errors' found in tests/*.rs — did you forget to add the integration test?"
+last-run: 2026-05-30T07:08:51.465092382+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description

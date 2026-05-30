@@ -2,7 +2,7 @@
 id: TC-237
 title: 'Config precedence chain: flag overrides env overrides config.toml overrides built-in default'
 type: invariant
-status: failing
+status: passing
 validates:
   features:
   - FT-114
@@ -14,9 +14,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_237_config_precedence_chain
 runner-timeout: 30
-last-run: 2026-05-30T05:23:42.111484491+00:00
+last-run: 2026-05-30T07:08:51.465092382+00:00
 last-run-duration: 0.5s
-failure-message: "No #[test] fn matching 'tc_237_config_precedence_chain' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

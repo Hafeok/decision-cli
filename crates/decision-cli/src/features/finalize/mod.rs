@@ -65,12 +65,19 @@ pub struct FinalizeInput<'a> {
     pub worker_summary: &'a str,
     /// When `true`, the run was a defect-fix (the dispatch bundle
     /// carried non-empty defect_feedback). The finalizer enforces a
-    /// scope guard: modifications to files NOT touched by any prior
-    /// `[FT-XXX]` commit are rejected, only new files are
-    /// unconditionally allowed. This stops "I gave up but made
-    /// changes anyway" worker outputs from gutting unrelated
-    /// modules. Initial runs (no defect feedback) keep the open
-    /// behaviour — anything in the working tree may be committed.
+    /// scope guard: modifications to code files NOT touched by any
+    /// prior `[FT-XXX]` commit are rejected. New files (status `A`)
+    /// and any path under `.product/` or `.dec/` are unconditionally
+    /// allowed — the artifact graph and harness store are touched by
+    /// orchestration bookkeeping, not by the targeted code the guard
+    /// protects. The guard bypasses entirely when no prior `[FT-XXX]`
+    /// commit has touched any code file (only spec authoring or no
+    /// commits at all) — there is no "old implementation" to protect
+    /// yet. This stops "I gave up but made changes anyway" worker
+    /// outputs from gutting unrelated modules without trapping the
+    /// initial-implementation round. Initial runs (no defect
+    /// feedback) keep the open behaviour — anything in the working
+    /// tree may be committed.
     pub defect_scoped: bool,
 }
 
@@ -136,19 +143,33 @@ pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, Finali
         if input.defect_scoped {
             let allowed =
                 feature_commit_files(input.repo_root, input.feature_id).unwrap_or_default();
-            // Empty allowlist means no prior `[FT-XXX]` commits exist — i.e.,
-            // this is the first implementation round for a brand-new feature
-            // whose VGA auto-ran and emitted defects on round 0. The guard's
-            // intent ("stop bad fixes to old features") doesn't apply because
-            // there's no "old feature" yet; bypass it so the implementer can
-            // write the initial implementation unrestricted. The guard kicks
-            // back in on round 2+ once the first commit lands.
-            if !allowed.is_empty() {
+            // The guard bypasses when no prior `[FT-XXX]` commit has
+            // touched real implementation. Two cases share that state:
+            //   1. No prior `[FT-XXX]` commits exist at all (the
+            //      original `7a7a112` fix).
+            //   2. Prior `[FT-XXX]` commits exist but only authored
+            //      artifact-graph files (`.product/features/...`, TCs,
+            //      ADRs). FT-114 is the witnessed case: two prior
+            //      `[FT-114]` commits, both spec-only, so the legitimate
+            //      first implementation under `crates/.../init/` is
+            //      "out of scope" and the loop cannot converge.
+            // Both reduce to the same intent: there is no "old feature
+            // implementation" to protect yet. The guard reactivates once
+            // a `[FT-XXX]` commit lands that touches code (any path
+            // outside `.product/` and `.dec/`).
+            //
+            // Independently, modifications inside `.product/` and
+            // `.dec/` are always permitted: the artifact graph and
+            // harness store are touched by orchestration bookkeeping
+            // and cross-cutting feature work, not by the targeted code
+            // the guard protects.
+            let has_prior_implementation = allowed.iter().any(|p| !is_system_path(p));
+            if has_prior_implementation {
                 let dirty = working_tree_modified_files(input.repo_root)?;
                 let violations: Vec<String> = dirty
                     .into_iter()
                     .filter(|(status, _)| status == "M" || status == "D" || status == "R")
-                    .filter(|(_, path)| !allowed.contains(path))
+                    .filter(|(_, path)| !is_system_path(path) && !allowed.contains(path))
                     .map(|(_, path)| path)
                     .collect();
                 if !violations.is_empty() {
@@ -167,6 +188,17 @@ pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, Finali
     }
 
     Ok(outcome)
+}
+
+/// Paths the scope guard treats as "always permitted" regardless of
+/// the feature's prior commit history. `.product/` is the artifact
+/// graph (specs, ADRs, TCs, requests log) — touched by any
+/// cross-cutting feature work or `product feature status` transition.
+/// `.dec/` is the harness store (orchestration store, verify benches,
+/// worktree state) — written by orchestration bookkeeping rather than
+/// by worker output. Neither belongs to the "code the guard protects."
+fn is_system_path(path: &str) -> bool {
+    path.starts_with(".product/") || path.starts_with(".dec/")
 }
 
 /// Files touched by any prior `[FT-XXX]` commit. The defect-scope

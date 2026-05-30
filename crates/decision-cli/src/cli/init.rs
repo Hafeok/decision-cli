@@ -14,14 +14,22 @@ pub struct InitArgs {
     /// Initialise from a local Turtle definition file.
     #[arg(long, group = "src", value_name = "PATH")]
     pub from: Option<PathBuf>,
+    /// Auto-confirm prompts (for non-TTY use).
+    #[arg(long)]
+    pub yes: bool,
+    /// Skip .env and .gitignore safety checks.
+    #[arg(long)]
+    pub no_env_check: bool,
 }
 
 pub fn run(workdir: &Path, args: InitArgs) -> ExitCode {
+    let auto_confirm = args.yes;
+    let skip_env_check = args.no_env_check;
     let source = match resolve_source(args) {
         Ok(s) => s,
         Err(code) => return code,
     };
-    match init::run(workdir, source) {
+    match init::run_with_opts(workdir, source, auto_confirm, skip_env_check) {
         Ok(outcome) => {
             print_init_success(&outcome);
             // FT-016: advisory worker preflight after bootstrap. Init
@@ -57,12 +65,8 @@ fn resolve_source(args: InitArgs) -> Result<DefinitionSource, ExitCode> {
             Err(ExitCode::from(2))
         }
         (None, None) => {
-            eprintln!(
-                "dec init: a definition reference is required.\n  \
-                 Try: dec init --template engineering-development\n  \
-                 Or:  dec init --from ./streams/decision-cli-development.ttl"
-            );
-            Err(ExitCode::from(2))
+            // FT-114: Auto-discover from .product/ when no source specified
+            Ok(DefinitionSource::AutoDiscover)
         }
     }
 }
@@ -76,8 +80,17 @@ fn print_init_success(outcome: &init::InitOutcome) {
     println!("  ValueAction:       {}", outcome.value_action_iri);
     println!("  Bootstrap session: {}", outcome.session_iri);
     let short = &outcome.definition_hash[..outcome.definition_hash.len().min(12)];
+    // FT-114: Make it clear when loading from a file vs auto-discovering
+    let source_prefix = if outcome.definition_source.starts_with("auto-") {
+        "Generated from"
+    } else if outcome.definition_source.contains('/') || outcome.definition_source.contains(".ttl") {
+        "Loaded from"
+    } else {
+        "Definition source:"
+    };
     println!(
-        "  Definition source: {} (sha256:{short}…)",
+        "  {}: {} (sha256:{short}…)",
+        source_prefix,
         outcome.definition_source
     );
     println!("  Ontology version:  {}", outcome.ontology_version);

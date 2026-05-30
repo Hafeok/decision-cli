@@ -1,0 +1,25 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-172>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-001> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-172/0> <https://decision-cli.dev/ns/step/VG-172/1> ) .
+
+<https://decision-cli.dev/ns/step/VG-172/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-009> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test -p oxi-events --test tc_009_monotonic_events" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-172/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-014> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test -p decision-cli --test tc_014_in_stream_invariant" ;
+    dec:expectExitCode 0 .
