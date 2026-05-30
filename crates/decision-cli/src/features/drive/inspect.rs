@@ -62,6 +62,27 @@ pub trait GraphInspector {
     /// Returns `0` only when an inspector error would otherwise have
     /// been raised — callers may treat `0` as "unknown / no signal."
     fn state_hash_for_feature(&self, feature_id: &str) -> Result<u64, InspectError>;
+
+    /// Ground-truth completion gate: shells out to
+    /// `product verify FT-XXX --root <product_root>` and returns
+    /// whether it exits 0. Per CLAUDE.md "Definition of done", this
+    /// is the authoritative completion criterion — VGs are
+    /// corroborating evidence but cannot mark a feature done when the
+    /// strict TC runners declared in `.product/tests/*.md` say it
+    /// isn't. The planner consults this before classifying `Done` so
+    /// an Approved aggregate VG verdict from a graph that bypassed
+    /// strict execution (e.g., shell-command `cargo test <name>` that
+    /// exits 0 on zero-match) cannot false-positive.
+    ///
+    /// Default impl returns `Ok(true)` — tests with stub inspectors
+    /// that don't care about this dimension keep their existing
+    /// expectations. Production overrides shell out to `product`.
+    fn product_verify_passes_for_feature(
+        &self,
+        _feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        Ok(true)
+    }
 }
 
 /// Inspector errors. Kept generic so planners can propagate
@@ -421,6 +442,66 @@ SELECT ?verdict WHERE {{
         }
         Ok(h.finish())
     }
+
+    fn product_verify_passes_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        use std::process::Command;
+        let product = match which_on_path("product") {
+            Some(p) => p,
+            // No `product` binary on $PATH → can't gate. Fall back to
+            // permissive (trust the VG verdict) rather than blocking
+            // the drive permanently; emit a one-shot warning via
+            // tracing so the operator sees it.
+            None => {
+                tracing::warn!(
+                    feature_id,
+                    "product CLI not on $PATH — skipping product-verify gate; \
+                     drive will trust aggregate VG verdict"
+                );
+                return Ok(true);
+            }
+        };
+        let out = Command::new(product)
+            .arg("verify")
+            .arg(feature_id)
+            .arg("--root")
+            .arg(self.product_root())
+            .output()
+            .map_err(|e| InspectError::Store {
+                detail: format!("spawn `product verify {feature_id}`: {e}"),
+            })?;
+        // `product verify FT-XXX` exits 0 in both pass and fail cases
+        // (witnessed: failing FT-116 prints "TC-NNN ... FAIL" lines for
+        // every TC and still exits 0). Trust stdout markers instead of
+        // the exit code: a full-pass run emits the success-tag line
+        // `✓ Tagged: product/FT-XXX/complete-vN`, while any failing
+        // run omits it. We additionally treat the presence of any
+        // `FAIL` token as definitive failure as a belt-and-braces
+        // check against future stdout format changes.
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        let tag_prefix = format!("✓ Tagged: product/{feature_id}/complete");
+        let saw_success_tag = stdout.contains(&tag_prefix);
+        let saw_fail_line = stdout
+            .lines()
+            .any(|line| line.contains(" FAIL ") || line.trim_end().ends_with(" FAIL"));
+        Ok(saw_success_tag && !saw_fail_line)
+    }
+}
+
+/// `which`-style $PATH lookup. Returns the absolute path to `bin` or
+/// `None` when not on $PATH. Mirrors the helper in `finalize/mod.rs`
+/// to avoid pulling that module into core/drive.
+fn which_on_path(bin: &str) -> Option<std::path::PathBuf> {
+    let path = std::env::var_os("PATH")?;
+    for dir in std::env::split_paths(&path) {
+        let candidate = dir.join(bin);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
 }
 
 /// Set of graph short ids (`VG-NNN`) in the store with a

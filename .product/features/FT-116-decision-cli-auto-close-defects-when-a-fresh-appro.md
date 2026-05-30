@@ -2,7 +2,7 @@
 id: FT-116
 title: 'decision-cli: auto-close defects when a fresh approved VGR retracts the failing evidence'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs: []
 tests:

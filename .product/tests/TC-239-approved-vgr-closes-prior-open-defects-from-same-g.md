@@ -2,7 +2,7 @@
 id: TC-239
 title: Approved VGR closes prior open defects from same graph against same passing TC
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-116
@@ -13,6 +13,9 @@ phase: 4
 runner: cargo-test
 runner-args: tc_239_approved_vgr_closes_prior_defects
 runner-timeout: 60
+last-run: 2026-05-30T11:01:28.947644318+00:00
+last-run-duration: 0.9s
+failure-message: "No #[test] fn matching 'tc_239_approved_vgr_closes_prior_defects' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

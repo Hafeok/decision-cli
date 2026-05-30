@@ -1,0 +1,60 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-176>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-116> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-176/0> <https://decision-cli.dev/ns/step/VG-176/1> <https://decision-cli.dev/ns/step/VG-176/2> <https://decision-cli.dev/ns/step/VG-176/3> <https://decision-cli.dev/ns/step/VG-176/4> <https://decision-cli.dev/ns/step/VG-176/5> <https://decision-cli.dev/ns/step/VG-176/6> ) .
+
+<https://decision-cli.dev/ns/step/VG-176/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-239> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_239_approved_vgr_closes_prior_defects" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-176/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-240> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_240_failing_tc_does_not_close_defects" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-176/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-241> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_241_cross_graph_defects_not_touched" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-176/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-242> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_242_terminal_defects_unchanged" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-176/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-243> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_243_auto_close_is_idempotent" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-176/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-244> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_244_auto_close_atomic_with_vgr_write" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-176/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-245> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_245_planner_open_count_drops_after_auto_close" ;
+    dec:expectExitCode 0 .

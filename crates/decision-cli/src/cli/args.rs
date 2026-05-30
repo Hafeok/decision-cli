@@ -18,7 +18,8 @@ use super::{
     drive, drive::DriveArgs, internal_dispatch, internal_dispatch::InternalDispatchCmd, loop_cmd,
     loop_cmd::LoopCmd, mcp,
     mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, product,
-    product::ProductArgs, query, query::QueryCmd, seed_ft101_catalog,
+    product::ProductArgs, query, query::QueryCmd, retract_stale_defects,
+    retract_stale_defects::RetractStaleDefectsArgs, seed_ft101_catalog,
     seed_ft101_catalog::SeedFt101CatalogArgs, session, session::SessionCmd, sparql,
     sparql::SparqlArgs, status, supersede_graph, supersede_graph::SupersedeGraphArgs,
     supersede_misrouted, supersede_misrouted::SupersedeMisroutedArgs, verify,
@@ -86,6 +87,11 @@ pub enum Command {
     /// then operators run it by hand). ADR-024 lifecycle pattern.
     #[command(name = "_supersede-graph", hide = true)]
     SupersedeGraph(SupersedeGraphArgs),
+    /// Hidden helper (FT-116): run the auto-close pass against an
+    /// existing graph's latest VGR. Operator-driven backfill for graphs
+    /// whose VGRs landed before FT-116 shipped.
+    #[command(name = "_retract-stale-defects", hide = true)]
+    RetractStaleDefects(RetractStaleDefectsArgs),
     /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
     /// Feature-coverage report sourced from the internal product-cli
@@ -147,6 +153,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::SeedFt101Catalog(args) => seed_ft101_catalog::run(workdir, args),
         Command::SupersedeMisroutedDefects(args) => supersede_misrouted::run(workdir, args),
         Command::SupersedeGraph(args) => supersede_graph::run(workdir, args),
+        Command::RetractStaleDefects(args) => retract_stale_defects::run(workdir, args),
         Command::Implement(args) => implement::run(workdir, args),
         Command::Preflight(args) => preflight::run(workdir, args),
         Command::Health => health::run(workdir),

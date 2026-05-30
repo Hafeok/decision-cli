@@ -92,6 +92,14 @@ pub(crate) fn write_result(
     writer
         .commit(mutation)
         .map_err(|source| RunnerError::ResultWriteFailed { source })?;
+
+    // FT-116: Auto-close stale defects after VGR commit (within same transaction)
+    use crate::features::ft_116_retract_stale_defects::retract_stale_defects_in_transaction;
+    let _closed_count = retract_stale_defects_in_transaction(&store, &writer, &result)
+        .map_err(|e| RunnerError::Internal {
+            detail: format!("auto-closing stale defects: {e}"),
+        })?;
+
     persist_store(&store, &orchestration_dump_path(workdir)).map_err(|e| RunnerError::Internal {
         detail: format!("persisting orchestration store: {e:#}"),
     })?;

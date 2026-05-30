@@ -2,13 +2,22 @@
 //!
 //! Classifier table:
 //!
-//! | aggregate verdict | implementer-open | verifier-open | Action |
-//! |---|---|---|---|
-//! | `Approved` | any | any | `Done` |
-//! | any | `> 0` | any | `DispatchImplementer` |
-//! | any | `0` | `> 0` | `DispatchVerifyGraphAuthor` |
-//! | `NeverRun` | `0` | `0` | `DispatchVerifier` |
-//! | `Rejected` / `Amendment` | `0` | `0` | `Stuck` |
+//! | aggregate verdict | impl-open | vga-open | `product verify` | Action |
+//! |---|---|---|---|---|
+//! | `Approved` | any | any | passes | `Done` |
+//! | `Approved` | any | any | fails | `DispatchImplementer` |
+//! | any | `> 0` | any | n/a | `DispatchImplementer` |
+//! | any | `0` | `> 0` | n/a | `DispatchVerifyGraphAuthor` |
+//! | `NeverRun` | `0` | `0` | n/a | `DispatchVerifier` |
+//! | `Rejected` / `Amendment` | `0` | `0` | n/a | `Stuck` |
+//!
+//! The `product verify` column gates the `Done` row: even an
+//! Approved aggregate verdict is rejected when the strict TC
+//! runners declared in `.product/tests/*.md` don't pass. This
+//! prevents a VGA whose authored graph fooled the verifier
+//! (e.g., shell-command `cargo test <name>` exiting 0 on
+//! zero-match) from false-positiving Done. The check is lazy —
+//! only invoked on the Approved branch, so cost is bounded.
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -135,7 +144,34 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         };
 
         let intended = match (verdict, impl_open > 0, vga_open > 0) {
-            (FeatureVerdict::Approved, _, _) => Action::Done,
+            (FeatureVerdict::Approved, _, _) => {
+                // Ground-truth gate: even when the aggregate VG verdict
+                // is Approved, classify Done only if `product verify
+                // FT-XXX` also exits 0. This is the authoritative
+                // completion criterion per CLAUDE.md "Definition of
+                // done." Without this gate, a VGA that authored a
+                // graph whose runners exit 0 without strictly executing
+                // the TCs (e.g., `cargo test <name>` matching zero
+                // tests by substring) can false-positive Done.
+                let product_verify_passes = self
+                    .inspector
+                    .product_verify_passes_for_feature(feature_id)
+                    .map_err(|e| PlanError::Store {
+                        detail: format!("{e}"),
+                    })?;
+                if product_verify_passes {
+                    Action::Done
+                } else {
+                    // VG says approved but product verify says no —
+                    // the VG's evidence is bogus. Drop back to
+                    // dispatching the implementer; on the next iter,
+                    // a fresh VGA may also be required, but that's
+                    // the planner's normal escalation path.
+                    Action::DispatchImplementer {
+                        feature_id: feature_id.to_string(),
+                    }
+                }
+            }
             (_, true, _) => Action::DispatchImplementer {
                 feature_id: feature_id.to_string(),
             },
@@ -519,6 +555,57 @@ mod tests {
                 let action = run_case(FeatureVerdict::Approved, impl_c, vga_c);
                 assert!(matches!(action, Action::Done), "{impl_c} {vga_c}");
             }
+        }
+    }
+
+    /// Ground-truth gate: an Approved aggregate verdict alone is
+    /// insufficient when the strict `product verify FT-XXX` runners
+    /// report failure. Witnessed on FT-116's drive: a VGA authored a
+    /// graph whose shell-command steps invoked `cargo test tc_239_…`
+    /// which matched zero tests (the implementation didn't exist),
+    /// exited 0, and the verifier called it Approved. The planner
+    /// classified Done despite `product verify FT-116` failing all 7
+    /// TCs. The gate dispatches the implementer instead so the loop
+    /// can converge truthfully.
+    #[test]
+    fn approved_with_failing_product_verify_dispatches_implementer() {
+        struct GatedStub;
+        impl GraphInspector for GatedStub {
+            fn aggregate_verdict_for_feature(
+                &self,
+                _: &str,
+            ) -> Result<FeatureVerdict, InspectError> {
+                Ok(FeatureVerdict::Approved)
+            }
+            fn open_defect_feedback_count(
+                &self,
+                _: &str,
+                _: &str,
+            ) -> Result<usize, InspectError> {
+                Ok(0)
+            }
+            fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
+                Ok(true)
+            }
+            fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
+                Ok(stub_hash(FeatureVerdict::Approved, 0, 0))
+            }
+            fn product_verify_passes_for_feature(
+                &self,
+                _: &str,
+            ) -> Result<bool, InspectError> {
+                Ok(false)
+            }
+        }
+        let planner = FeatureShipPlanner::new(GatedStub);
+        let action = planner.classify("FT-TEST", "ENV-002").unwrap();
+        match action {
+            Action::DispatchImplementer { feature_id } => {
+                assert_eq!(feature_id, "FT-TEST");
+            }
+            other => panic!(
+                "expected DispatchImplementer when product verify fails, got {other:?}"
+            ),
         }
     }
 

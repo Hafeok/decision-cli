@@ -13,8 +13,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_224_generator_wires_one_subscription_per_runner_type
 runner-timeout: 30
-last-run: 2026-05-30T07:54:48.214827485+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-30T10:44:58.216346341+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
