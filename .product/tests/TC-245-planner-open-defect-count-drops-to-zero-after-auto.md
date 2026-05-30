@@ -2,21 +2,20 @@
 id: TC-245
 title: Planner open-defect count drops to zero after auto-close runs on approved VGR
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-116
   adrs: []
+phase: 4
+runner: cargo-test
+runner-args: features::ft_116_retract_stale_defects::tests::tc_245_open_defect_count_drops_to_zero_after_auto_close
+runner-timeout: 30
 observes:
 - graph
 - stdout
-phase: 4
-runner: cargo-test
-runner-args: tc_245_planner_open_count_drops_after_auto_close
-runner-timeout: 30
-last-run: 2026-05-30T11:01:28.947644318+00:00
-last-run-duration: 0.4s
-failure-message: "No #[test] fn matching 'tc_245_planner_open_count_drops_after_auto_close' found in tests/*.rs — did you forget to add the integration test?"
+last-run: 2026-05-30T11:19:08.836590639+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

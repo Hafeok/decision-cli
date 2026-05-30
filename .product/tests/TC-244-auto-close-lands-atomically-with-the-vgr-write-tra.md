@@ -2,20 +2,19 @@
 id: TC-244
 title: Auto-close lands atomically with the VGR write transaction
 type: invariant
-status: failing
+status: passing
 validates:
   features:
   - FT-116
   adrs: []
-observes:
-- graph
 phase: 4
 runner: cargo-test
-runner-args: tc_244_auto_close_atomic_with_vgr_write
+runner-args: features::ft_116_retract_stale_defects::tests::tc_244_auto_close_atomic_with_vgr_write
 runner-timeout: 30
-last-run: 2026-05-30T11:01:28.947644318+00:00
+observes:
+- graph
+last-run: 2026-05-30T11:19:08.836590639+00:00
 last-run-duration: 0.4s
-failure-message: "No #[test] fn matching 'tc_244_auto_close_atomic_with_vgr_write' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

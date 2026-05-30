@@ -2,20 +2,19 @@
 id: TC-243
 title: Auto-close pass is idempotent on already-closed defects
 type: invariant
-status: failing
+status: passing
 validates:
   features:
   - FT-116
   adrs: []
-observes:
-- graph
 phase: 4
 runner: cargo-test
-runner-args: tc_243_auto_close_is_idempotent
+runner-args: features::ft_116_retract_stale_defects::tests::tc_243_auto_close_is_idempotent
 runner-timeout: 30
-last-run: 2026-05-30T11:01:28.947644318+00:00
+observes:
+- graph
+last-run: 2026-05-30T11:19:08.836590639+00:00
 last-run-duration: 0.4s
-failure-message: "No #[test] fn matching 'tc_243_auto_close_is_idempotent' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

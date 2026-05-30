@@ -2,20 +2,19 @@
 id: TC-241
 title: Defects from a different graph are not touched by auto-close
 type: invariant
-status: failing
+status: passing
 validates:
   features:
   - FT-116
   adrs: []
-observes:
-- graph
 phase: 4
 runner: cargo-test
-runner-args: tc_241_cross_graph_defects_not_touched
+runner-args: features::ft_116_retract_stale_defects::tests::tc_241_defects_from_different_graph_not_touched
 runner-timeout: 30
-last-run: 2026-05-30T11:01:28.947644318+00:00
+observes:
+- graph
+last-run: 2026-05-30T11:19:08.836590639+00:00
 last-run-duration: 0.4s
-failure-message: "No #[test] fn matching 'tc_241_cross_graph_defects_not_touched' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

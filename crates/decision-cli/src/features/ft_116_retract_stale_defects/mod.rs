@@ -13,4 +13,7 @@ mod pipeline;
 
 pub mod cli;
 
+#[cfg(test)]
+mod tests;
+
 pub use pipeline::{retract_stale_defects, retract_stale_defects_in_transaction};

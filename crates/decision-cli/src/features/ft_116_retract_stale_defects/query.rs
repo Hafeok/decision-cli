@@ -38,6 +38,7 @@ pub fn find_stale_defects_for_vgr(
         // Find open defects from this graph for this TC
         let q = format!(
             r#"PREFIX dec: <https://decision-cli.dev/ns#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 SELECT ?feedback WHERE {{
   # Find feedback for this TC
   GRAPH ?g1 {{

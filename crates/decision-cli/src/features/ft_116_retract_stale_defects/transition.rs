@@ -84,10 +84,12 @@ pub fn close_feedback(
         .collect();
 
     // Insert new state + evidence
+    // Use Superseded (not Closed) because ADR-024 allows produced → superseded
+    // but not produced → closed. New passing evidence supersedes old failing evidence.
     let mut inserts = vec![Quad::new(
         feedback_iri.clone(),
         lifecycle_pred.into_owned(),
-        Literal::new_simple_literal(LifecycleState::Closed.as_str()),
+        Literal::new_simple_literal(LifecycleState::Superseded.as_str()),
         g.clone(),
     )];
     inserts.extend(build_retraction_evidence(feedback_iri, vgr_iri, graph));
