@@ -2,7 +2,7 @@
 id: TC-259
 title: dec drive ship accepts FT-XXX as first positional without requiring a goal positional
 type: invariant
-status: failing
+status: passing
 validates:
   features: []
   adrs: []
@@ -13,9 +13,8 @@ runner-timeout: 30
 observes:
 - stdout
 - exit-code
-last-run: 2026-05-30T16:07:54.658458112+00:00
-last-run-duration: 0.0s
-failure-message: "REGRESSION: `dec drive ship` requires <GOAL> as first positional.\n            Expected: `Usage: dec drive ship [OPTIONS] <ARTIFACT>` (or [ARTIFACT]).\n            Got:\n    Run a goal-driven dispatch loop (FT-110, FT-111)\n    \n    Usage: dec drive ship [OPTIONS] <GOAL> [ARTIFACT]\n    \n    Arguments:\n      <GOAL>      Goal: `ship`, `verify`, `accept`, `cover`, or `approve`\n      [ARTIFACT]  Artifact short id (e.g. `FT-019`, `TC-027`). Mutually exclusive with --all\n    \n    Options:\n          --all\n"
+last-run: 2026-05-30T16:19:59.375908023+00:00
+last-run-duration: 99.8s
 ---
 
 ## Description

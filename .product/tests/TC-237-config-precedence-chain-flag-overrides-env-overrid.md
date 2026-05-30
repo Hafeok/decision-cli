@@ -14,8 +14,8 @@ phase: 4
 runner: cargo-test
 runner-args: tc_237_config_precedence_chain
 runner-timeout: 30
-last-run: 2026-05-30T16:21:02.175212108+00:00
-last-run-duration: 0.6s
+last-run: 2026-05-30T16:21:42.181107422+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
