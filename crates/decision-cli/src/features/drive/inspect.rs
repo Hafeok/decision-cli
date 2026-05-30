@@ -429,8 +429,23 @@ SELECT ?verdict WHERE {{
             }
         }
 
+        // Include the product-verify gate's signal in the hash. Without
+        // it the cycle detector false-positives "period 1 cycle" after
+        // every implementer dispatch on an Approved-with-failing-verify
+        // feature: VGs/defects/verdict are identical between the pre-
+        // and post-implementer classify calls because the implementer
+        // produces code (not VGs), so only the product-verify outcome
+        // can record the work. When the implementer's commit flips
+        // product verify from fail to pass, the hash changes and the
+        // planner correctly proceeds to Done; when it stays failing,
+        // the hash repeats and the cycle detector terminates as
+        // intended.
+        let product_verify_passes = self
+            .product_verify_passes_for_feature(feature_id)
+            .unwrap_or(true);
         let mut h = DefaultHasher::new();
         format!("{verdict:?}").hash(&mut h);
+        product_verify_passes.hash(&mut h);
         for iri in &open_iris {
             iri.hash(&mut h);
         }
