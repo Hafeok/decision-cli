@@ -11,11 +11,14 @@ supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
-content-hash: sha256:f4a8e87cbf0d8a7e6089ebec78f38854b4ebbe2bbcdc7ecaf9cef4d9a620eb76
+content-hash: sha256:0c18aa723a8f51db3e8ceecd5702680f103d27145432f5026950cae1df2cfb45
 amendments:
 - date: 2026-05-22T18:27:36Z
   reason: Capability layer ([ADR-033](ADR-033)) injects (endpoint, model_identifier, parameters) into the dispatch payload alongside the bundle; record the payload extension so the worker contract documentation matches the reality the dispatcher produces after [FT-061](FT-061) and [FT-062](FT-062). Worker statelessness and bundle-completeness are preserved — this is a payload-shape clarification, not a contract change.
   previous-hash: sha256:ad73cf6f1d820f25ff99a40fe0e514ba852bd2ff77b40a4ed8550b98ccfb6bea
+- date: 2026-06-01T18:47:00Z
+  reason: Role-scoped tool surfaces ([ADR-070](ADR-070)) introduce `allowed_tools` to the dispatch payload alongside the capability triple recorded by the Phase-2 amendment. The in-process LiteLLM-client agentic loop ([ADR-069](ADR-069), [FT-123](FT-123)) consumes the field; the field is sourced from the role catalog by the dispatcher. Worker statelessness, no-graph-access, and bundle-completeness invariants are unchanged — this is a payload-shape extension, not a contract change. Same shape as the Phase-2 amendment for [ADR-033](ADR-033).
+  previous-hash: sha256:f4a8e87cbf0d8a7e6089ebec78f38854b4ebbe2bbcdc7ecaf9cef4d9a620eb76
 ---
 
 ## Context
@@ -55,6 +58,16 @@ The dispatch payload is extended by [FT-061](FT-061) to include the dispatcher-r
 
 Workers consume the triple verbatim via the `ModelRouter` from [FT-060](FT-060); they remain ignorant of capabilities, role bindings, escalation, and cost. The statelessness, no-graph-access, and bundle-completeness invariants are unchanged — the payload simply grew. See [ADR-033](ADR-033) for the rationale and the cleanly orthogonal roles of `dec:WorkerBinding` (which executable) and `dec:Capability`/`dec:RoleBinding` (which model).
 
+### Amendment — tool-surface injection (Phase 3, post [ADR-070](ADR-070))
+
+The dispatch payload extends further to include the role-scoped tool surface resolved from the role catalog:
+
+- `allowed_tools` — `list[str]`. Short snake_case tool names (`read_file`, `write_file`, `run_build`, `run_lint`, `run_tests`, …). Sourced from `dec:roleTool` quads on the dispatch's role per [ADR-070](ADR-070). Empty list means no tools granted; the worker fail-closes with `WorkerError(category="invalid_dispatch")` before the first LLM call, per [ADR-069](ADR-069).
+
+The in-process LiteLLM-client agentic loop ([ADR-069](ADR-069), [FT-123](FT-123)) intersects `allowed_tools` with its own tool registry and exposes only the intersection to the model. Path containment and secrets blocking on every tool call are enforced per [ADR-071](ADR-071).
+
+Workers remain ignorant of *where* the tool surface comes from (role catalog, SHACL shape, dispatcher logic) — they consume the resolved list verbatim. The statelessness, no-graph-access, and bundle-completeness invariants are unchanged. The payload shape after Phase 3 is `(bundle, endpoint, model_identifier, parameters, capability_ref, binding_ref, allowed_tools)`.
+
 ## Consequences
 
 **Positive:**
@@ -76,4 +89,4 @@ Workers consume the triple verbatim via the `ModelRouter` from [FT-060](FT-060);
 
 ## Status
 
-Accepted. Governs FT-013 (code-writer worker) and FT-011 (harness assembles bundle, writes artifacts on worker's behalf). Future workers in later slices inherit this contract. Phase-2 capability injection extension recorded by amendment, governed by [ADR-033](ADR-033).
+Accepted. Governs FT-013 (code-writer worker) and FT-011 (harness assembles bundle, writes artifacts on worker's behalf). Future workers in later slices inherit this contract. Phase-2 capability injection extension recorded by amendment, governed by [ADR-033](ADR-033). Phase-3 tool-surface injection extension recorded by amendment, governed by [ADR-069](ADR-069) and [ADR-070](ADR-070).
