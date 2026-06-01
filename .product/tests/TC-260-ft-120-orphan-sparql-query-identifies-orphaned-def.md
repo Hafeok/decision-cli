@@ -2,7 +2,7 @@
 id: TC-260
 title: FT-120 orphan SPARQL query identifies orphaned defects
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-120
@@ -12,6 +12,8 @@ phase: 4
 runner: cargo-test
 runner-args: features::ft_120_retract_orphan_defects::tests::tc_260_orphan_query_identifies_candidates
 runner-timeout: 30
+last-run: 2026-06-01T09:36:07.533566345+00:00
+last-run-duration: 99.0s
 ---
 
 ## Description

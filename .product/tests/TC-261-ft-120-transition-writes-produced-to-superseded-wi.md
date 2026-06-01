@@ -2,7 +2,7 @@
 id: TC-261
 title: FT-120 transition writes produced-to-superseded with supersededByTopologyChange predicate
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-120
@@ -10,8 +10,10 @@ validates:
   - ADR-024
 phase: 4
 runner: cargo-test
-runner-args: features::ft_120_retract_orphan_defects::tests::tc_261_transition_writes_superseded
+runner-args: features::ft_120_retract_orphan_defects::tests::tc_261_produced_to_superseded
 runner-timeout: 30
+last-run: 2026-06-01T09:36:07.533566345+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description
@@ -27,8 +29,9 @@ predicates atomically.
    `superseded`. SHACL validation passes.
 2. **Routed → superseded transition.** Same as (1) starting from
    `routed` state.
-3. **Received → superseded transition.** Same as (1) starting from
-   `received` state.
+3. **Received state not retracted.** Calling `retract_orphan` on a
+   feedback in `received` state returns an error or no-ops (ADR-024
+   does not include `received → superseded` in the legal transitions).
 4. **Predicate set.** The post-transition triples include
    `<fb> dec:supersededByTopologyChange <session>`,
    `<fb> dec:supersededAt <timestamp>`, and a non-empty

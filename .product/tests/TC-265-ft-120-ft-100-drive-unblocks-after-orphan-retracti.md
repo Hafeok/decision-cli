@@ -2,7 +2,7 @@
 id: TC-265
 title: FT-120 FT-100 drive unblocks after orphan retraction (regression)
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-120
@@ -12,6 +12,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-265-ft-100-unblock-regression.sh
 runner-timeout: 300
+last-run: 2026-06-01T09:36:07.533566345+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

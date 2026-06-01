@@ -18,7 +18,8 @@ use super::{
     drive, drive::DriveCmd, internal_dispatch, internal_dispatch::InternalDispatchCmd, loop_cmd,
     loop_cmd::LoopCmd, mcp,
     mcp::McpCmd, migrate, migrate::MigrateCmd, preflight, preflight::PreflightArgs, product,
-    product::ProductArgs, query, query::QueryCmd, retract_stale_defects,
+    product::ProductArgs, query, query::QueryCmd, retract_orphan_defects,
+    retract_orphan_defects::RetractOrphanDefectsArgs, retract_stale_defects,
     retract_stale_defects::RetractStaleDefectsArgs, seed_ft101_catalog,
     seed_ft101_catalog::SeedFt101CatalogArgs, session, session::SessionCmd, sparql,
     sparql::SparqlArgs, status, supersede_graph, supersede_graph::SupersedeGraphArgs,
@@ -92,6 +93,11 @@ pub enum Command {
     /// whose VGRs landed before FT-116 shipped.
     #[command(name = "_retract-stale-defects", hide = true)]
     RetractStaleDefects(RetractStaleDefectsArgs),
+    /// Hidden helper (FT-120): retract orphaned defects whose source-VG
+    /// topology no longer covers the TC. Companion to
+    /// `_retract-stale-defects`.
+    #[command(name = "_retract-orphan-defects", hide = true)]
+    RetractOrphanDefects(RetractOrphanDefectsArgs),
     /// Implement a feature end-to-end (FT-011 + FT-013).
     Implement(ImplementCmdArgs),
     /// Feature-coverage report sourced from the internal product-cli
@@ -158,6 +164,7 @@ pub fn dispatch(workdir: &Path, command: Command) -> ExitCode {
         Command::SupersedeMisroutedDefects(args) => supersede_misrouted::run(workdir, args),
         Command::SupersedeGraph(args) => supersede_graph::run(workdir, args),
         Command::RetractStaleDefects(args) => retract_stale_defects::run(workdir, args),
+        Command::RetractOrphanDefects(args) => retract_orphan_defects::run(workdir, args),
         Command::Implement(args) => implement::run(workdir, args),
         Command::Preflight(args) => preflight::run(workdir, args),
         Command::Health => health::run(workdir),

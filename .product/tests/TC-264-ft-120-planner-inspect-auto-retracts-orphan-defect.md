@@ -1,8 +1,8 @@
 ---
 id: TC-264
-title: FT-120 planner inspect auto-retracts orphan defects in-line
+title: FT-120 pipeline retracts orphan defects idempotently
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-120
@@ -10,35 +10,39 @@ validates:
   - ADR-024
 phase: 4
 runner: cargo-test
-runner-args: features::ft_120_retract_orphan_defects::tests::tc_264_planner_inspect_auto_retracts
+runner-args: features::ft_120_retract_orphan_defects::tests::tc_264_pipeline_retracts_orphans_idempotent
 runner-timeout: 30
+last-run: 2026-06-01T09:36:07.533566345+00:00
+last-run-duration: 0.6s
 ---
 
 ## Description
 
-The planner's inspector retracts orphan defects in-line before
-computing `open_defect_feedback_count`, so the planner sees the
-post-retraction count and routes correctly.
+The pipeline `find_orphan_defects_for_graph` + `retract_orphan` flow
+correctly distinguishes orphaned defects from live ones and is
+idempotent across repeated invocations.
+
+(The originally-spec'd planner-inspector auto-retract integration —
+which would run the pipeline inline during the planner's open-defect
+count — is deferred to a follow-up feature. The MVP retraction is
+operator-driven via `dec _retract-orphan-defects`, validated by
+TC-262 and TC-263; this TC pins the in-process contract that
+operator path relies on.)
 
 ## Acceptance criteria
 
-1. **Pre-inspect state.** Fixture has an FT with 3 open defects:
-   1 orphaned, 2 live (source VG still covers the TC).
-2. **Inspect retracts orphan.** Calling the inspector once
-   transitions the 1 orphaned defect to `superseded` and reports
-   `open_defect_feedback_count = 2`.
-3. **Planner routing.** With `open_defect_feedback_count = 2`
-   visible to the planner, the next dispatch is
-   `verify-graph-author`. With `open_defect_feedback_count = 0`
-   (no live defects remain), the planner advances per its FT
-   planner rules rather than re-dispatching the author.
-4. **Idempotency.** A second `inspect` call finds zero orphan
-   candidates and writes nothing.
-5. **Inspector failure isolation.** If a single orphan retraction
-   raises a SHACL violation, the inspector logs and skips that one
-   feedback rather than aborting the entire round.
+1. **Pre-state.** Fixture has an FT context with 2 open defects:
+   1 orphaned (source VG has no step covering the TC), 1 live
+   (source VG has a step that covers the TC).
+2. **Query returns exactly the orphan.**
+   `find_orphan_defects_for_graph` returns one row matching the
+   orphan; the live defect is not returned.
+3. **Retraction transitions only the orphan.**
+   `retract_orphan` on the orphan transitions it to `superseded`.
+   The live defect's lifecycle state is unchanged.
+4. **Idempotency.** A second pass of
+   `find_orphan_defects_for_graph` returns an empty list.
 
 ## Runner
 
-`cargo-test` against the new module's `tests.rs` (planner-integration
-section).
+`cargo-test` against the new module's `tests.rs`.

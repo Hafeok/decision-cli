@@ -2,7 +2,7 @@
 id: TC-263
 title: FT-120 dec _retract-orphan-defects --all sweeps every graph
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-120
@@ -12,6 +12,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-263-orphan-retract-all.sh
 runner-timeout: 60
+last-run: 2026-06-01T09:36:07.533566345+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

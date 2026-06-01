@@ -18,6 +18,7 @@ pub mod migrate;
 pub mod preflight;
 pub mod product;
 pub mod query;
+pub mod retract_orphan_defects;
 pub mod retract_stale_defects;
 pub mod seed_ft101_catalog;
 pub mod session;

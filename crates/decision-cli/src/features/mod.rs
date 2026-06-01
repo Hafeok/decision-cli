@@ -16,6 +16,7 @@ pub mod ft_113_drive_show;
 pub mod ft_115_implementer_worktree;
 pub mod ft_116_retract_stale_defects;
 pub mod ft_117_migrate_env_to_bench;
+pub mod ft_120_retract_orphan_defects;
 pub mod health;
 pub mod implement;
 pub mod init;

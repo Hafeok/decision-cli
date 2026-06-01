@@ -2,7 +2,7 @@
 id: TC-262
 title: FT-120 dec _retract-orphan-defects --graph VG-NNN --dry-run lists candidates without writing
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-120
@@ -12,6 +12,8 @@ phase: 4
 runner: bash
 runner-args: tests/scripts/tc-262-orphan-retract-dry-run.sh
 runner-timeout: 60
+last-run: 2026-06-01T09:36:07.533566345+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

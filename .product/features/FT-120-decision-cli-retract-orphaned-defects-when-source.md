@@ -2,7 +2,7 @@
 id: FT-120
 title: 'decision-cli: retract orphaned defects when source-VG topology no longer covers the TC'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-116
 adrs:
@@ -94,13 +94,16 @@ For debugging and one-shot backfill:
 - `cli.rs` — adapter for the `_retract-orphan-defects` diagnostic.
 - `tests.rs` — unit + integration tests per the TC list.
 
-**Planner integration** (the durable mechanism): the existing
-inspector that computes `open_defect_feedback_count` for the planner
-gains a pre-filter step. Before counting an open defect as live, it
-checks: does the defect's source VG still have a step that verifies
-the defect's source TC? If not, the defect is orphaned; the
-inspector schedules its retraction in the same transaction that
-records the planner round.
+**Planner integration** (deferred to a follow-up feature): the
+inspector that computes `open_defect_feedback_count` would gain a
+pre-filter step calling the orphan-retract pipeline before counting,
+so the planner sees the post-retraction count and routes correctly.
+This is left for a follow-up because (a) the operator-driven CLI
+gets FT-100 unblocked today, and (b) the planner-side hook touches
+the hot dispatch path and warrants its own design + TCs. The
+pipeline is exposed via `retract_orphans_for_graph` /
+`retract_orphans_for_feature` / `retract_orphans_all` precisely so
+that future feature can wire it in without restructuring this code.
 
 **Lifecycle vocabulary extension** (minor):
 
@@ -137,11 +140,15 @@ unchanged — orphan-retraction is an orchestration-store-only edit.
        dec:lifecycleState ?state .
    ?vgr dec:resultOf <vg_iri> ; prov:wasGeneratedBy ?session .
    FILTER NOT EXISTS {
-     <vg_iri> dec:hasStep ?step .
-     ?step dec:verifies <tc_iri> .
+     <vg_iri> dec:steps/rdf:rest*/rdf:first ?step .
+     ?step dec:providesEvidenceFor <tc_iri> .
    }
-   FILTER (?state IN ("produced", "routed", "received"))
+   FILTER (?state IN ("produced", "routed"))
    ```
+   (`received` is excluded: once the target role has begun work on
+   the feedback, the supersede-by-reference path no longer applies
+   per ADR-024; the lifecycle must continue through `addressed` or
+   `rejected`.)
 4. **Transition write.** For each orphaned `<fb>`:
    - `<fb> dec:lifecycleState "superseded"`
    - `<fb> dec:supersededByTopologyChange <retraction_session>`
