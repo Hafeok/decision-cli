@@ -11,9 +11,9 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-164-subscription-dedup.sh
 runner-timeout: 180
-last-run: 2026-05-28T20:37:16.719173153+00:00
-last-run-duration: 0.4s
-failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
+last-run: 2026-05-30T17:41:33.418852154+00:00
+last-run-duration: 0.3s
+failure-message: "warning: unused imports: `Dispatch`, `Outcome`, and `RoundState`\n --> crates/decision-cli/src/features/ft_113_drive_show/reader.rs:3:20\n  |\n3 | use super::model::{Dispatch, Outcome, Round, RoundState};\n  |                    ^^^^^^^^  ^^^^^^^         ^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `DateTime` and `Utc`\n --> crates/decision-cli/src/features/ft_113_drive_show/reader.rs:4:14\n  |\n4 | use chrono::{DateTime, Utc};\n "
 ---
 
 ## Claim

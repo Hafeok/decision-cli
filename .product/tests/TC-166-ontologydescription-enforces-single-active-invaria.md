@@ -2,7 +2,7 @@
 id: TC-166
 title: OntologyDescription enforces single-active invariant; parallel non-superseded write is rejected by SHACL
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-101
@@ -11,9 +11,8 @@ phase: 1
 runner: cargo-test
 runner-args: tc_166_ontologydescription_enforces_single_active_invaria
 runner-timeout: 120
-last-run: 2026-05-28T08:49:01.807930442+00:00
-last-run-duration: 0.9s
-failure-message: "warning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs"
+last-run: 2026-05-30T17:36:27.139403394+00:00
+last-run-duration: 0.7s
 ---
 
 ## Claim
