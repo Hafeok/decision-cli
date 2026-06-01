@@ -147,7 +147,7 @@ fn find_candidates(
             let vg_iri = if vg_id.starts_with("https://") {
                 vg_id.clone()
             } else {
-                format!("https://decision-cli.dev/ns/verify/graph/{vg_id}")
+                format!("https://decision-cli.dev/ns/graph/{vg_id}")
             };
             find_orphan_defects_for_graph(store, &vg_iri)
         }

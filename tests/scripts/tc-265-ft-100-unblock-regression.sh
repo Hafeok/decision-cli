@@ -39,17 +39,17 @@ cat <<EOF
 <https://decision-cli.dev/ns/stream/tc-265> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueStream> .
 <https://decision-cli.dev/ns/stream/tc-265> <https://decision-cli.dev/ns#terminalValueAction> <https://decision-cli.dev/ns/value-actions/test-action> .
 <https://decision-cli.dev/ns/feature/FT-100> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Feature> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-088> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-088> <https://decision-cli.dev/ns#verifies> <https://decision-cli.dev/ns/feature/FT-100> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-088> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-155> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-155> <https://decision-cli.dev/ns#verifies> <https://decision-cli.dev/ns/feature/FT-100> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-155> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-088> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-088> <https://decision-cli.dev/ns#verifies> <https://decision-cli.dev/ns/feature/FT-100> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-088> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-155> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-155> <https://decision-cli.dev/ns#verifies> <https://decision-cli.dev/ns/feature/FT-100> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-155> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-088> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraphResult> <$ORC> .
-<https://decision-cli.dev/ns/result/VGR-088> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/verify/graph/VG-088> <$ORC> .
+<https://decision-cli.dev/ns/result/VGR-088> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/graph/VG-088> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-088> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/sess-088> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-155> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraphResult> <$ORC> .
-<https://decision-cli.dev/ns/result/VGR-155> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/verify/graph/VG-155> <$ORC> .
+<https://decision-cli.dev/ns/result/VGR-155> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/graph/VG-155> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-155> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/sess-155> <$ORC> .
 EOF
 # 5 defects from VG-088

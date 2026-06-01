@@ -40,12 +40,16 @@ SELECT DISTINCT ?feedback ?tc ?vg ?session WHERE {
          prov:wasGeneratedBy ?session .
   }
   FILTER (?state IN ("produced", "routed"))
-  FILTER NOT EXISTS {
-    GRAPH ?g3 {
-      ?vg dec:steps/rdf:rest*/rdf:first ?step .
-      ?step dec:providesEvidenceFor ?tc .
+  FILTER (
+    EXISTS { GRAPH ?gs { ?vg dec:supersededBy ?_succ } }
+    ||
+    NOT EXISTS {
+      GRAPH ?g3 {
+        ?vg dec:steps/rdf:rest*/rdf:first ?step .
+        ?step dec:providesEvidenceFor ?tc .
+      }
     }
-  }
+  )
 }"#;
 
     collect_orphans(store, q)
@@ -61,7 +65,6 @@ pub fn find_orphan_defects_for_graph(
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 SELECT DISTINCT ?feedback ?tc ?vg ?session WHERE {{
-  BIND (<{vg_iri}> AS ?vg)
   GRAPH ?g1 {{
     ?feedback a dec:Feedback ;
               dec:sourceArtifact ?tc ;
@@ -73,13 +76,18 @@ SELECT DISTINCT ?feedback ?tc ?vg ?session WHERE {{
          dec:resultOf ?vg ;
          prov:wasGeneratedBy ?session .
   }}
+  FILTER (?vg = <{vg_iri}>)
   FILTER (?state IN ("produced", "routed"))
-  FILTER NOT EXISTS {{
-    GRAPH ?g3 {{
-      ?vg dec:steps/rdf:rest*/rdf:first ?step .
-      ?step dec:providesEvidenceFor ?tc .
+  FILTER (
+    EXISTS {{ GRAPH ?gs {{ ?vg dec:supersededBy ?_succ }} }}
+    ||
+    NOT EXISTS {{
+      GRAPH ?g3 {{
+        ?vg dec:steps/rdf:rest*/rdf:first ?step .
+        ?step dec:providesEvidenceFor ?tc .
+      }}
     }}
-  }}
+  )
 }}"#
     );
 
@@ -118,12 +126,16 @@ SELECT DISTINCT ?feedback ?tc ?vg ?session WHERE {{
          prov:wasGeneratedBy ?session .
   }}
   FILTER (?state IN ("produced", "routed"))
-  FILTER NOT EXISTS {{
-    GRAPH ?g3 {{
-      ?vg dec:steps/rdf:rest*/rdf:first ?step .
-      ?step dec:providesEvidenceFor ?tc .
+  FILTER (
+    EXISTS {{ GRAPH ?gs {{ ?vg dec:supersededBy ?_succ }} }}
+    ||
+    NOT EXISTS {{
+      GRAPH ?g3 {{
+        ?vg dec:steps/rdf:rest*/rdf:first ?step .
+        ?step dec:providesEvidenceFor ?tc .
+      }}
     }}
-  }}
+  )
 }}"#
     );
 

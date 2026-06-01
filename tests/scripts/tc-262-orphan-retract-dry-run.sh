@@ -24,10 +24,10 @@ mkdir -p "$WORKDIR/.dec/store"
 cat > "$WORKDIR/.dec/store/orchestration.nq" <<'EOF'
 <https://decision-cli.dev/ns/stream/tc-262> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueStream> .
 <https://decision-cli.dev/ns/stream/tc-262> <https://decision-cli.dev/ns#terminalValueAction> <https://decision-cli.dev/ns/value-actions/test-action> .
-<https://decision-cli.dev/ns/verify/graph/VG-262> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <https://decision-cli.dev/ns/orchestration> .
-<https://decision-cli.dev/ns/verify/graph/VG-262> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/graph/VG-262> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/graph/VG-262> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <https://decision-cli.dev/ns/orchestration> .
 <https://decision-cli.dev/ns/result/VGR-262> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraphResult> <https://decision-cli.dev/ns/orchestration> .
-<https://decision-cli.dev/ns/result/VGR-262> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/verify/graph/VG-262> <https://decision-cli.dev/ns/orchestration> .
+<https://decision-cli.dev/ns/result/VGR-262> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/graph/VG-262> <https://decision-cli.dev/ns/orchestration> .
 <https://decision-cli.dev/ns/result/VGR-262> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://decision-cli.dev/ns/session/sess-262> <https://decision-cli.dev/ns/orchestration> .
 <https://test/fb-a> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Feedback> <https://decision-cli.dev/ns/orchestration> .
 <https://test/fb-a> <https://decision-cli.dev/ns#sourceArtifact> <https://decision-cli.dev/ns/test/TC-262-a> <https://decision-cli.dev/ns/orchestration> .

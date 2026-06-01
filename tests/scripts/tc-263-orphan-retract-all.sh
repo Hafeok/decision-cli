@@ -26,11 +26,11 @@ cat > "$WORKDIR/.dec/store/orchestration.nq" <<EOF
 <https://decision-cli.dev/ns/stream/tc-263> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#ValueStream> .
 <https://decision-cli.dev/ns/stream/tc-263> <https://decision-cli.dev/ns#terminalValueAction> <https://decision-cli.dev/ns/value-actions/test-action> .
 <https://decision-cli.dev/ns/feature/FT-263> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Feature> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-A> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-A> <https://decision-cli.dev/ns#verifies> <https://decision-cli.dev/ns/feature/FT-263> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-A> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-A> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-A> <https://decision-cli.dev/ns#verifies> <https://decision-cli.dev/ns/feature/FT-263> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-A> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-A> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraphResult> <$ORC> .
-<https://decision-cli.dev/ns/result/VGR-A> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/verify/graph/VG-A> <$ORC> .
+<https://decision-cli.dev/ns/result/VGR-A> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/graph/VG-A> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-A> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://test/sess-a> <$ORC> .
 <https://test/fb-a1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Feedback> <$ORC> .
 <https://test/fb-a1> <https://decision-cli.dev/ns#sourceArtifact> <https://decision-cli.dev/ns/test/TC-a1> <$ORC> .
@@ -40,23 +40,23 @@ cat > "$WORKDIR/.dec/store/orchestration.nq" <<EOF
 <https://test/fb-a2> <https://decision-cli.dev/ns#sourceArtifact> <https://decision-cli.dev/ns/test/TC-a2> <$ORC> .
 <https://test/fb-a2> <https://decision-cli.dev/ns#sourceSession> <https://test/sess-a> <$ORC> .
 <https://test/fb-a2> <https://decision-cli.dev/ns#lifecycleState> "produced" <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-B> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-B> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
 _:b0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> <https://decision-cli.dev/ns/verify/step/STEP-B1> <$ORC> .
 _:b0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-B> <https://decision-cli.dev/ns#steps> _:b0 <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-B> <https://decision-cli.dev/ns#steps> _:b0 <$ORC> .
 <https://decision-cli.dev/ns/verify/step/STEP-B1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationStep> <$ORC> .
 <https://decision-cli.dev/ns/verify/step/STEP-B1> <https://decision-cli.dev/ns#providesEvidenceFor> <https://decision-cli.dev/ns/test/TC-b1> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-B> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraphResult> <$ORC> .
-<https://decision-cli.dev/ns/result/VGR-B> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/verify/graph/VG-B> <$ORC> .
+<https://decision-cli.dev/ns/result/VGR-B> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/graph/VG-B> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-B> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://test/sess-b> <$ORC> .
 <https://test/fb-b1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Feedback> <$ORC> .
 <https://test/fb-b1> <https://decision-cli.dev/ns#sourceArtifact> <https://decision-cli.dev/ns/test/TC-b1> <$ORC> .
 <https://test/fb-b1> <https://decision-cli.dev/ns#sourceSession> <https://test/sess-b> <$ORC> .
 <https://test/fb-b1> <https://decision-cli.dev/ns#lifecycleState> "produced" <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-C> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
-<https://decision-cli.dev/ns/verify/graph/VG-C> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-C> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraph> <$ORC> .
+<https://decision-cli.dev/ns/graph/VG-C> <https://decision-cli.dev/ns#steps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-C> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#VerificationGraphResult> <$ORC> .
-<https://decision-cli.dev/ns/result/VGR-C> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/verify/graph/VG-C> <$ORC> .
+<https://decision-cli.dev/ns/result/VGR-C> <https://decision-cli.dev/ns#resultOf> <https://decision-cli.dev/ns/graph/VG-C> <$ORC> .
 <https://decision-cli.dev/ns/result/VGR-C> <http://www.w3.org/ns/prov#wasGeneratedBy> <https://test/sess-c> <$ORC> .
 <https://test/fb-c1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Feedback> <$ORC> .
 <https://test/fb-c1> <https://decision-cli.dev/ns#sourceArtifact> <https://decision-cli.dev/ns/test/TC-c1> <$ORC> .

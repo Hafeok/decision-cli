@@ -12,8 +12,8 @@ phase: 4
 runner: cargo-test
 runner-args: features::ft_120_retract_orphan_defects::tests::tc_261_produced_to_superseded
 runner-timeout: 30
-last-run: 2026-06-01T09:36:07.533566345+00:00
-last-run-duration: 0.7s
+last-run: 2026-06-01T10:13:00.978438776+00:00
+last-run-duration: 1.1s
 ---
 
 ## Description

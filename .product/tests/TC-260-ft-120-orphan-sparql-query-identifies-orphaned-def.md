@@ -12,8 +12,8 @@ phase: 4
 runner: cargo-test
 runner-args: features::ft_120_retract_orphan_defects::tests::tc_260_orphan_query_identifies_candidates
 runner-timeout: 30
-last-run: 2026-06-01T09:36:07.533566345+00:00
-last-run-duration: 99.0s
+last-run: 2026-06-01T10:13:00.978438776+00:00
+last-run-duration: 86.6s
 ---
 
 ## Description

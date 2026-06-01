@@ -265,6 +265,53 @@ fn tc_260_empty_vg_step_list_marks_all_defects_orphan() {
 }
 
 #[test]
+fn tc_260_superseded_vg_marks_defects_orphan() {
+    // VG has a step that covers the TC, but the VG itself was superseded.
+    // The defect is an orphan regardless of step coverage.
+    let store = Store::new().unwrap();
+
+    let vg_iri = "https://decision-cli.dev/ns/verify/graph/VG-SUP";
+    let vg_succ_iri = "https://decision-cli.dev/ns/verify/graph/VG-SUP-SUCC";
+    let tc_iri = "https://decision-cli.dev/ns/test/TC-SUP";
+    let step_iri = "https://decision-cli.dev/ns/verify/step/STEP-SUP";
+    let session_iri = "https://test/session-sup";
+
+    // Step exists and covers the TC — but VG is superseded.
+    seed_vg_with_steps(&store, vg_iri, &[(step_iri, tc_iri)]);
+    // Mark VG as superseded.
+    let g: GraphName = orchestration_graph().into_owned().into();
+    store
+        .extend(vec![Quad::new(
+            NamedNode::new_unchecked(vg_iri),
+            dec("supersededBy"),
+            NamedNode::new_unchecked(vg_succ_iri),
+            g,
+        )])
+        .unwrap();
+
+    seed_vgr(
+        &store,
+        "https://decision-cli.dev/ns/result/VGR-SUP",
+        vg_iri,
+        session_iri,
+    );
+    seed_feedback(
+        &store,
+        "https://test/fb-sup",
+        tc_iri,
+        session_iri,
+        LifecycleState::Produced,
+    );
+
+    let orphans = find_orphan_defects_all(&store).unwrap();
+    assert_eq!(
+        orphans.len(),
+        1,
+        "superseded-VG defect must be orphan even when step covers the TC"
+    );
+}
+
+#[test]
 fn tc_260_non_vgr_session_not_returned() {
     // Defects whose sourceSession is not a VGR's wasGeneratedBy
     // session must not be returned as orphans.

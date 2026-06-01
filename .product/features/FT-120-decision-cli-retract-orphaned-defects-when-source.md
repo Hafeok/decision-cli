@@ -132,18 +132,25 @@ unchanged — orphan-retraction is an orchestration-store-only edit.
    explicit graph (or feature, or store-wide for `--all`).
    `--dry-run` lists candidates without writing.
 3. **Orphan check (SPARQL).** A defect feedback `<fb>` is orphaned
-   iff its source VG no longer has any active step verifying its
-   source TC:
+   iff EITHER its source VG has been superseded (via `dec _supersede-graph`
+   or any other `dec:supersededBy` write), OR its source VG no longer
+   has any active step verifying its source TC. Both conditions
+   indicate that no future VGR will ever address the defect through
+   the FT-116 path:
    ```
    ?fb dec:sourceArtifact <tc_iri> ;
        dec:sourceSession ?session ;
        dec:lifecycleState ?state .
    ?vgr dec:resultOf <vg_iri> ; prov:wasGeneratedBy ?session .
-   FILTER NOT EXISTS {
-     <vg_iri> dec:steps/rdf:rest*/rdf:first ?step .
-     ?step dec:providesEvidenceFor <tc_iri> .
-   }
    FILTER (?state IN ("produced", "routed"))
+   FILTER (
+     EXISTS { <vg_iri> dec:supersededBy ?_succ }
+     ||
+     NOT EXISTS {
+       <vg_iri> dec:steps/rdf:rest*/rdf:first ?step .
+       ?step dec:providesEvidenceFor <tc_iri> .
+     }
+   )
    ```
    (`received` is excluded: once the target role has begun work on
    the feedback, the supersede-by-reference path no longer applies
