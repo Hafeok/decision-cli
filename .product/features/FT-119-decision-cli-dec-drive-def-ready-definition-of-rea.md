@@ -2,7 +2,7 @@
 id: FT-119
 title: 'decision-cli: dec drive def-ready — Definition-of-Ready planner with per-feature and --all sweep'
 phase: 4
-status: planned
+status: in-progress
 depends-on:
 - FT-110
 - FT-111
@@ -284,6 +284,34 @@ loop can fix on its own is missing graph coverage."
   feature).
 - The CLI does not add a `--watch` mode for DoR (operators who want
   continuous monitoring use `dec drive show` per feature, per FT-113).
+
+## Post-landing acceptance targets
+
+Two real features in the current repo naturally exercise the live
+`DispatchVerifyGraphAuthor` branch of the planner end-to-end. Both are
+`status: complete`, have wired runners, and carry zero covering
+`dec:VerificationGraph` artifacts on disk — exactly the shape
+(`vgs_cover: false` with every other DoR bit true) the planner is
+designed to convert into a single VGA dispatch followed by `Done`:
+
+- **[FT-120](FT-120)** — primary target. TCs TC-260..TC-265 mix
+  `cargo-test` and `bash` runners, so a single drive exercises both
+  shell-step shapes through the VGA worker. Expected sequence for
+  `dec drive def-ready FT-120 --bench BNCH-002`: iter 0
+  `DispatchVerifyGraphAuthor`, iter 1 `Done`.
+- **[FT-117](FT-117)** — secondary, all-bash variant. TCs TC-246..TC-248
+  are all `bash` runners against `tests/scripts/tc-*.sh`. Per the
+  planner-stuck mode witnessed on FT-100 (2026-06-01), a pure-bash TC
+  set can surface a downstream VGA worker limitation; def-ready will
+  still *classify* correctly — `DispatchVerifyGraphAuthor` is the right
+  action, and any worker-side failure is out of scope for the planner.
+
+Together with TC-254's stub-driven coverage of every `Stuck` branch
+(`spec incomplete`, `preflight: …`, `blocked: …`, `no TCs linked`,
+`TC quality: …`, `VG pending_review: …`), these two integration targets
+give the planner full table coverage without requiring synthetic spec
+drift on a real feature. After FT-119 ships, the first live verification
+run should be `dec drive def-ready FT-120 --bench BNCH-002`.
 
 ## Out of scope
 
