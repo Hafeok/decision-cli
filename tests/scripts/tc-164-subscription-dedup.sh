@@ -17,6 +17,7 @@ trap 'rm -rf "$WORKDIR"' EXIT
 
 cd "$WORKDIR"
 "$DEC" init --template engineering-development >/dev/null 2>&1
+mkdir -p .dec/verify/result
 
 # Configure short TTL for testability
 cat >>.dec/config.toml <<'EOF'

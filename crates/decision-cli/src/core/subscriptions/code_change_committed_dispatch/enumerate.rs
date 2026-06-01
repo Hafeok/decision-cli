@@ -89,7 +89,7 @@ fn extend_from_verifies_target(
          GRAPH <{vg}> {{\n    \
          ?graph a <https://decision-cli.dev/ns#VerificationGraph> ;\n           \
          <https://decision-cli.dev/ns#verifies> <{target}> ;\n           \
-         <https://decision-cli.dev/ns#environment> ?env .\n  \
+         <https://decision-cli.dev/ns#bench> ?env .\n  \
          }}\n\
          }}",
         vg = IRI_DEC_GRAPH_VERIFY_GRAPH,
@@ -116,7 +116,7 @@ fn extend_from_evidence(
          GRAPH <{vg}> {{\n    \
          ?graph a <https://decision-cli.dev/ns#VerificationGraph> ;\n           \
          <https://decision-cli.dev/ns#steps>/<{rest}>*/<{first}> ?step ;\n           \
-         <https://decision-cli.dev/ns#environment> ?env .\n    \
+         <https://decision-cli.dev/ns#bench> ?env .\n    \
          ?step <https://decision-cli.dev/ns#providesEvidenceFor> ?tc .\n    \
          VALUES ?tc {{ {values} }}\n  \
          }}\n\

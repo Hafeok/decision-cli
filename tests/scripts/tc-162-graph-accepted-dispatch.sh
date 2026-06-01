@@ -17,6 +17,9 @@ trap 'rm -rf "$WORKDIR"' EXIT
 
 cd "$WORKDIR"
 "$DEC" init --template engineering-development >/dev/null 2>&1
+# Pre-create result dir so `find ... | wc -l` doesn't trip set -o pipefail
+# when the dir doesn't exist before the first dispatch.
+mkdir -p .dec/verify/result
 
 # Configure the subscription
 cat >>.dec/config.toml <<'EOF'
@@ -152,7 +155,7 @@ if ! printf '%s' "$dispatch_out1" | grep -q 'dispatched=1'; then
 fi
 
 # Verify ledger entry exists
-ledger_out=$("$DEC" _dispatch ledger-graph-accepted VG-202 ENV-001-ephemeral-cli 2>&1)
+ledger_out=$("$DEC" _dispatch ledger-graph-accepted VG-202 BNCH-001-ephemeral-cli 2>&1)
 if ! printf '%s' "$ledger_out" | grep -q 'entry graph='; then
   echo "TC-162 FAIL Scenario C: ledger entry not found after first dispatch:" >&2
   echo "$ledger_out" >&2
@@ -178,33 +181,43 @@ fi
 
 echo "TC-162: Scenario C PASS"
 
-# --- Scenario D: missing env produces error ---------------------------------
-echo "TC-162: Scenario D — missing env"
-
-# Author graph referencing non-existent env
-"$DEC" verify graph new --id VG-203 --verifies FT-TC162 \
-  --bench BNCH-DOES-NOT-EXIST >/dev/null 2>&1 || true
-
-"$DEC" verify step add VG-203 --type shell-command \
-  --field command="echo pass" \
-  --field expect-exit-code=0 >/dev/null 2>&1 || true
+# --- Scenario D: missing bench rejected at authoring time -------------------
+# Post-FT-112, `dec verify graph new --bench BNCH-DOES-NOT-EXIST` fails
+# at authoring (bench resolver short-circuits a dangling reference), so
+# the graph never lands and dispatch can never run. The bench-missing
+# failure mode therefore surfaces here, not in the dispatch output —
+# verify both the early rejection and that no result artifact is created
+# downstream.
+echo "TC-162: Scenario D — missing bench"
 
 before_results=$(find .dec/verify/result -name "*.ttl" 2>/dev/null | wc -l)
 
-# Dispatch should succeed but report env_errors
-dispatch_out=$("$DEC" _dispatch graph-accepted VG-203 2>&1 || true)
-
-if ! printf '%s' "$dispatch_out" | grep -E 'env_errors=1|env-error|env catalog entry missing' >/dev/null; then
-  echo "TC-162 FAIL Scenario D: expected env_errors in output, got:" >&2
-  echo "$dispatch_out" >&2
+# Authoring with a missing bench must fail with a dangling-reference error.
+if author_out=$("$DEC" verify graph new --id VG-203 --verifies FT-TC162 \
+    --bench BNCH-DOES-NOT-EXIST 2>&1); then
+  echo "TC-162 FAIL Scenario D: graph new with missing bench should error; got:" >&2
+  printf '%s\n' "$author_out" >&2
+  exit 1
+fi
+if ! printf '%s\n' "$author_out" | grep -qE 'dangling reference|environment'; then
+  echo "TC-162 FAIL Scenario D: error did not mention dangling reference/environment:" >&2
+  printf '%s\n' "$author_out" >&2
   exit 1
 fi
 
-# No new result should be created
+# Dispatching the non-existent graph must report graph-not-found (not a
+# silent success) and create no result artifact.
+dispatch_out=$("$DEC" _dispatch graph-accepted VG-203 2>&1 || true)
+if ! printf '%s\n' "$dispatch_out" | grep -qE 'graph not found|env_errors=1|env catalog entry missing'; then
+  echo "TC-162 FAIL Scenario D: expected graph-not-found or env_errors in dispatch output:" >&2
+  printf '%s\n' "$dispatch_out" >&2
+  exit 1
+fi
+
 after_results=$(find .dec/verify/result -name "*.ttl" 2>/dev/null | wc -l)
 new_results=$((after_results - before_results))
 if [ "$new_results" -ne 0 ]; then
-  echo "TC-162 FAIL Scenario D: expected 0 new results for missing env, got $new_results" >&2
+  echo "TC-162 FAIL Scenario D: expected 0 new results for missing bench, got $new_results" >&2
   exit 1
 fi
 

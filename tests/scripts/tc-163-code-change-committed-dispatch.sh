@@ -104,7 +104,7 @@ cat >.dec/verify/graph/VG-202.ttl <<'EOF'
 <https://decision-cli.dev/ns/graph/VG-202>
     rdf:type           dec:VerificationGraph ;
     dec:verifies       <https://decision-cli.dev/ns/feature/FT-CC> ;
-    dec:environment    <https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli> ;
+    dec:bench          <https://decision-cli.dev/ns/bench/BNCH-001-ephemeral-cli> ;
     dec:steps          ( <https://decision-cli.dev/ns/step/VG-202/0> ) .
 
 <https://decision-cli.dev/ns/step/VG-202/0>
