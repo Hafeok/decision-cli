@@ -55,7 +55,7 @@ echo "TC-164: Scenario A — graph_accepted dedup"
 
 # Author a minimal graph
 "$DEC" verify graph new --id VG-300 --verifies FT-TC164-A \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-300 --type shell-command \
   --field command="echo pass" \
@@ -119,7 +119,7 @@ echo "TC-164: Scenario B — code_change_committed dedup"
 
 # Create a graph covering the fixture feature
 "$DEC" verify graph new --id VG-301 --verifies FT-TC164-B \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-301 --type shell-command \
   --field command="echo pass" \
@@ -185,7 +185,7 @@ echo "TC-164: Scenario C — per-key dedup"
 
 # Author first graph and dispatch
 "$DEC" verify graph new --id VG-302 --verifies FT-TC164-A \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-302 --type shell-command \
   --field command="echo pass" \
@@ -203,7 +203,7 @@ after_first=$(find .dec/verify/result -name "*.ttl" 2>/dev/null | wc -l)
 
 # Immediately author and dispatch second graph (different key)
 "$DEC" verify graph new --id VG-303 --verifies FT-TC164-A \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-303 --type shell-command \
   --field command="echo pass" \

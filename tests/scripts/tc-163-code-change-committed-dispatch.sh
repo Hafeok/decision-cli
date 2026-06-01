@@ -51,14 +51,14 @@ EOF
 
 # Two graphs both targeting FT-CC, each covering one TC.
 "$DEC" verify graph new --id VG-201 --verifies FT-CC \
-  --environment BNCH-001-ephemeral-cli >/dev/null
+  --bench BNCH-001-ephemeral-cli >/dev/null
 "$DEC" verify step add VG-201 --type shell-command \
   --field command="echo ok" \
   --field expect-exit-code=0 \
   --provides-evidence-for TC-CC-A >/dev/null
 
 "$DEC" verify graph new --id VG-202 --verifies FT-CC \
-  --environment BNCH-001-ephemeral-cli >/dev/null
+  --bench BNCH-001-ephemeral-cli >/dev/null
 "$DEC" verify step add VG-202 --type shell-command \
   --field command="echo ok" \
   --field expect-exit-code=0 \

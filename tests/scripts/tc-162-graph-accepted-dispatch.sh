@@ -44,7 +44,7 @@ before_results=$(find .dec/verify/result -name "*.ttl" 2>/dev/null | wc -l)
 
 # Author a minimal passing graph
 "$DEC" verify graph new --id VG-200 --verifies FT-TC162 \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-200 --type shell-command \
   --field command="echo pass" \
@@ -95,7 +95,7 @@ before_results=$(find .dec/verify/result -name "*.ttl" 2>/dev/null | wc -l)
 
 # Author another graph
 "$DEC" verify graph new --id VG-201 --verifies FT-TC162 \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-201 --type shell-command \
   --field command="echo pass" \
@@ -136,7 +136,7 @@ EOF
 
 # Author and dispatch
 "$DEC" verify graph new --id VG-202 --verifies FT-TC162 \
-  --environment ENV-001-ephemeral-cli >/dev/null 2>&1
+  --bench BNCH-001-ephemeral-cli >/dev/null 2>&1
 
 "$DEC" verify step add VG-202 --type shell-command \
   --field command="echo pass" \
@@ -183,7 +183,7 @@ echo "TC-162: Scenario D — missing env"
 
 # Author graph referencing non-existent env
 "$DEC" verify graph new --id VG-203 --verifies FT-TC162 \
-  --environment ENV-DOES-NOT-EXIST >/dev/null 2>&1 || true
+  --bench BNCH-DOES-NOT-EXIST >/dev/null 2>&1 || true
 
 "$DEC" verify step add VG-203 --type shell-command \
   --field command="echo pass" \

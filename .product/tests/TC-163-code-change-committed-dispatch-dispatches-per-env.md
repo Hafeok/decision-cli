@@ -11,8 +11,8 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-163-code-change-committed-dispatch.sh
 runner-timeout: 180
-last-run: 2026-05-30T17:41:33.418852154+00:00
-last-run-duration: 0.3s
+last-run: 2026-06-01T10:12:01.387184105+00:00
+last-run-duration: 0.5s
 failure-message: "warning: unused imports: `Dispatch`, `Outcome`, and `RoundState`\n --> crates/decision-cli/src/features/ft_113_drive_show/reader.rs:3:20\n  |\n3 | use super::model::{Dispatch, Outcome, Round, RoundState};\n  |                    ^^^^^^^^  ^^^^^^^         ^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `DateTime` and `Utc`\n --> crates/decision-cli/src/features/ft_113_drive_show/reader.rs:4:14\n  |\n4 | use chrono::{DateTime, Utc};\n "
 ---
 
