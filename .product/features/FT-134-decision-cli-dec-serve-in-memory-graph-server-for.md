@@ -7,12 +7,26 @@ depends-on:
 - FT-110
 - FT-111
 - FT-119
-adrs: []
-tests: []
+adrs:
+- ADR-047
+- ADR-043
+- ADR-036
+- ADR-068
+tests:
+- TC-104
+- TC-237
+- TC-238
+- TC-298
+- TC-300
+- TC-316
+- TC-317
 domains:
 - api
 - storage
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-070: Server hosts orchestrator state but does not introduce new role tool surfaces — workers receive the same tool surfaces declared by the existing role catalog. The socket protocol is infrastructure beneath role-scoped dispatch, not a new tool.
+  ADR-071: Per-workdir scope is inherited verbatim (one socket per .dec/serve.sock, 0600 perms, workdir-owner only); no new in-process worker tools — workers stay stateless subprocess per CLAUDE.md and ADR-008. Workspace containment + secrets blocking apply unchanged.
+  ADR-072: Slice-1 of this feature lands the start/read/mutate/external-edit/shutdown/crash-recovery lifecycle; per the Behaviour section that's 6 distinct TCs (well above the 4-TC floor). Draft phase carries no TCs yet by convention; the 4+ floor will be satisfied before status complete.
 ---
 
 ## Description

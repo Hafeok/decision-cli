@@ -6,14 +6,15 @@ status: passing
 validates:
   features:
   - FT-114
+  - FT-134
   adrs:
   - ADR-068
-observes:
-- stdout
 phase: 4
 runner: cargo-test
 runner-args: tc_237_config_precedence_chain
 runner-timeout: 30
+observes:
+- stdout
 last-run: 2026-05-30T16:41:58.446771378+00:00
 last-run-duration: 0.5s
 ---

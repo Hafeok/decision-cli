@@ -6,6 +6,7 @@ status: unimplemented
 validates:
   features:
   - FT-129
+  - FT-134
   adrs:
   - ADR-073
   - ADR-047

@@ -6,15 +6,16 @@ status: passing
 validates:
   features:
   - FT-114
+  - FT-134
   adrs:
   - ADR-068
-observes:
-- stderr
-- exit-code
 phase: 4
 runner: cargo-test
 runner-args: tc_238_strict_parser_rejects_invalid_config
 runner-timeout: 30
+observes:
+- stderr
+- exit-code
 last-run: 2026-05-30T16:41:58.446771378+00:00
 last-run-duration: 0.5s
 ---

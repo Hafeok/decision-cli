@@ -6,6 +6,7 @@ status: passing
 validates:
   features:
   - FT-058
+  - FT-134
   adrs:
   - ADR-036
 phase: 2
