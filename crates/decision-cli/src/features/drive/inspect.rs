@@ -26,6 +26,21 @@ pub enum FeatureVerdict {
     NeverRun,
 }
 
+/// Single unaddressed preflight gap (FT-119). Typed so the planner
+/// can format the Stuck reason with the right vocabulary
+/// (`ADR-NNN unacknowledged` vs `<domain> domain uncovered`),
+/// satisfying TC-255's per-row token requirements.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PreflightGap {
+    /// A cross-cutting ADR that neither links nor is acknowledged.
+    /// The string is the ADR short id (`ADR-NNN`).
+    UnacknowledgedAdr(String),
+    /// A domain mentioned by a governing ADR that the feature
+    /// neither links nor acknowledges. The string is the domain
+    /// name (e.g. `"observability"`).
+    UncoveredDomain(String),
+}
+
 /// Definition-of-Ready preflight bucket (FT-119). Mirrors the
 /// `product preflight FT-XXX` status field plus the per-gap detail
 /// that FT-119's planner cites in its Stuck reason.
@@ -34,10 +49,28 @@ pub enum PreflightStatus {
     /// Every cross-cutting ADR is acknowledged, every domain gap is
     /// linked or acknowledged, and dependencies are available.
     Clean,
-    /// At least one unacknowledged gap remains. `gaps` carries
-    /// human-readable identifiers (typically `ADR-NNN` or domain
-    /// names) so the planner's Stuck reason can cite them.
-    Warnings { gaps: Vec<String> },
+    /// At least one unaddressed gap remains.
+    Warnings {
+        /// Typed gap list — the planner formats per-variant
+        /// vocabulary into the Stuck reason. Sorted on the
+        /// inspector side for byte-deterministic output (TC-255
+        /// boundary requirement).
+        gaps: Vec<PreflightGap>,
+    },
+}
+
+/// FT-119 `spec_complete` dimension. When the body fails the
+/// FT-055/ADR-047 H2/H3 completeness check, the planner cites the
+/// missing heading verbatim per TC-255 so the operator can jump to
+/// the exact section.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SpecCompleteness {
+    /// Body conforms to the body-completeness schema.
+    Complete,
+    /// At least one required section is missing. The string is the
+    /// first missing heading (e.g. `"### Behaviour"`,
+    /// `"## Out of scope"`) in the schema's declared order.
+    MissingHeading(String),
 }
 
 /// Per-TC runner-quality state used by FT-119's `tcs_ready`
@@ -152,9 +185,14 @@ pub trait GraphInspector {
     // ---------------------------------------------------------------
 
     /// Whether the feature_spec body passes the FT-055 / ADR-047
-    /// H2/H3 completeness check (`spec_complete` dimension).
-    fn feature_spec_complete(&self, _feature_id: &str) -> Result<bool, InspectError> {
-        Ok(true)
+    /// H2/H3 completeness check (`spec_complete` dimension). The
+    /// `MissingHeading` variant carries the first missing section
+    /// heading so the planner's Stuck reason can cite it.
+    fn feature_spec_completeness(
+        &self,
+        _feature_id: &str,
+    ) -> Result<SpecCompleteness, InspectError> {
+        Ok(SpecCompleteness::Complete)
     }
 
     /// Aggregate preflight status for the feature (`preflight`
