@@ -1,7 +1,7 @@
 ---
 id: ADR-070
 title: Role-scoped tool surfaces declared in the role catalog
-status: proposed
+status: accepted
 features:
 - FT-126
 - FT-127
@@ -14,6 +14,7 @@ supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:c7fd039c5918a32e6fb591c4ca5f6d1b765f47dcf4f93fbcaf140d4565f14454
 ---
 
 ## Context

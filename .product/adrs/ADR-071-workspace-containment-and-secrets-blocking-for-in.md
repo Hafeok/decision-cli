@@ -1,12 +1,13 @@
 ---
 id: ADR-071
 title: Workspace containment and secrets blocking for in-process worker tools
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: cross-cutting
+content-hash: sha256:200d444f220d9d9d90ce21f91bd348630d0775fe3df4e7faa21231b091f33e7f
 source-files:
 - workers/_shared/src/_shared/tool_safety.py
 ---

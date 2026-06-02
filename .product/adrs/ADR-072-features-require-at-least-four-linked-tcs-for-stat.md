@@ -1,7 +1,7 @@
 ---
 id: ADR-072
 title: Features require at least four linked TCs for status complete
-status: proposed
+status: accepted
 features:
 - FT-126
 - FT-127
@@ -17,6 +17,7 @@ domains:
 - api
 - observability
 scope: cross-cutting
+content-hash: sha256:5b74cd5f4e1b1a30fed117c1341665cd8a4b2f5820feaedf055b112da7022f53
 source-files:
 - scripts/checks/feature-tc-coverage.baseline
 - scripts/checks/feature-tc-coverage.sh

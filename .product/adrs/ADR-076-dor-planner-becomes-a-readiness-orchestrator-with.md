@@ -1,7 +1,7 @@
 ---
 id: ADR-076
 title: DoR planner becomes a readiness orchestrator with full upstream chain
-status: proposed
+status: accepted
 features:
 - FT-131
 supersedes: []
@@ -10,6 +10,7 @@ domains:
 - api
 - observability
 scope: domain
+content-hash: sha256:dfabf9dc7961e132ca168153689d09792f6d62f8bfbc967961a656f5084f9d22
 ---
 
 **Status:** Proposed

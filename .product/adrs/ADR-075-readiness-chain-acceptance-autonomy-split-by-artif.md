@@ -1,7 +1,7 @@
 ---
 id: ADR-075
 title: Readiness chain acceptance autonomy split by artifact kind
-status: proposed
+status: accepted
 features:
 - FT-127
 - FT-128
@@ -16,6 +16,7 @@ domains:
 - api
 - observability
 scope: domain
+content-hash: sha256:6b47c06514ea61facbe602db06922035868064b90c854ee0f222e4fb7f428c1b
 ---
 
 **Status:** Proposed

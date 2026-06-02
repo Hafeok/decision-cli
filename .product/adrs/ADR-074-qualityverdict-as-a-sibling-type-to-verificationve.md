@@ -1,7 +1,7 @@
 ---
 id: ADR-074
 title: QualityVerdict as a sibling type to VerificationVerdict
-status: proposed
+status: accepted
 features:
 - FT-126
 - FT-127
@@ -16,6 +16,7 @@ superseded-by: []
 domains:
 - data-model
 scope: domain
+content-hash: sha256:07e371d9d96cda83a8016b5512dbf242a45cc32be7e639a119823191a32985dc
 ---
 
 **Status:** Proposed

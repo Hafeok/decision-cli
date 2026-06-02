@@ -1,12 +1,13 @@
 ---
 id: ADR-069
 title: In-process LiteLLM-client agentic loop for code-writer (retire claude -p subprocess)
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:0c92716493677952253c4fad0170af6c2e88364aa41b0d385c474a2cca388abf
 ---
 
 ## Context

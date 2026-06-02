@@ -1,7 +1,7 @@
 ---
 id: ADR-073
 title: Authoring roles as action-interpretation pairs in the readiness chain
-status: proposed
+status: accepted
 features:
 - FT-126
 - FT-127
@@ -17,6 +17,7 @@ domains:
 - api
 - data-model
 scope: domain
+content-hash: sha256:d1aa96b15bf375ea8baf6d3f1e7989a7f7f2e8b9e8026ade988431b6b322b3ce
 ---
 
 **Status:** Proposed
