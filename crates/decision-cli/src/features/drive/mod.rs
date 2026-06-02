@@ -6,6 +6,7 @@
 
 pub mod execute;
 pub mod inspect;
+pub(crate) mod inspect_dor;
 pub mod outcome;
 pub mod planners;
 pub mod registry;

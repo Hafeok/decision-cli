@@ -690,6 +690,47 @@ SELECT ?verdict WHERE {{
         Ok(h.finish())
     }
 
+    fn preflight_status_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<PreflightStatus, InspectError> {
+        super::inspect_dor::preflight_status(self.product_root(), feature_id)
+    }
+
+    fn dependency_statuses_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<Vec<(String, String)>, InspectError> {
+        super::inspect_dor::dependency_statuses(self.product_root(), feature_id)
+    }
+
+    fn feature_spec_completeness(
+        &self,
+        feature_id: &str,
+    ) -> Result<SpecCompleteness, InspectError> {
+        super::inspect_dor::feature_spec_completeness(self.product_root(), feature_id)
+    }
+
+    fn tcs_linked_state_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<TcsLinkedState, InspectError> {
+        super::inspect_dor::tcs_linked_state(self.product_root(), feature_id)
+    }
+
+    fn covering_graph_state_for_feature(
+        &self,
+        feature_id: &str,
+        env_id: &str,
+    ) -> Result<CoveringGraphState, InspectError> {
+        super::inspect_dor::covering_graph_state(
+            self.workdir(),
+            self.product_root(),
+            feature_id,
+            env_id,
+        )
+    }
+
     fn product_verify_passes_for_feature(
         &self,
         feature_id: &str,
