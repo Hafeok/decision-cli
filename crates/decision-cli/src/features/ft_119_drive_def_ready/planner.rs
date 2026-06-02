@@ -24,7 +24,9 @@
 //! cross-contaminate.
 
 use std::cell::RefCell;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::VecDeque;
+use std::hash::{Hash, Hasher};
 
 use crate::core::drive::planner::PlanError;
 use crate::core::drive::{Action, ArtifactKind, ArtifactRef, PlanContext, Planner};
@@ -92,29 +94,67 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
         feature_id: &str,
         default_env_id: &str,
     ) -> Result<Action, PlanError> {
-        let proposed = self.classify_without_cycle_check(feature_id, default_env_id)?;
-        let final_action = self.apply_cycle_detection(feature_id, proposed)?;
-        self.record_observation(feature_id, &final_action)?;
+        let (proposed, state_hash) =
+            self.classify_and_hash(feature_id, default_env_id)?;
+        let final_action =
+            self.apply_cycle_detection_with_hash(feature_id, proposed, state_hash);
+        self.record_observation_with_hash(feature_id, &final_action, state_hash);
         Ok(final_action)
     }
 
-    /// The raw classification, ignoring history. Splitting it out
-    /// keeps the cycle-detection logic readable and lets tests
-    /// inspect the pre-history dispatch when needed.
+    /// Compatibility shim for the planner-internal tests that want to
+    /// inspect the pre-history dispatch. Returns the same `Action`
+    /// `classify_and_hash` would, discarding the hash.
+    #[cfg(test)]
     fn classify_without_cycle_check(
         &self,
         feature_id: &str,
         default_env_id: &str,
     ) -> Result<Action, PlanError> {
+        Ok(self.classify_and_hash(feature_id, default_env_id)?.0)
+    }
+
+    /// Classify and fold each dimension into a `DefaultHasher` as it
+    /// is read. Returning the hash alongside the action lets the
+    /// planner reuse the dimension reads it already made for
+    /// PAT-002 cycle detection — no second pass through the inspector
+    /// is needed.
+    ///
+    /// This is the DoR-specific replacement for
+    /// `inspector.state_hash_for_feature`: the trait-level method
+    /// also hashes the FT-097 aggregate VG verdict + the
+    /// `product verify` exit-code signal + the latest [FT-XXX]
+    /// commit SHA, which are load-bearing for `FeatureShipPlanner`
+    /// (its cycle detector needs to distinguish progressive
+    /// implementer dispatches) but irrelevant to FT-119 (which
+    /// never dispatches the implementer and doesn't care whether
+    /// the code passes verify). Skipping those reads is what makes
+    /// the per-round latency drop from ~15s to ~1s in production.
+    fn classify_and_hash(
+        &self,
+        feature_id: &str,
+        default_env_id: &str,
+    ) -> Result<(Action, u64), PlanError> {
+        let mut h = DefaultHasher::new();
+        // Feature id participates in the hash so that within one
+        // planner instance two different features can never collide
+        // on the no-progress check (mirrors the feature-id reset on
+        // the ring buffer).
+        feature_id.hash(&mut h);
+
         // 1. Preflight gates everything.
         let preflight = self
             .inspector
             .preflight_status_for_feature(feature_id)
             .map_err(store_err)?;
+        hash_preflight(&preflight, &mut h);
         if let PreflightStatus::Warnings { gaps } = preflight {
-            return Ok(Action::Stuck {
-                reason: stuck_preflight(&gaps),
-            });
+            return Ok((
+                Action::Stuck {
+                    reason: stuck_preflight(&gaps),
+                },
+                h.finish(),
+            ));
         }
 
         // 2. Dependencies.
@@ -122,10 +162,17 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             .inspector
             .dependency_statuses_for_feature(feature_id)
             .map_err(store_err)?;
+        for (id, status) in &deps {
+            id.hash(&mut h);
+            status.hash(&mut h);
+        }
         if let Some((dep_id, status)) = first_unfinished_dep(&deps) {
-            return Ok(Action::Stuck {
-                reason: stuck_blocked(dep_id, status),
-            });
+            return Ok((
+                Action::Stuck {
+                    reason: stuck_blocked(dep_id, status),
+                },
+                h.finish(),
+            ));
         }
 
         // 3. Spec body completeness.
@@ -133,10 +180,14 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             .inspector
             .feature_spec_completeness(feature_id)
             .map_err(store_err)?;
+        hash_spec(&spec, &mut h);
         if let SpecCompleteness::MissingHeading(heading) = spec {
-            return Ok(Action::Stuck {
-                reason: stuck_spec_incomplete(feature_id, &heading),
-            });
+            return Ok((
+                Action::Stuck {
+                    reason: stuck_spec_incomplete(feature_id, &heading),
+                },
+                h.finish(),
+            ));
         }
 
         // 4. TCs — linked + body + runner state.
@@ -144,16 +195,23 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             .inspector
             .tcs_linked_state_for_feature(feature_id)
             .map_err(store_err)?;
+        hash_tcs(&tcs, &mut h);
         match tcs {
             TcsLinkedState::NoneLinked => {
-                return Ok(Action::Stuck {
-                    reason: "no TCs linked".to_string(),
-                });
+                return Ok((
+                    Action::Stuck {
+                        reason: "no TCs linked".to_string(),
+                    },
+                    h.finish(),
+                ));
             }
             TcsLinkedState::SomeUnready { problem_tc, reason } => {
-                return Ok(Action::Stuck {
-                    reason: stuck_tc_quality(&problem_tc, &reason),
-                });
+                return Ok((
+                    Action::Stuck {
+                        reason: stuck_tc_quality(&problem_tc, &reason),
+                    },
+                    h.finish(),
+                ));
             }
             TcsLinkedState::AllReady => {}
         }
@@ -163,16 +221,18 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             .inspector
             .covering_graph_state_for_feature(feature_id, default_env_id)
             .map_err(store_err)?;
-        match vgs {
-            CoveringGraphState::Missing => Ok(Action::DispatchVerifyGraphAuthor {
+        hash_vgs(&vgs, &mut h);
+        let action = match vgs {
+            CoveringGraphState::Missing => Action::DispatchVerifyGraphAuthor {
                 feature_id: feature_id.to_string(),
                 env_id: default_env_id.to_string(),
-            }),
-            CoveringGraphState::PendingReview { graph_ids } => Ok(Action::Stuck {
+            },
+            CoveringGraphState::PendingReview { graph_ids } => Action::Stuck {
                 reason: stuck_vg_pending(&graph_ids),
-            }),
-            CoveringGraphState::AcceptedAll => Ok(Action::Done),
-        }
+            },
+            CoveringGraphState::AcceptedAll => Action::Done,
+        };
+        Ok((action, h.finish()))
     }
 
     /// PAT-002 cycle detection. Two layers, checked in order:
@@ -188,18 +248,15 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
     /// Non-dispatch outcomes (`Done`, `Stuck { ... }`) bypass cycle
     /// detection — they are terminal by definition and shouldn't
     /// trip the buffer.
-    fn apply_cycle_detection(
+    fn apply_cycle_detection_with_hash(
         &self,
         feature_id: &str,
         proposed: Action,
-    ) -> Result<Action, PlanError> {
+        state_hash: u64,
+    ) -> Action {
         if proposed.is_terminal() {
-            return Ok(proposed);
+            return proposed;
         }
-        let state_hash = self
-            .inspector
-            .state_hash_for_feature(feature_id)
-            .map_err(store_err)?;
 
         // Pairwise check.
         if let Some(prev) = self.last_seen.borrow().as_ref() {
@@ -207,12 +264,12 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
                 && prev.state_hash == state_hash
                 && action_kind(&prev.final_action) == action_kind(&proposed)
             {
-                return Ok(Action::Stuck {
+                return Action::Stuck {
                     reason: format!(
                         "{tag} dispatch did not change state for {feature_id}",
                         tag = proposed.tag(),
                     ),
-                });
+                };
             }
         }
 
@@ -223,26 +280,22 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             buf.hashes.clear();
         }
         if let Some(period) = position_from_head(&buf.hashes, state_hash) {
-            return Ok(Action::Stuck {
+            return Action::Stuck {
                 reason: format!(
                     "state-hash cycle detected for {feature_id}: period {period}"
                 ),
-            });
+            };
         }
 
-        Ok(proposed)
+        proposed
     }
 
-    fn record_observation(
+    fn record_observation_with_hash(
         &self,
         feature_id: &str,
         final_action: &Action,
-    ) -> Result<(), PlanError> {
-        let state_hash = self
-            .inspector
-            .state_hash_for_feature(feature_id)
-            .map_err(store_err)?;
-
+        state_hash: u64,
+    ) {
         *self.last_seen.borrow_mut() = Some(LastSeen {
             feature_id: feature_id.to_string(),
             state_hash,
@@ -260,7 +313,83 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             }
             buf.hashes.push_back(state_hash);
         }
-        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------------
+// Dimension-folding helpers — called from `classify_and_hash` to mix
+// each dimension reading into the running state hash. Each takes a
+// shared `Hasher` ref and a borrowed dimension value; ordering /
+// content matches `state_hash_for_feature`'s `Debug`-string approach,
+// but for fixed-shape enums so the hash is reproducible across runs
+// that see the same dimension state.
+// ---------------------------------------------------------------------
+
+fn hash_preflight(p: &PreflightStatus, h: &mut DefaultHasher) {
+    match p {
+        PreflightStatus::Clean => {
+            "clean".hash(h);
+        }
+        PreflightStatus::Warnings { gaps } => {
+            "warnings".hash(h);
+            for gap in gaps {
+                match gap {
+                    PreflightGap::UnacknowledgedAdr(id) => {
+                        "adr".hash(h);
+                        id.hash(h);
+                    }
+                    PreflightGap::UncoveredDomain(d) => {
+                        "domain".hash(h);
+                        d.hash(h);
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn hash_spec(s: &SpecCompleteness, h: &mut DefaultHasher) {
+    match s {
+        SpecCompleteness::Complete => {
+            "complete".hash(h);
+        }
+        SpecCompleteness::MissingHeading(heading) => {
+            "missing-heading".hash(h);
+            heading.hash(h);
+        }
+    }
+}
+
+fn hash_tcs(t: &TcsLinkedState, h: &mut DefaultHasher) {
+    match t {
+        TcsLinkedState::NoneLinked => {
+            "none-linked".hash(h);
+        }
+        TcsLinkedState::AllReady => {
+            "all-ready".hash(h);
+        }
+        TcsLinkedState::SomeUnready { problem_tc, reason } => {
+            "some-unready".hash(h);
+            problem_tc.hash(h);
+            reason.hash(h);
+        }
+    }
+}
+
+fn hash_vgs(v: &CoveringGraphState, h: &mut DefaultHasher) {
+    match v {
+        CoveringGraphState::Missing => {
+            "missing".hash(h);
+        }
+        CoveringGraphState::AcceptedAll => {
+            "accepted-all".hash(h);
+        }
+        CoveringGraphState::PendingReview { graph_ids } => {
+            "pending-review".hash(h);
+            for id in graph_ids {
+                id.hash(h);
+            }
+        }
     }
 }
 
