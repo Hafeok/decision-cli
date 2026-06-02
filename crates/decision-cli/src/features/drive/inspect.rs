@@ -239,6 +239,70 @@ pub trait GraphInspector {
     }
 }
 
+/// Blanket: a shared reference to any `GraphInspector` is itself an
+/// inspector. Lets test fixtures hand the same inspector to both a
+/// `FeatureReadyPlanner` (which owns its `I: GraphInspector`) and a
+/// fake `Executor` that needs to flip the inspector's interior
+/// mutable state mid-loop, without `Rc` or new shared-state wrappers.
+impl<T: GraphInspector + ?Sized> GraphInspector for &T {
+    fn aggregate_verdict_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<FeatureVerdict, InspectError> {
+        (**self).aggregate_verdict_for_feature(feature_id)
+    }
+    fn open_defect_feedback_count(
+        &self,
+        feature_id: &str,
+        role_id: &str,
+    ) -> Result<usize, InspectError> {
+        (**self).open_defect_feedback_count(feature_id, role_id)
+    }
+    fn graphs_exist_for_feature(&self, feature_id: &str) -> Result<bool, InspectError> {
+        (**self).graphs_exist_for_feature(feature_id)
+    }
+    fn state_hash_for_feature(&self, feature_id: &str) -> Result<u64, InspectError> {
+        (**self).state_hash_for_feature(feature_id)
+    }
+    fn product_verify_passes_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        (**self).product_verify_passes_for_feature(feature_id)
+    }
+    fn feature_spec_completeness(
+        &self,
+        feature_id: &str,
+    ) -> Result<SpecCompleteness, InspectError> {
+        (**self).feature_spec_completeness(feature_id)
+    }
+    fn preflight_status_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<PreflightStatus, InspectError> {
+        (**self).preflight_status_for_feature(feature_id)
+    }
+    fn dependency_statuses_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<Vec<(String, String)>, InspectError> {
+        (**self).dependency_statuses_for_feature(feature_id)
+    }
+    fn tcs_linked_state_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<TcsLinkedState, InspectError> {
+        (**self).tcs_linked_state_for_feature(feature_id)
+    }
+    fn covering_graph_state_for_feature(
+        &self,
+        feature_id: &str,
+        env_id: &str,
+    ) -> Result<CoveringGraphState, InspectError> {
+        (**self).covering_graph_state_for_feature(feature_id, env_id)
+    }
+}
+
 /// Inspector errors. Kept generic so planners can propagate
 /// without knowing the underlying read API.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]

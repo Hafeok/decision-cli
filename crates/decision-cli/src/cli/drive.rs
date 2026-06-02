@@ -17,6 +17,11 @@ use decision_cli::ft_113_drive_show;
 pub enum DriveCmd {
     /// Run a goal-driven dispatch loop (FT-110, FT-111).
     Ship(ShipArgs),
+    /// Drive a feature through the Definition-of-Ready gate (FT-119).
+    /// Dispatches `verify-graph-author` when a covering graph is
+    /// missing; reports `Stuck` for every gap requiring human
+    /// authoring (spec body, preflight ack, missing TCs, etc.).
+    DefReady(DefReadyArgs),
     /// Show per-round narrative for a feature drive (FT-113).
     Show(ShowArgs),
 }
@@ -56,6 +61,34 @@ pub struct ShipArgs {
 }
 
 #[derive(Debug, clap::Args)]
+pub struct DefReadyArgs {
+    /// Feature short id (e.g. `FT-019`). Mutually exclusive with --all.
+    #[arg(conflicts_with = "all")]
+    pub artifact: Option<String>,
+    /// Sweep every feature whose dependencies have shipped.
+    #[arg(long, conflicts_with = "artifact")]
+    pub all: bool,
+    /// Bail out after N planner iterations (default 5).
+    #[arg(long)]
+    pub max_iter: Option<usize>,
+    /// Bench override threaded to `verify-graph-author` dispatches.
+    #[arg(long, value_name = "BNCH-NNN")]
+    pub bench: Option<String>,
+    /// Override the product-cli root (default: same as `--workdir`).
+    #[arg(long, value_name = "PATH")]
+    pub product_root: Option<PathBuf>,
+    /// Comma-separated feature filter for --all.
+    #[arg(long, value_delimiter = ',', requires = "all")]
+    pub filter: Option<Vec<String>>,
+    /// Per-feature timeout in seconds for --all. Default 600.
+    #[arg(long, requires = "all", default_value = "600")]
+    pub per_feature_timeout: u64,
+    /// Output format for --all: text, tsv, or json. Default text.
+    #[arg(long, requires = "all", default_value = "text")]
+    pub format: String,
+}
+
+#[derive(Debug, clap::Args)]
 pub struct ShowArgs {
     /// Feature ID (e.g. FT-113).
     pub feature_id: String,
@@ -82,6 +115,7 @@ pub struct ShowArgs {
 pub fn run(workdir: &Path, cmd: DriveCmd) -> ExitCode {
     match cmd {
         DriveCmd::Ship(args) => run_ship(workdir, args),
+        DriveCmd::DefReady(args) => run_def_ready(workdir, args),
         DriveCmd::Show(args) => run_show(workdir, args),
     }
 }
@@ -210,6 +244,7 @@ fn run_sweep_all(workdir: &Path, args: ShipArgs) -> ExitCode {
         env_id: args.bench,
         max_iter: args.max_iter.unwrap_or(6), // FT-111 default is 6, not 5
         per_item_timeout: Duration::from_secs(args.per_feature_timeout),
+        goal: Goal::Ship,
     };
 
     let runtime = match tokio::runtime::Runtime::new() {
@@ -234,6 +269,124 @@ fn run_sweep_all(workdir: &Path, args: ShipArgs) -> ExitCode {
 
     // Exit code: 0 if all done, 1 otherwise
     if tally.done == rows.len() && rows.len() > 0 {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    }
+}
+
+fn run_def_ready(workdir: &Path, args: DefReadyArgs) -> ExitCode {
+    if args.all {
+        return run_def_ready_sweep(workdir, args);
+    }
+    let Some(artifact_str) = args.artifact else {
+        eprintln!("dec drive def-ready: artifact required (or use --all for sweep)");
+        return ExitCode::from(2);
+    };
+    let artifact = match ArtifactRef::parse(&artifact_str) {
+        Ok(a) => a,
+        Err(e) => {
+            eprintln!("dec drive def-ready: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let ctx = match PlanContext::open(workdir.to_path_buf(), args.product_root, args.bench) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("dec drive def-ready: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let run_args = RunArgs {
+        goal: Goal::DefReady,
+        artifact,
+        max_iter: args.max_iter.unwrap_or(DEFAULT_MAX_ITER),
+    };
+    match drive_run(&ctx, &run_args) {
+        Ok(outcome) => {
+            println!(
+                "drive: reached def-ready in {n} iteration(s)",
+                n = outcome.iterations
+            );
+            for entry in &outcome.history {
+                println!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+            }
+            ExitCode::SUCCESS
+        }
+        Err(DriveError::Stuck { reason, history }) => {
+            eprintln!("drive: stuck — {reason}");
+            for entry in &history {
+                eprintln!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+            }
+            ExitCode::from(3)
+        }
+        Err(DriveError::MaxIterations { max, history }) => {
+            eprintln!("drive: hit iteration cap ({max}); not converging");
+            for entry in &history {
+                eprintln!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+            }
+            ExitCode::from(3)
+        }
+        Err(other) => {
+            eprintln!("dec drive def-ready: {other}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn run_def_ready_sweep(workdir: &Path, args: DefReadyArgs) -> ExitCode {
+    let format = match Format::parse(&args.format) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("dec drive def-ready --all: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let product_root = args
+        .product_root
+        .unwrap_or_else(|| workdir.join(".product"));
+    let resolved = match resolve_features(&product_root) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("dec drive def-ready --all: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    let features = match apply_filter(resolved, args.filter) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("dec drive def-ready --all: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    if features.is_empty() {
+        eprintln!("dec drive def-ready --all: no features match filter");
+        return ExitCode::from(2);
+    }
+    let sweep_input = SweepInput {
+        features,
+        env_id: args.bench,
+        max_iter: args.max_iter.unwrap_or(6),
+        per_item_timeout: Duration::from_secs(args.per_feature_timeout),
+        goal: Goal::DefReady,
+    };
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("dec drive def-ready --all: failed to create async runtime: {e}");
+            return ExitCode::from(1);
+        }
+    };
+    let (rows, tally) = match runtime.block_on(run_sweep(workdir.to_path_buf(), sweep_input)) {
+        Ok(result) => result,
+        Err(e) => {
+            eprintln!("dec drive def-ready --all: {e}");
+            return ExitCode::from(1);
+        }
+    };
+    let output = render(&rows, &tally, format);
+    print!("{output}");
+    if tally.done == rows.len() && !rows.is_empty() {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)

@@ -63,6 +63,26 @@ pub struct SweepInput {
     pub env_id: Option<String>,
     pub max_iter: usize,
     pub per_item_timeout: Duration,
+    /// Which goal to drive each feature toward. FT-111 ships with
+    /// `Goal::Ship`; FT-119 reuses this same sweep to drive
+    /// `Goal::DefReady` over the same feature enumeration logic
+    /// (per FT-119 §"Behaviour" — the sweep is goal-agnostic).
+    /// Defaults to `Goal::Ship` so back-compat callers (anything
+    /// constructing `SweepInput` without this field via
+    /// `..Default::default()`) keep the slice-1 behaviour.
+    pub goal: Goal,
+}
+
+impl Default for SweepInput {
+    fn default() -> Self {
+        Self {
+            features: Vec::new(),
+            env_id: None,
+            max_iter: 0,
+            per_item_timeout: Duration::from_secs(0),
+            goal: Goal::Ship,
+        }
+    }
 }
 
 /// Error variants for sweep-level failures (not per-feature failures).
@@ -113,7 +133,7 @@ pub async fn run_sweep(
         };
 
         let run_args = RunArgs {
-            goal: Goal::Ship,
+            goal: input.goal,
             artifact,
             max_iter: input.max_iter,
         };

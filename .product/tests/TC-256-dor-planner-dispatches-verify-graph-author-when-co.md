@@ -8,6 +8,9 @@ validates:
   - FT-119
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --lib features::ft_119_drive_def_ready::dispatch_tests::tc_256
+runner-timeout: 120
 observes:
 - exit-code
 - graph

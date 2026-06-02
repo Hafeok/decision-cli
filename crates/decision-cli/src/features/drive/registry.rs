@@ -6,6 +6,7 @@ use crate::core::drive::{ArtifactKind, Goal, PlanContext, Planner};
 
 use super::inspect::ProductionInspector;
 use super::planners::FeatureShipPlanner;
+use crate::features::ft_119_drive_def_ready::FeatureReadyPlanner;
 
 /// Look up the planner for `(kind, goal)`. Returns `None` when no
 /// planner is registered — the driver translates that into
@@ -22,6 +23,19 @@ pub fn planner_for<'a>(
         (ArtifactKind::Feature, Goal::Ship) => {
             let inspector = ProductionInspector::new(ctx_ref);
             Some(Box::new(FeatureShipPlanner::new(inspector)))
+        }
+        (ArtifactKind::Feature, Goal::DefReady) => {
+            // The FT-119 planner shares `ProductionInspector` with
+            // the ship planner — the FT-119-specific dimensions
+            // (preflight, deps, spec, tcs, vgs) currently fall
+            // through to the trait's default impls (permissive
+            // "ready" answers). Production overrides for those
+            // dimensions land in a follow-up commit; until then the
+            // registry wiring is structural so `dec drive def-ready`
+            // dispatches and the test seams (TC-256/TC-257) can
+            // inject their own inspectors.
+            let inspector = ProductionInspector::new(ctx_ref);
+            Some(Box::new(FeatureReadyPlanner::new(inspector)))
         }
         _ => None,
     }
