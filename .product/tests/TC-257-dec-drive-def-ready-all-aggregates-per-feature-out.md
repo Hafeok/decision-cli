@@ -2,7 +2,7 @@
 id: TC-257
 title: dec drive def-ready --all aggregates per-feature outcomes into the FT-111 SweepTally and exit codes match the sweep contract
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-119
@@ -14,6 +14,8 @@ runner-timeout: 120
 observes:
 - stdout
 - exit-code
+last-run: 2026-06-02T12:04:43.919578702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

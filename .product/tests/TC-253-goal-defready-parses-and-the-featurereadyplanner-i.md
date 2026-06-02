@@ -2,15 +2,20 @@
 id: TC-253
 title: Goal::DefReady parses and the FeatureReadyPlanner is registered for (Feature, DefReady)
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-119
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: -p decision-cli --lib features::ft_119_drive_def_ready::registry_tests::tc_253
+runner-timeout: 120
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-02T12:04:43.919578702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

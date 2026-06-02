@@ -2,7 +2,7 @@
 id: TC-258
 title: 'DoR planner inherits PAT-002 cycle detection: a VGA re-author oscillation yields Stuck with a period-N reason'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-119
@@ -14,6 +14,8 @@ runner-timeout: 120
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-02T12:04:43.919578702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

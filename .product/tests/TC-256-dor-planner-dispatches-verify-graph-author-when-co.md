@@ -2,7 +2,7 @@
 id: TC-256
 title: DoR planner dispatches verify-graph-author when coverage is missing and returns Done once the covering VG is accepted
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-119
@@ -14,6 +14,8 @@ runner-timeout: 120
 observes:
 - exit-code
 - graph
+last-run: 2026-06-02T12:04:43.919578702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

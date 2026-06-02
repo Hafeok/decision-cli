@@ -1,5 +1,7 @@
 //! Goal vocabulary — the set of value-actions `dec drive` understands.
 
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -54,6 +56,12 @@ impl Goal {
                 input: s.to_string(),
             }),
         }
+    }
+}
+
+impl fmt::Display for Goal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 

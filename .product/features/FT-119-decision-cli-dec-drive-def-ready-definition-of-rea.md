@@ -2,7 +2,7 @@
 id: FT-119
 title: 'decision-cli: dec drive def-ready — Definition-of-Ready planner with per-feature and --all sweep'
 phase: 4
-status: in-progress
+status: complete
 depends-on:
 - FT-110
 - FT-111

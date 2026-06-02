@@ -2,7 +2,7 @@
 id: TC-255
 title: DoR Stuck reasons cite the offending artifact id and surface verbatim through the driver
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-119
@@ -14,6 +14,8 @@ runner-timeout: 120
 observes:
 - stdout
 - exit-code
+last-run: 2026-06-02T12:04:43.919578702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim

@@ -25,4 +25,7 @@ pub mod planner;
 #[cfg(test)]
 mod dispatch_tests;
 
+#[cfg(test)]
+mod registry_tests;
+
 pub use planner::FeatureReadyPlanner;

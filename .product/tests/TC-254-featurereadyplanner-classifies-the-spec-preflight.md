@@ -2,7 +2,7 @@
 id: TC-254
 title: FeatureReadyPlanner classifies the (spec, preflight, deps, tcs, vgs) state matrix into the right Action
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-119
@@ -13,6 +13,8 @@ runner-args: -p decision-cli --lib features::ft_119_drive_def_ready::planner::te
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-02T12:04:43.919578702+00:00
+last-run-duration: 0.2s
 ---
 
 ## Claim
