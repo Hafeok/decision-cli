@@ -12,6 +12,12 @@ pub enum Goal {
     /// Drive a feature through one verify cycle (no implicit
     /// re-implementation).
     Verify,
+    /// Drive a feature through the Definition-of-Ready gate
+    /// (FT-119). Authors a `VerificationGraph` via the
+    /// verify-graph-author worker when one is missing; returns
+    /// `Stuck` on every gap that requires human-authored content
+    /// (spec body, preflight ADR ack, missing TCs).
+    DefReady,
     /// Drive an ADR through review to accepted status. Placeholder for
     /// the future ADR+Accept planner.
     Accept,
@@ -28,6 +34,7 @@ impl Goal {
         match self {
             Self::Ship => "ship",
             Self::Verify => "verify",
+            Self::DefReady => "def-ready",
             Self::Accept => "accept",
             Self::Cover => "cover",
             Self::Approve => "approve",
@@ -39,6 +46,7 @@ impl Goal {
         match s {
             "ship" => Ok(Self::Ship),
             "verify" => Ok(Self::Verify),
+            "def-ready" => Ok(Self::DefReady),
             "accept" => Ok(Self::Accept),
             "cover" => Ok(Self::Cover),
             "approve" => Ok(Self::Approve),
@@ -53,7 +61,7 @@ impl Goal {
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum GoalParseError {
     /// String didn't match any known goal.
-    #[error("unknown goal {input:?}; supported: ship, verify, accept, cover, approve")]
+    #[error("unknown goal {input:?}; supported: ship, verify, def-ready, accept, cover, approve")]
     Unknown {
         /// The raw input string.
         input: String,

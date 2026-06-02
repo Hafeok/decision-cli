@@ -26,6 +26,67 @@ pub enum FeatureVerdict {
     NeverRun,
 }
 
+/// Definition-of-Ready preflight bucket (FT-119). Mirrors the
+/// `product preflight FT-XXX` status field plus the per-gap detail
+/// that FT-119's planner cites in its Stuck reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PreflightStatus {
+    /// Every cross-cutting ADR is acknowledged, every domain gap is
+    /// linked or acknowledged, and dependencies are available.
+    Clean,
+    /// At least one unacknowledged gap remains. `gaps` carries
+    /// human-readable identifiers (typically `ADR-NNN` or domain
+    /// names) so the planner's Stuck reason can cite them.
+    Warnings { gaps: Vec<String> },
+}
+
+/// Per-TC runner-quality state used by FT-119's `tcs_ready`
+/// dimension. Mirrors the spec table: every linked TC must have a
+/// wired runner pair (`runner` + `runner-args`) AND a non-empty
+/// body — otherwise the planner classifies as `Stuck "TC quality:
+/// TC-NNN ..."`. The variant carrying `problem_tc` lets the planner
+/// surface the offending id verbatim per TC-255.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TcsLinkedState {
+    /// Feature has zero linked TCs in its `tests:` frontmatter.
+    NoneLinked,
+    /// Feature has linked TCs and every TC has a wired runner +
+    /// non-empty body.
+    AllReady,
+    /// Feature has linked TCs but at least one fails the runner /
+    /// body check. The first offender is named for the Stuck reason.
+    SomeUnready {
+        /// TC short id (e.g. "TC-201") that fails the readiness check.
+        problem_tc: String,
+        /// One-line reason ("runner missing", "body empty", etc.) the
+        /// planner appends to the Stuck text.
+        reason: String,
+    },
+}
+
+/// VG-coverage + acceptance state for a feature in a given env
+/// (FT-119 `vgs_cover` + `vgs_accepted` dimensions). When a covering
+/// graph exists but sits in `pending_review`, the planner returns
+/// `Stuck "VG pending_review: VG-NNN..."` rather than dispatching
+/// the author again; the brief is explicit that auto-acceptance is
+/// Level-3 human work today (ADR-030).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CoveringGraphState {
+    /// No non-superseded graph covers the feature in this env →
+    /// FT-119 dispatches `verify-graph-author`.
+    Missing,
+    /// Covering graph(s) exist and are accepted (out of
+    /// `pending_review`).
+    AcceptedAll,
+    /// Covering graph(s) exist but at least one is still in
+    /// `pending_review`. The planner cites the pending ids in its
+    /// Stuck reason.
+    PendingReview {
+        /// VG short ids still awaiting human accept.
+        graph_ids: Vec<String>,
+    },
+}
+
 /// Trait planners depend on. Production impl lives in
 /// [`ProductionInspector`]; tests build their own.
 pub trait GraphInspector {
@@ -81,6 +142,62 @@ pub trait GraphInspector {
         _feature_id: &str,
     ) -> Result<bool, InspectError> {
         Ok(false)
+    }
+
+    // ---------------------------------------------------------------
+    // FT-119 (Definition-of-Ready) dimensions. All five default to a
+    // permissive "ready" answer so existing `FeatureShipPlanner`
+    // inspectors compile unchanged. The FT-119 planner overrides
+    // each via dedicated production / stub impls.
+    // ---------------------------------------------------------------
+
+    /// Whether the feature_spec body passes the FT-055 / ADR-047
+    /// H2/H3 completeness check (`spec_complete` dimension).
+    fn feature_spec_complete(&self, _feature_id: &str) -> Result<bool, InspectError> {
+        Ok(true)
+    }
+
+    /// Aggregate preflight status for the feature (`preflight`
+    /// dimension). The Stuck-row cites the gap list verbatim.
+    fn preflight_status_for_feature(
+        &self,
+        _feature_id: &str,
+    ) -> Result<PreflightStatus, InspectError> {
+        Ok(PreflightStatus::Clean)
+    }
+
+    /// Returns the list of `(feature_id, status)` pairs for every
+    /// feature in `depends-on`. The planner classifies `Stuck
+    /// "blocked: FT-Y status=..."` when any status is not
+    /// `complete` (`deps_done` dimension).
+    fn dependency_statuses_for_feature(
+        &self,
+        _feature_id: &str,
+    ) -> Result<Vec<(String, String)>, InspectError> {
+        Ok(Vec::new())
+    }
+
+    /// `tcs_linked` + `tcs_ready` dimensions combined. The two are
+    /// classified together because the failure modes flow through
+    /// the same read path (the feature's `tests:` frontmatter array
+    /// + per-TC runner config).
+    fn tcs_linked_state_for_feature(
+        &self,
+        _feature_id: &str,
+    ) -> Result<TcsLinkedState, InspectError> {
+        Ok(TcsLinkedState::AllReady)
+    }
+
+    /// `vgs_cover` + `vgs_accepted` dimensions combined for the
+    /// supplied env. Returning `Missing` triggers
+    /// `DispatchVerifyGraphAuthor`; `PendingReview` produces a
+    /// `Stuck` row naming the pending VG ids.
+    fn covering_graph_state_for_feature(
+        &self,
+        _feature_id: &str,
+        _env_id: &str,
+    ) -> Result<CoveringGraphState, InspectError> {
+        Ok(CoveringGraphState::AcceptedAll)
     }
 }
 
