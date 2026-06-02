@@ -4,6 +4,7 @@ title: Verify-graph-author role and graph-proposal output
 status: accepted
 features:
 - FT-119
+- FT-128
 supersedes: []
 superseded-by: []
 domains: []

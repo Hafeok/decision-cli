@@ -4,6 +4,7 @@ title: Authority declarations in the role catalog
 status: accepted
 features:
 - FT-030
+- FT-127
 supersedes: []
 superseded-by: []
 domains: []

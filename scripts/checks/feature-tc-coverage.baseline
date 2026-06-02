@@ -1,0 +1,109 @@
+# scripts/checks/feature-tc-coverage.baseline
+#
+# Snapshot of features that were `status: complete` with fewer than four
+# linked TCs at the moment ADR-072 landed. Listed feature IDs are exempt
+# from the hard gate so the rule can be enforced on new work without
+# blocking 92 features of pre-existing technical debt. Snapshot date:
+# 2026-06-02.
+#
+# Maintenance:
+#   - DO NOT add new entries. New features must be authored with >=4 TCs.
+#   - REMOVE entries as the TC-author worker brings each feature up to
+#     the floor and the script emits a "remove from baseline" diagnostic.
+#   - When this file is empty, delete it and tighten the script to remove
+#     the baseline branch.
+#
+# One feature ID per line. Blank lines and `#` comments are ignored.
+
+FT-001
+FT-002
+FT-003
+FT-004
+FT-005
+FT-006
+FT-007
+FT-010
+FT-012
+FT-013
+FT-015
+FT-017
+FT-018
+FT-019
+FT-020
+FT-021
+FT-022
+FT-023
+FT-024
+FT-025
+FT-026
+FT-027
+FT-028
+FT-029
+FT-030
+FT-031
+FT-032
+FT-033
+FT-034
+FT-035
+FT-036
+FT-037
+FT-040
+FT-042
+FT-043
+FT-045
+FT-046
+FT-047
+FT-048
+FT-050
+FT-051
+FT-052
+FT-053
+FT-054
+FT-055
+FT-056
+FT-057
+FT-058
+FT-059
+FT-060
+FT-061
+FT-062
+FT-063
+FT-064
+FT-065
+FT-067
+FT-068
+FT-069
+FT-070
+FT-071
+FT-072
+FT-073
+FT-074
+FT-075
+FT-076
+FT-077
+FT-078
+FT-079
+FT-080
+FT-081
+FT-082
+FT-083
+FT-084
+FT-085
+FT-086
+FT-087
+FT-088
+FT-089
+FT-090
+FT-091
+FT-092
+FT-093
+FT-094
+FT-095
+FT-096
+FT-097
+FT-100
+FT-101
+FT-103
+FT-104
+FT-106
+FT-117

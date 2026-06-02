@@ -10,6 +10,11 @@ domains:
 - api
 - storage
 scope: domain
+content-hash: sha256:85395b0df7d69b2d63d2e6b35d408550f177865fb80bd1ea5ad210ae00f69fa8
+amendments:
+- date: 2026-06-02T07:06:02Z
+  reason: 'ADR-072 (proposed) introduces a configurable TC-coverage floor — `min_tcs_per_feature`. Per ADR-068''s inventory pattern ("adding a new knob has a canonical home: extend this ADR + amend the inventory"), the knob lands under a new `[verification]` section with the documented built-in default of 4. No semantic change to existing keys; precedence chain and strict-parsing rules are unchanged.'
+  previous-hash: sha256:e00d692ea2856cf9fb78a6e4d47897056fa55d7da2e9525df8984c71c5162d80
 ---
 
 **Status:** Accepted
@@ -66,6 +71,7 @@ the key. Examples:
 | `[sweep] per_feature_timeout_secs` | `DEC_SWEEP_PER_FEATURE_TIMEOUT_SECS` |
 | `[sweep] auto_retire_failing_graphs` | `DEC_SWEEP_AUTO_RETIRE_FAILING_GRAPHS` |
 | `[paths] worktree_root` | `DEC_PATHS_WORKTREE_ROOT` |
+| `[verification] min_tcs_per_feature` | `DEC_VERIFICATION_MIN_TCS_PER_FEATURE` |
 
 The mapping is mechanical: lowercase the env var, replace
 underscores with `.` at the section boundary (first underscore
@@ -125,6 +131,9 @@ default_secret_env = "SCW_SECRET_KEY" # env var name dec init names in .env.exam
 [paths]
 worktree_root = ".dec/worktrees"      # FT-115
 store_path = ".dec/store/orchestration.nq"
+
+[verification]
+min_tcs_per_feature = 4               # ADR-072 TC-coverage floor for status:complete
 ```
 
 Every key has a documented built-in default (matching the
@@ -220,6 +229,10 @@ constraint that a flag always wins.
 
 - **FT-114** ships the parser + initial config.toml generation
   as part of `dec init` auto-bootstrap.
+- **ADR-072** authors `[verification] min_tcs_per_feature` as
+  the TC-coverage floor for `status: complete`; the
+  enforcement script reads the value through the precedence
+  chain documented here.
 - **Future feature** ships the forward-merge tool that handles
   key-removal across CLI versions (the strict-parsing
   consequence).
