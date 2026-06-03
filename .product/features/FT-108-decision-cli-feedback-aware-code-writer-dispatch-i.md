@@ -109,7 +109,7 @@ This mirrors FT-107's matcher-bypass gate. After the worker writes new code and 
 - Worker returns a `CodeChange` with empty `addressed_feedback_iris` when bundle feedback was non-empty → reject with `Error::WorkerIgnoredFeedback` (the same variant FT-107 added). Mirror-rejection for the implementer.
 - Feedback IRI cited that doesn't exist in the store → fail the accept with referential-integrity error.
 
-### Out of scope
+## Out of scope
 
 - Re-dispatching the verifier after the implementer fixes code. The orchestrator already auto-dispatches the runner on `CodeChange` commit (FT-100). When verify next runs, it'll either pass (clearing the addressed feedback) or emit fresh defect feedback for the next loop iteration.
 - Cross-feature defect feedback (a `cargo test` panic in FT-018 that's actually caused by FT-009 code). This slice scopes per-feature; cross-feature triage is a follow-up.

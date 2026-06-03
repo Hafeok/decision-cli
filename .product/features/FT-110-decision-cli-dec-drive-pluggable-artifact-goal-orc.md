@@ -129,7 +129,7 @@ Text rendering by default; `--format json` for piping the outcome into downstrea
 - No planner for `(kind, goal)` → `Err::NoPlannerRegistered { kind, goal }`. Includes a hint about which combinations *are* registered so the operator knows what's supported today.
 - A dispatched action fails (worker subprocess crashes, validator refuses) → the failure propagates; the driver does NOT swallow it. The history captures the action that errored.
 
-### Out of scope
+## Out of scope
 
 - ADR+Accept, TC+Cover, VG+Approve planners. The substrate accepts them, the slice doesn't ship them. Each is a follow-up of ~50 lines.
 - `--watch` mode that polls `dec loop list` and drives features with open defects automatically. The interactive `dec drive FT-XXX` is the primitive; the watcher is a wrapper.

@@ -87,7 +87,7 @@ class WorkspaceViolation(Exception):
 - `tool_result_error("toolu_001", "blocked")` returns a dict with `"is_error": True` and `"tool_use_id": "toolu_001"`.
 - All tests run via `pytest` from the repo root with `pytest workers/_shared/tests/test_tool_safety.py` (or wherever the test file lands).
 
-### Non-goals
+## Out of scope
 
 - Subprocess invocation helpers (`run_*` tools with `cwd=workspace` and timeouts). Owned by FT-123 (the tool implementations themselves), which import this module's `safe_join` and `is_write_blocked` plus apply their own subprocess containment per [ADR-071](ADR-071) §4-5.
 - Static scan that validates every worker file imports `tool_safety`. Tracked as part of the [ADR-071](ADR-071) cross-cutting fitness gate; lives in `scripts/checks/tool-safety-imports.sh`, authored separately when the platform TC for that ADR lands.

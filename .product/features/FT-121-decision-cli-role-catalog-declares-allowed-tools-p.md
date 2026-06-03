@@ -64,7 +64,7 @@ No operator-facing CLI inputs. The seeded values are constants in `crates/decisi
 - A SHACL validation pass against a legacy store (pre-seed) does not panic; `lookup()` returns `Role { allowed_tools: vec![], .. }`. Validation may report the shape violation (advisory); the lookup path remains operational.
 - All existing role catalog tests continue to pass — the field addition is additive.
 
-### Non-goals
+## Out of scope
 
 - Tool-call enforcement at the worker. Owned by FT-123.
 - Wire-format threading through `DispatchPayloadJson`. Owned by FT-122.

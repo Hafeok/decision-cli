@@ -118,7 +118,7 @@ Both views render text by default (operator-friendly columns) and JSON on `--for
 - Unresolvable TC → silently dropped from the rollup (logged at trace level). Feedback whose `sourceArtifact` isn't a TC (e.g. catalog-gap feedback pointing at a CapabilityReference) is excluded from `dec loop list`'s feature rollup but still listed in a final "(N feedback artifacts not scoped to any feature)" line.
 - Missing product graph (running outside an initialised tree) → `dec loop list` errors with a clear remediation hint ("run inside a `dec init`-ed working directory"). `dec loop show` errors the same way.
 
-### Out of scope
+## Out of scope
 
 - Metrics roll-up: time-to-close per loop, average worker cost per addressed defect, worker-quality scoreboard. The data exists; a metrics CLI is a follow-up.
 - Real-time tailing of in-progress loops. `dec events tail` already streams the events; the loop reporter is a post-hoc summary.
