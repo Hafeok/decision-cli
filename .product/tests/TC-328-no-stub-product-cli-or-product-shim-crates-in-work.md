@@ -2,7 +2,7 @@
 id: TC-328
 title: No stub product-cli or product-shim crates in workspace after FT-136
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -13,6 +13,8 @@ runner-args: scripts/checks/no-stub-product-crates.sh
 runner-timeout: 30
 observes:
 - disk-state
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 0.0s
 ---
 
 ## Acceptance criteria

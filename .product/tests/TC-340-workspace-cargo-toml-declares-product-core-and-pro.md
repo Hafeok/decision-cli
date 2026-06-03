@@ -2,7 +2,7 @@
 id: TC-340
 title: Workspace Cargo.toml declares product-core and product-mcp at the pinned SHA
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -13,6 +13,8 @@ runner-args: scripts/checks/workspace-cargo-toml-shape.sh
 runner-timeout: 30
 observes:
 - file
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 0.0s
 ---
 
 ## Acceptance criteria

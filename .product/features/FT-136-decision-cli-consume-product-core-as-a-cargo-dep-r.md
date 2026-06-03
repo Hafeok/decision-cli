@@ -2,7 +2,7 @@
 id: FT-136
 title: 'decision-cli: Consume product-core as a Cargo dep; retire product-cli stub and product-shim'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-077

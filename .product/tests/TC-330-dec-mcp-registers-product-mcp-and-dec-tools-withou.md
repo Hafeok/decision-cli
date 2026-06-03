@@ -2,7 +2,7 @@
 id: TC-330
 title: dec mcp registers product-mcp and dec tools without name collision
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --test ft_136_mcp_merge_no_collision
 runner-timeout: 120
 observes:
 - mcp-response
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 0.4s
 ---
 
 ## Acceptance criteria

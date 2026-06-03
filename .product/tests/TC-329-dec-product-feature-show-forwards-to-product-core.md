@@ -2,7 +2,7 @@
 id: TC-329
 title: dec product feature show forwards to product_core and returns the expected artifact
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -14,6 +14,8 @@ runner-timeout: 120
 observes:
 - stdout
 - exit-code
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 1.3s
 ---
 
 ## Acceptance criteria

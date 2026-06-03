@@ -1,9 +1,8 @@
-//! `dec product *` — clap adapter that re-exports the absorbed product-cli surface.
+//! `dec product *` — clap adapter that forwards to product_core (FT-136 / ADR-077).
 //!
-//! FT-105 §Phase 3: every product-cli verb gets a `dec product *` form
-//! by routing through the same `product_cli::dispatch` function the
-//! standalone binary uses. The CLI adapter here is wiring only per
-//! ADR-013 §Rule 3 — clap argument capture + delegation.
+//! The adapter routes through `product_cmd::run`, which loads the
+//! KnowledgeGraph via product_core and renders the result. Wiring only
+//! per ADR-013 §Rule 3 — clap argument capture + delegation.
 
 use std::path::Path;
 use std::process::ExitCode;

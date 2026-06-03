@@ -2,7 +2,7 @@
 id: TC-331
 title: product-core's Cargo.toml has no dependency on decision-cli or oxi-events
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -13,6 +13,8 @@ runner-args: scripts/checks/product-core-sdp-boundary.sh
 runner-timeout: 90
 observes:
 - file
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 0.3s
 ---
 
 ## Acceptance criteria

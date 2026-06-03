@@ -1,0 +1,12 @@
+# Product-cli configuration for decision-cli repository
+
+[product]
+name = "decision-cli"
+version = "0.1.0"
+
+[paths]
+features = ".product/features"
+adrs = ".product/adrs"
+tests = ".product/tests"
+dependencies = ".product/dependencies"
+patterns = ".product/patterns"

@@ -2,7 +2,7 @@
 id: TC-334
 title: dec product adr show ADR-009 surfaces the adr title and status
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -14,6 +14,8 @@ runner-timeout: 60
 observes:
 - stdout
 - exit-code
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

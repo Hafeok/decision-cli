@@ -2,7 +2,7 @@
 id: TC-333
 title: dec product feature next returns the next implementable feature
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -14,6 +14,8 @@ runner-timeout: 60
 observes:
 - stdout
 - exit-code
+last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria
