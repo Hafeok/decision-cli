@@ -13,6 +13,15 @@ tests:
 - TC-329
 - TC-330
 - TC-331
+- TC-332
+- TC-333
+- TC-334
+- TC-335
+- TC-336
+- TC-337
+- TC-338
+- TC-339
+- TC-340
 domains:
 - api
 domains-acknowledged:
@@ -77,17 +86,96 @@ The Cargo wiring and the stub deletion land in **one commit** to avoid an interm
    pub fn build_command() -> clap::Command { /* feature / adr / context / preflight / graph subcommands */ }
    pub fn dispatch(matches: &clap::ArgMatches) -> ExitCode { /* match verb → product_core::* */ }
    ```
-3. Each verb delegates to `product_core::*` in-process:
-   - `product feature show ID` → `product_core::feature::show(repo_root, ID)` → render to stdout
-   - `product feature list` → `product_core::feature::list(repo_root, filters)` → render
-   - `product feature next` → `product_core::feature::next(repo_root)` → render
-   - `product adr show ID` → `product_core::adr::show(repo_root, ID)` → render
-   - `product adr list` → `product_core::adr::list(repo_root)` → render
-   - `product context ID` → `product_core::context::assemble(repo_root, ID, depth, target)` → render
-   - `product preflight ID` → `product_core::gap::preflight(repo_root, ID)` → render
-   - `product graph check` → `product_core::graph::check(repo_root)` → render
-   - `product graph stats` → `product_core::graph::stats(repo_root)` → render
-4. Renderer choice: where `product_core` exposes a renderer, use it; where the upstream `product` binary builds its own output in `product-cli/src/commands/`, decision-cli implements an equivalent renderer. The slice does not chase byte-for-byte parity with upstream `product *` stdout — that surface is the upstream binary's responsibility.
+3. **product_core API reference** (verified against upstream HEAD `5fad7aa11ca8787ff74e87bb00e1cc0bdfb8b2c1`). `product_core` does NOT expose `feature_show`-style entry points — it exposes typed artifacts (`Feature`, `Adr`, `TestCriterion`) and a `KnowledgeGraph` with `pub` field accessors. The adapter does its own rendering against the typed structs.
+
+   **Canonical load sequence** (do this once per `dec product *` invocation):
+
+   ```rust
+   use product_core::{
+       config::ProductConfig,
+       context,
+       error::Result,
+       gap,
+       graph::{full_check, KnowledgeGraph},
+       parser,
+       root,
+       types::{Adr, Feature, TestCriterion},
+   };
+
+   // Resolve the active .product/ root (--root flag, then PRODUCT_ROOT env, then walk-up).
+   let repo_root = root::resolve_active()?;
+   let config    = ProductConfig::load(&repo_root)?;
+
+   // Resolve per-artifact-type subdirs (respects config.paths.* overrides).
+   let features_dir = config.resolve_path(&repo_root, &config.paths.features);
+   let adrs_dir     = config.resolve_path(&repo_root, &config.paths.adrs);
+   let tests_dir    = config.resolve_path(&repo_root, &config.paths.tests);
+   let deps_dir     = config.resolve_path(&repo_root, &config.paths.dependencies);
+   let patterns_dir = config.resolve_path(&repo_root, &config.paths.patterns);
+
+   // Load all artifact types.
+   let loaded = parser::load_all_full(
+       &features_dir, &adrs_dir, &tests_dir,
+       Some(&deps_dir), Some(&patterns_dir),
+   )?;
+
+   // Build the canonical graph.
+   let graph = KnowledgeGraph::build_full(
+       loaded.features, loaded.adrs, loaded.tests,
+       loaded.dependencies, loaded.patterns,
+   );
+   ```
+
+   **`KnowledgeGraph` read surface** (all fields are `pub`):
+
+   ```rust
+   pub struct KnowledgeGraph {
+       pub features:     HashMap<String, Feature>,
+       pub adrs:         HashMap<String, Adr>,
+       pub tests:        HashMap<String, TestCriterion>,
+       pub dependencies: HashMap<String, Dependency>,
+       pub patterns:     HashMap<String, Pattern>,
+       // ... edges / forward / reverse used internally by graph algorithms
+   }
+
+   pub struct Feature { pub front: FeatureFrontMatter, pub body: String, pub path: PathBuf }
+   pub struct Adr     { pub front: AdrFrontMatter,     pub body: String, pub path: PathBuf }
+   // FeatureFrontMatter / AdrFrontMatter expose id, title, phase, status, depends_on, adrs, tests, etc.
+
+   impl KnowledgeGraph {
+       pub fn build_full(features, adrs, tests, deps, patterns) -> Self;
+       pub fn stats(&self) -> graph::GraphStats;
+       pub fn all_ids(&self) -> HashSet<String>;
+       // ... plus traversal helpers used by full_check / gap / context
+   }
+   ```
+
+   **Per-verb wiring** — each verb loads the graph as above, then:
+
+   | `dec product` verb       | Read pattern                                                                          |
+   |--------------------------|---------------------------------------------------------------------------------------|
+   | `feature show <ID>`      | `graph.features.get(id)` → render `Feature.front` + `Feature.body`                    |
+   | `feature list`           | iterate `graph.features.values()`, filter on phase/status, render one row each        |
+   | `feature next`           | use `product_core::feature::depends_on` helpers + `graph::types::FeatureNextResult`   |
+   | `adr show <ID>`          | `graph.adrs.get(id)` → render `Adr.front` + `Adr.body`                                |
+   | `adr list`               | iterate `graph.adrs.values()`, render one row each                                    |
+   | `context <ID>`           | `product_core::context::bundle_feature(&graph, id, ...)` (FT) or `context::bundle_adr` (ADR) |
+   | `preflight <ID>`         | `product_core::gap::check::check_feature_dep_gaps(&graph, id)` → `Vec<GapFinding>`    |
+   | `graph check`            | `product_core::graph::full_check::run(&graph, &config, &repo_root)` → `CheckResult`   |
+   | `graph stats`            | `graph.stats()` → `product_core::graph::GraphStats`                                    |
+
+   Source-of-truth files in the upstream repo (browse these to confirm the API hasn't drifted before re-pinning):
+
+   - `product-core/src/parser.rs:178+` — `load_all`, `load_all_with_deps`, `load_all_full`.
+   - `product-core/src/graph/model.rs:55+` — `KnowledgeGraph` struct + `build_full` impl.
+   - `product-core/src/graph/types.rs` — `GraphStats`, `FeatureNextResult`, `PhaseGateStatus`, `ImpactResult`.
+   - `product-core/src/graph/full_check.rs` — `pub fn run(&graph, &config, root) -> CheckResult`.
+   - `product-core/src/gap/mod.rs` — re-exports `check::{check_all, check_feature_dep_gaps, gap_stats}` and the `GapFinding`/`GapReport` types.
+   - `product-core/src/context/mod.rs` — re-exports `bundle_feature`, `bundle_feature_with_product`, `bundle_adr`.
+   - `product-core/src/types.rs:365+` — `Feature`, `Adr`, `TestCriterion`.
+   - `product-core/src/root.rs` — `resolve_active`, `RootSource`.
+
+4. **Renderers.** `product_core` exposes typed artifacts but does NOT expose `product feature show`-style text renderers (those live in `product-cli/src/commands/feature.rs:render_feature_show_text` upstream — a binary-side concern). decision-cli implements equivalent renderers in `crates/decision-cli/src/features/product_cmd/render.rs` (or per-verb sub-modules). Byte-for-byte parity with upstream `product *` stdout is NOT an invariant — TC-329 through TC-339 assert *behavioural* parity (substring match on id / title / phase / status). Adopt the upstream renderer shape where practical so operators familiar with the standalone CLI see a familiar layout.
 5. Wire `register(cmd)` into `crates/decision-cli/src/main.rs` (or the existing CLI scaffold) so `dec product` is reachable.
 6. `cargo build --workspace` succeeds at the end of this phase; this is the natural commit boundary.
 
