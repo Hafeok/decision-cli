@@ -2,7 +2,7 @@
 id: FT-137
 title: 'decision-cli: Defect-scope guard — extend allowlist with build/docs/CI/VCS defaults and project-level config'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-078

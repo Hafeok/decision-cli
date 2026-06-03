@@ -2,7 +2,7 @@
 id: TC-343
 title: defect-scoped finalize succeeds when worker touches Cargo.toml plus a prior-set file
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-137
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --test ft_137_finalize_allowlist defect_scop
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-03T11:44:11.154198982+00:00
+last-run-duration: 0.5s
 ---
 
 ## Acceptance criteria

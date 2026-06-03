@@ -14,6 +14,7 @@ fn commit_message_includes_iris_and_short_hash() {
         bundle_hash: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
         worker_summary: "Land the thing\n\nMore detail follows.",
         defect_scoped: false,
+        scope_guard_extras: &[],
     };
     let msg = build_commit_message(&input);
     assert!(msg.starts_with("[FT-099] Land the thing\n\n"), "subject");
@@ -35,6 +36,7 @@ fn commit_message_drops_codechange_line_when_empty() {
         bundle_hash: "deadbeefdeadbeef",
         worker_summary: "x",
         defect_scoped: false,
+        scope_guard_extras: &[],
     };
     let msg = build_commit_message(&input);
     assert!(!msg.contains("CodeChange:"), "{msg}");
@@ -80,6 +82,7 @@ fn scope_guard_allows_in_scope_modification() {
         bundle_hash: "abc",
         worker_summary: "fix in-scope",
         defect_scoped: true,
+        scope_guard_extras: &[],
     };
     let outcome = finalize_run(&input).expect("finalize succeeds for in-scope edit");
     assert!(outcome.commit_sha.is_some());
@@ -132,6 +135,7 @@ fn scope_guard_blocks_out_of_scope_modification() {
         bundle_hash: "abc",
         worker_summary: "stomp",
         defect_scoped: true,
+        scope_guard_extras: &[],
     };
     let err = finalize_run(&input).expect_err("expected ScopeViolation");
     match err {
@@ -166,6 +170,7 @@ fn scope_guard_allows_new_file_additions() {
         bundle_hash: "abc",
         worker_summary: "add helper",
         defect_scoped: true,
+        scope_guard_extras: &[],
     };
     let outcome = finalize_run(&input).expect("finalize succeeds for added file");
     assert!(outcome.commit_sha.is_some());
@@ -230,6 +235,7 @@ fn scope_guard_bypasses_when_no_prior_feature_commits_exist() {
         bundle_hash: "abc",
         worker_summary: "initial impl with defects",
         defect_scoped: true,
+        scope_guard_extras: &[],
     };
     let outcome = finalize_run(&input).expect("finalize succeeds for empty-allowlist case");
     assert!(
@@ -318,6 +324,7 @@ fn scope_guard_bypasses_when_prior_commits_are_spec_only() {
         bundle_hash: "abc",
         worker_summary: "initial impl after spec-only history",
         defect_scoped: true,
+        scope_guard_extras: &[],
     };
     let outcome =
         finalize_run(&input).expect("finalize succeeds: spec-only history bypasses guard");
@@ -385,6 +392,7 @@ fn scope_guard_permits_system_path_modifications() {
         bundle_hash: "abc",
         worker_summary: "in-scope fix plus harness bookkeeping",
         defect_scoped: true,
+        scope_guard_extras: &[],
     };
     let outcome = finalize_run(&input)
         .expect("finalize succeeds: .dec/ and .product/ are system paths");
@@ -437,4 +445,129 @@ fn scope_test_setup_repo(
         .output()
         .unwrap();
     base
+}
+
+// ----------------------------------------------------------------------
+// TC-341 / FT-137 — is_always_allowed default categories.
+// ----------------------------------------------------------------------
+
+/// Verifies the four default allowlist categories (build manifests,
+/// repo-level docs, CI/packaging configs, VCS metadata) plus the
+/// pre-existing `.product/` + `.dec/` prefixes (ADR-078). Asserts both
+/// positive cases (each category exercised with at least one path) and
+/// negative cases (representative feature-scoped paths that must NOT be
+/// allowed by defaults). `extras` is empty for this test.
+#[test]
+fn is_always_allowed_default_categories() {
+    use super::scope_guard::is_always_allowed;
+
+    let extras: &[String] = &[];
+
+    // Build manifests — basenames at any depth.
+    let manifests = [
+        "Cargo.toml",
+        "crates/foo/Cargo.toml",
+        "crates/decision-cli/Cargo.toml",
+        "Cargo.lock",
+        "pyproject.toml",
+        "uv.lock",
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+    ];
+    for p in manifests {
+        assert!(is_always_allowed(p, extras), "manifest {p} must be allowed");
+    }
+
+    // Repo-level docs — root only.
+    let docs = [
+        "CLAUDE.md",
+        "README.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "LICENSE.md",
+        "LICENSE.txt",
+        "CODE_OF_CONDUCT.md",
+        "CHANGELOG.md",
+    ];
+    for p in docs {
+        assert!(is_always_allowed(p, extras), "doc {p} must be allowed");
+    }
+
+    // CI / packaging — prefix matches + exact root paths.
+    let ci = [
+        ".github/workflows/release.yml",
+        ".github/CODEOWNERS",
+        ".cargo/config.toml",
+        "dist-workspace.toml",
+        "rust-toolchain.toml",
+        "rust-toolchain",
+    ];
+    for p in ci {
+        assert!(is_always_allowed(p, extras), "ci {p} must be allowed");
+    }
+
+    // VCS metadata.
+    assert!(is_always_allowed(".gitignore", extras));
+    assert!(is_always_allowed(".gitattributes", extras));
+
+    // Pre-existing prefixes (regression guard).
+    assert!(is_always_allowed(".product/features/FT-001.md", extras));
+    assert!(is_always_allowed(".dec/store/orchestration.nq", extras));
+
+    // Negative — feature-scoped code paths must NOT be allowed by defaults.
+    let scoped = [
+        "crates/decision-cli/src/main.rs",
+        "crates/decision-cli/tests/integration.rs",
+        "docs/architecture.md",
+        "workers/code-writer/main.py",
+        "crates/foo/src/lib.rs",
+    ];
+    for p in scoped {
+        assert!(
+            !is_always_allowed(p, extras),
+            "feature-scoped {p} must NOT be allowed by defaults"
+        );
+    }
+}
+
+// ----------------------------------------------------------------------
+// TC-342 / FT-137 — is_always_allowed with project-config extras.
+// ----------------------------------------------------------------------
+
+/// Verifies that the project-level `[scope-guard].always-allowed` array
+/// (read from `.dec/config.toml`) augments the default allowlist with
+/// glob (`**`) and exact-match patterns, additively — defaults still
+/// apply when extras are present, and extras leave non-matching paths
+/// denied (ADR-078 §Boundaries: extras are additive, not subtractive).
+#[test]
+fn is_always_allowed_config_extras() {
+    use super::scope_guard::is_always_allowed;
+
+    let extras: Vec<String> = vec!["scripts/checks/**".into(), "deny.toml".into()];
+
+    // `**` glob covers descendants at any depth.
+    assert!(is_always_allowed("scripts/checks/foo.sh", &extras));
+    assert!(is_always_allowed(
+        "scripts/checks/nested/bar.sh",
+        &extras
+    ));
+
+    // Exact match.
+    assert!(is_always_allowed("deny.toml", &extras));
+
+    // Defaults still apply when extras are present (additive).
+    assert!(is_always_allowed("Cargo.toml", &extras));
+
+    // Only `scripts/checks/**` is allowed — `scripts/unrelated.sh` is denied.
+    assert!(!is_always_allowed("scripts/unrelated.sh", &extras));
+
+    // A feature-scoped file still denied with these extras.
+    assert!(!is_always_allowed("crates/foo/src/lib.rs", &extras));
+
+    // Empty extras: TC-341 positive cases unchanged; extras' targets denied.
+    let empty: &[String] = &[];
+    assert!(!is_always_allowed("scripts/checks/foo.sh", empty));
+    assert!(is_always_allowed("Cargo.toml", empty));
 }

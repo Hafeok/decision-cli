@@ -20,6 +20,11 @@
 #[cfg(test)]
 mod tests;
 
+mod scope_guard;
+
+pub use scope_guard::load_scope_guard_extras;
+use scope_guard::is_always_allowed;
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -79,6 +84,14 @@ pub struct FinalizeInput<'a> {
     /// feedback) keep the open behaviour — anything in the working
     /// tree may be committed.
     pub defect_scoped: bool,
+    /// Project-configured extras for the always-allowed predicate
+    /// (FT-137 / ADR-078). Patterns are matched in addition to the
+    /// hardcoded defaults (build manifests, repo docs, CI configs,
+    /// VCS metadata, `.product/`, `.dec/`). Patterns ending in `/**`
+    /// match any descendant path; other patterns are exact-match.
+    /// Read from `.dec/config.toml`'s `[scope-guard].always-allowed`
+    /// array by the production caller; tests typically pass `&[]`.
+    pub scope_guard_extras: &'a [String],
 }
 
 /// Finalisation errors that abort the `dec implement` run.
@@ -163,13 +176,18 @@ pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, Finali
             // harness store are touched by orchestration bookkeeping
             // and cross-cutting feature work, not by the targeted code
             // the guard protects.
-            let has_prior_implementation = allowed.iter().any(|p| !is_system_path(p));
+            let has_prior_implementation = allowed
+                .iter()
+                .any(|p| !is_always_allowed(p, input.scope_guard_extras));
             if has_prior_implementation {
                 let dirty = working_tree_modified_files(input.repo_root)?;
                 let violations: Vec<String> = dirty
                     .into_iter()
                     .filter(|(status, _)| status == "M" || status == "D" || status == "R")
-                    .filter(|(_, path)| !is_system_path(path) && !allowed.contains(path))
+                    .filter(|(_, path)| {
+                        !is_always_allowed(path, input.scope_guard_extras)
+                            && !allowed.contains(path)
+                    })
                     .map(|(_, path)| path)
                     .collect();
                 if !violations.is_empty() {
@@ -190,16 +208,9 @@ pub fn finalize_run(input: &FinalizeInput<'_>) -> Result<FinalizeOutcome, Finali
     Ok(outcome)
 }
 
-/// Paths the scope guard treats as "always permitted" regardless of
-/// the feature's prior commit history. `.product/` is the artifact
-/// graph (specs, ADRs, TCs, requests log) — touched by any
-/// cross-cutting feature work or `product feature status` transition.
-/// `.dec/` is the harness store (orchestration store, verify benches,
-/// worktree state) — written by orchestration bookkeeping rather than
-/// by worker output. Neither belongs to the "code the guard protects."
-fn is_system_path(path: &str) -> bool {
-    path.starts_with(".product/") || path.starts_with(".dec/")
-}
+// FT-137: the always-allowed predicate + config reader live in
+// `scope_guard.rs` to keep this file under ADR-013's source-file-length
+// limits.
 
 /// Files touched by any prior `[FT-XXX]` commit. The defect-scope
 /// guard's allowlist for modifications: a worker fixing defect

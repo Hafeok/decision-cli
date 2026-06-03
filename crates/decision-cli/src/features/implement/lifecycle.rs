@@ -159,6 +159,7 @@ pub(super) fn finalize_implement_run(
     code_change: &CodeChangeJson,
     defect_scoped: bool,
 ) -> Result<crate::finalize::FinalizeOutcome> {
+    let scope_guard_extras = crate::finalize::load_scope_guard_extras(workdir);
     let finalize_input = crate::finalize::FinalizeInput {
         repo_root: workdir,
         product_root: &ctx.product_root,
@@ -169,6 +170,7 @@ pub(super) fn finalize_implement_run(
         bundle_hash: &ctx.bundle_hash,
         worker_summary: &code_change.summary,
         defect_scoped,
+        scope_guard_extras: &scope_guard_extras,
     };
     crate::finalize::finalize_run(&finalize_input).context("finalising dec implement run (FT-017)")
 }

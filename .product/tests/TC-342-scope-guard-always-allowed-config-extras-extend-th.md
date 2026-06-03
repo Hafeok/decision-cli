@@ -2,7 +2,7 @@
 id: TC-342
 title: scope-guard always-allowed config extras extend the predicate with glob patterns
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-137
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib features::finalize::tests::is_always_a
 runner-timeout: 60
 observes:
 - exit-code
+last-run: 2026-06-03T11:44:11.154198982+00:00
+last-run-duration: 0.4s
 ---
 
 ## Acceptance criteria
