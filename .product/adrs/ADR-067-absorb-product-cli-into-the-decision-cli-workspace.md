@@ -1,12 +1,14 @@
 ---
 id: ADR-067
 title: Absorb product-cli into the decision-cli workspace
-status: accepted
+status: superseded
 features:
 - FT-105
 - FT-106
+- FT-136
 supersedes: []
-superseded-by: []
+superseded-by:
+- ADR-077
 domains: []
 scope: domain
 content-hash: sha256:62e9bdb5fccca042d0b012f50368c1f7f11378128bf6b87b5885e794ab078dd4

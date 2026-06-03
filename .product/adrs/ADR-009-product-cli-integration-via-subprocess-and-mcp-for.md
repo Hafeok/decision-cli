@@ -4,6 +4,7 @@ title: product-cli integration via subprocess and MCP for slice 1
 status: accepted
 features:
 - FT-105
+- FT-136
 supersedes: []
 superseded-by: []
 domains: []
