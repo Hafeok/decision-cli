@@ -1,0 +1,32 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-186>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-117> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-186/0> <https://decision-cli.dev/ns/step/VG-186/1> <https://decision-cli.dev/ns/step/VG-186/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-186/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-246> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-246-migrate-cli-rewrites-store.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-186/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-247> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-247-migrate-cli-idempotent.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-186/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-248> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash tests/scripts/tc-248-post-migration-bench-list.sh" ;
+    dec:expectExitCode 0 .

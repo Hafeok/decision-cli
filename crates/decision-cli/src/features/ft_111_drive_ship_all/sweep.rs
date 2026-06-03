@@ -222,12 +222,19 @@ pub fn resolve_features(product_root: &Path) -> Result<Vec<String>, SweepError> 
         let filename = entry.file_name();
         let filename_str = filename.to_string_lossy();
 
-        // Extract FT-NNN from filename
+        // Extract FT-NNN from filename, preserving the original
+        // zero-padding (the product catalogue canonicalises to
+        // 3-digit ids like FT-099; reformatting via `u32` would
+        // produce FT-99, which `product preflight` rejects as
+        // "not found" and the inspector then can't parse).
         if let Some(ft_id) = filename_str.strip_prefix("FT-").and_then(|s| {
-            s.split('-')
-                .next()
-                .and_then(|num| num.parse::<u32>().ok())
-                .map(|n| format!("FT-{n}"))
+            let num_part = s.split('-').next()?;
+            if num_part.is_empty()
+                || !num_part.chars().all(|c| c.is_ascii_digit())
+            {
+                return None;
+            }
+            Some(format!("FT-{num_part}"))
         }) {
             features.push(ft_id);
         }
@@ -352,5 +359,26 @@ mod tests {
         let filter = vec![];
         let result = apply_filter(resolved, Some(filter));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn resolve_features_preserves_zero_padding() {
+        // Regression: the catalogue uses 3-digit zero-padded ids
+        // (FT-001, FT-099). Reformatting via u32 would yield FT-1,
+        // FT-99 — and `product preflight FT-99` rejects those as
+        // "not found", crashing the sweep with EOF parse errors.
+        let tmp = tempfile::tempdir().unwrap();
+        let features_dir = tmp.path().join("features");
+        std::fs::create_dir_all(&features_dir).unwrap();
+        for name in [
+            "FT-001-foo.md",
+            "FT-099-bar.md",
+            "FT-100-baz.md",
+            "FT-135-qux.md",
+        ] {
+            std::fs::write(features_dir.join(name), "").unwrap();
+        }
+        let resolved = resolve_features(tmp.path()).unwrap();
+        assert_eq!(resolved, vec!["FT-001", "FT-099", "FT-100", "FT-135"]);
     }
 }
