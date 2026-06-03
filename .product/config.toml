@@ -32,6 +32,7 @@ test = "TC"
 "api" = "CLI surface, MCP tools, event schema"
 "observability" = "Metrics, tracing, logging, telemetry"
 "data-model" = "RDF, SPARQL, ontology, event sourcing"
+"workers" = "In-process worker tool surfaces, role-tool catalog, workspace containment, secrets blocking"
 
 [mcp]
 write = true
@@ -47,3 +48,9 @@ required-sections = ["Description", "Functional Specification", "Out of scope"]
 functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
 required-from-phase = 1
 completeness-severity = "warning"
+
+# FT-104 — cross-cutting ADRs every feature acknowledges by default.
+# Per-feature opt-out via the feature's `adrs-rejected:` frontmatter list.
+# ADR-072 (≥4 linked TCs) is a universal quality gate — every feature
+# respects it; per-feature acknowledgement is noise.
+default-acknowledged-cross-cutting = ["ADR-072"]

@@ -12,8 +12,9 @@ features:
 - FT-133
 supersedes: []
 superseded-by: []
-domains: []
-scope: cross-cutting
+domains:
+- workers
+scope: domain
 content-hash: sha256:c7fd039c5918a32e6fb591c4ca5f6d1b765f47dcf4f93fbcaf140d4565f14454
 ---
 
