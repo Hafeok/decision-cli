@@ -13,8 +13,8 @@ runner-args: --package decision-cli --test ft_136_mcp_merge_no_collision
 runner-timeout: 120
 observes:
 - mcp-response
-last-run: 2026-06-03T10:59:22.224178625+00:00
-last-run-duration: 0.4s
+last-run: 2026-06-03T12:09:07.168277302+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

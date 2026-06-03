@@ -13,8 +13,8 @@ runner-args: scripts/checks/product-core-sdp-boundary.sh
 runner-timeout: 90
 observes:
 - file
-last-run: 2026-06-03T10:59:22.224178625+00:00
-last-run-duration: 0.3s
+last-run: 2026-06-03T12:09:07.168277302+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

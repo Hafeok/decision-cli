@@ -1,0 +1,102 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-191>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-136> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-191/0> <https://decision-cli.dev/ns/step/VG-191/1> <https://decision-cli.dev/ns/step/VG-191/2> <https://decision-cli.dev/ns/step/VG-191/3> <https://decision-cli.dev/ns/step/VG-191/4> <https://decision-cli.dev/ns/step/VG-191/5> <https://decision-cli.dev/ns/step/VG-191/6> <https://decision-cli.dev/ns/step/VG-191/7> <https://decision-cli.dev/ns/step/VG-191/8> <https://decision-cli.dev/ns/step/VG-191/9> <https://decision-cli.dev/ns/step/VG-191/10> <https://decision-cli.dev/ns/step/VG-191/11> <https://decision-cli.dev/ns/step/VG-191/12> ) .
+
+<https://decision-cli.dev/ns/step/VG-191/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-328> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/no-stub-product-crates.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-329> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --test ft_136_product_forwards" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-330> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --test ft_136_mcp_merge_no_collision" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-331> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/product-core-sdp-boundary.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-332> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh feature list" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-333> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh feature next" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-334> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh adr show ADR-009" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-335> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh adr list" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/8>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-336> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh context FT-001" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/9>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-337> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh preflight FT-001" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/10>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-338> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh graph check" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/11>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-339> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/dec-product-verb.sh graph stats" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-191/12>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-340> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/workspace-cargo-toml-shape.sh" ;
+    dec:expectExitCode 0 .

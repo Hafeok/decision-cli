@@ -13,7 +13,7 @@ runner-args: scripts/checks/no-stub-product-crates.sh
 runner-timeout: 30
 observes:
 - disk-state
-last-run: 2026-06-03T10:59:22.224178625+00:00
+last-run: 2026-06-03T12:09:07.168277302+00:00
 last-run-duration: 0.0s
 ---
 
