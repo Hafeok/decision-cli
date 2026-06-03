@@ -1,6 +1,6 @@
 ---
 id: TC-182
-title: Every release tag produces five target archives for both product and dec binaries, with lockstep version
+title: Every release tag produces five target archives for the dec binary
 type: exit-criteria
 status: passing
 validates:
@@ -11,13 +11,13 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-182-release-artifact-parity.sh
 runner-timeout: 60
-last-run: 2026-05-28T08:49:13.087442580+00:00
+last-run: 2026-06-03T12:20:26.933108738+00:00
 last-run-duration: 0.0s
 ---
 
 ## Claim
 
-Every release tag pushed to the absorbed workspace produces five target-platform archives for **both** the `product` (deprecation shim) and `dec` binaries — `aarch64-apple-darwin`, `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`, `x86_64-pc-windows-msvc` — and both binaries ship at the same SemVer version (lockstep).
+Every release tag pushed to the decision-cli workspace produces five target-platform archives for the `dec` binary — `aarch64-apple-darwin`, `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`, `x86_64-pc-windows-msvc`. Re-scoped under ADR-077: only the dec binary is shipped from this workspace (product-cli was dropped).
 
 ## Scenarios
 
@@ -35,30 +35,30 @@ EXPECTED_TARGETS=(
   x86_64-unknown-linux-gnu
   x86_64-pc-windows-msvc
 )
-EXPECTED_BINARIES=(product dec)
+EXPECTED_BINARY=dec
 EXPECTED_ARCHIVE_EXTS=(
   tar.xz tar.xz tar.xz tar.xz zip  # parallel to EXPECTED_TARGETS; Windows uses zip
 )
 ```
 
-### Scenario A — every (binary, target) combination has an archive
+### Scenario A — every target has an archive
 
 For the most recent release tag, list all release assets. Assertions:
-- For each `binary ∈ EXPECTED_BINARIES`, for each `target ∈ EXPECTED_TARGETS`, an asset named `<binary>-<target>.<ext>` exists.
-- Total archive count: `len(BINARIES) * len(TARGETS) = 2 * 5 = 10` archives, plus the installer scripts (`installer.sh`, `installer.ps1`, Homebrew formula) that cargo-dist auto-generates.
-- A missing archive fails the test with a diagnostic naming the absent combination.
+- For each `target ∈ EXPECTED_TARGETS`, an asset named `dec-<target>.<ext>` exists.
+- Total archive count: 5 archives (one per target), plus the installer scripts (`installer.sh`, `installer.ps1`, Homebrew formula) that cargo-dist auto-generates.
+- A missing archive fails the test with a diagnostic naming the absent target.
 
-### Scenario B — lockstep version
+### Scenario B — version consistency
 
-For each archive, extract the binary and run `<binary> --version`. Assertions:
-- Every archive's binary reports the **same** SemVer string.
+For each archive, extract the binary and run `dec --version`. Assertions:
+- Every archive's binary reports the same SemVer string.
 - The reported version matches the release tag (modulo the `v` prefix).
-- The reported version matches the version in the workspace's `Cargo.toml` files (the test downloads the tag's `Cargo.toml` to compare).
+- The reported version matches the version in `crates/decision-cli/Cargo.toml`.
 
 ### Scenario C — archive contents are minimal
 
 Each archive contains exactly:
-- The binary (`product` or `dec`).
+- The `dec` binary.
 - A license file (LICENSE).
 - A README or doc subset (per cargo-dist's defaults).
 - No stray `.git/`, `target/`, or other build artefacts.
@@ -69,27 +69,27 @@ Asserted via `tar -tzf` (or `unzip -l` for Windows) and a contents-allowlist.
 
 For each archive, the release also publishes a `.sha256` or equivalent checksum file (cargo-dist does this by default via the `dist-manifest.json` it uploads). Assertions:
 - Either per-archive `.sha256` files exist, OR the release has a `dist-manifest.json` listing every archive's SHA-256.
-- For Scenario A's full set of 10 archives, every one has a recorded SHA matching what `sha256sum` produces on download.
+- For Scenario A's full set of 5 archives, every one has a recorded SHA matching what `sha256sum` produces on download.
 
 ### Scenario E — installer scripts work end-to-end
 
 Run the shell installer (`installer.sh`) in an isolated environment (a container or a temp `HOME`). Assertions:
 - Exit 0.
-- Both `dec` and `product` binaries are installed to the expected location.
-- Both binaries are executable and respond to `--version`.
+- The `dec` binary is installed to the expected location.
+- The binary is executable and responds to `--version`.
 
 Repeat for the PowerShell installer on a Windows runner if available. Homebrew formula testing is brittle in CI; skip with a documented note.
 
-### Scenario F — lockstep version drift detection (pre-release)
+### Scenario F — dist-workspace.toml structural check (pre-release)
 
-A separate sub-assertion that runs on PRs, not against releases: parse every workspace member's `Cargo.toml` and assert version equality across `crates/decision-cli/Cargo.toml`, `crates/product-cli/Cargo.toml`, and `crates/product-shim/Cargo.toml`. (Note: `crates/product-cli/` may or may not produce a binary depending on FT-105 §Phase 2 reconciliation; if it doesn't, its version still ships with the lockstep group.) Drift fails CI before any tag push.
+A separate sub-assertion that runs on PRs, not against releases: validate that `dist-workspace.toml` has `members = ["cargo:crates/decision-cli"]` only and includes all five target triples. Drift fails CI before any tag push.
 
 ## Runner
 
 `bash tests/scripts/tc-182-release-artifact-parity.sh`. Two modes:
 
 1. **Release-mode** — invoked with `--tag v0.X.Y`; queries the GitHub Releases API for that tag and runs Scenarios A-E. This mode runs on a schedule (nightly checks the most recent release) and on-demand for release validation.
-2. **PR-mode** — invoked with no args; runs Scenario F only (lockstep version drift check on the workspace's Cargo.toml files). This mode runs on every PR.
+2. **PR-mode** — invoked with no args; runs Scenario F only (dist-workspace.toml structural check). This mode runs on every PR.
 
 The two modes share the same script but gate scenarios on `--tag` presence.
 

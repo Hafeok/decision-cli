@@ -2,22 +2,24 @@
 id: TC-180
 title: io.github.Hafeok/product-cli MCP registry entry installs a working product binary after FT-106 lands
 type: scenario
-status: passing
+status: unrunnable
 validates:
-  features:
-  - FT-106
+  features: []
   adrs: []
 phase: 1
 runner: bash
 runner-args: tests/scripts/tc-180-mcp-registry-backwards-compat.sh
 runner-timeout: 120
-last-run: 2026-05-28T08:49:13.087442580+00:00
-last-run-duration: 0.2s
+last-run: 2026-06-03T12:16:34.624831600+00:00
+last-run-duration: 0.0s
+failure-message: "TC-180 FAIL: missing crates/product-cli/server.json — FT-106 §Phase 3 not applied\n"
 ---
 
 ## Claim
 
-The MCP registry entry `io.github.Hafeok/product-cli` continues to install a working `product` MCP server after FT-106 ships. Existing users see only the deprecation warning on the side; the registry name, the install mechanism, the binary name, and the runtime arguments are unchanged.
+**OBSOLETE under ADR-077.** This TC was written for the original FT-106 plan (ADR-067) where this workspace would publish both `io.github.Hafeok/product-cli` and `io.github.Hafeok/decision-cli`. ADR-077 supersedes that plan: this workspace only publishes `io.github.Hafeok/decision-cli`. The standalone product-cli repo continues to publish `io.github.Hafeok/product-cli` from its own release flow. This test is no longer relevant to this workspace.
+
+Original claim: The MCP registry entry `io.github.Hafeok/product-cli` continues to install a working `product` MCP server after FT-106 ships. Existing users see only the deprecation warning on the side; the registry name, the install mechanism, the binary name, and the runtime arguments are unchanged.
 
 ## Scenarios
 

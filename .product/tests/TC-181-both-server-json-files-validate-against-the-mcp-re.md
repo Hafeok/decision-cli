@@ -1,6 +1,6 @@
 ---
 id: TC-181
-title: Both server.json files validate against the MCP registry schema on every PR
+title: decision-cli server.json validates against the MCP registry schema on every PR
 type: scenario
 status: passing
 validates:
@@ -11,13 +11,13 @@ phase: 1
 runner: bash
 runner-args: tests/scripts/tc-181-server-json-schema.sh
 runner-timeout: 60
-last-run: 2026-05-28T08:49:13.087442580+00:00
-last-run-duration: 0.5s
+last-run: 2026-06-03T12:20:26.933108738+00:00
+last-run-duration: 0.3s
 ---
 
 ## Claim
 
-Both `crates/product-cli/server.json` and `crates/decision-cli/server.json` (or wherever the dec MCP server's manifest is committed) validate against the MCP registry's published `server.schema.json` on every PR. Schema drift fails CI; the test catches it before a release attempt finds out.
+`crates/decision-cli/server.json` validates against the MCP registry's published `server.schema.json` on every PR. Schema drift fails CI; the test catches it before a release attempt finds out. Re-scoped under ADR-077: only decision-cli's server.json is validated (product-cli was dropped from this workspace).
 
 ## Scenarios
 
@@ -26,10 +26,10 @@ Both `crates/product-cli/server.json` and `crates/decision-cli/server.json` (or 
 - The committed schema file at a known path (e.g. `tests/fixtures/server.schema.json`, mirroring product-cli's existing convention of shipping the schema for offline validation).
 - A JSON schema validator available in the CI environment (`jsonschema` Python package, `ajv` node, or a Rust crate — implementation detail).
 
-### Scenario A — both server.json files validate
+### Scenario A — server.json validates
 
-Run the validator with the schema against each committed `server.json`. Assertions:
-- Exit code: 0 for both files.
+Run the validator with the schema against the committed `server.json`. Assertions:
+- Exit code: 0.
 - No validation errors reported.
 - The validator output includes the file path and the schema version it validated against (for audit).
 
@@ -37,7 +37,7 @@ Run the validator with the schema against each committed `server.json`. Assertio
 
 Beyond schema validation, assert presence of business-required fields (the registry rejects on these too, but better-fast-CI-feedback):
 - `$schema` URL matches the expected version (e.g. `2025-09-29`).
-- `name` matches the expected pattern `io.github.<owner>/<repo>` and is unique across both files (`product-cli` vs `decision-cli`).
+- `name` matches the expected pattern `io.github.<owner>/<repo>` (specifically `io.github.Hafeok/decision-cli`).
 - `description` is non-empty and ≥ 16 chars (registry minimum).
 - `version` exists (placeholder allowed pre-publish; the publish workflow substitutes).
 - `repository.url`, `repository.source`, `repository.id` all present.
@@ -54,7 +54,7 @@ This sub-check runs nightly, not on every PR (network dependency); PR runs use t
 
 ### Scenario D — deliberate breakage caught
 
-Mutate one of the `server.json` files locally to introduce a known-bad change (e.g. remove the `name` field). Run the test. Assertions:
+Mutate the `server.json` file locally to introduce a known-bad change (e.g. remove the `name` field). Run the test. Assertions:
 - Exit code: 1.
 - Stderr names the failing file and the missing field.
 - The test reverts the mutation after asserting (so it doesn't leak state).
@@ -63,14 +63,14 @@ This sub-check is for the test-of-the-test pattern — proving the validator act
 
 ### Scenario E — placeholder values are tolerated pre-publish
 
-The committed `server.json` files carry placeholders for `version`, `fileSha256`, and parts of `identifier`. The validator must accept these placeholders (they're substituted at publish time):
+The committed `server.json` carries placeholders for `version`, `fileSha256`, and parts of `identifier`. The validator must accept these placeholders (they're substituted at publish time):
 - `version`: `"<PLACEHOLDER>"` or a SemVer string (both pass).
 - `fileSha256`: 64 hex characters (the placeholder is 64 zeros; valid hex; passes the schema's `pattern` constraint).
-- `identifier`: URL template with `v<VERSION>` substring; the schema accepts any valid URL.
+- `identifier`: URL template with `v<PLACEHOLDER>` substring; the schema accepts any valid URL.
 
 ### Scenario F — version pin matches the workspace
 
-A sub-assertion: the `version` field in each `server.json` matches the workspace's current version (read from `Cargo.toml`). Drift here means the operator bumped the workspace version without updating the manifests; the publish workflow will fix it at publish time, but committing a matched value reduces ambiguity for readers. This is a soft assertion (warning, not failure) — the publish workflow has the final say.
+A sub-assertion: the `version` field in `server.json` matches the workspace's current version (read from `Cargo.toml`). Drift here means the operator bumped the workspace version without updating the manifest; the publish workflow will fix it at publish time, but committing a matched value reduces ambiguity for readers. This is a soft assertion (warning, not failure) — the publish workflow has the final say.
 
 ## Runner
 

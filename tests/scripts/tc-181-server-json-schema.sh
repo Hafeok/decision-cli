@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # tests/scripts/tc-181-server-json-schema.sh
 #
-# TC-181 — Both `crates/product-cli/server.json` and
-# `crates/decision-cli/server.json` validate against the MCP registry's
-# `server.schema.json` on every PR. Schema drift fails CI before a
-# release attempt finds out.
+# TC-181 — `crates/decision-cli/server.json` validates against the MCP
+# registry's `server.schema.json` on every PR. Schema drift fails CI
+# before a release attempt finds out.
 #
 # Spec: .product/tests/TC-181-*.md
-# Implements: FT-106 §Phase 6 (schema validation as a CI gate).
+# Implements: FT-106 §Phase 4 (schema validation as a CI gate).
+# Re-scoped under ADR-077: only decision-cli's server.json is validated
+# (product-cli was dropped from this workspace).
 #
 # Two-tier exit-code contract (per ADR-013):
 #   exit 0 — every scenario passes.
@@ -25,7 +26,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 SCHEMA="$REPO_ROOT/tests/fixtures/server.schema.json"
-PRODUCT_JSON="$REPO_ROOT/crates/product-cli/server.json"
 DECISION_JSON="$REPO_ROOT/crates/decision-cli/server.json"
 
 fail() {
@@ -37,7 +37,7 @@ info() {
   echo "TC-181 info: $*"
 }
 
-for path in "$SCHEMA" "$PRODUCT_JSON" "$DECISION_JSON"; do
+for path in "$SCHEMA" "$DECISION_JSON"; do
   if [ ! -f "$path" ]; then
     fail "missing required file: $path"
   fi
@@ -48,7 +48,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 # --- Scenarios A, B, E, F: per-file validation + required fields ----------
-python3 - "$SCHEMA" "$PRODUCT_JSON" "$DECISION_JSON" <<'PY' || exit 1
+python3 - "$SCHEMA" "$DECISION_JSON" <<'PY' || exit 1
 import json
 import re
 import sys
@@ -115,7 +115,6 @@ def validate_fallback(doc):
     return errs
 
 
-seen_names = []
 exit_code = 0
 for path in files:
     try:
@@ -138,7 +137,6 @@ for path in files:
         errors.append(
             f"name {doc.get('name')!r} does not match io.github.<owner>/<repo>"
         )
-    seen_names.append(doc.get("name", ""))
 
     repo = doc.get("repository", {}) or {}
     for f in ("url", "source", "id"):
@@ -162,23 +160,17 @@ for path in files:
     else:
         print(f"TC-181 OK: {path} validated against {SCHEMA_URL}")
 
-# Scenario B: name uniqueness across the two manifests
-if len(seen_names) != len(set(seen_names)):
-    print(f"TC-181 FAIL: server.json `name` collision across files: {seen_names}",
-          file=sys.stderr)
-    exit_code = 1
-
 sys.exit(exit_code)
 PY
 
-info "Scenarios A/B/E OK: both server.json files schema-valid."
+info "Scenarios A/B/E OK: server.json schema-valid."
 
 # --- Scenario D: deliberate breakage caught -------------------------------
 # Mutate a temp copy and ensure the validator rejects it. This is the
 # test-of-the-test pattern — proves the validator actually fires.
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
-cp "$PRODUCT_JSON" "$tmpdir/broken.json"
+cp "$DECISION_JSON" "$tmpdir/broken.json"
 
 python3 - "$tmpdir/broken.json" <<'PY'
 import json, sys

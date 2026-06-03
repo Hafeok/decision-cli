@@ -2,7 +2,7 @@
 id: FT-106
 title: 'decision-cli: Cross-platform cargo-dist release flow and MCP registry publishing for the absorbed workspace'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-105
 - FT-136

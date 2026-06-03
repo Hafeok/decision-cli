@@ -2,12 +2,11 @@
 # tests/scripts/tc-182-release-artifact-parity.sh
 #
 # TC-182 — Every release tag produces five target-platform archives for
-# both the `product` (deprecation shim) and `dec` binaries, with
-# lockstep SemVer version across the workspace.
+# the `dec` binary. Re-scoped under ADR-077.
 #
 # Spec: .product/tests/TC-182-*.md
 # Implements: FT-106 §Phase 1 (dist-workspace.toml) + §Invariants
-# (per-platform parity, lockstep versioning).
+# (per-platform parity).
 #
 # Two-tier exit-code contract (per ADR-013):
 #   exit 0 — every applicable scenario passes.
@@ -15,10 +14,9 @@
 #            names the offender.
 #
 # Two modes:
-#   1. PR-mode (no args). Runs Scenario F only: lockstep version drift
-#      check across crates/decision-cli/Cargo.toml,
-#      crates/product-cli/Cargo.toml, crates/product-shim/Cargo.toml.
-#      Plus structural sanity on dist-workspace.toml. Fast, no network.
+#   1. PR-mode (no args). Runs Scenario F only: dist-workspace.toml
+#      structural sanity check (single binary, five targets).
+#      Fast, no network.
 #   2. Release-mode (--tag vX.Y.Z). Runs Scenarios A-E against the
 #      named GitHub Release. Requires `gh` + network. Nightly / on
 #      release-tag CI.
@@ -35,7 +33,7 @@ EXPECTED_TARGETS=(
   x86_64-unknown-linux-gnu
   x86_64-pc-windows-msvc
 )
-EXPECTED_BINARIES=(product dec)
+EXPECTED_BINARY=dec
 
 DIST_WORKSPACE="$REPO_ROOT/dist-workspace.toml"
 
@@ -79,8 +77,8 @@ if [ ! -f "$DIST_WORKSPACE" ]; then
   fail "missing dist-workspace.toml at workspace root (FT-106 §Phase 1)"
 fi
 
-# dist-workspace.toml must enumerate both binary-producing crates and
-# all five targets.
+# dist-workspace.toml must enumerate the single binary-producing crate
+# (decision-cli only, per ADR-077) and all five targets.
 python3 - "$DIST_WORKSPACE" <<'PY' || exit 1
 import sys
 path = sys.argv[1]
@@ -89,7 +87,10 @@ with open(path) as fh:
 
 required_members = [
     "cargo:crates/decision-cli",
+]
+disallowed_members = [
     "cargo:crates/product-shim",
+    "cargo:crates/product-cli",
 ]
 required_targets = [
     "aarch64-apple-darwin",
@@ -102,6 +103,9 @@ errs = []
 for m in required_members:
     if m not in text:
         errs.append(f"dist-workspace.toml missing workspace member {m!r}")
+for m in disallowed_members:
+    if m in text:
+        errs.append(f"dist-workspace.toml should NOT contain {m!r} (ADR-077)")
 for t in required_targets:
     if t not in text:
         errs.append(f"dist-workspace.toml missing target triple {t!r}")
@@ -112,34 +116,16 @@ if errs:
 print("dist-workspace.toml structural check OK")
 PY
 
-# Scenario F: lockstep version across workspace crates that ship.
-CARGO_FILES=(
-  "$REPO_ROOT/crates/decision-cli/Cargo.toml"
-  "$REPO_ROOT/crates/product-cli/Cargo.toml"
-  "$REPO_ROOT/crates/product-shim/Cargo.toml"
-)
-declare -A VERSIONS
-SEEN=""
-for cf in "${CARGO_FILES[@]}"; do
-  if [ ! -f "$cf" ]; then
-    fail "missing $cf"
-  fi
-  v="$(grep -m1 '^version' "$cf" | sed -E 's/version = "([^"]+)"/\1/' | tr -d ' ')"
-  if [ -z "$v" ]; then
-    fail "$cf: no [package].version found"
-  fi
-  VERSIONS["$cf"]="$v"
-  if [ -z "$SEEN" ]; then
-    SEEN="$v"
-  elif [ "$SEEN" != "$v" ]; then
-    echo "TC-182 FAIL: lockstep version drift:" >&2
-    for k in "${!VERSIONS[@]}"; do
-      echo "  $k: ${VERSIONS[$k]}" >&2
-    done
-    exit 1
-  fi
-done
-info "Scenario F OK: lockstep version $SEEN across ${#CARGO_FILES[@]} crates"
+# Scenario F (continued): verify decision-cli/Cargo.toml version is present.
+CARGO_FILE="$REPO_ROOT/crates/decision-cli/Cargo.toml"
+if [ ! -f "$CARGO_FILE" ]; then
+  fail "missing $CARGO_FILE"
+fi
+VERSION_IN_CARGO="$(grep -m1 '^version' "$CARGO_FILE" | sed -E 's/version = "([^"]+)"/\1/' | tr -d ' ')"
+if [ -z "$VERSION_IN_CARGO" ]; then
+  fail "$CARGO_FILE: no [package].version found"
+fi
+info "Scenario F OK: decision-cli version $VERSION_IN_CARGO"
 
 # PR-mode ends here.
 if [ -z "$TAG" ]; then
@@ -161,20 +147,18 @@ if ! gh release view "$TAG" --json assets --jq '.assets[].name' > "$assets_file"
   fail "could not fetch assets for release $TAG"
 fi
 
-# Scenario A: every (binary, target) combination exists.
+# Scenario A: every target has an archive for dec.
 missing=0
-for bin in "${EXPECTED_BINARIES[@]}"; do
-  for target in "${EXPECTED_TARGETS[@]}"; do
-    case "$target" in
-      *windows*) ext="zip" ;;
-      *)         ext="tar.xz" ;;
-    esac
-    expect="${bin}-${target}.${ext}"
-    if ! grep -qx "$expect" "$assets_file"; then
-      echo "TC-182 FAIL: missing release asset: $expect" >&2
-      missing=$((missing + 1))
-    fi
-  done
+for target in "${EXPECTED_TARGETS[@]}"; do
+  case "$target" in
+    *windows*) ext="zip" ;;
+    *)         ext="tar.xz" ;;
+  esac
+  expect="${EXPECTED_BINARY}-${target}.${ext}"
+  if ! grep -qx "$expect" "$assets_file"; then
+    echo "TC-182 FAIL: missing release asset: $expect" >&2
+    missing=$((missing + 1))
+  fi
 done
 
 if [ "$missing" -gt 0 ]; then
@@ -183,7 +167,7 @@ if [ "$missing" -gt 0 ]; then
   cat "$assets_file" >&2
   exit 1
 fi
-info "Scenario A OK: 10 archives (5 targets x 2 binaries) present."
+info "Scenario A OK: 5 archives (5 targets for dec binary) present."
 
 # Scenario D: checksums recorded. Prefer dist-manifest.json; per-asset
 # .sha256 files acceptable as fallback.
@@ -206,7 +190,7 @@ fi
 workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir" "$assets_file"' EXIT
 cd "$workdir"
-LINUX_ASSET="product-x86_64-unknown-linux-gnu.tar.xz"
+LINUX_ASSET="dec-x86_64-unknown-linux-gnu.tar.xz"
 gh release download "$TAG" --pattern "$LINUX_ASSET" --output "$LINUX_ASSET"
 tar -tJf "$LINUX_ASSET" | head -5
 info "Scenarios B/C/E partial OK on $LINUX_ASSET (extend per-platform as runners allow)."

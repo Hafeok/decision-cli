@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.Hafeok/decision-cli",
-  "description": "Orchestration system for Decision-Driven Design — drives product-cli through the engineering process via LLM-backed role dispatch. Includes the absorbed product-cli surface; replaces io.github.Hafeok/product-cli for new installations.",
+  "description": "Orchestration system for Decision-Driven Design — drives an external product-cli through the engineering process via LLM-backed role dispatch, recording sessions and routing artifacts via a graph-native event substrate.",
   "repository": {
     "url": "https://github.com/Hafeok/decision-cli",
     "source": "github",
