@@ -60,7 +60,7 @@ No operator-facing inputs. The harness reads `allowed_tools` from `role_catalog:
 - A legacy store (pre-FT-121) dispatching the implementer role produces a `DispatchPayloadJson` with `allowed_tools == vec![]`. The harness emits a `warn!` log entry naming the missing seed. The dispatch JSON contains `"allowed_tools":[]`.
 - A worker run against an empty-`allowed_tools` payload exits with a structured `WorkerResponse(status="error", error.category="invalid_dispatch", error.message=~"no tools granted")`. This is asserted via the existing pytest harness against the Python `models.DispatchPayload`.
 
-### Non-goals
+## Out of scope
 
 - Worker-side enforcement of the surface (i.e. the agentic loop's tool registry filter). Owned by FT-123.
 - Surface declaration for non-implementer roles. The harness lookup uses the implementer role IRI; other roles (verifier, future reviewer) thread their own `allowed_tools` via the same path when the dispatcher integrates them — out of scope here.
