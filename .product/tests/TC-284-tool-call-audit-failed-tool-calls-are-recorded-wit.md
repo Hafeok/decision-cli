@@ -2,7 +2,7 @@
 id: TC-284
 title: 'tool-call audit: failed tool calls are recorded with toolStatus=error'
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-125
@@ -15,6 +15,9 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_audit.py::test_failed_tool_call_recorded_with_error_status
 runner-timeout: 30
+last-run: 2026-06-04T16:24:14.074184257+00:00
+last-run-duration: 0.2s
+failure-message: "ERROR: file or directory not found: workers/code-writer/tests/test_audit.py::test_failed_tool_call_recorded_with_error_status\n\n"
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: FT-130
 title: 'decision-cli: adr-author worker package — drafts ADRs or acknowledgements for preflight gaps'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-129
 - FT-127

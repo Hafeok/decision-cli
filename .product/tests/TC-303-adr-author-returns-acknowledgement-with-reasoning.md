@@ -2,7 +2,7 @@
 id: TC-303
 title: adr-author returns acknowledgement with reasoning >= 40 chars for an existing-ADR gap
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-130
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:39.023702542+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -39,4 +41,3 @@ Synthetic bundle JSON: a preflight gap whose subject is in fact governed by ADR-
 - New-ADR path (covered by TC-302).
 - Bare-ack defence (covered by TC-304).
 - Gap path (covered by TC-305).
-

@@ -2,7 +2,7 @@
 id: TC-304
 title: adr-author rejects bare acknowledgements at the worker boundary before stdout
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-130
@@ -15,6 +15,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:39.023702542+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -36,4 +38,3 @@ Synthetic bundle JSON: a preflight gap with an existing ADR present. The Anthrop
 
 - The fallback policy decision (gap vs error) — this TC asserts the invariant only, not the chosen branch.
 - Verdict adjudication of fallback gaps (covered by ADR/spec-quality worker TCs if added later).
-

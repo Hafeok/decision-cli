@@ -2,7 +2,7 @@
 id: TC-301
 title: spec-author echoes bundle_hash and writes nothing beyond stdout
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-129
@@ -16,9 +16,8 @@ observes:
 - exit-code
 - stdout
 - disk-state
-last-run: 2026-06-04T12:08:02.706715821+00:00
-last-run-duration: 0.3s
-failure-message: "ERROR: file or directory not found: workers/spec-author/tests/test_bundle_hash_echo.py\n\n"
+last-run: 2026-06-04T18:41:36.609476729+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose

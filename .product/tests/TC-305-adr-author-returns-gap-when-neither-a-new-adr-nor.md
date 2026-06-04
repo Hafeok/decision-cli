@@ -2,7 +2,7 @@
 id: TC-305
 title: adr-author returns gap when neither a new ADR nor a reasoned acknowledgement is defensible
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-130
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:39.023702542+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ Synthetic bundle JSON: a preflight gap with no scope, no problem statement, no e
 
 - New-ADR (TC-302) and acknowledgement (TC-303) paths.
 - Bare-ack defence (TC-304).
-

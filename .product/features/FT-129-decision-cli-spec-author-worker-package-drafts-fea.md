@@ -2,7 +2,7 @@
 id: FT-129
 title: 'decision-cli: spec-author worker package — drafts feature_spec bodies from a request brief'
 phase: 5
-status: in-progress
+status: complete
 depends-on:
 - FT-131
 - FT-127

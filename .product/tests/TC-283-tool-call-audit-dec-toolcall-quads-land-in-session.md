@@ -2,7 +2,7 @@
 id: TC-283
 title: 'tool-call audit: dec:ToolCall quads land in session graph with all required predicates'
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-125
@@ -14,6 +14,9 @@ observes:
 runner: cargo-test
 runner-args: tc_283_tool_call_quads_persisted_in_session_graph
 runner-timeout: 30
+last-run: 2026-06-04T16:24:14.074184257+00:00
+last-run-duration: 0.5s
+failure-message: "No #[test] fn matching 'tc_283_tool_call_quads_persisted_in_session_graph' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Description

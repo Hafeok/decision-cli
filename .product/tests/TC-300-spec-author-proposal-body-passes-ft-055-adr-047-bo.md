@@ -2,7 +2,7 @@
 id: TC-300
 title: spec-author proposal body passes FT-055/ADR-047 body-completeness validation
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-129
@@ -17,9 +17,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
-last-run: 2026-06-04T12:08:02.706715821+00:00
-last-run-duration: 0.2s
-failure-message: "ERROR: file or directory not found: workers/spec-author/tests/test_body_schema.py\n\n"
+last-run: 2026-06-04T18:41:36.609476729+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose

@@ -2,7 +2,7 @@
 id: FT-133
 title: 'decision-cli: adr-quality judge worker package — interprets ADR drafts and acknowledgements against the preflight gap'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-130
 - FT-132

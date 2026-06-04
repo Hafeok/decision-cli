@@ -1,7 +1,7 @@
 ---
 id: ADR-080
 title: Apply DDD task/cell decomposition to decision-cli's self-implementation pipeline; broad code-writer becomes the unknown-task path
-status: proposed
+status: accepted
 features:
 - FT-139
 - FT-142
@@ -14,6 +14,7 @@ superseded-by: []
 domains:
 - api
 scope: platform
+content-hash: sha256:2430e55f5b441d3ed2ea145fcc435f14d2a295f1d6ff6d02031000906b932b4d
 ---
 
 ## Context

@@ -2,7 +2,7 @@
 id: FT-132
 title: 'decision-cli: spec-quality judge worker package — interprets feature_spec drafts against the originating request'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-129
 - FT-127

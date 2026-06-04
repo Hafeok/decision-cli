@@ -1,0 +1,38 @@
+[project]
+name = "spec-quality"
+version = "0.1.0"
+description = "Python spec-quality worker for decision-cli's feature_spec quality judge role (ADR-073, FT-132)."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+    "anthropic>=0.34",
+]
+
+[project.scripts]
+spec-quality = "spec_quality.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spec_quality"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.6",
+]

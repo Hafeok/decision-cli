@@ -2,7 +2,7 @@
 id: TC-302
 title: adr-author returns new ADR for a gap warranting a net-new decision
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-130
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:39.023702542+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ Synthetic bundle JSON: a preflight gap describing a missing decision (e.g. "no A
 
 - Acknowledgement path (covered by TC-303 and TC-304).
 - Gap path (covered by TC-305).
-

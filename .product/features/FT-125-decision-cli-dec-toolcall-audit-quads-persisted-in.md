@@ -2,7 +2,7 @@
 id: FT-125
 title: 'decision-cli: dec:ToolCall audit quads persisted in session graph for every tool invocation'
 phase: 4
-status: planned
+status: in-progress
 depends-on:
 - FT-123
 adrs:
@@ -16,8 +16,8 @@ domains:
 - data-model
 - observability
 domains-acknowledged:
-  data-model: "Introduces `dec:ToolCall` class and predicates `dec:toolName`, `dec:toolStatus`, `dec:toolArgsHash`, `dec:toolStartedAt`, `dec:toolEndedAt`. Quads land in the session named graph (no new top-level graphs)."
-  observability: "Every tool invocation made by a worker is recorded as an auditable graph fact. Downstream SPARQL queries can analyse tool usage by role, by session, by status. Failure visibility is first-class — blocked or timed-out tools land in the audit too."
+  data-model: Introduces `dec:ToolCall` class and predicates `dec:toolName`, `dec:toolStatus`, `dec:toolArgsHash`, `dec:toolStartedAt`, `dec:toolEndedAt`. Quads land in the session named graph (no new top-level graphs).
+  observability: Every tool invocation made by a worker is recorded as an auditable graph fact. Downstream SPARQL queries can analyse tool usage by role, by session, by status. Failure visibility is first-class — blocked or timed-out tools land in the audit too.
 ---
 
 ## Description
@@ -71,7 +71,7 @@ New IRI constants in `crates/decision-cli/src/core/ontology/iris.rs` (or whereve
 - The args hash is a 64-char lowercase hex string. Re-running the same dispatch deterministically produces the same hashes (unit-testable via Python).
 - Adding the audit quads does NOT mutate any other data on the session — the existing session graph contents are unchanged byte-for-byte except for the new `dec:toolCall` quads.
 
-### Non-goals
+## Out of scope
 
 - The `dec session show` rendering of tool-call audit. Out of scope; tracked as a follow-up.
 - An `events tail` / SSE stream of tool calls as they happen. Out of scope — audit is on accept, after the dispatch terminates.
