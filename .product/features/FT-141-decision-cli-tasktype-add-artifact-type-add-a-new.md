@@ -2,7 +2,7 @@
 id: FT-141
 title: 'decision-cli: TaskType add-artifact-type — add a new typed ontology artifact (Rust struct + SHACL + parser + emitter + round-trip tests)'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-080

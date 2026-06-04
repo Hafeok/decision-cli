@@ -2,7 +2,7 @@
 id: FT-143
 title: 'decision-cli: TaskType extend-planner-classifier — add a row to a def-ready/ship planner''s classifier table with trait method + production impl + state-hash update + 4 TCs'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-080

@@ -2,7 +2,7 @@
 id: TC-361
 title: 'add-cli-subcommand: coherence audit FAILS with check=integration_test_path when no file under crates/decision-cli/tests/ is emitted'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-142
@@ -14,6 +14,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stderr
+last-run: 2026-06-04T15:47:45.847784661+00:00
+last-run-duration: 0.0s
 ---
 
 ## Description

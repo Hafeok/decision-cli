@@ -2,15 +2,17 @@
 id: TC-353
 title: classifier dispatches add-author-worker cluster when task_type front-matter declares it
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-140
   adrs: []
 phase: 1
 runner: cargo-test
-runner-args: --package decision-cli --lib features::ft_139_cluster_dispatch::tests::author_worker_classifier_branch
+runner-args: --package decision-cli --lib features::drive::planners::feature_ship::tests::author_worker_classifier_branch
 runner-timeout: 120
+last-run: 2026-06-04T15:47:44.739819852+00:00
+last-run-duration: 0.2s
 ---
 
 ## Context

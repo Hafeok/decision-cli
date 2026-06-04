@@ -2,7 +2,7 @@
 id: TC-350
 title: add-author-worker cluster topological order is acyclic and deterministic
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-140
@@ -11,6 +11,8 @@ phase: 1
 runner: cargo-test
 runner-args: --package decision-cli --lib core::task_type::tests::author_worker_topo_order
 runner-timeout: 120
+last-run: 2026-06-04T15:47:44.739819852+00:00
+last-run-duration: 0.2s
 ---
 
 ## Context

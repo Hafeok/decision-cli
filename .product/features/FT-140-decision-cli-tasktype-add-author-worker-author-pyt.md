@@ -2,7 +2,7 @@
 id: FT-140
 title: 'decision-cli: TaskType add-author-worker — author Python workers that draft markdown bodies for engineering artifacts'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-080

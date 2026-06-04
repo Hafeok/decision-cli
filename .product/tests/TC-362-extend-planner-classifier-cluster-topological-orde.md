@@ -2,7 +2,7 @@
 id: TC-362
 title: extend-planner-classifier cluster topological order is acyclic and deterministic
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-143
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib core::task_type::tests::planner_classi
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-04T15:47:46.291419308+00:00
+last-run-duration: 0.2s
 ---
 
 ## Context

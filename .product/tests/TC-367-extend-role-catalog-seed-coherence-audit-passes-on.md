@@ -2,7 +2,7 @@
 id: TC-367
 title: extend-role-catalog-seed coherence audit passes on positive fixture with consistent IRI references
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-144
@@ -14,6 +14,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stderr
+last-run: 2026-06-04T15:47:46.704677747+00:00
+last-run-duration: 0.0s
 ---
 
 ## Context

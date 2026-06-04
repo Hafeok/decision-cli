@@ -2,7 +2,7 @@
 id: TC-366
 title: extend-role-catalog-seed cluster topological order is acyclic and deterministic including conditional cells
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-144
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib core::task_type::tests::role_catalog_s
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-04T15:47:46.704677747+00:00
+last-run-duration: 0.2s
 ---
 
 ## Context

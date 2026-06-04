@@ -2,7 +2,7 @@
 id: TC-352
 title: add-author-worker coherence audit fails when Output schema has verdict instead of body_markdown
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-140
@@ -11,6 +11,8 @@ phase: 1
 runner: bash
 runner-args: scripts/checks/tc-352-cluster-audit-author-negative.sh
 runner-timeout: 60
+last-run: 2026-06-04T15:47:44.739819852+00:00
+last-run-duration: 0.0s
 ---
 
 ## Context

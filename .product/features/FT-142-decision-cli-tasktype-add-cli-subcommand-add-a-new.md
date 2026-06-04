@@ -2,7 +2,7 @@
 id: FT-142
 title: 'decision-cli: TaskType add-cli-subcommand — add a new dec subcommand with clap args + handler + integration test + optional MCP twin'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-080

@@ -2,7 +2,7 @@
 id: TC-354
 title: add-artifact-type cluster topological order is acyclic and deterministic
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-141
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib core::task_type::tests::artifact_type_
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-04T15:47:45.339341071+00:00
+last-run-duration: 0.2s
 ---
 
 ## Context

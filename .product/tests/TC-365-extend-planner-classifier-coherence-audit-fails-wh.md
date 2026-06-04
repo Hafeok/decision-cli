@@ -2,7 +2,7 @@
 id: TC-365
 title: extend-planner-classifier coherence audit FAILS when state_hash_update does not fold in new signal (FT-138 TC-349 silent-regression guard generalised)
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-143
@@ -14,6 +14,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stderr
+last-run: 2026-06-04T15:47:46.291419308+00:00
+last-run-duration: 0.0s
 ---
 
 ## Context

@@ -113,3 +113,64 @@ fn add_judge_worker_audit_path_matches_spec() {
         .script_path
         .ends_with("cluster-audit-add-judge-worker.py"));
 }
+
+// ----------------------------------------------------------------------
+// FT-140..FT-144 — topo order tests for the five sibling TaskTypes.
+// Each asserts: lookup returns Some, topo_order is acyclic + deterministic,
+// dependency ordering is respected. Mirrors TC-370's shape per TaskType.
+// ----------------------------------------------------------------------
+
+fn assert_topo_invariants(task_type_name: &str, expected_cell_count: usize) {
+    let tt = lookup(task_type_name).expect("TaskType registered");
+    assert_eq!(
+        tt.cells.len(),
+        expected_cell_count,
+        "{task_type_name} cell count"
+    );
+    let order = topo_order(&tt.cells).expect("topo order is acyclic");
+    assert_eq!(order.len(), tt.cells.len(), "every cell appears once");
+    let unique: std::collections::HashSet<_> = order.iter().collect();
+    assert_eq!(unique.len(), order.len(), "no duplicates");
+    for (i, cell_name) in order.iter().enumerate() {
+        let cell = tt
+            .cells
+            .iter()
+            .find(|c| &c.name == cell_name)
+            .expect("cell exists");
+        for dep in &cell.derived_from {
+            let dep_pos = order.iter().position(|n| n == dep).expect("dep in order");
+            assert!(
+                dep_pos < i,
+                "{dep} must precede {cell_name} in {task_type_name} order"
+            );
+        }
+    }
+    // Determinism.
+    let order2 = topo_order(&tt.cells).expect("second run also acyclic");
+    assert_eq!(order, order2, "{task_type_name} topo order deterministic");
+}
+
+#[test]
+fn author_worker_topo_order() {
+    assert_topo_invariants("add-author-worker", 6);
+}
+
+#[test]
+fn artifact_type_topo_order() {
+    assert_topo_invariants("add-artifact-type", 6);
+}
+
+#[test]
+fn cli_subcommand_topo_order() {
+    assert_topo_invariants("add-cli-subcommand", 6);
+}
+
+#[test]
+fn planner_classifier_topo_order() {
+    assert_topo_invariants("extend-planner-classifier", 6);
+}
+
+#[test]
+fn role_catalog_seed_topo_order() {
+    assert_topo_invariants("extend-role-catalog-seed", 6);
+}

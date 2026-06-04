@@ -1236,4 +1236,39 @@ mod tests {
             "unknown task_type falls through to broad worker"
         );
     }
+
+    // ---------------------------------------------------------------------
+    // TC-353 / FT-140 — classifier dispatches add-author-worker cluster
+    // when task_type front-matter matches; falls through to
+    // DispatchImplementer (broad worker) when absent / unknown.
+    // ---------------------------------------------------------------------
+
+    #[test]
+    fn author_worker_classifier_branch() {
+        use crate::core::drive::Action;
+        use super::classify_for_task_type_value;
+
+        // Positive: registered add-author-worker → DispatchCluster.
+        let action = classify_for_task_type_value("FT-T353", Some("add-author-worker"))
+            .expect("registered add-author-worker dispatches cluster");
+        match action {
+            Action::DispatchCluster {
+                feature_id,
+                task_type_name,
+            } => {
+                assert_eq!(feature_id, "FT-T353");
+                assert_eq!(task_type_name, "add-author-worker");
+            }
+            other => panic!("expected DispatchCluster, got {other:?}"),
+        }
+
+        // Fallthrough (absent task_type) → broad worker.
+        assert!(classify_for_task_type_value("FT-T353", None).is_none());
+
+        // Fallthrough (mistyped) → broad worker.
+        assert!(
+            classify_for_task_type_value("FT-T353", Some("add_author_worker")).is_none(),
+            "underscore variant is not the kebab-case registered name"
+        );
+    }
 }

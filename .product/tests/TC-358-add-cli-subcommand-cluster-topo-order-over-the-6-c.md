@@ -2,7 +2,7 @@
 id: TC-358
 title: 'add-cli-subcommand: Cluster::topo_order over the 6 cells is acyclic and deterministic'
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-142
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib core::task_type::tests::cli_subcommand
 runner-timeout: 60
 observes:
 - exit-code
+last-run: 2026-06-04T15:47:45.847784661+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: FT-144
 title: 'decision-cli: TaskType extend-role-catalog-seed — add a role/capability/authority/predicate to the seeded role catalog with seed function + wiring + SHACL + tests'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-080

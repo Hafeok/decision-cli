@@ -2,7 +2,7 @@
 id: TC-364
 title: extend-planner-classifier coherence audit FAILS when inspector_trait_method and inspector_production_impl return types disagree
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-143
@@ -14,6 +14,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stderr
+last-run: 2026-06-04T15:47:46.291419308+00:00
+last-run-duration: 0.0s
 ---
 
 ## Context
