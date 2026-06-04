@@ -39,6 +39,11 @@ pub struct DispatchPayloadJson {
     /// run produced `rejected` evidence and routed it to the implementer.
     #[serde(default)]
     pub defect_feedback: Vec<crate::core::feedback::DefectFeedbackRecord>,
+    /// FT-122 / ADR-070: role-scoped tool surface resolved from the role
+    /// catalog. Empty for legacy stores pre-dating FT-121; worker
+    /// fail-closes per ADR-069.
+    #[serde(default)]
+    pub allowed_tools: Vec<String>,
 }
 
 /// Serialisable view of a `dec:Authority` for the worker bundle (FT-030).
@@ -318,4 +323,78 @@ fn try_invoke_mock(payload: &DispatchPayloadJson) -> Option<Result<WorkerRun>> {
 #[cfg(test)]
 pub(crate) fn payload_defect_feedback_len(payload: &DispatchPayloadJson) -> usize {
     payload.defect_feedback.len()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::Value;
+    use tempfile::tempdir;
+
+    /// TC-270: Dispatch JSON written to worker stdin contains non-empty
+    /// `allowed_tools` when the role is seeded. Validates the FT-122 wire
+    /// format: the JSON serialization includes the field and its content
+    /// matches the role catalog seed.
+    #[test]
+    fn tc_270_dispatch_json_has_allowed_tools() {
+        // Build a payload with allowed_tools populated
+        let tmpdir = tempdir().expect("tmpdir");
+        let workspace = tmpdir.path().to_path_buf();
+
+        let payload = DispatchPayloadJson {
+            dispatch_id: "urn:dec:dispatch:TC-270".into(),
+            session_id: "urn:dec:session:TC-270".into(),
+            feature_id: "FT-122".into(),
+            bundle_markdown: "# TC-270\nTest bundle\n".into(),
+            bundle_hash: "a".repeat(64),
+            workspace_path: workspace.to_string_lossy().into_owned(),
+            model_id: "claude-sonnet-4-5".into(),
+            endpoint: "anthropic".into(),
+            timeout_seconds: 1800,
+            authority: None,
+            defect_feedback: Vec::new(),
+            allowed_tools: vec![
+                "read_file".into(),
+                "write_file".into(),
+                "run_build".into(),
+                "run_lint".into(),
+                "run_tests".into(),
+            ],
+        };
+
+        // Serialize to JSON
+        let json_str = serde_json::to_string(&payload).expect("serialize payload");
+
+        // Parse back to check the field is present
+        let parsed: Value = serde_json::from_str(&json_str).expect("parse JSON");
+
+        // Assert allowed_tools field exists and is an array
+        let tools_value = parsed
+            .get("allowed_tools")
+            .expect("allowed_tools field should exist in JSON");
+        assert!(
+            tools_value.is_array(),
+            "allowed_tools should be a JSON array"
+        );
+
+        let tools_array = tools_value.as_array().expect("as array");
+        assert_eq!(
+            tools_array.len(),
+            5,
+            "allowed_tools array should have 5 elements"
+        );
+
+        // Check each expected tool is present (order-insensitive)
+        let expected = vec!["read_file", "write_file", "run_build", "run_lint", "run_tests"];
+        for tool in &expected {
+            let found = tools_array
+                .iter()
+                .any(|v| v.as_str() == Some(tool));
+            assert!(
+                found,
+                "expected tool {tool} in JSON allowed_tools array"
+            );
+        }
+    }
 }

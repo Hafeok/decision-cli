@@ -2,7 +2,7 @@
 id: FT-122
 title: 'decision-cli: DispatchPayloadJson threads allowed_tools from role catalog to worker stdin'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-121
 - FT-066
@@ -18,8 +18,8 @@ domains:
 - data-model
 - api
 domains-acknowledged:
-  data-model: "One additive `serde(default)` field on `DispatchPayloadJson`. Backwards-compatible by construction — old payloads parse as empty Vec; new payloads parse against either generation of worker."
-  api: "Extends the worker dispatch payload (the harness↔worker contract) with one new field. Wire-format change, monotonic and backwards-compatible — old payloads parse as empty Vec, new payloads parse against either generation of worker."
+  data-model: One additive `serde(default)` field on `DispatchPayloadJson`. Backwards-compatible by construction — old payloads parse as empty Vec; new payloads parse against either generation of worker.
+  api: Extends the worker dispatch payload (the harness↔worker contract) with one new field. Wire-format change, monotonic and backwards-compatible — old payloads parse as empty Vec, new payloads parse against either generation of worker.
 ---
 
 ## Description

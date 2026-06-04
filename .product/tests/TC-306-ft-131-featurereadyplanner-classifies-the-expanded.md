@@ -14,7 +14,7 @@ runner-args: -p decision-cli --test ft_131_classification_table
 runner-timeout: 120
 observes:
 - exit-code
-last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run: 2026-06-04T09:35:01.130813997+00:00
 last-run-duration: 0.2s
 ---
 

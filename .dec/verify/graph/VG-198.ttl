@@ -1,0 +1,32 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-198>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-122> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-198/0> <https://decision-cli.dev/ns/step/VG-198/1> <https://decision-cli.dev/ns/step/VG-198/2> ) .
+
+<https://decision-cli.dev/ns/step/VG-198/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-269> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_269_build_dispatch_payload_carries_allowed_tools" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-198/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-270> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_270_dispatch_json_has_allowed_tools" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-198/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-271> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_allowed_tools_fail_closed.py" ;
+    dec:expectExitCode 0 .

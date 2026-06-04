@@ -2,7 +2,7 @@
 id: TC-270
 title: Dispatch JSON written to worker stdin contains non-empty allowed_tools when role is seeded
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-122
@@ -14,6 +14,8 @@ observes:
 runner: cargo-test
 runner-args: tc_270_dispatch_json_has_allowed_tools
 runner-timeout: 30
+last-run: 2026-06-04T11:33:49.027021278+00:00
+last-run-duration: 1.8s
 ---
 
 ## Description

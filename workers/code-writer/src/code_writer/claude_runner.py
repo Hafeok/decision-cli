@@ -61,6 +61,21 @@ def run_dispatch(
     ``--stub`` flag). When ``None`` (the default), the env var
     ``CODE_WRITER_STUB`` is consulted.
     """
+    # FT-122 / ADR-069: fail-closed if no tools granted. FT-123 will add
+    # the full in-process LiteLLM loop with tool-registry intersection;
+    # this is the minimal contract check to satisfy TC-271.
+    if not payload.allowed_tools:
+        from .models import WorkerError, WorkerResponse
+
+        return WorkerResponse(
+            dispatch_id=payload.dispatch_id,
+            session_id=payload.session_id,
+            status="error",
+            error=WorkerError(
+                category="invalid_dispatch",
+                message="no tools granted (allowed_tools is empty)",
+            ),
+        )
     use_stub = _is_stub_mode() if force_stub is None else force_stub
     if use_stub:
         return run_stub(payload)

@@ -2,7 +2,7 @@
 id: TC-269
 title: build_dispatch_payload populates allowed_tools from role catalog lookup
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-122
@@ -15,6 +15,8 @@ observes:
 runner: cargo-test
 runner-args: tc_269_build_dispatch_payload_carries_allowed_tools
 runner-timeout: 30
+last-run: 2026-06-04T11:33:49.027021278+00:00
+last-run-duration: 140.6s
 ---
 
 ## Description

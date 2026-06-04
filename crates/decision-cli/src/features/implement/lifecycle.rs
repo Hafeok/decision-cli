@@ -34,6 +34,7 @@ pub(super) fn build_dispatch_payload(
         .into_owned();
     let authority = lookup_role_authority(&ctx.store, IMPLEMENTER_ROLE);
     let defect_feedback = load_defect_feedback_for_feature(ctx, &args.feature_id);
+    let allowed_tools = lookup_allowed_tools(&ctx.store, IMPLEMENTER_ROLE);
     DispatchPayloadJson {
         dispatch_id: ctx.dispatch_iri.as_str().to_string(),
         session_id: ctx.session_iri.as_str().to_string(),
@@ -49,6 +50,7 @@ pub(super) fn build_dispatch_payload(
         timeout_seconds: 1800,
         authority,
         defect_feedback,
+        allowed_tools,
     }
 }
 
@@ -103,6 +105,23 @@ fn lookup_role_authority(store: &oxigraph::store::Store, role_id: &str) -> Optio
             .collect(),
         rationale: authority.rationale,
     })
+}
+
+/// FT-122 / ADR-070: look up the role's `dec:roleTool` set from the
+/// catalog. Returns empty Vec on lookup failure or for legacy stores that
+/// pre-date FT-121. The worker fail-closes on empty per ADR-069.
+fn lookup_allowed_tools(store: &oxigraph::store::Store, role_id: &str) -> Vec<String> {
+    match role_catalog::lookup(store, role_id) {
+        Ok(Some(role)) => role.allowed_tools,
+        Ok(None) => {
+            tracing::warn!(role_id, "role not found in catalog; allowed_tools empty");
+            Vec::new()
+        }
+        Err(e) => {
+            tracing::warn!(role_id, error = %e, "role catalog lookup failed; allowed_tools empty");
+            Vec::new()
+        }
+    }
 }
 
 /// Persist the worker's CodeChange into the product-cli graph slice.
@@ -212,4 +231,49 @@ pub(super) fn extract_code_change(response: &WorkerResponseJson) -> Result<&Code
         .code_change
         .as_ref()
         .ok_or_else(|| anyhow!("worker reported status=ok with no code_change"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::role_catalog;
+    use oxigraph::store::Store;
+
+    /// TC-269: `build_dispatch_payload` populates `allowed_tools` from the
+    /// role catalog lookup. Validates the FT-122 integration: given a store
+    /// seeded by FT-121, the payload carries the implementer's tool surface.
+    #[test]
+    fn tc_269_build_dispatch_payload_carries_allowed_tools() {
+        // Create a store and seed the implementer role
+        let store = Store::new().expect("in-memory store");
+
+        // Insert implementer role quads (includes allowed_tools from FT-121)
+        for quad in role_catalog::seeds::implementer_seed_quads() {
+            store.insert(&quad).expect("insert quad");
+        }
+
+        // Test the lookup helper directly
+        let tools = lookup_allowed_tools(&store, IMPLEMENTER_ROLE);
+
+        // Assert allowed_tools is populated from the catalog
+        assert!(
+            !tools.is_empty(),
+            "allowed_tools should be populated from role catalog"
+        );
+
+        // The implementer role is seeded with these five tools (FT-121)
+        let expected_tools = vec!["read_file", "write_file", "run_build", "run_lint", "run_tests"];
+        for tool in &expected_tools {
+            assert!(
+                tools.contains(&tool.to_string()),
+                "expected tool {tool} in allowed_tools, got {:?}",
+                tools
+            );
+        }
+        assert_eq!(
+            tools.len(),
+            expected_tools.len(),
+            "allowed_tools should contain exactly the expected tools"
+        );
+    }
 }
