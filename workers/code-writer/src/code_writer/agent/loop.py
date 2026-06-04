@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -86,6 +87,12 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
             retryable=False,
         )
 
+    # Proactive throttle threshold — sleep until the reset window when
+    # remaining tokens OR remaining requests fall below this fraction of
+    # the per-minute limit. 10% leaves headroom for one more turn's
+    # bundle without tripping 429. Override via CODE_WRITER_RL_THRESHOLD_PCT.
+    rl_threshold_pct = _read_int_env("CODE_WRITER_RL_THRESHOLD_PCT", 10)
+
     # Adapt the (endpoint, model_id) pair from the capability resolver
     # to LiteLLM's <provider>/<model> convention. Scaleway exposes
     # OpenAI-compatible inference, so route via the "openai/" prefix
@@ -112,6 +119,12 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
                 api_key=litellm_key,
                 base_url=litellm_base_url,
             )
+            # Proactive throttle on Scaleway's x-ratelimit-* headers — back
+            # off before the 429 hits when the per-minute window is nearly
+            # exhausted. See docs/scaleway-rate-limits.md for the headers
+            # contract. No-op on endpoints that don't surface the headers
+            # (Anthropic, OpenAI direct, etc.).
+            _maybe_throttle(_extract_rate_limit_headers(response))
         except Exception as exc:
             latency = time.monotonic() - started
             from ..models import WorkerTelemetry
@@ -207,3 +220,113 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
     # Max turns exceeded
     latency = time.monotonic() - started
     return build_max_turns_response(payload, tool_calls, latency)
+
+
+# ---------------------------------------------------------------------------
+# Proactive rate-limit throttling against Scaleway's x-ratelimit-* headers.
+# See docs/scaleway-rate-limits.md in the decision-cli repo for the contract.
+# Defensive by construction: missing / malformed headers are treated as "no
+# signal" and the loop proceeds unchanged.
+# ---------------------------------------------------------------------------
+
+
+def _read_int_env(name: str, default: int) -> int:
+    """Read an int env var with a default. Defensive against malformed values."""
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _extract_rate_limit_headers(response) -> dict[str, str]:
+    """Pull the raw HTTP response headers off a LiteLLM completion object.
+
+    LiteLLM versions surface them differently — try the common access
+    patterns in order, return an empty dict (no signal) when none match.
+    Always lower-cases keys so callers can do case-insensitive lookups.
+    """
+    candidates = []
+    hidden = getattr(response, "_hidden_params", None)
+    if isinstance(hidden, dict):
+        for key in ("additional_headers", "headers", "response_headers"):
+            candidates.append(hidden.get(key))
+    candidates.append(getattr(response, "response_headers", None))
+    candidates.append(getattr(response, "headers", None))
+    for c in candidates:
+        if isinstance(c, dict) and c:
+            return {str(k).lower(): str(v) for k, v in c.items()}
+    return {}
+
+
+def _parse_reset_duration(raw) -> float | None:
+    """Parse Scaleway's x-ratelimit-reset-{tokens,requests} header value.
+
+    Observed formats:
+      "250ms" / "35ms" — sub-second resets when the window is nearly fresh.
+      "1.5s" / "10s"   — second granularity when the window is older.
+      "750"            — bare integer (assume milliseconds per Scaleway docs).
+    Returns seconds as a float, or None when the value can't be parsed.
+    """
+    if raw is None:
+        return None
+    s = str(raw).strip().lower()
+    if not s:
+        return None
+    try:
+        if s.endswith("ms"):
+            return float(s[:-2]) / 1000.0
+        if s.endswith("s"):
+            return float(s[:-1])
+        # Bare number: docs example "35ms" / "250ms" — assume ms.
+        return float(s) / 1000.0
+    except ValueError:
+        return None
+
+
+def _parse_int(raw) -> int | None:
+    if raw is None:
+        return None
+    try:
+        return int(str(raw).strip())
+    except ValueError:
+        return None
+
+
+def _maybe_throttle(headers: dict[str, str], threshold_pct: int = 10) -> None:
+    """Sleep until the rate-limit window resets when remaining capacity
+    for either dimension (tokens, requests) drops below `threshold_pct`%.
+
+    Defensive: missing headers or unparseable values → no sleep. Logs the
+    decision to stderr so operators can correlate with drive timing.
+    """
+    if not headers:
+        return
+    sleep_for: float = 0.0
+    sleep_reason = ""
+    for dim in ("tokens", "requests"):
+        limit = _parse_int(headers.get(f"x-ratelimit-limit-{dim}"))
+        remaining = _parse_int(headers.get(f"x-ratelimit-remaining-{dim}"))
+        reset = _parse_reset_duration(headers.get(f"x-ratelimit-reset-{dim}"))
+        if limit is None or remaining is None or limit <= 0:
+            continue
+        ratio_pct = (remaining * 100) / limit
+        if ratio_pct >= threshold_pct:
+            continue
+        # Below threshold — sleep until the window resets. Cap at 75s so
+        # a malformed header can't hang the loop indefinitely (the per-minute
+        # window is 60s; a 75s cap is generous headroom).
+        candidate = min(reset if reset and reset > 0 else 60.0, 75.0)
+        if candidate > sleep_for:
+            sleep_for = candidate
+            sleep_reason = (
+                f"{dim} remaining {remaining}/{limit} "
+                f"({ratio_pct:.1f}% < {threshold_pct}% threshold); "
+                f"sleeping {candidate:.2f}s for reset"
+            )
+    if sleep_for > 0:
+        sys.stderr.write(f"agent throttle: {sleep_reason}\n")
+        sys.stderr.flush()
+        time.sleep(sleep_for)
