@@ -13,7 +13,7 @@ runner-args: --package decision-cli --test ft_138_def_ready_implementer_feedback
 runner-timeout: 120
 observes:
 - exit-code
-last-run: 2026-06-04T08:31:47.593368217+00:00
+last-run: 2026-06-04T08:35:21.140440710+00:00
 last-run-duration: 0.2s
 ---
 
