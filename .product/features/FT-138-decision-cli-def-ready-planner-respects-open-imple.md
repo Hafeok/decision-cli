@@ -12,6 +12,7 @@ tests:
 - TC-346
 - TC-347
 - TC-348
+- TC-349
 domains:
 - api
 domains-acknowledged:
@@ -86,7 +87,8 @@ One subcommand → one slice — no new CLI surface; the change is internal to `
 
 1. Update the module-top documentation table in `planner.rs` to add the new row at the documented precedence.
 2. In `classify_and_hash` (or whichever function carries the first-match-wins ladder), after the TC checks and before the VG checks, call `self.inspector.has_open_implementer_feedback_for_feature(feature_id)?`. If `Ok(true)`, return `Action::Done`.
-3. The state-hash for the iteration folds in the boolean (e.g. as an extra `0u8 / 1u8` hashed alongside the existing dimensions). This means a defect transitioning from `produced` → `addressed` between iterations changes the hash, preventing false-positive cycle detection across the lifecycle transition.
+3. **Precedence vs `vgs = PendingReview`** — the new row is intentionally positioned **above** BOTH `vgs = Missing` AND `vgs = PendingReview`. Rationale: open implementer feedback is evidence that the implementer's loop has work pending right now — that work invalidates whatever a human accept/reject decision on a pending VG would conclude. Once the defect is addressed, the next verify run produces a fresh verdict, which informs whether the pending VG accept is still meaningful. Returning `Done` immediately tells the operator "go to `dec drive ship`"; surfacing the pending VG as `Stuck` would be a misleading instruction. TC-346 locks the precedence-over-`Missing` half; the precedence-over-`PendingReview` half is documented here and exercised opportunistically by TC-348's fixture (a superseded VG with no live pending session, but the implementer is free to add an extra `StubInspector` permutation under TC-346 if they want to lock it explicitly).
+4. The state-hash for the iteration folds in the boolean (e.g. as an extra `0u8 / 1u8` hashed alongside the existing dimensions). This means a defect transitioning from `produced` → `addressed` between iterations changes the hash, preventing false-positive cycle detection across the lifecycle transition. **TC-349 is the silent-regression guard** for this property — an implementer who only adds the classifier row but forgets the hash update would still pass TC-345/346/347/348 and only break things in live drives.
 
 #### Phase 4 — Tests
 
@@ -94,6 +96,7 @@ One subcommand → one slice — no new CLI surface; the change is internal to `
 2. **TC-346** — Positive: a fixture inspector returning `tcs = AllReady`, `has_open_implementer_feedback = true`, `vgs = Missing` produces `Action::Done`. The new row fires before the VG check.
 3. **TC-347** — Regression: a fixture inspector returning `tcs = AllReady`, `has_open_implementer_feedback = false`, `vgs = Missing` produces `Action::DispatchVerifyGraphAuthor` (the new row does NOT fire; existing behaviour preserved).
 4. **TC-348** — Integration: a tempdir-backed orchestration store with a real defect-class implementer-targeted `produced` feedback artifact for an FT-X TC, plus a feature spec linking that TC and a superseded VG. Running `FeatureReadyPlanner::classify` via the production `inspect_dor::*` wiring returns `Action::Done`.
+5. **TC-349** — State-hash regression guard: two `classify_and_hash` calls differing only in `has_open_implementer_feedback_for_feature`'s return value produce different state hashes. Without this property the cycle detector false-positives across `produced → addressed` lifecycle transitions; the implementer must fold the new boolean into the hash.
 
 ### Invariants
 
