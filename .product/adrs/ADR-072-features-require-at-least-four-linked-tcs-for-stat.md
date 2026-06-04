@@ -12,6 +12,12 @@ features:
 - FT-132
 - FT-133
 - FT-138
+- FT-139
+- FT-142
+- FT-140
+- FT-141
+- FT-143
+- FT-144
 supersedes: []
 superseded-by: []
 domains:
