@@ -4,6 +4,7 @@
 //! Public surface kept narrow so the CLI module composes against a
 //! stable boundary.
 
+pub mod cluster_dispatch;
 pub mod execute;
 pub mod inspect;
 pub(crate) mod inspect_dor;

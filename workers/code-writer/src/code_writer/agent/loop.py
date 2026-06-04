@@ -86,12 +86,27 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
             retryable=False,
         )
 
+    # Adapt the (endpoint, model_id) pair from the capability resolver
+    # to LiteLLM's <provider>/<model> convention. Scaleway exposes
+    # OpenAI-compatible inference, so route via the "openai/" prefix
+    # which makes LiteLLM use the OpenAI protocol against base_url
+    # (= the Scaleway endpoint). Anthropic-native bindings get the
+    # "anthropic/" prefix. Already-prefixed model_ids pass through.
+    if "/" in payload.model_id:
+        litellm_model = payload.model_id
+    elif payload.endpoint == "scaleway":
+        litellm_model = f"openai/{payload.model_id}"
+    elif payload.endpoint == "anthropic":
+        litellm_model = f"anthropic/{payload.model_id}"
+    else:
+        litellm_model = payload.model_id
+
     # Main loop
     for turn in range(payload.max_turns):
         try:
             # Call LiteLLM
             response = litellm.completion(
-                model=payload.model_id,
+                model=litellm_model,
                 messages=[{"role": "system", "content": system_prompt}] + messages,
                 tools=list(available_tools.values()),
                 api_key=litellm_key,

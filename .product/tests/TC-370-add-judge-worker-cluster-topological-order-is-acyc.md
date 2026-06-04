@@ -2,7 +2,7 @@
 id: TC-370
 title: add-judge-worker cluster topological order is acyclic and deterministic
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib core::task_type::tests::add_judge_work
 runner-timeout: 60
 observes:
 - exit-code
+last-run: 2026-06-04T14:35:45.762132444+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

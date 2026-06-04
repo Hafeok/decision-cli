@@ -2,7 +2,7 @@
 id: TC-373
 title: cluster_dispatch end-to-end emits all five cells then runs audit and commits
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --test ft_139_cluster_dispatch_end_to_end cl
 runner-timeout: 180
 observes:
 - exit-code
+last-run: 2026-06-04T14:35:45.762132444+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

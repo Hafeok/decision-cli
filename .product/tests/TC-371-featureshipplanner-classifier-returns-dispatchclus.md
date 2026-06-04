@@ -2,7 +2,7 @@
 id: TC-371
 title: FeatureShipPlanner classifier returns DispatchCluster for task_type front-matter; falls through to DispatchImplementer otherwise
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib features::drive::planners::feature_shi
 runner-timeout: 60
 observes:
 - exit-code
+last-run: 2026-06-04T14:35:45.762132444+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

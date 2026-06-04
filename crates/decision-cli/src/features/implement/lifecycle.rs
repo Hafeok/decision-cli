@@ -52,6 +52,7 @@ pub(super) fn build_dispatch_payload(
         model_id,
         endpoint,
         timeout_seconds: 1800,
+        max_turns: 64,
         authority,
         defect_feedback,
         allowed_tools,
@@ -68,11 +69,17 @@ fn resolve_implementer_endpoint_and_model(
     store: &oxigraph::store::Store,
 ) -> (String, String) {
     use crate::core::dispatch::resolve_default_capability;
-    match resolve_default_capability(store, role_catalog::IMPLEMENTER_ROLE_ID) {
+    // The RoleBinding's dec:role_id literal is "implementer" (per
+    // config/role-bindings.yaml seeded by bootstrap_catalog.py); the
+    // role-catalog const IMPLEMENTER_ROLE_ID happens to be the WORKER
+    // manifest name "code-writer" (a pre-FT-058 carryover). Pass the
+    // RoleBinding literal directly to keep the resolver path correct.
+    let role_id = "implementer";
+    match resolve_default_capability(store, role_id) {
         Ok(cap) => (cap.endpoint.as_str().to_string(), cap.model_identifier),
         Err(e) => {
             tracing::warn!(
-                role = role_catalog::IMPLEMENTER_ROLE_ID,
+                role = role_id,
                 error = %e,
                 "capability resolution failed for implementer; falling back to legacy hardcoded anthropic/SLICE1_MODEL_ID"
             );

@@ -483,6 +483,7 @@ fn action_kind(a: &Action) -> &'static str {
         Action::DispatchAdrAuthor { .. } => "adr-author",
         Action::EscalateVgaToImplementer { .. } => "esc-vga-impl",
         Action::EscalateImplementerToVga { .. } => "esc-impl-vga",
+        Action::DispatchCluster { .. } => "cluster",
         Action::Stuck { .. } => "stuck",
     }
 }

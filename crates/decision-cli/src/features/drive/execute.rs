@@ -57,6 +57,17 @@ impl Executor for ProductionExecutor {
                 // FT-131: tc-author worker dispatch (stub for now)
                 anyhow::bail!("DispatchTcAuthor not yet implemented for {feature_id}")
             }
+            Action::DispatchCluster {
+                feature_id,
+                task_type_name,
+            } => crate::features::drive::cluster_dispatch::run(
+                ctx,
+                feature_id,
+                task_type_name,
+            )
+            .with_context(|| {
+                format!("dispatch cluster {task_type_name} for {feature_id}")
+            }),
             Action::DispatchTcQuality { feature_id, .. } => {
                 // FT-131: tc-quality judge dispatch (stub for now)
                 anyhow::bail!("DispatchTcQuality not yet implemented for {feature_id}")

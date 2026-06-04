@@ -2,7 +2,7 @@
 id: TC-372
 title: add-judge-worker coherence audit fails when agent_loop references a field absent from pydantic_io_models
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -13,6 +13,8 @@ runner-args: scripts/checks/tc-372-cluster-audit-judge-worker-negative.sh
 runner-timeout: 60
 observes:
 - exit-code
+last-run: 2026-06-04T14:35:45.762132444+00:00
+last-run-duration: 0.1s
 ---
 
 ## Acceptance criteria

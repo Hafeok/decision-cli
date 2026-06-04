@@ -485,6 +485,42 @@ impl<I: GraphInspector> Planner for FeatureShipPlanner<I> {
 }
 
 // ---------------------------------------------------------------------
+// FT-139 / ADR-080 — TaskType classifier branch.
+// ---------------------------------------------------------------------
+
+/// Classify a feature for typed cluster dispatch. Returns
+/// `Some(Action::DispatchCluster { .. })` when the feature's front-matter
+/// carries a `task_type:` value matching a registered TaskType in
+/// `core::task_type::registry`. Returns `None` when the field is absent
+/// or names an unknown TaskType — the caller falls through to the
+/// broad-worker dispatch per ADR-080's escape-hatch principle.
+///
+/// Pure function: takes the parsed front-matter value rather than
+/// reading disk, so unit tests can exercise it without I/O. The
+/// disk-reading wrapper lives at `classify_for_task_type` (FT-139's
+/// Phase 2 step 1).
+#[must_use]
+pub fn classify_for_task_type_value(
+    feature_id: &str,
+    task_type_value: Option<&str>,
+) -> Option<crate::core::drive::Action> {
+    let name = task_type_value?.trim();
+    if name.is_empty() {
+        return None;
+    }
+    if crate::core::task_type::lookup(name).is_some() {
+        Some(crate::core::drive::Action::DispatchCluster {
+            feature_id: feature_id.to_string(),
+            task_type_name: name.to_string(),
+        })
+    } else {
+        // Unknown TaskType → fall through to broad worker per ADR-080's
+        // escape-hatch. Low-confidence ≡ no match.
+        None
+    }
+}
+
+// ---------------------------------------------------------------------
 // Tests — exercise the classification table without I/O.
 // ---------------------------------------------------------------------
 
@@ -1155,5 +1191,49 @@ mod tests {
         let _ = planner.classify("FT-A", "ENV-002").unwrap();
         let action = planner.classify("FT-B", "ENV-002").unwrap();
         assert!(matches!(action, Action::DispatchImplementer { .. }));
+    }
+
+    // ---------------------------------------------------------------------
+    // TC-371 / FT-139 — classifier returns DispatchCluster for matching
+    // task_type front-matter, falls through (None) on absent or unknown.
+    // ---------------------------------------------------------------------
+
+    #[test]
+    fn classifier_returns_dispatch_cluster_for_task_type_frontmatter() {
+        use crate::core::drive::Action;
+        use super::classify_for_task_type_value;
+
+        // Positive: known TaskType in registry.
+        let action = classify_for_task_type_value("FT-T371", Some("add-judge-worker"))
+            .expect("registered TaskType produces DispatchCluster");
+        match action {
+            Action::DispatchCluster {
+                feature_id,
+                task_type_name,
+            } => {
+                assert_eq!(feature_id, "FT-T371");
+                assert_eq!(task_type_name, "add-judge-worker");
+            }
+            other => panic!("expected DispatchCluster, got {other:?}"),
+        }
+
+        // Fallthrough (absent): None → caller uses DispatchImplementer.
+        assert!(
+            classify_for_task_type_value("FT-T371", None).is_none(),
+            "absent task_type falls through"
+        );
+
+        // Fallthrough (empty string): None.
+        assert!(
+            classify_for_task_type_value("FT-T371", Some("")).is_none(),
+            "empty task_type falls through"
+        );
+
+        // Fallthrough (unknown): None per ADR-080's escape hatch
+        // (low-confidence → broad worker, NOT a PlanError).
+        assert!(
+            classify_for_task_type_value("FT-T371", Some("not-a-real-task-type")).is_none(),
+            "unknown task_type falls through to broad worker"
+        );
     }
 }

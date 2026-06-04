@@ -26,6 +26,7 @@ pub mod ontology;
 pub mod queries;
 pub mod role_catalog;
 pub mod sbom_referrer;
+pub mod task_type;
 pub mod scope;
 pub mod sparql;
 pub mod store;

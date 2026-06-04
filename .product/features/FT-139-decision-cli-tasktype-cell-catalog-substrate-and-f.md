@@ -2,7 +2,7 @@
 id: FT-139
 title: 'decision-cli: TaskType + Cell catalog substrate and first task type — add-judge-worker — with coherence audit prototype'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-080

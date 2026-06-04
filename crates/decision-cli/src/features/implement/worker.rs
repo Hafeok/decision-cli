@@ -30,6 +30,9 @@ pub struct DispatchPayloadJson {
     /// the right `ANTHROPIC_*` env vars before spawning `claude -p`.
     pub endpoint: String,
     pub timeout_seconds: u32,
+    /// FT-123: agentic loop turn cap. Python worker schema defaults to
+    /// 8 when absent; substantive features need much more headroom.
+    pub max_turns: u32,
     /// FT-030 / ADR-027: role authority declaration. `None` when the
     /// orchestration store predates FT-030 (legacy slice-1 stores).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -352,6 +355,7 @@ mod tests {
             model_id: "claude-sonnet-4-5".into(),
             endpoint: "anthropic".into(),
             timeout_seconds: 1800,
+            max_turns: 8,
             authority: None,
             defect_feedback: Vec::new(),
             allowed_tools: vec![

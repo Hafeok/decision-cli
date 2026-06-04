@@ -95,6 +95,19 @@ pub enum Action {
         /// Env short id.
         env_id: String,
     },
+    /// FT-139 / ADR-080: dispatch a typed cell cluster against the
+    /// feature. The classifier matched `task_type:` in the front-matter
+    /// to a registered TaskType in `core::task_type::registry`; the
+    /// executor walks the cluster in `derived_from` order, runs the
+    /// coherence audit, and commits atomically. Unknown / absent
+    /// `task_type` falls through to the broad `DispatchImplementer`
+    /// per ADR-080's escape hatch.
+    DispatchCluster {
+        /// Feature short id.
+        feature_id: String,
+        /// Registered TaskType name (e.g. `add-judge-worker`).
+        task_type_name: String,
+    },
     /// Terminal — no path forward. Driver returns `DriveError::Stuck`.
     /// The `reason` is rendered verbatim so the operator sees the
     /// planner's diagnosis.
@@ -127,6 +140,7 @@ impl Action {
             Self::DispatchAdrAuthor { .. } => "dispatch:adr-author",
             Self::EscalateVgaToImplementer { .. } => "escalate:vga-to-implementer",
             Self::EscalateImplementerToVga { .. } => "escalate:implementer-to-vga",
+            Self::DispatchCluster { .. } => "dispatch:cluster",
             Self::Stuck { .. } => "stuck",
         }
     }
