@@ -2,7 +2,7 @@
 id: FT-131
 title: 'decision-cli: dec drive def-ready readiness-orchestrator extension — full upstream chain'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-119
 - FT-126

@@ -2,7 +2,7 @@
 id: TC-308
 title: FT-131 dispatches tc-author then tc-quality and flips tcs_ready on accepted verdict
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-131
@@ -17,6 +17,8 @@ runner-timeout: 180
 observes:
 - exit-code
 - graph
+last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
@@ -40,4 +42,3 @@ A mocked dispatch harness (extending the FT-119 test scaffolding) that records e
 - The VG arm (covered by TC-309).
 - Cycle detection on repeated rejections (covered by TC-310).
 - No-author opt-out behaviour (covered by TC-311).
-

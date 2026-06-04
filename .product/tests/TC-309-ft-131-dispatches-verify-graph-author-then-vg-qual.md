@@ -2,7 +2,7 @@
 id: TC-309
 title: FT-131 dispatches verify-graph-author then vg-quality and flips vgs_ready on accepted verdict
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-131
@@ -18,6 +18,8 @@ runner-timeout: 180
 observes:
 - exit-code
 - graph
+last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run-duration: 0.1s
 ---
 
 ## Purpose
@@ -41,4 +43,3 @@ The same mocked dispatch harness used in TC-308, with the orchestration store se
 - TC arm (covered by TC-308).
 - Cycle detection (TC-310) and no-author opt-out (TC-311).
 - Gap-routing path (covered by TC-297 from the worker side).
-

@@ -2,7 +2,7 @@
 id: TC-306
 title: FT-131 FeatureReadyPlanner classifies the expanded eight-dimension matrix into the right Action
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-131
@@ -14,6 +14,8 @@ runner-args: -p decision-cli --test ft_131_classification_table
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
@@ -36,4 +38,3 @@ A `StubInspector` per row constructed via the FT-119 / FT-117 test-scaffolding p
 
 - Stuck-reason string formatting (covered by TC-307).
 - Dispatch sequencing and harness integration (covered by TC-308 / TC-309).
-

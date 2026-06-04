@@ -2,7 +2,7 @@
 id: TC-310
 title: FT-131 PAT-002 cycle detection catches author-judge oscillation with period-N Stuck before max_iter
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-131
@@ -15,6 +15,8 @@ runner-timeout: 120
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run-duration: 0.1s
 ---
 
 ## Purpose
@@ -37,4 +39,3 @@ A stub dispatch harness configured to return: tc-author terminal with TcProposal
 
 - Non-cyclic Stuck reasons (covered by TC-307).
 - Successful unblock paths (covered by TC-308 / TC-309).
-

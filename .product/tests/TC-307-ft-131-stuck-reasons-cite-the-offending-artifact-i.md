@@ -2,7 +2,7 @@
 id: TC-307
 title: FT-131 Stuck reasons cite the offending artifact id verbatim through the driver
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-131
@@ -15,6 +15,8 @@ runner-timeout: 120
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
@@ -37,4 +39,3 @@ Validates FT-131 (FeatureReadyPlanner) against ADR-076's debuggability invariant
 
 - The full classification matrix (covered by TC-306).
 - The dispatch-on-non-Stuck paths (covered by TC-308 / TC-309).
-

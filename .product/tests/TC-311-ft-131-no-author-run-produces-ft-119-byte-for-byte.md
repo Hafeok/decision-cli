@@ -2,7 +2,7 @@
 id: TC-311
 title: FT-131 --no-author run produces FT-119 byte-for-byte parity on classifications and Stuck reasons
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-131
@@ -15,6 +15,8 @@ runner-timeout: 120
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T09:34:27.854942760+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose
@@ -37,4 +39,3 @@ The TC-253..TC-258 fixture set reused as golden files (the FT-119 planner output
 
 - Authoring-enabled paths (covered by TC-308 / TC-309 / TC-310).
 - New classification rows added by FT-131 that have no FT-119 analogue (those rows are excluded from the parity diff).
-

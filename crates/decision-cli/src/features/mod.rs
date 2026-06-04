@@ -18,6 +18,7 @@ pub mod ft_116_retract_stale_defects;
 pub mod ft_117_migrate_env_to_bench;
 pub mod ft_119_drive_def_ready;
 pub mod ft_120_retract_orphan_defects;
+pub mod ft_131_readiness_orchestrator;
 pub mod health;
 pub mod implement;
 pub mod init;

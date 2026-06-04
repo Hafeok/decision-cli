@@ -252,6 +252,58 @@ pub trait GraphInspector {
     ) -> Result<bool, InspectError> {
         Ok(false)
     }
+
+    // ---------------------------------------------------------------
+    // FT-131 (Readiness Orchestrator) dimensions. All default to
+    // permissive "ready" answers for test-stub compatibility.
+    // ---------------------------------------------------------------
+
+    /// Count of accepted quality verdicts on TCs linked to this
+    /// feature (FT-131 `tcs_ready` dimension expansion).
+    fn tc_quality_verdicts_count(
+        &self,
+        _feature_id: &str,
+    ) -> Result<usize, InspectError> {
+        Ok(0)
+    }
+
+    /// Count of accepted quality verdicts on VGs covering this
+    /// feature (FT-131 `vgs_ready` dimension expansion).
+    fn vg_quality_verdicts_count(
+        &self,
+        _feature_id: &str,
+    ) -> Result<usize, InspectError> {
+        Ok(0)
+    }
+
+    /// Whether the feature_spec has an accepted quality verdict
+    /// (FT-131 `spec_ready` dimension, Slice B).
+    fn spec_quality_approved(
+        &self,
+        _feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        Ok(true)
+    }
+
+    /// Whether all preflight gaps have accepted ADR
+    /// acknowledgements with quality verdicts (FT-131
+    /// `adr_acks_ready` dimension, Slice B).
+    fn adr_acks_quality_approved(
+        &self,
+        _feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        Ok(true)
+    }
+
+    /// Count of pending proposals (TC, VG, spec, ADR) for this
+    /// feature that have no paired verdict yet (FT-131
+    /// author-dispatch gating).
+    fn pending_proposals_count(
+        &self,
+        _feature_id: &str,
+    ) -> Result<usize, InspectError> {
+        Ok(0)
+    }
 }
 
 /// Blanket: a shared reference to any `GraphInspector` is itself an
@@ -321,6 +373,36 @@ impl<T: GraphInspector + ?Sized> GraphInspector for &T {
         feature_id: &str,
     ) -> Result<bool, InspectError> {
         (**self).has_open_implementer_feedback_for_feature(feature_id)
+    }
+    fn tc_quality_verdicts_count(
+        &self,
+        feature_id: &str,
+    ) -> Result<usize, InspectError> {
+        (**self).tc_quality_verdicts_count(feature_id)
+    }
+    fn vg_quality_verdicts_count(
+        &self,
+        feature_id: &str,
+    ) -> Result<usize, InspectError> {
+        (**self).vg_quality_verdicts_count(feature_id)
+    }
+    fn spec_quality_approved(
+        &self,
+        feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        (**self).spec_quality_approved(feature_id)
+    }
+    fn adr_acks_quality_approved(
+        &self,
+        feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        (**self).adr_acks_quality_approved(feature_id)
+    }
+    fn pending_proposals_count(
+        &self,
+        feature_id: &str,
+    ) -> Result<usize, InspectError> {
+        (**self).pending_proposals_count(feature_id)
     }
 }
 

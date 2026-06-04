@@ -36,6 +36,39 @@ pub enum Action {
         /// Env short id.
         env_id: String,
     },
+    /// Dispatch tc-author worker to author missing TCs (FT-126, FT-131).
+    DispatchTcAuthor {
+        /// Feature short id.
+        feature_id: String,
+        /// Target count of TCs to reach (ADR-072 floor).
+        target_count: usize,
+    },
+    /// Dispatch tc-quality judge on a pending TC proposal (FT-127, FT-131).
+    DispatchTcQuality {
+        /// Feature short id.
+        feature_id: String,
+        /// IRI of the pending TC proposal artifact.
+        tc_proposal_iri: String,
+    },
+    /// Dispatch vg-quality judge on a pending VG proposal (FT-128, FT-131).
+    DispatchVgQuality {
+        /// Feature short id.
+        feature_id: String,
+        /// IRI of the pending graph proposal artifact.
+        graph_proposal_iri: String,
+    },
+    /// Dispatch spec-author worker to author missing spec sections (FT-129, FT-131, Slice B).
+    DispatchSpecAuthor {
+        /// Feature short id.
+        feature_id: String,
+    },
+    /// Dispatch adr-author worker to close a preflight gap (FT-130, FT-131, Slice B).
+    DispatchAdrAuthor {
+        /// Feature short id.
+        feature_id: String,
+        /// Preflight gap detail (unacknowledged ADR or domain).
+        preflight_gap: String,
+    },
     /// Escalation: the verify-graph-author can't fix the open defects
     /// (typically because the underlying commands the graph invokes
     /// fail with general errors — exit 1 — that signal a missing or
@@ -87,6 +120,11 @@ impl Action {
             Self::DispatchVerifier { .. } => "dispatch:verifier",
             Self::DispatchImplementer { .. } => "dispatch:implementer",
             Self::DispatchVerifyGraphAuthor { .. } => "dispatch:verify-graph-author",
+            Self::DispatchTcAuthor { .. } => "dispatch:tc-author",
+            Self::DispatchTcQuality { .. } => "dispatch:tc-quality",
+            Self::DispatchVgQuality { .. } => "dispatch:vg-quality",
+            Self::DispatchSpecAuthor { .. } => "dispatch:spec-author",
+            Self::DispatchAdrAuthor { .. } => "dispatch:adr-author",
             Self::EscalateVgaToImplementer { .. } => "escalate:vga-to-implementer",
             Self::EscalateImplementerToVga { .. } => "escalate:implementer-to-vga",
             Self::Stuck { .. } => "stuck",

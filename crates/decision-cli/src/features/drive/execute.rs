@@ -53,6 +53,26 @@ impl Executor for ProductionExecutor {
                     format!("escalate implementer→vga for {feature_id}")
                 })
             }
+            Action::DispatchTcAuthor { feature_id, .. } => {
+                // FT-131: tc-author worker dispatch (stub for now)
+                anyhow::bail!("DispatchTcAuthor not yet implemented for {feature_id}")
+            }
+            Action::DispatchTcQuality { feature_id, .. } => {
+                // FT-131: tc-quality judge dispatch (stub for now)
+                anyhow::bail!("DispatchTcQuality not yet implemented for {feature_id}")
+            }
+            Action::DispatchVgQuality { feature_id, .. } => {
+                // FT-131: vg-quality judge dispatch (stub for now)
+                anyhow::bail!("DispatchVgQuality not yet implemented for {feature_id}")
+            }
+            Action::DispatchSpecAuthor { feature_id } => {
+                // FT-131: spec-author worker dispatch (Slice B stub)
+                anyhow::bail!("DispatchSpecAuthor not yet implemented for {feature_id}")
+            }
+            Action::DispatchAdrAuthor { feature_id, .. } => {
+                // FT-131: adr-author worker dispatch (Slice B stub)
+                anyhow::bail!("DispatchAdrAuthor not yet implemented for {feature_id}")
+            }
         }
     }
 }

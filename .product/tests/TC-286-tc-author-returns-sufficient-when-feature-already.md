@@ -17,8 +17,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
-last-run: 2026-06-04T09:19:14.427479625+00:00
-last-run-duration: 0.4s
+last-run: 2026-06-04T09:19:46.865241935+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose
