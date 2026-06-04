@@ -15,7 +15,7 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_provider_routing.py::test_scaleway_routes_via_litellm
 runner-timeout: 60
-last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run: 2026-06-04T12:26:02.266912072+00:00
 last-run-duration: 0.4s
 ---
 

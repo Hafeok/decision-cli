@@ -15,8 +15,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_agent_loop.py::test_single_write_completes
 runner-timeout: 60
-last-run: 2026-06-04T12:25:32.225732911+00:00
-last-run-duration: 0.4s
+last-run: 2026-06-04T12:26:02.266912072+00:00
+last-run-duration: 0.7s
 ---
 
 ## Description
