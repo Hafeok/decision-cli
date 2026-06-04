@@ -1,0 +1,39 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-200>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-129> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-200/0> <https://decision-cli.dev/ns/step/VG-200/1> <https://decision-cli.dev/ns/step/VG-200/2> <https://decision-cli.dev/ns/step/VG-200/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-200/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-298> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/spec-author/tests/test_new_conforming.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-200/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-299> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/spec-author/tests/test_gap_underspec.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-200/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-300> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/spec-author/tests/test_body_schema.py" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-200/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-301> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/spec-author/tests/test_bundle_hash_echo.py" ;
+    dec:expectExitCode 0 .

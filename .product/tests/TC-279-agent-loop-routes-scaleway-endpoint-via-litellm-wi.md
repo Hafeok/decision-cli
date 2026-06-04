@@ -2,7 +2,7 @@
 id: TC-279
 title: 'agent loop: routes Scaleway endpoint via LiteLLM with model group resolution'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-123
@@ -15,6 +15,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_provider_routing.py::test_scaleway_routes_via_litellm
 runner-timeout: 60
+last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

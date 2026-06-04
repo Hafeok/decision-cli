@@ -2,7 +2,7 @@
 id: TC-301
 title: spec-author echoes bundle_hash and writes nothing beyond stdout
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-129
@@ -16,6 +16,9 @@ observes:
 - exit-code
 - stdout
 - disk-state
+last-run: 2026-06-04T12:08:02.706715821+00:00
+last-run-duration: 0.3s
+failure-message: "ERROR: file or directory not found: workers/spec-author/tests/test_bundle_hash_echo.py\n\n"
 ---
 
 ## Purpose
@@ -37,4 +40,3 @@ Synthetic bundle JSON written to a `tmp_path` fixture with a known `bundle_hash`
 
 - Proposal-payload correctness (covered by TC-298, TC-299, TC-300).
 - Stderr logging discipline (logs are allowed; only stdout JSON and disk state are observed).
-

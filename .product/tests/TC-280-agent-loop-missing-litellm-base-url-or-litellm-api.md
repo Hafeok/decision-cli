@@ -2,7 +2,7 @@
 id: TC-280
 title: 'agent loop: missing LITELLM_API_KEY returns structured invalid_dispatch error'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-123
@@ -15,6 +15,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_provider_routing.py::test_missing_litellm_key_fails_closed
 runner-timeout: 30
+last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

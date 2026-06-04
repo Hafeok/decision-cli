@@ -2,7 +2,7 @@
 id: FT-123
 title: 'decision-cli: code-writer in-process LiteLLM-client agentic loop (retire claude -p subprocess)'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-122
 - FT-124
@@ -27,8 +27,8 @@ domains:
 - api
 - security
 domains-acknowledged:
-  api: "Replaces the `claude -p` subprocess in `workers/code-writer/` with an in-process Python agentic loop using `litellm.completion`. Five tool primitives exposed to the model via the OpenAI-shaped function-calling protocol. Provider-agnostic via LiteLLM (Anthropic + Scaleway first-class)."
-  security: "Tool surface is enforced by intersection with `payload.allowed_tools` ([ADR-070](ADR-070)); empty intersection fails closed. Every tool routes through `_shared.tool_safety` for workspace containment and secrets blocking ([ADR-071](ADR-071))."
+  api: Replaces the `claude -p` subprocess in `workers/code-writer/` with an in-process Python agentic loop using `litellm.completion`. Five tool primitives exposed to the model via the OpenAI-shaped function-calling protocol. Provider-agnostic via LiteLLM (Anthropic + Scaleway first-class).
+  security: Tool surface is enforced by intersection with `payload.allowed_tools` ([ADR-070](ADR-070)); empty intersection fails closed. Every tool routes through `_shared.tool_safety` for workspace containment and secrets blocking ([ADR-071](ADR-071)).
 ---
 
 ## Description

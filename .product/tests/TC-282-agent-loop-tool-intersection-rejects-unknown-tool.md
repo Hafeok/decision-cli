@@ -2,7 +2,7 @@
 id: TC-282
 title: 'agent loop: tool intersection drops unknown tool names with a warn log'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-123
@@ -16,6 +16,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_agent_loop.py::test_unknown_tool_names_dropped
 runner-timeout: 30
+last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

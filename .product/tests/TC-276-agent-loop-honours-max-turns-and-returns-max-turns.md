@@ -2,7 +2,7 @@
 id: TC-276
 title: 'agent loop: honours max_turns and returns max_turns_exceeded with partial telemetry'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-123
@@ -14,6 +14,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_agent_loop.py::test_max_turns_exceeded
 runner-timeout: 60
+last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

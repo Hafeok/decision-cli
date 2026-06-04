@@ -2,7 +2,7 @@
 id: TC-281
 title: 'agent loop: FT-108 addressed feedback extraction still works post-migration'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-123
@@ -15,6 +15,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_addressed_feedback_extraction.py::test_extracts_citations_from_litellm_response
 runner-timeout: 60
+last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

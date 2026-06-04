@@ -1,0 +1,67 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-199>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-123> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-199/0> <https://decision-cli.dev/ns/step/VG-199/1> <https://decision-cli.dev/ns/step/VG-199/2> <https://decision-cli.dev/ns/step/VG-199/3> <https://decision-cli.dev/ns/step/VG-199/4> <https://decision-cli.dev/ns/step/VG-199/5> <https://decision-cli.dev/ns/step/VG-199/6> <https://decision-cli.dev/ns/step/VG-199/7> ) .
+
+<https://decision-cli.dev/ns/step/VG-199/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-275> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_agent_loop.py::test_single_write_completes" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-276> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_agent_loop.py::test_max_turns_exceeded" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-277> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_agent_loop.py::test_no_model_subprocess" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-278> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_provider_routing.py::test_anthropic_routes_via_litellm" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-279> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_provider_routing.py::test_scaleway_routes_via_litellm" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/5>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-280> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_provider_routing.py::test_missing_litellm_key_fails_closed" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/6>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-281> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_addressed_feedback_extraction.py::test_extracts_citations_from_litellm_response" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-199/7>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-282> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_agent_loop.py::test_unknown_tool_names_dropped" ;
+    dec:expectExitCode 0 .

@@ -2,7 +2,7 @@
 id: TC-275
 title: 'agent loop: single write_file tool call completes with status=ok and one FileWrite'
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-123
@@ -15,6 +15,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_agent_loop.py::test_single_write_completes
 runner-timeout: 60
+last-run: 2026-06-04T12:25:32.225732911+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

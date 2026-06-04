@@ -46,10 +46,10 @@ _ = (_claude_on_path, _is_stub_mode, _make_code_change_iri, _safe_join, _default
 
 
 def run_claude(payload: DispatchPayload) -> WorkerResponse:
-    """Real ``claude -p`` subprocess runner (ADR-008 §Behaviour 3-5)."""
-    from ._subprocess_runner import run_claude as _impl
+    """In-process LiteLLM-client agentic loop (FT-123 / ADR-069)."""
+    from .agent import run_agent
 
-    return _impl(payload)
+    return run_agent(payload)
 
 
 def run_dispatch(

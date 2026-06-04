@@ -1,0 +1,165 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-611>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-199> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:verdict "rejected" ;
+    dec:startedAt "2026-06-04T12:07:20.893Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:22.815Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-611/step/0> <https://decision-cli.dev/ns/result/VGR-611/step/1> <https://decision-cli.dev/ns/result/VGR-611/step/2> <https://decision-cli.dev/ns/result/VGR-611/step/3> <https://decision-cli.dev/ns/result/VGR-611/step/4> <https://decision-cli.dev/ns/result/VGR-611/step/5> <https://decision-cli.dev/ns/result/VGR-611/step/6> <https://decision-cli.dev/ns/result/VGR-611/step/7> ) ;
+    dec:rationale "step 0 failed; evidence regression on TCs: https://decision-cli.dev/ns/tc/TC-275; the run is rejected" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-275> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-276> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-277> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-278> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-279> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/4>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-280> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/5>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-281> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/6>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-282> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-611/step/7>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-06-04T12:07:22.815Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:20.893Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:21.109Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_agent_loop.py::test_single_write_completes\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/1> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:21.109Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:21.314Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_agent_loop.py::test_max_turns_exceeded\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:21.314Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:21.520Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_agent_loop.py::test_no_model_subprocess\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:21.520Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:21.718Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_provider_routing.py::test_anthropic_routes_via_litellm\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:21.718Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:21.935Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_provider_routing.py::test_scaleway_routes_via_litellm\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/5>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/5> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:21.935Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:22.261Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.01s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_provider_routing.py::test_missing_litellm_key_fails_closed\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/6>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/6> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:22.261Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:22.546Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_addressed_feedback_extraction.py::test_extracts_citations_from_litellm_response\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .
+
+<https://decision-cli.dev/ns/result/VGR-611/step/7>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-199/7> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T12:07:22.546Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T12:07:22.815Z"^^xsd:dateTime ;
+    dec:exitCode 4 ;
+    dec:stdoutExcerpt "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.0.3, pluggy-1.6.0\nrootdir: /home/hafeok/projects/decision-cli\nplugins: asyncio-0.23.4, cov-7.1.0\nasyncio: mode=Mode.STRICT\ncollected 0 items\n\n============================ no tests ran in 0.00s =============================\n" ;
+    dec:stderrExcerpt "ERROR: file or directory not found: workers/code-writer/tests/test_agent_loop.py::test_unknown_tool_names_dropped\n\n" ;
+    dec:errorMessage "expected exit 0, got 4" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-199/BNCH-002/ts-1780574840891746822> .

@@ -2,7 +2,7 @@
 id: TC-299
 title: spec-author returns gap listing missing_information for an under-specified request
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-129
@@ -16,6 +16,9 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T12:08:02.706715821+00:00
+last-run-duration: 0.2s
+failure-message: "ERROR: file or directory not found: workers/spec-author/tests/test_gap_underspec.py\n\n"
 ---
 
 ## Purpose
@@ -38,4 +41,3 @@ Synthetic bundle JSON: a `SpecRequest` with only a title and no scope, no accept
 
 - Well-formed new path (covered by TC-298).
 - ADR-author's gap behaviour (covered by TC-305).
-

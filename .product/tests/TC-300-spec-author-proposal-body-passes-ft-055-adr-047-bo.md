@@ -2,7 +2,7 @@
 id: TC-300
 title: spec-author proposal body passes FT-055/ADR-047 body-completeness validation
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-129
@@ -17,6 +17,9 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T12:08:02.706715821+00:00
+last-run-duration: 0.2s
+failure-message: "ERROR: file or directory not found: workers/spec-author/tests/test_body_schema.py\n\n"
 ---
 
 ## Purpose
@@ -38,4 +41,3 @@ Synthetic bundle JSON with a complete `SpecRequest`. The Anthropic client is mon
 
 - Behavioural assertions on which body content was produced (TC-298 covers structural presence; this TC closes the loop with the validator).
 - Validator behaviour on already-stored feature_specs (covered by FT-055 TCs).
-
