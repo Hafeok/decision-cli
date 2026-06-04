@@ -10,6 +10,7 @@
 //! | spec = `MissingHeading(...)`           | `Stuck "spec incomplete: <heading>"`  |
 //! | tcs = `NoneLinked`                     | `Stuck "no TCs linked"`               |
 //! | tcs = `SomeUnready { problem_tc, ... }`| `Stuck "TC quality: TC-NNN ..."`      |
+//! | open implementer feedback exists       | `Done` (FT-138 / ADR-079)             |
 //! | vgs = `Missing`                        | `DispatchVerifyGraphAuthor`           |
 //! | vgs = `PendingReview { graph_ids }`    | `Stuck "VG pending_review: VG-..."`   |
 //! | otherwise                              | `Done`                                |
@@ -216,6 +217,19 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
             TcsLinkedState::AllReady => {}
         }
 
+        // 4.5. FT-138 / ADR-079: open implementer feedback → Done.
+        // When the feature has open implementer-targeted defect
+        // feedback, the right next move is `dec drive ship` (which
+        // will dispatch the implementer), not authoring a new VG.
+        let open_feedback = self
+            .inspector
+            .has_open_implementer_feedback_for_feature(feature_id)
+            .map_err(store_err)?;
+        hash_open_feedback(open_feedback, &mut h);
+        if open_feedback {
+            return Ok((Action::Done, h.finish()));
+        }
+
         // 5. Covering graph state.
         let vgs = self
             .inspector
@@ -393,6 +407,10 @@ fn hash_vgs(v: &CoveringGraphState, h: &mut DefaultHasher) {
     }
 }
 
+fn hash_open_feedback(open: bool, h: &mut DefaultHasher) {
+    (if open { 1u8 } else { 0u8 }).hash(h);
+}
+
 fn store_err(e: crate::features::drive::inspect::InspectError) -> PlanError {
     PlanError::Store {
         detail: format!("{e}"),
@@ -508,6 +526,7 @@ mod tests {
         preflight: PreflightStatus,
         deps: Vec<(String, String)>,
         tcs: TcsLinkedState,
+        open_feedback: bool,
         vgs: CoveringGraphState,
         state_hash: u64,
     }
@@ -521,6 +540,7 @@ mod tests {
                 preflight: PreflightStatus::Clean,
                 deps: vec![("FT-DEP".to_string(), "complete".to_string())],
                 tcs: TcsLinkedState::AllReady,
+                open_feedback: false,
                 vgs: CoveringGraphState::AcceptedAll,
                 state_hash: 1,
             }
@@ -580,6 +600,12 @@ mod tests {
             _: &str,
         ) -> Result<CoveringGraphState, InspectError> {
             Ok(self.vgs.clone())
+        }
+        fn has_open_implementer_feedback_for_feature(
+            &self,
+            _: &str,
+        ) -> Result<bool, InspectError> {
+            Ok(self.open_feedback)
         }
     }
 
@@ -876,6 +902,85 @@ mod tests {
             }
             other => panic!("expected Stuck, got {other:?}"),
         }
+    }
+
+    // -----------------------------------------------------------------
+    // FT-138 / ADR-079 — open implementer feedback check.
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn precedence_tc_quality_wins_over_open_implementer_feedback() {
+        // TC-345: TC quality stuck still wins when open implementer
+        // feedback exists. The new row is positioned below the TC
+        // checks in the precedence ladder.
+        let mut s = StubInspector::all_ready();
+        s.tcs = TcsLinkedState::SomeUnready {
+            problem_tc: "TC-999".to_string(),
+            reason: "runner missing".to_string(),
+        };
+        s.open_feedback = true;
+        s.vgs = CoveringGraphState::Missing;
+        match run(s) {
+            Action::Stuck { reason } => {
+                assert!(reason.contains("TC quality"), "reason was: {reason}");
+                assert!(reason.contains("TC-999"));
+                assert!(!reason.contains("feedback"));
+            }
+            other => panic!("expected Stuck (TC quality), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn open_implementer_feedback_returns_done_before_vg_missing() {
+        // TC-346: when all earlier classifier rows pass and open
+        // implementer feedback exists, the planner returns Done
+        // before considering the VG-missing branch.
+        let mut s = StubInspector::all_ready();
+        s.open_feedback = true;
+        s.vgs = CoveringGraphState::Missing;
+        assert_eq!(run(s), Action::Done);
+    }
+
+    #[test]
+    fn no_feedback_preserves_dispatch_verify_graph_author() {
+        // TC-347: regression guard — the new row does not change
+        // behaviour when no open implementer feedback exists. The
+        // VG-missing → DispatchVerifyGraphAuthor path continues to
+        // fire for features that need a graph authored from scratch.
+        let mut s = StubInspector::all_ready();
+        s.open_feedback = false;
+        s.vgs = CoveringGraphState::Missing;
+        match run(s) {
+            Action::DispatchVerifyGraphAuthor { feature_id, env_id } => {
+                assert_eq!(feature_id, "FT-T254");
+                assert_eq!(env_id, "BNCH-002");
+            }
+            other => panic!("expected DispatchVerifyGraphAuthor, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn state_hash_includes_open_implementer_feedback_signal() {
+        // TC-349: the state hash folds in the open-implementer-feedback
+        // boolean. Without this property the cycle detector
+        // false-positives across `produced → addressed` lifecycle
+        // transitions.
+        let mut s1 = StubInspector::all_ready();
+        s1.open_feedback = true;
+        s1.vgs = CoveringGraphState::Missing;
+        let p1 = FeatureReadyPlanner::new(s1);
+        let (_, hash_with) = p1.classify_and_hash("FT-T349", "BNCH-002").unwrap();
+
+        let mut s2 = StubInspector::all_ready();
+        s2.open_feedback = false;
+        s2.vgs = CoveringGraphState::Missing;
+        let p2 = FeatureReadyPlanner::new(s2);
+        let (_, hash_without) = p2.classify_and_hash("FT-T349", "BNCH-002").unwrap();
+
+        assert_ne!(
+            hash_with, hash_without,
+            "state hash must differ when open_feedback flips"
+        );
     }
 
     // -----------------------------------------------------------------

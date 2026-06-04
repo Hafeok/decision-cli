@@ -2,7 +2,7 @@
 id: TC-346
 title: def-ready returns Done when open implementer feedback exists and TCs are ready
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-138
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --lib features::ft_119_drive_def_ready::plan
 runner-timeout: 60
 observes:
 - exit-code
+last-run: 2026-06-04T08:31:47.593368217+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

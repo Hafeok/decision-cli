@@ -2,7 +2,7 @@
 id: TC-348
 title: def-ready against live orchestration store with produced implementer feedback returns Done
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-138
@@ -13,6 +13,8 @@ runner-args: --package decision-cli --test ft_138_def_ready_implementer_feedback
 runner-timeout: 120
 observes:
 - exit-code
+last-run: 2026-06-04T08:31:47.593368217+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

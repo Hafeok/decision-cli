@@ -554,6 +554,67 @@ fn which_on_path(bin: &str) -> Option<PathBuf> {
 }
 
 // ---------------------------------------------------------------------
+// FT-138 — open implementer feedback check.
+// ---------------------------------------------------------------------
+
+/// Returns `true` if the feature has at least one open
+/// (`lifecycleState = "produced"`), implementer-targeted
+/// (`targetRole = "implementer"`), defect-class
+/// (`feedbackClass = "defect"`) `dec:Feedback` whose `sourceArtifact`
+/// is one of the feature's TCs.
+pub(super) fn has_open_implementer_feedback(
+    workdir: &Path,
+    product_root: &Path,
+    feature_id: &str,
+) -> Result<bool, InspectError> {
+    use crate::core::store::{load_store_from_dump, orchestration_dump_path};
+    use crate::core::verify::coverage::feature_resolver::{
+        resolve_feature_tcs_short, tc_iri_for,
+    };
+
+    let tc_shorts =
+        resolve_feature_tcs_short(product_root, feature_id).map_err(|e| InspectError::Store {
+            detail: format!("resolve TCs for {feature_id}: {e}"),
+        })?;
+    if tc_shorts.is_empty() {
+        return Ok(false);
+    }
+    let tc_iris: Vec<String> = tc_shorts.iter().map(|s| tc_iri_for(s)).collect();
+
+    let dump = orchestration_dump_path(workdir);
+    let store = match load_store_from_dump(&dump) {
+        Ok(s) => s,
+        Err(_) => return Ok(false),
+    };
+
+    let tc_iris_quoted: Vec<String> = tc_iris
+        .iter()
+        .map(|iri| format!("<{iri}>"))
+        .collect();
+    let tc_filter = tc_iris_quoted.join(", ");
+
+    let q = format!(
+        r#"PREFIX dec: <https://decision-cli.dev/ns#>
+ASK {{
+  GRAPH ?g {{
+    ?fb a dec:Feedback ;
+        dec:feedbackClass "defect" ;
+        dec:lifecycleState "produced" ;
+        dec:targetRole "implementer" ;
+        dec:sourceArtifact ?tc .
+    FILTER(?tc IN ({tc_filter}))
+  }}
+}}"#
+    );
+
+    let result = match store.query(&q) {
+        Ok(QueryResults::Boolean(b)) => b,
+        _ => false,
+    };
+    Ok(result)
+}
+
+// ---------------------------------------------------------------------
 // Tests — frontmatter helpers + body parser. Live-store / live-product
 // dimensions are exercised end-to-end via FT-119's existing TC runners
 // once they wire production through, which is the next iteration.

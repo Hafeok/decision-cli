@@ -237,6 +237,21 @@ pub trait GraphInspector {
     ) -> Result<CoveringGraphState, InspectError> {
         Ok(CoveringGraphState::AcceptedAll)
     }
+
+    /// FT-138: whether the feature has at least one open
+    /// (`lifecycleState = "produced"`), implementer-targeted
+    /// (`targetRole = "implementer"`), defect-class
+    /// (`feedbackClass = "defect"`) `dec:Feedback` whose
+    /// `sourceArtifact` is one of the feature's TCs.
+    ///
+    /// Default impl returns `Ok(false)` — matches the test-stub
+    /// pattern of every other inspector method.
+    fn has_open_implementer_feedback_for_feature(
+        &self,
+        _feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        Ok(false)
+    }
 }
 
 /// Blanket: a shared reference to any `GraphInspector` is itself an
@@ -300,6 +315,12 @@ impl<T: GraphInspector + ?Sized> GraphInspector for &T {
         env_id: &str,
     ) -> Result<CoveringGraphState, InspectError> {
         (**self).covering_graph_state_for_feature(feature_id, env_id)
+    }
+    fn has_open_implementer_feedback_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        (**self).has_open_implementer_feedback_for_feature(feature_id)
     }
 }
 
@@ -775,6 +796,17 @@ SELECT ?verdict WHERE {{
             .lines()
             .any(|line| line.contains(" FAIL ") || line.trim_end().ends_with(" FAIL"));
         Ok(saw_success_tag && !saw_fail_line)
+    }
+
+    fn has_open_implementer_feedback_for_feature(
+        &self,
+        feature_id: &str,
+    ) -> Result<bool, InspectError> {
+        super::inspect_dor::has_open_implementer_feedback(
+            self.workdir(),
+            self.product_root(),
+            feature_id,
+        )
     }
 }
 

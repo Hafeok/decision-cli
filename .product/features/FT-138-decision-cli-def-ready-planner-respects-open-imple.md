@@ -2,7 +2,7 @@
 id: FT-138
 title: 'decision-cli: def-ready planner respects open implementer feedback before dispatching verify-graph-author'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-079

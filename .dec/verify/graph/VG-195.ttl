@@ -1,0 +1,46 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-195>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-138> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-195/0> <https://decision-cli.dev/ns/step/VG-195/1> <https://decision-cli.dev/ns/step/VG-195/2> <https://decision-cli.dev/ns/step/VG-195/3> <https://decision-cli.dev/ns/step/VG-195/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-195/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-345> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --lib features::ft_119_drive_def_ready::planner::tests::precedence_tc_quality_wins_over_open_implementer_feedback" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-195/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-346> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --lib features::ft_119_drive_def_ready::planner::tests::open_implementer_feedback_returns_done_before_vg_missing" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-195/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-347> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --lib features::ft_119_drive_def_ready::planner::tests::no_feedback_preserves_dispatch_verify_graph_author" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-195/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-348> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --test ft_138_def_ready_implementer_feedback live_store_open_feedback_returns_done" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-195/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-349> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --lib features::ft_119_drive_def_ready::planner::tests::state_hash_includes_open_implementer_feedback_signal" ;
+    dec:expectExitCode 0 .
