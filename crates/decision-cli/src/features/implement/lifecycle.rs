@@ -35,6 +35,13 @@ pub(super) fn build_dispatch_payload(
     let authority = lookup_role_authority(&ctx.store, IMPLEMENTER_ROLE);
     let defect_feedback = load_defect_feedback_for_feature(ctx, &args.feature_id);
     let allowed_tools = lookup_allowed_tools(&ctx.store, IMPLEMENTER_ROLE);
+    // FT-066 deferred migration completed: resolve endpoint + model_id
+    // from the active capability binding for the code-writer role (the
+    // same pattern verify-graph-author has used since FT-067/068).
+    // Falls back to the legacy hardcoded `anthropic` + SLICE1_MODEL_ID
+    // when no binding exists so legacy / pre-bootstrap stores stay
+    // dispatch-capable; the warn! makes the fallback visible.
+    let (endpoint, model_id) = resolve_implementer_endpoint_and_model(&ctx.store);
     DispatchPayloadJson {
         dispatch_id: ctx.dispatch_iri.as_str().to_string(),
         session_id: ctx.session_iri.as_str().to_string(),
@@ -42,15 +49,35 @@ pub(super) fn build_dispatch_payload(
         bundle_markdown: ctx.bundle_markdown.clone(),
         bundle_hash: ctx.bundle_hash.clone(),
         workspace_path,
-        model_id: SLICE1_MODEL_ID.to_string(),
-        // FT-066: until the implementer dispatch path is migrated to the
-        // capability resolver (covered by a follow-on feature), pin to
-        // the Anthropic endpoint so `claude -p` keeps its native API path.
-        endpoint: "anthropic".to_string(),
+        model_id,
+        endpoint,
         timeout_seconds: 1800,
         authority,
         defect_feedback,
         allowed_tools,
+    }
+}
+
+/// FT-066 deferred migration: look up the code-writer role's default
+/// capability binding and return its `(endpoint, model_identifier)`
+/// pair. Falls back to the legacy hardcode (`anthropic` /
+/// `SLICE1_MODEL_ID`) on any resolver failure so pre-bootstrap stores
+/// keep dispatching. The fallback path emits a `warn!` so the operator
+/// can spot a missing binding before the worker fails downstream.
+fn resolve_implementer_endpoint_and_model(
+    store: &oxigraph::store::Store,
+) -> (String, String) {
+    use crate::core::dispatch::resolve_default_capability;
+    match resolve_default_capability(store, role_catalog::IMPLEMENTER_ROLE_ID) {
+        Ok(cap) => (cap.endpoint.as_str().to_string(), cap.model_identifier),
+        Err(e) => {
+            tracing::warn!(
+                role = role_catalog::IMPLEMENTER_ROLE_ID,
+                error = %e,
+                "capability resolution failed for implementer; falling back to legacy hardcoded anthropic/SLICE1_MODEL_ID"
+            );
+            ("anthropic".to_string(), SLICE1_MODEL_ID.to_string())
+        }
     }
 }
 
