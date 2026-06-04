@@ -2,7 +2,7 @@
 id: TC-320
 title: adr-quality emits approved for a new ADR that schema-conforms and soundly closes the preflight gap
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-133
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:43.104580599+00:00
+last-run-duration: 0.6s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ A synthetic bundle containing one `dec:AdrProposal` with `kind: new`, whose mark
 
 - Does not exercise the acknowledgement-kind path (TC-321 covers that).
 - Does not exercise rejection on scope mismatch or bare alternatives (TC-322 covers that).
-

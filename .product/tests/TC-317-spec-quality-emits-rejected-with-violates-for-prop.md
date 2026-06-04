@@ -2,7 +2,7 @@
 id: TC-317
 title: spec-quality emits rejected with violates for proposals missing required H2/H3 sections
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-132
@@ -18,6 +18,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:41.022525478+00:00
+last-run-duration: 0.5s
 ---
 
 ## Purpose
@@ -40,4 +42,3 @@ A synthetic bundle containing one `dec:SpecProposal` whose markdown body is miss
 
 - Does not exercise the request-faithfulness rubric independently (TC-316 covers the conjunction).
 - Does not assert ordering of multiple entries within `violates` when more than one section is missing.
-

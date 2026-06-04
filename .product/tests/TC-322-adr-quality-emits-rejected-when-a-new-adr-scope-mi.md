@@ -2,7 +2,7 @@
 id: TC-322
 title: adr-quality emits rejected when a new ADR scope mismatches the gap kind or alternatives section is bare
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-133
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:43.104580599+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ A synthetic bundle containing one `dec:AdrProposal` with `kind: new`, paired wit
 
 - Does not assert behaviour when both failure modes are present simultaneously (each variant runs independently within the test).
 - Does not exercise schema-conforming H2-missing rejections (those are structurally identical to TC-317's analogue on the spec side).
-

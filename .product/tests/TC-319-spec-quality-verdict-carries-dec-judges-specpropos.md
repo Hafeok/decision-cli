@@ -2,7 +2,7 @@
 id: TC-319
 title: spec-quality verdict carries dec:judges (SpecProposal) and dec:against (request) per ADR-074 polymorphism
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-132
@@ -16,6 +16,8 @@ observes:
 - exit-code
 - stdout
 - graph
+last-run: 2026-06-04T18:41:41.022525478+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ A synthetic bundle containing exactly one `dec:SpecProposal` IRI and exactly one
 
 - Does not assert rubric-level fields (verdict, rationale, violates) — TC-316 covers approval semantics.
 - Does not validate the symmetric contract on the adr-quality side (TC-323 covers that).
-

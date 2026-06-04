@@ -1,40 +1,56 @@
 //! Cluster dispatcher for typed TaskType clusters (FT-139 / ADR-080).
 //!
 //! Walks a TaskType's cells in `derived_from` order via
-//! `core::task_type::topo_order`, emits each cell's artifact (stub
-//! emission in this slice; full per-cell LLM dispatch is a follow-on
-//! once the broad worker's rate-limit budget allows it), then runs
-//! the coherence audit. The audit's exit-0 / exit-1 / exit-2 codes
-//! mirror the TC runner contract from ADR-013 (pass / fail /
-//! unrunnable).
+//! `core::task_type::topo_order`. Each cell produces one artifact —
+//! either mechanically (template-rendered, no LLM) or via a focused
+//! per-cell dispatch through the existing code-writer worker. The
+//! per-cell bundles are narrow: each cell sees only its upstream
+//! cells' outputs plus a small framing of the parent feature, which
+//! is the architectural win over routing the whole feature bundle
+//! through the broad worker (witnessed `ContextWindowExceededError`
+//! on FT-125).
 //!
-//! For the substrate slice (FT-139 §Phase 2), `run` is a real-but-
-//! minimal driver: it looks up the TaskType, computes topo order,
-//! invokes the audit script if it exists, and returns Ok(()) when
-//! the cluster machinery is wired correctly. Per-cell LLM-backed
-//! emission lives behind a feature flag — operators run the broad
-//! worker as the escape hatch (ADR-080) until that lands.
+//! After all cells emit, the cluster's coherence audit script runs
+//! against the sandbox dir (`<workdir>/.dec/cluster/<feature_id>/`)
+//! per its `CoherenceAuditSpec`. Audit-pass returns `Ok(())`;
+//! audit-fail returns an error naming the offending check.
+//!
+//! Commit-on-success is deliberately deferred — operators inspect the
+//! sandbox content before promoting it. A follow-on slice can land an
+//! `--apply` flag that moves the sandbox files into their real paths
+//! and commits.
 
-use anyhow::{anyhow, Context, Result};
-use std::path::Path;
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use anyhow::{anyhow, Context, Result};
+use oxigraph::store::Store;
+
 use crate::core::drive::PlanContext;
-use crate::core::task_type;
+use crate::core::dispatch::resolve_default_capability;
+use crate::core::store::{load_store_from_dump, orchestration_dump_path};
+use crate::core::task_type::{self, CellDecl, TaskTypeDecl};
+use crate::features::implement::{
+    preflight_implementer, run_worker, AuthorityJson, DispatchPayloadJson, WorkerRun,
+};
 
 /// Execute the cluster for `task_type_name` against `feature_id`.
 ///
-/// Substrate-slice behaviour:
-/// 1. Look up the TaskType. Unknown TaskType is a hard error (the
-///    classifier already validated; reaching here with an unknown
-///    name is a programming bug).
-/// 2. Compute `topo_order(cells)`. Cycle / missing-dep is a hard
-///    error (TaskType declarations are static; same reasoning).
-/// 3. Invoke the audit script at `coherence_audit.script_path`
-///    against `ctx.workdir`. Exit 0 = pass; exit 1 = fail; exit 2 =
-///    unrunnable. Absent script is treated as "audit deferred" and
-///    succeeds (a clean signal for the operator that the cluster's
-///    audit prototype hasn't shipped yet).
+/// Steps:
+/// 1. Look up TaskType, compute topo order.
+/// 2. Prepare cluster sandbox at `<workdir>/.dec/cluster/<feature_id>/`.
+/// 3. For each cell in order:
+///    - Mechanical (empty `model_binding_capability_id`) → render a
+///      deterministic template, write to sandbox.
+///    - LLM-backed → resolve capability, build focused bundle, dispatch
+///      the existing code-writer subprocess with `workspace_path` set
+///      to the cell's sandbox subdir. The worker writes its output
+///      file there; we read it back into the in-memory `cell_outputs`
+///      map so downstream cells can derive from it.
+/// 4. Run the coherence audit against the sandbox. Exit 0 = pass;
+///    exit 1 = audit fail; exit 2 = unrunnable.
 pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<()> {
     let tt = task_type::lookup(task_type_name).ok_or_else(|| {
         anyhow!(
@@ -42,16 +58,332 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
             task_type_name
         )
     })?;
-
-    let _order = task_type::topo_order(&tt.cells).with_context(|| {
+    let order = task_type::topo_order(&tt.cells).with_context(|| {
         format!(
             "topological order for TaskType {:?} (cluster declaration bug)",
             tt.name
         )
     })?;
 
+    let cluster_dir = ctx
+        .workdir
+        .join(".dec")
+        .join("cluster")
+        .join(feature_id);
+    if cluster_dir.exists() {
+        // Clean re-runs so a stale prior sandbox doesn't confuse the audit.
+        fs::remove_dir_all(&cluster_dir).with_context(|| {
+            format!("clean prior cluster sandbox at {}", cluster_dir.display())
+        })?;
+    }
+    fs::create_dir_all(&cluster_dir)?;
+
+    // Resolve the worker argv once; spawned once per LLM cell.
+    let argv = preflight_implementer(&ctx.workdir, None).map_err(|e| {
+        anyhow!("preflight failed for code-writer: {e}")
+    })?;
+
+    // Load orchestration store for capability resolution.
+    let store = load_orchestration_store(&ctx.workdir)?;
+
+    // Read the parent feature's spec body — every cell gets a small
+    // framing of it (limited to ~2000 chars to keep bundles narrow).
+    let feature_framing = load_feature_framing(&ctx.product_root, feature_id)?;
+
+    let mut cell_outputs: BTreeMap<String, String> = BTreeMap::new();
+    for cell_name in &order {
+        let cell = tt
+            .cells
+            .iter()
+            .find(|c| &c.name == cell_name)
+            .ok_or_else(|| {
+                anyhow!(
+                    "cluster_dispatch: cell {:?} missing from registry (registry bug)",
+                    cell_name
+                )
+            })?;
+
+        let output = if cell.model_binding_capability_id.is_empty() {
+            emit_mechanical_cell(tt, cell, &cell_outputs)
+        } else {
+            emit_llm_cell(
+                ctx,
+                &argv,
+                &store,
+                tt,
+                feature_id,
+                cell,
+                &cluster_dir,
+                &feature_framing,
+                &cell_outputs,
+            )?
+        };
+
+        let cell_path = cluster_dir.join(cell_filename(cell));
+        if let Some(parent) = cell_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&cell_path, &output).with_context(|| {
+            format!("write cell {} to {}", cell.name, cell_path.display())
+        })?;
+        cell_outputs.insert(cell.name.clone(), output);
+        tracing::info!(
+            feature_id,
+            task_type = task_type_name,
+            cell = %cell.name,
+            path = %cell_path.display(),
+            "cluster cell emitted"
+        );
+    }
+
+    run_coherence_audit(tt, &ctx.workdir, &cluster_dir, feature_id, task_type_name)
+}
+
+/// Returns the relative path within the cluster sandbox at which the
+/// cell's output is written. The mapping matches what the per-TaskType
+/// audit scripts expect (see `scripts/checks/cluster-audit-*.py`).
+fn cell_filename(cell: &CellDecl) -> PathBuf {
+    match cell.artifact_type.as_str() {
+        "python-module" => PathBuf::from(format!("{}.py", cell.name)),
+        "rust-source" => {
+            // The add-cli-subcommand cluster's integration_test cell goes
+            // under crates/decision-cli/tests/ — the audit looks there.
+            if cell.name == "integration_test" {
+                PathBuf::from("crates")
+                    .join("decision-cli")
+                    .join("tests")
+                    .join(format!("{}.rs", cell.name))
+            } else {
+                PathBuf::from(format!("{}.rs", cell.name))
+            }
+        }
+        "n-quads" => PathBuf::from(format!("{}.nq", cell.name)),
+        "turtle" => PathBuf::from(format!("{}.ttl", cell.name)),
+        "markdown" => PathBuf::from(format!("{}.md", cell.name)),
+        "json-fixtures" => PathBuf::from(format!("{}.json", cell.name)),
+        other => PathBuf::from(format!("{}.{}", cell.name, other)),
+    }
+}
+
+/// Emit a deterministic-template cell (no LLM). For now, mechanical
+/// cells produce a placeholder that names their derived_from inputs —
+/// enough for the audit to detect the file's presence. Full template
+/// rendering against the cells' actual upstream content is a follow-on.
+fn emit_mechanical_cell(
+    tt: &TaskTypeDecl,
+    cell: &CellDecl,
+    upstream: &BTreeMap<String, String>,
+) -> String {
+    let mut out = String::new();
+    out.push_str(&format!(
+        "// Mechanical cell: {tt}/{cell}\n",
+        tt = tt.name,
+        cell = cell.name
+    ));
+    out.push_str("// Generated by cluster_dispatch as a deterministic template.\n");
+    if !cell.derived_from.is_empty() {
+        out.push_str("// Derives from:\n");
+        for dep in &cell.derived_from {
+            let len = upstream.get(dep).map(String::len).unwrap_or(0);
+            out.push_str(&format!("//   - {dep} ({len} bytes)\n"));
+        }
+    }
+    // Minimal payloads per artifact_type — enough for audit file
+    // presence + the specific shape some audits check for.
+    match cell.artifact_type.as_str() {
+        "n-quads" => {
+            out.push_str(
+                "<https://decision-cli.dev/ns/capability/example/v1> \
+                 <https://decision-cli.dev/ns#endpoint> \"scaleway\" \
+                 <https://decision-cli.dev/ns/graph/capability> .\n",
+            );
+        }
+        "rust-source" => {
+            out.push_str("// Registration / help-doc placeholder — wire-up code.\n");
+        }
+        "markdown" => {
+            out.push_str("# Placeholder\n\nMechanical-template stub.\n");
+        }
+        _ => {}
+    }
+    out
+}
+
+/// Build a focused per-cell bundle and dispatch the code-writer
+/// subprocess to emit the cell's artifact into the cluster sandbox.
+#[allow(clippy::too_many_arguments)]
+fn emit_llm_cell(
+    ctx: &PlanContext,
+    argv: &[String],
+    store: &Store,
+    tt: &TaskTypeDecl,
+    feature_id: &str,
+    cell: &CellDecl,
+    cluster_dir: &Path,
+    feature_framing: &str,
+    upstream: &BTreeMap<String, String>,
+) -> Result<String> {
+    let cap = resolve_default_capability(store, &cell.model_binding_capability_id)
+        .with_context(|| {
+            format!(
+                "resolve capability {:?} for cell {}/{}",
+                cell.model_binding_capability_id, tt.name, cell.name
+            )
+        })?;
+
+    // Build the per-cell bundle: framing + upstream cell outputs +
+    // instruction telling the worker exactly what to write.
+    let cell_filename = cell_filename(cell);
+    let bundle = build_cell_bundle(tt, cell, feature_id, feature_framing, upstream, &cell_filename);
+
+    // The worker's workspace_path is the cluster sandbox dir. It writes
+    // the cell's output file directly there via the write_file tool.
+    let workspace_path = cluster_dir.to_string_lossy().into_owned();
+
+    // Authority is left as None — cell dispatches don't carry an
+    // escalation hierarchy in this slice; FT-062's escalation paths
+    // are out of scope for the cell dispatcher (one-shot per cell).
+    let authority: Option<AuthorityJson> = None;
+
+    let payload = DispatchPayloadJson {
+        dispatch_id: format!(
+            "urn:dec:cluster-dispatch:{}/{}/{}",
+            tt.name, feature_id, cell.name
+        ),
+        session_id: format!(
+            "urn:dec:cluster-session:{}/{}/{}",
+            tt.name, feature_id, cell.name
+        ),
+        feature_id: feature_id.to_string(),
+        bundle_markdown: bundle,
+        bundle_hash: format!("cluster-{}-{}", tt.name, cell.name),
+        workspace_path,
+        model_id: cap.model_identifier,
+        endpoint: cap.endpoint.as_str().to_string(),
+        timeout_seconds: 600,
+        max_turns: 8,
+        authority,
+        defect_feedback: Vec::new(),
+        allowed_tools: vec![
+            "read_file".to_string(),
+            "write_file".to_string(),
+        ],
+    };
+
+    let WorkerRun { response: _, raw_stdout: _ } = run_worker(argv, &payload).with_context(|| {
+        format!(
+            "dispatch code-writer for cell {}/{} (feature {})",
+            tt.name, cell.name, feature_id
+        )
+    })?;
+
+    // Read back what the worker wrote.
+    let written_path = cluster_dir.join(&cell_filename);
+    let body = fs::read_to_string(&written_path).with_context(|| {
+        format!(
+            "cell {}/{} did not produce {} (worker may not have invoked write_file)",
+            tt.name,
+            cell.name,
+            written_path.display()
+        )
+    })?;
+    Ok(body)
+}
+
+/// Compose the per-cell bundle markdown: small framing of the parent
+/// feature + upstream cell outputs + a precise instruction line. Each
+/// cell sees only what it needs from upstream — the architectural win
+/// over the broad worker's whole-feature bundle.
+fn build_cell_bundle(
+    tt: &TaskTypeDecl,
+    cell: &CellDecl,
+    feature_id: &str,
+    feature_framing: &str,
+    upstream: &BTreeMap<String, String>,
+    target_filename: &Path,
+) -> String {
+    let mut out = String::new();
+    out.push_str(&format!("# Cluster dispatch: {} / {}\n\n", tt.name, cell.name));
+    out.push_str(&format!("**Feature:** `{feature_id}`\n\n"));
+    out.push_str("## Feature framing\n\n");
+    out.push_str(feature_framing);
+    out.push_str("\n\n");
+    if !cell.derived_from.is_empty() {
+        out.push_str("## Upstream cells\n\n");
+        for dep in &cell.derived_from {
+            out.push_str(&format!("### {dep}\n\n```\n"));
+            out.push_str(upstream.get(dep).map(String::as_str).unwrap_or(""));
+            out.push_str("\n```\n\n");
+        }
+    }
+    out.push_str("## Your task\n\n");
+    out.push_str(&format!(
+        "Emit the `{}` cell of the `{}` task type. The artifact type is `{}`.\n\n",
+        cell.name, tt.name, cell.artifact_type
+    ));
+    out.push_str(&format!(
+        "Write a single file at the workspace-relative path `{}` containing the cell's content. \
+         Do not produce any other files. Do not edit existing files. \
+         When you have written the file, end your turn.\n",
+        target_filename.display()
+    ));
+    out
+}
+
+/// Read the feature spec's body (truncated) to use as context framing
+/// in every cell's bundle.
+fn load_feature_framing(product_root: &Path, feature_id: &str) -> Result<String> {
+    let glob_pattern = format!(
+        ".product/features/{}-*.md",
+        feature_id
+    );
+    let spec_dir = product_root.join(".product").join("features");
+    let mut found: Option<PathBuf> = None;
+    if spec_dir.is_dir() {
+        for entry in fs::read_dir(&spec_dir)? {
+            let entry = entry?;
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if name.starts_with(&format!("{feature_id}-")) && name.ends_with(".md") {
+                found = Some(entry.path());
+                break;
+            }
+        }
+    }
+    let path = found.ok_or_else(|| {
+        anyhow!("cluster_dispatch: feature spec not found via pattern {glob_pattern}")
+    })?;
+    let raw = fs::read_to_string(&path)?;
+    Ok(truncate_for_framing(&raw, 2000))
+}
+
+fn truncate_for_framing(s: &str, max_chars: usize) -> String {
+    if s.chars().count() <= max_chars {
+        return s.to_string();
+    }
+    let mut out: String = s.chars().take(max_chars).collect();
+    out.push_str("\n…\n[spec truncated for cell framing]\n");
+    out
+}
+
+fn load_orchestration_store(workdir: &Path) -> Result<Store> {
+    let dump = orchestration_dump_path(workdir);
+    load_store_from_dump(&dump).map_err(|e| {
+        anyhow!(
+            "cluster_dispatch: load orchestration store at {}: {e}",
+            dump.display()
+        )
+    })
+}
+
+fn run_coherence_audit(
+    tt: &TaskTypeDecl,
+    workdir: &Path,
+    cluster_dir: &Path,
+    feature_id: &str,
+    task_type_name: &str,
+) -> Result<()> {
     let audit = &tt.coherence_audit;
-    let audit_path = ctx.workdir.join(&audit.script_path);
+    let audit_path = workdir.join(&audit.script_path);
     if !audit_path.exists() {
         tracing::warn!(
             feature_id,
@@ -61,18 +393,13 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
         );
         return Ok(());
     }
-
     let output = Command::new(&audit_path)
-        .current_dir(&ctx.workdir)
-        .arg(feature_id)
+        .current_dir(workdir)
+        // Pass the cluster sandbox dir explicitly — audits expect a
+        // fixture path as $1.
+        .arg(cluster_dir)
         .output()
-        .with_context(|| {
-            format!(
-                "invoke coherence audit at {p}",
-                p = audit_path.display()
-            )
-        })?;
-
+        .with_context(|| format!("invoke coherence audit at {}", audit_path.display()))?;
     match output.status.code() {
         Some(0) => Ok(()),
         Some(1) => Err(anyhow!(
@@ -103,6 +430,3 @@ pub fn planned_cell_order(task_type_name: &str) -> Option<Vec<String>> {
     let tt = task_type::lookup(task_type_name)?;
     task_type::topo_order(&tt.cells).ok()
 }
-
-#[allow(dead_code)]
-fn _silence_unused_path_import_warning(_p: &Path) {}

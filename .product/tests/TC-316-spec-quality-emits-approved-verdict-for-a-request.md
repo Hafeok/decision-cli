@@ -2,7 +2,7 @@
 id: TC-316
 title: spec-quality emits approved verdict for a request-faithful schema-conforming SpecProposal
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-132
@@ -19,6 +19,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:41.022525478+00:00
+last-run-duration: 0.6s
 ---
 
 ## Purpose
@@ -42,4 +44,3 @@ A synthetic bundle containing one `dec:SpecProposal` IRI whose markdown body has
 
 - Does not assert the worker's behaviour when the SpecProposal IRI cannot be resolved in the bundle (covered by separate substrate tests).
 - Does not validate the orchestrator's persistence of the verdict to the named graph (that is harness-side, covered under FT-127/FT-128 parity tests).
-

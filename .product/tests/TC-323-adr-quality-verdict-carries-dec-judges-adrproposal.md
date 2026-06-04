@@ -2,7 +2,7 @@
 id: TC-323
 title: adr-quality verdict carries dec:judges (AdrProposal) and dec:against (preflight_gap + feature_spec) per ADR-074
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-133
@@ -16,6 +16,8 @@ observes:
 - exit-code
 - stdout
 - graph
+last-run: 2026-06-04T18:41:43.104580599+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ A synthetic bundle containing exactly one `dec:AdrProposal` IRI, exactly one `de
 
 - Does not assert rubric-level fields (verdict, rationale, violates) — TC-320 and TC-321 cover approval semantics.
 - Does not validate the symmetric contract on the spec-quality side (TC-319 covers that).
-

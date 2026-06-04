@@ -62,7 +62,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "crates/decision-cli/src/core/task_type/templates/add_judge_worker/\
                      pydantic_io_models.tmpl",
                 ),
-                model_binding_capability_id: "code-writer".to_string(),
+                model_binding_capability_id: "implementer".to_string(),
                 derived_from: Vec::new(),
             },
             CellDecl {
@@ -72,7 +72,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "crates/decision-cli/src/core/task_type/templates/add_judge_worker/\
                      system_prompt.tmpl",
                 ),
-                model_binding_capability_id: "code-writer".to_string(),
+                model_binding_capability_id: "implementer".to_string(),
                 derived_from: vec!["pydantic_io_models".to_string()],
             },
             CellDecl {
@@ -82,7 +82,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "crates/decision-cli/src/core/task_type/templates/add_judge_worker/\
                      agent_loop.tmpl",
                 ),
-                model_binding_capability_id: "code-writer".to_string(),
+                model_binding_capability_id: "implementer".to_string(),
                 derived_from: vec![
                     "pydantic_io_models".to_string(),
                     "system_prompt".to_string(),
@@ -96,7 +96,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "crates/decision-cli/src/core/task_type/templates/add_judge_worker/\
                      unit_tests.tmpl",
                 ),
-                model_binding_capability_id: "code-writer".to_string(),
+                model_binding_capability_id: "implementer".to_string(),
                 derived_from: vec![
                     "pydantic_io_models".to_string(),
                     "system_prompt".to_string(),
@@ -124,21 +124,21 @@ fn add_author_worker() -> TaskTypeDecl {
         name: "add-author-worker".to_string(),
         cells: vec![
             cell("capability_binding", "n-quads", here, "", &[]),
-            cell("pydantic_io_models", "python-module", here, "code-writer", &[]),
-            cell("system_prompt", "markdown", here, "code-writer", &["pydantic_io_models"]),
+            cell("pydantic_io_models", "python-module", here, "implementer", &[]),
+            cell("system_prompt", "markdown", here, "implementer", &["pydantic_io_models"]),
             cell("fixtures_example_inputs", "json-fixtures", here, "", &["pydantic_io_models"]),
             cell(
                 "agent_loop",
                 "python-module",
                 here,
-                "code-writer",
+                "implementer",
                 &["pydantic_io_models", "system_prompt", "capability_binding"],
             ),
             cell(
                 "unit_tests",
                 "python-module",
                 here,
-                "code-writer",
+                "implementer",
                 &["pydantic_io_models", "fixtures_example_inputs", "system_prompt"],
             ),
         ],
@@ -160,28 +160,28 @@ fn add_artifact_type() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "add-artifact-type".to_string(),
         cells: vec![
-            cell("rust_struct", "rust-source", here, "code-writer", &[]),
-            cell("shacl_shape", "turtle", here, "code-writer", &["rust_struct"]),
+            cell("rust_struct", "rust-source", here, "implementer", &[]),
+            cell("shacl_shape", "turtle", here, "implementer", &["rust_struct"]),
             cell("iri_module_consts", "rust-source", here, "", &["rust_struct"]),
             cell(
                 "parser",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["rust_struct", "iri_module_consts"],
             ),
             cell(
                 "emitter",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["rust_struct", "iri_module_consts"],
             ),
             cell(
                 "round_trip_tests",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["rust_struct", "shacl_shape", "parser", "emitter"],
             ),
         ],
@@ -204,12 +204,12 @@ fn add_cli_subcommand() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "add-cli-subcommand".to_string(),
         cells: vec![
-            cell("clap_args_module", "rust-source", here, "code-writer", &[]),
+            cell("clap_args_module", "rust-source", here, "implementer", &[]),
             cell(
                 "handler_module",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["clap_args_module"],
             ),
             cell(
@@ -223,14 +223,14 @@ fn add_cli_subcommand() -> TaskTypeDecl {
                 "mcp_tool_shim",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["handler_module"],
             ),
             cell(
                 "integration_test",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["clap_args_module", "handler_module"],
             ),
             cell(
@@ -260,7 +260,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "extend-planner-classifier".to_string(),
         cells: vec![
-            cell("inspector_trait_method", "rust-source", here, "code-writer", &[]),
+            cell("inspector_trait_method", "rust-source", here, "implementer", &[]),
             cell(
                 "inspector_default_impl",
                 "rust-source",
@@ -272,28 +272,28 @@ fn extend_planner_classifier() -> TaskTypeDecl {
                 "inspector_production_impl",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["inspector_trait_method"],
             ),
             cell(
                 "classifier_row",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["inspector_trait_method", "inspector_production_impl"],
             ),
             cell(
                 "state_hash_update",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["inspector_trait_method", "classifier_row"],
             ),
             cell(
                 "unit_tests",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &[
                     "inspector_trait_method",
                     "classifier_row",
@@ -328,7 +328,7 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
                 "seed_quad_function",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["iri_constants"],
             ),
             cell(
@@ -342,21 +342,21 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
                 "shacl_shape_extension",
                 "turtle",
                 here,
-                "code-writer",
+                "implementer",
                 &["iri_constants", "seed_quad_function"],
             ),
             cell(
                 "role_struct_field_extension",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &["iri_constants"],
             ),
             cell(
                 "round_trip_tests",
                 "rust-source",
                 here,
-                "code-writer",
+                "implementer",
                 &[
                     "seed_quad_function",
                     "init_pipeline_wiring",

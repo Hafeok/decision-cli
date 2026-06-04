@@ -2,7 +2,7 @@
 id: TC-321
 title: adr-quality emits approved for an acknowledgement with reasoning >= 40 chars referencing an existing ADR
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-133
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:43.104580599+00:00
+last-run-duration: 0.6s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ A synthetic bundle containing one `dec:AdrProposal` with `kind: acknowledgement`
 
 - Does not assert the worker's behaviour when the referenced ADR is missing or does not govern the feature (negative-path coverage is folded into TC-322's broader rejection scenarios).
 - Does not exercise the new-kind path (TC-320 covers that).
-

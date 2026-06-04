@@ -2,7 +2,7 @@
 id: TC-318
 title: spec-quality emits amendment-required with guidance for non-empty but thin Out of scope sections
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-132
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T18:41:41.022525478+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ A synthetic bundle containing one `dec:SpecProposal` whose body has every requir
 
 - Does not exercise the approved or rejected paths (TC-316 and TC-317 cover those).
 - Does not assert that the orchestrator routes the amendment back to spec-author for revision (that is harness-side flow).
-

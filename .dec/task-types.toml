@@ -1,0 +1,7 @@
+# Cluster-routing config: feature_id → TaskType name.
+# Read by FeatureShipPlanner::classify (FT-139 / ADR-080) when the
+# feature_spec's front-matter doesn't carry `task_type:` (the common
+# case until product-cli's parser accepts the field upstream).
+
+[features]
+"FT-145" = "add-cli-subcommand"

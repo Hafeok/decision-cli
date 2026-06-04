@@ -102,6 +102,15 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         feature_id: &str,
         default_env_id: &str,
     ) -> Result<Action, PlanError> {
+        // FT-139 / ADR-080: TaskType classifier branch — first priority.
+        // Reads `task_type:` from the feature_spec front-matter and, if it
+        // matches a registered TaskType in `core::task_type::registry`,
+        // dispatches through the cell cluster instead of the broad worker.
+        // Falls through to the existing verdict-driven logic on absent /
+        // unknown task_type (ADR-080's broad-worker escape hatch).
+        if let Some(action) = self.classify_for_task_type(feature_id) {
+            return Ok(action);
+        }
         let verdict = self
             .inspector
             .aggregate_verdict_for_feature(feature_id)
@@ -482,6 +491,92 @@ impl<I: GraphInspector> Planner for FeatureShipPlanner<I> {
         let env_id = ctx.env_or_default("ENV-002");
         self.classify(&artifact.short_id, &env_id)
     }
+}
+
+impl<I: GraphInspector> FeatureShipPlanner<I> {
+    /// FT-139 / ADR-080 production integration: read `task_type:` from
+    /// the feature spec's front-matter and, if it names a registered
+    /// TaskType, return `Some(Action::DispatchCluster)`. Returns `None`
+    /// on missing spec, unparseable front-matter, absent `task_type`,
+    /// or unknown TaskType — caller falls through to the broad-worker
+    /// path per ADR-080's escape hatch.
+    fn classify_for_task_type(&self, feature_id: &str) -> Option<Action> {
+        let task_type_value = read_task_type_from_spec(feature_id)?;
+        classify_for_task_type_value(feature_id, Some(&task_type_value))
+    }
+}
+
+/// Read `.dec/task-types.toml` and extract the `task_type` mapped to
+/// `feature_id`. Two paths supported per ADR-080:
+///
+/// 1. `.product/features/<id>-*.md` front-matter `task_type:` field —
+///    requires product-cli's parser to accept the field as a known
+///    known declaration. Default product-cli (≤ v0.x) strips unknown
+///    fields on save, so this path needs a schema bump upstream.
+///
+/// 2. `.dec/task-types.toml` table at the workdir root — works today
+///    against any product-cli version. Schema:
+///
+///    ```toml
+///    [features]
+///    "FT-145" = "add-cli-subcommand"
+///    ```
+///
+/// Returns `None` defensively — any IO or parse failure degrades to
+/// broad-worker fallback per ADR-080's escape hatch.
+fn read_task_type_from_spec(feature_id: &str) -> Option<String> {
+    let cwd = std::env::current_dir().ok()?;
+    // Path 1: front-matter (forward-compatible once product-cli accepts
+    // `task_type:` as a known field).
+    if let Some(t) = read_task_type_from_frontmatter(&cwd, feature_id) {
+        return Some(t);
+    }
+    // Path 2: `.dec/task-types.toml` (works today).
+    read_task_type_from_routing_config(&cwd, feature_id)
+}
+
+fn read_task_type_from_frontmatter(cwd: &std::path::Path, feature_id: &str) -> Option<String> {
+    let spec_dir = cwd.join(".product").join("features");
+    if !spec_dir.is_dir() {
+        return None;
+    }
+    let prefix = format!("{feature_id}-");
+    let entries = std::fs::read_dir(&spec_dir).ok()?;
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if !name.starts_with(&prefix) || !name.ends_with(".md") {
+            continue;
+        }
+        let body = std::fs::read_to_string(entry.path()).ok()?;
+        let after_open = body.strip_prefix("---\n")?;
+        let close_idx = after_open.find("\n---")?;
+        let frontmatter = &after_open[..close_idx];
+        for line in frontmatter.lines() {
+            if let Some(rest) = line.strip_prefix("task_type:") {
+                let value = rest.trim().trim_matches('"').trim_matches('\'');
+                if !value.is_empty() {
+                    return Some(value.to_string());
+                }
+            }
+        }
+        return None;
+    }
+    None
+}
+
+fn read_task_type_from_routing_config(
+    cwd: &std::path::Path,
+    feature_id: &str,
+) -> Option<String> {
+    let config_path = cwd.join(".dec").join("task-types.toml");
+    let body = std::fs::read_to_string(&config_path).ok()?;
+    let value: toml::Value = body.parse().ok()?;
+    let features = value.get("features")?.as_table()?;
+    let mapped = features.get(feature_id)?.as_str()?;
+    if mapped.is_empty() {
+        return None;
+    }
+    Some(mapped.to_string())
 }
 
 // ---------------------------------------------------------------------

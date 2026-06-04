@@ -52,7 +52,8 @@ pub use session_show::session_show;
 // FT-108 test seam: expose the worker mock surface so integration tests
 // can intercept code-writer dispatches without subprocesses.
 pub use worker::{
-    install_mock, CodeChangeJson, DispatchPayloadJson, MockGuard, WorkerResponseJson, WorkerRun,
+    install_mock, preflight_implementer, run_worker, AuthorityJson, CodeChangeJson,
+    DispatchPayloadJson, MockGuard, WorkerResponseJson, WorkerRun,
 };
 
 use bundle::persist_store;
@@ -62,7 +63,7 @@ use lifecycle::{
 };
 use prepare::prepare_dispatch;
 use quads::build_failure_quad;
-use worker::{format_worker_failure, run_worker};
+use worker::format_worker_failure;
 
 /// Goal verb the implementer role always pursues (ADR-005 / §3.4).
 pub const IMPLEMENT_GOAL: &str = "ship";
