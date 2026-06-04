@@ -17,8 +17,8 @@ observes:
 runner: pytest
 runner-args: workers/code-writer/tests/test_allowed_tools_fail_closed.py
 runner-timeout: 30
-last-run: 2026-06-04T11:33:49.027021278+00:00
-last-run-duration: 0.7s
+last-run: 2026-06-04T11:36:44.793038594+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

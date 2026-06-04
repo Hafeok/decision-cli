@@ -2,7 +2,7 @@
 id: TC-292
 title: tc-quality emits amendment-required with amendment_guidance for fixable style or runner issues
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-127
@@ -17,6 +17,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T11:59:46.203570490+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose
@@ -39,4 +41,3 @@ Synthetic bundle JSON: `TcProposal(kind="new", new=ProposedNew(tcs=[ProposedTc(t
 
 - Approval (TC-290) and rejection (TC-291) paths.
 - The harness's downstream re-author cycle (covered by FT-131 planner TCs).
-

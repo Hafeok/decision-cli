@@ -2,7 +2,7 @@
 id: TC-291
 title: tc-quality emits rejected with violates citing redundant or unfaithful proposed TCs
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-127
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T11:59:46.203570490+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ Synthetic bundle JSON: an `existing_tcs` array containing TC-EX1 with a specific
 
 - Approval path (covered by TC-290).
 - mayDecide-class amendment guidance (covered by TC-292).
-

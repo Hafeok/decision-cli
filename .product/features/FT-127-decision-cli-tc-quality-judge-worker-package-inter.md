@@ -2,7 +2,7 @@
 id: FT-127
 title: 'decision-cli: tc-quality judge worker package — interprets TC drafts against feature_spec'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-126
 - FT-021

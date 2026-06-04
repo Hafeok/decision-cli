@@ -14,8 +14,8 @@ observes:
 runner: cargo-test
 runner-args: tc_270_dispatch_json_has_allowed_tools
 runner-timeout: 30
-last-run: 2026-06-04T11:33:49.027021278+00:00
-last-run-duration: 1.8s
+last-run: 2026-06-04T11:36:44.793038594+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

@@ -15,8 +15,8 @@ observes:
 runner: cargo-test
 runner-args: tc_269_build_dispatch_payload_carries_allowed_tools
 runner-timeout: 30
-last-run: 2026-06-04T11:33:49.027021278+00:00
-last-run-duration: 140.6s
+last-run: 2026-06-04T11:36:44.793038594+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description

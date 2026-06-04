@@ -2,7 +2,7 @@
 id: TC-293
 title: tc-quality verdict carries dec:judges and dec:against per ADR-074 polymorphism
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-127
@@ -16,6 +16,8 @@ observes:
 - exit-code
 - stdout
 - graph
+last-run: 2026-06-04T11:59:46.203570490+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ Synthetic bundle JSON: a `TcProposal` with known IRI (`dec:TcProposal/abc123`) a
 
 - The downstream graph-side SHACL validation (covered by harness-level TCs).
 - Verdict kind (approved/rejected/amendment-required); this TC only asserts provenance shape.
-

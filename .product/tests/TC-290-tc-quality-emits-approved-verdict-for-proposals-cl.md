@@ -2,7 +2,7 @@
 id: TC-290
 title: tc-quality emits approved verdict for proposals clearing every rubric criterion
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-127
@@ -17,6 +17,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T11:59:46.203570490+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose
@@ -39,4 +41,3 @@ Synthetic bundle JSON: a `TcProposal` whose `new.tcs` array contains entries tha
 
 - Rejection or amendment behaviour (covered by TC-291 / TC-292).
 - Provenance shape beyond presence/non-emptiness (covered by TC-293).
-
