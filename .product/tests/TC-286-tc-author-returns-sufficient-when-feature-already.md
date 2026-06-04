@@ -2,7 +2,7 @@
 id: TC-286
 title: tc-author returns sufficient when feature already meets min_tcs_per_feature
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-126
@@ -17,6 +17,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T09:19:14.427479625+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -39,4 +41,3 @@ Synthetic bundle JSON written to a temp dir: feature_spec FT-stub with `min_tcs_
 
 - Behaviour when `existing_tcs.len() < target_count` (covered by TC-287).
 - Validation of `runner_args` shape against the runner vocabulary (covered by TC-288).
-

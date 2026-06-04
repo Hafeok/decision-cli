@@ -2,7 +2,7 @@
 id: TC-288
 title: tc-author falls back to sufficient when proposed runners fail args_pattern validation
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-126
@@ -16,6 +16,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T09:19:14.427479625+00:00
+last-run-duration: 0.3s
 ---
 
 ## Purpose
@@ -38,4 +40,3 @@ Synthetic bundle JSON: a feature with `min_tcs_per_feature = 3` and `existing_tc
 
 - Success-path retry where the second attempt yields valid TCs (the budget-1 fallback is the focus).
 - Verdict adjudication of the fallback `sufficient` proposal (covered by FT-127 TCs).
-

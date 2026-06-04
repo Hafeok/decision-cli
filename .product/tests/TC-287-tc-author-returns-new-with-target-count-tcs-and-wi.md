@@ -2,7 +2,7 @@
 id: TC-287
 title: tc-author returns new with target_count TCs and wired runner fields for an under-covered feature
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-126
@@ -17,6 +17,8 @@ runner-timeout: 60
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-04T09:19:14.427479625+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -40,4 +42,3 @@ Synthetic bundle JSON: feature_spec FT-stub with `min_tcs_per_feature = 4`, `exi
 
 - Verdict adjudication of the proposed TCs (covered by FT-127 TCs).
 - Retry / fallback behaviour when proposals fail vocabulary validation (covered by TC-288).
-

@@ -2,7 +2,7 @@
 id: FT-126
 title: 'decision-cli: tc-author worker package — authors TC bodies + runner fields for under-covered features'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-048
 - FT-067

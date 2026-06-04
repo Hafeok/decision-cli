@@ -2,7 +2,7 @@
 id: TC-289
 title: tc-author echoes bundle_hash and writes nothing beyond stdout
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-126
@@ -16,6 +16,8 @@ observes:
 - exit-code
 - stdout
 - disk-state
+last-run: 2026-06-04T09:19:14.427479625+00:00
+last-run-duration: 0.4s
 ---
 
 ## Purpose
@@ -37,4 +39,3 @@ Synthetic bundle JSON written to a `tmp_path` fixture with a known `bundle_hash`
 
 - Correctness of the proposal payload itself (covered by TC-286 / TC-287 / TC-288).
 - Stderr logging discipline (logs are allowed; only stdout JSON and disk state are observed).
-
