@@ -85,6 +85,11 @@ fn verifier_role_quads(role: &NamedNode, authority: &NamedNode, g: &GraphName) -
         g,
     ));
     quads.push(authority_link_quad(role, authority, g));
+    quads.extend(role_tool_quads(
+        role,
+        &["read_file", "run_build", "run_lint", "run_tests"],
+        g,
+    ));
     quads
 }
 
@@ -106,6 +111,11 @@ fn implementer_role_quads(role: &NamedNode, authority: &NamedNode, g: &GraphName
         g,
     ));
     quads.push(authority_link_quad(role, authority, g));
+    quads.extend(role_tool_quads(
+        role,
+        &["read_file", "write_file", "run_build", "run_lint", "run_tests"],
+        g,
+    ));
     quads
 }
 
@@ -142,6 +152,21 @@ fn role_output_and_model_quads(role: &NamedNode, output_iri: &str, g: &GraphName
 fn authority_link_quad(role: &NamedNode, authority: &NamedNode, g: &GraphName) -> Quad {
     let pred = NamedNodeRef::new_unchecked(AUTHORITY_PRED_IRI).into_owned();
     Quad::new(role.clone(), pred, authority.clone(), g.clone())
+}
+
+fn role_tool_quads(role: &NamedNode, tools: &[&str], g: &GraphName) -> Vec<Quad> {
+    let role_tool = NamedNodeRef::new_unchecked(super::role::ROLE_TOOL_IRI).into_owned();
+    tools
+        .iter()
+        .map(|tool| {
+            Quad::new(
+                role.clone(),
+                role_tool.clone(),
+                Literal::new_simple_literal(*tool),
+                g.clone(),
+            )
+        })
+        .collect()
 }
 
 fn verifier_authority_quads(authority: &NamedNode, g: &GraphName) -> Vec<Quad> {

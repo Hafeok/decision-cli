@@ -1,0 +1,46 @@
+# SHACL shape for dec:Role (FT-121 / ADR-070).
+#
+# Every role must declare at least one tool via dec:roleTool. The catalog
+# refuses unscoped roles; workers fail-close on empty tool surfaces per
+# ADR-069.
+
+@prefix dec:  <https://decision-cli.dev/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+dec:RoleShape a sh:NodeShape ;
+    sh:targetClass dec:Role ;
+    sh:property [
+        sh:path dec:roleId ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path dec:roleInputType ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:roleOutputType ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:roleModelBinding ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path dec:authority ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:roleTool ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+    ] .

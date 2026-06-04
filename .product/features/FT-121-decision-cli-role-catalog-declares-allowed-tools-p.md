@@ -2,7 +2,7 @@
 id: FT-121
 title: 'decision-cli: role catalog declares allowed_tools per dec:Role'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-030
 adrs:
@@ -17,8 +17,8 @@ domains:
 - data-model
 - security
 domains-acknowledged:
-  data-model: "One new predicate (`dec:roleTool`, literal range). Seed catalog is extended; no migration of existing seeded roles is required because this feature owns the seed of the new predicate."
-  security: "The role catalog becomes the source of truth for per-role tool surfaces — i.e. the authorisation policy for what each worker dispatch may invoke. SHACL enforces minCount-1 so no role can ship without a declared surface."
+  data-model: One new predicate (`dec:roleTool`, literal range). Seed catalog is extended; no migration of existing seeded roles is required because this feature owns the seed of the new predicate.
+  security: The role catalog becomes the source of truth for per-role tool surfaces — i.e. the authorisation policy for what each worker dispatch may invoke. SHACL enforces minCount-1 so no role can ship without a declared surface.
 ---
 
 ## Description

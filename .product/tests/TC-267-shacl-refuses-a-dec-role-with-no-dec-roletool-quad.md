@@ -2,7 +2,7 @@
 id: TC-267
 title: SHACL refuses a dec:Role with no dec:roleTool quads
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-121
@@ -14,6 +14,8 @@ observes:
 runner: cargo-test
 runner-args: tc_267_shacl_refuses_role_without_role_tool
 runner-timeout: 30
+last-run: 2026-06-04T09:02:32.005072667+00:00
+last-run-duration: 0.9s
 ---
 
 ## Description

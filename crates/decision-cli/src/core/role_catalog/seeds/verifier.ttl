@@ -21,4 +21,8 @@
                           <https://decision-cli.dev/ns#BundleHash> ;
     dec:roleOutputType    <https://decision-cli.dev/ns#VerificationVerdict> ;
     dec:roleModelBinding  "claude-sonnet-4-5" ;
-    dec:authority         <https://decision-cli.dev/ns/authority/verifier> .
+    dec:authority         <https://decision-cli.dev/ns/authority/verifier> ;
+    dec:roleTool          "read_file" ,
+                          "run_build" ,
+                          "run_lint" ,
+                          "run_tests" .

@@ -24,6 +24,9 @@ pub const ROLE_OUTPUT_TYPE_IRI: &str = "https://decision-cli.dev/ns#roleOutputTy
 /// `dec:roleModelBinding` IRI.
 pub const ROLE_MODEL_BINDING_IRI: &str = "https://decision-cli.dev/ns#roleModelBinding";
 
+/// `dec:roleTool` IRI (FT-121 / ADR-070).
+pub const ROLE_TOOL_IRI: &str = "https://decision-cli.dev/ns#roleTool";
+
 /// `dec:VerificationVerdict` IRI (FT-020 / ADR-018).
 pub const VERIFICATION_VERDICT_IRI: &str = "https://decision-cli.dev/ns#VerificationVerdict";
 
@@ -33,6 +36,10 @@ pub const VERIFICATION_VERDICT_IRI: &str = "https://decision-cli.dev/ns#Verifica
 /// declaration. The field is `Option<Authority>` to allow degraded
 /// reads on legacy stores that haven't been re-seeded; SHACL refuses
 /// new writes that omit `dec:authority`.
+///
+/// FT-121 / ADR-070: every role carries one or more `dec:roleTool`
+/// declarations. Empty Vec for legacy stores; SHACL refuses new writes
+/// with no `dec:roleTool` quads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Role {
     /// IRI of the `dec:Role` artifact.
@@ -47,6 +54,9 @@ pub struct Role {
     pub model_binding: String,
     /// `dec:authority` — ADR-027 declaration. `None` for legacy stores.
     pub authority: Option<Authority>,
+    /// `dec:roleTool` values — short snake_case tool names. Empty for
+    /// legacy stores (ADR-042 grandfathering).
+    pub allowed_tools: Vec<String>,
 }
 
 /// Look up a role by its `dec:roleId` against the orchestration store.
@@ -62,6 +72,7 @@ pub fn lookup(store: &Store, role_id: &str) -> Result<Option<Role>> {
     let (iri, output_type, model_binding) = extract_role_columns(&row)?;
     let input_types = collect_input_types(store, &iri)?;
     let authority = load_authority_for_role(store, &iri)?;
+    let allowed_tools = collect_allowed_tools(store, &iri)?;
     Ok(Some(Role {
         iri,
         role_id: role_id.to_string(),
@@ -69,6 +80,7 @@ pub fn lookup(store: &Store, role_id: &str) -> Result<Option<Role>> {
         output_type,
         model_binding,
         authority,
+        allowed_tools,
     }))
 }
 
@@ -125,6 +137,7 @@ fn role_from_row(store: &Store, sol: &oxigraph::sparql::QuerySolution) -> Result
     let model_binding = require_literal(sol, "model")?;
     let input_types = collect_input_types(store, &iri)?;
     let authority = load_authority_for_role(store, &iri)?;
+    let allowed_tools = collect_allowed_tools(store, &iri)?;
     Ok(Role {
         iri,
         role_id,
@@ -132,6 +145,7 @@ fn role_from_row(store: &Store, sol: &oxigraph::sparql::QuerySolution) -> Result
         output_type,
         model_binding,
         authority,
+        allowed_tools,
     })
 }
 
@@ -195,6 +209,29 @@ fn collect_input_types(store: &Store, role_iri: &str) -> Result<Vec<String>> {
         let sol = sol.context("input-type row")?;
         if let Some(oxigraph::model::Term::NamedNode(n)) = sol.get("t") {
             out.push(n.as_str().to_string());
+        }
+    }
+    Ok(out)
+}
+
+fn collect_allowed_tools(store: &Store, role_iri: &str) -> Result<Vec<String>> {
+    let q = format!(
+        "PREFIX dec: <https://decision-cli.dev/ns#> \
+         SELECT ?tool WHERE {{ \
+           {{ <{role}> dec:roleTool ?tool . }} \
+           UNION \
+           {{ GRAPH ?g {{ <{role}> dec:roleTool ?tool . }} }} \
+         }} ORDER BY ?tool",
+        role = role_iri,
+    );
+    let mut out: Vec<String> = Vec::new();
+    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("allowed-tools query")? else {
+        return Ok(out);
+    };
+    for sol in sols {
+        let sol = sol.context("allowed-tools row")?;
+        if let Some(oxigraph::model::Term::Literal(lit)) = sol.get("tool") {
+            out.push(lit.value().to_string());
         }
     }
     Ok(out)

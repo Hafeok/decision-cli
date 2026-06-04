@@ -13,8 +13,8 @@ runner-args: --package decision-cli --lib features::ft_119_drive_def_ready::plan
 runner-timeout: 60
 observes:
 - exit-code
-last-run: 2026-06-04T08:35:21.140440710+00:00
-last-run-duration: 0.1s
+last-run: 2026-06-04T08:36:34.025280866+00:00
+last-run-duration: 0.2s
 ---
 
 ## Acceptance criteria

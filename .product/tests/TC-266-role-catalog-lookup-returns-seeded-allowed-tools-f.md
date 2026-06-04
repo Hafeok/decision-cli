@@ -2,7 +2,7 @@
 id: TC-266
 title: role_catalog::lookup returns seeded allowed_tools for implementer role
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-121
@@ -14,6 +14,8 @@ observes:
 runner: cargo-test
 runner-args: tc_266_role_catalog_lookup_returns_seeded_allowed_tools
 runner-timeout: 30
+last-run: 2026-06-04T09:02:32.005072667+00:00
+last-run-duration: 150.0s
 ---
 
 ## Description

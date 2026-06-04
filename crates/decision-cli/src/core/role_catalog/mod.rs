@@ -22,7 +22,7 @@ pub use authority::{
 };
 pub use role::{
     list_all, lookup, Role, ROLE_CLASS_IRI, ROLE_ID_IRI, ROLE_INPUT_TYPE_IRI,
-    ROLE_MODEL_BINDING_IRI, ROLE_OUTPUT_TYPE_IRI, VERIFICATION_VERDICT_IRI,
+    ROLE_MODEL_BINDING_IRI, ROLE_OUTPUT_TYPE_IRI, ROLE_TOOL_IRI, VERIFICATION_VERDICT_IRI,
 };
 pub use seeds::{
     implementer_seed_quads, verifier_seed_quads, IMPLEMENTER_ROLE_ID, IMPLEMENTER_ROLE_IRI,
@@ -45,6 +45,9 @@ pub const VERIFIER_AUTHORITY_TTL: &str = include_str!("seeds/verifier-authority.
 
 /// Raw Turtle bytes for the implementer authority seed (FT-030).
 pub const IMPLEMENTER_AUTHORITY_TTL: &str = include_str!("seeds/implementer-authority.ttl");
+
+/// SHACL shape for dec:Role (FT-121 / ADR-070).
+pub const ROLE_SHAPE_TTL: &str = include_str!("seeds/role.shacl.ttl");
 
 /// FT-030 read API: list every role in the catalog (implementer +
 /// verifier in Phase A). Order is `dec:roleId` ascending.

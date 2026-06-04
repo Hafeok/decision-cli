@@ -2,7 +2,7 @@
 id: TC-268
 title: Legacy stores without dec:roleTool quads return empty allowed_tools and do not panic
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-121
@@ -15,6 +15,8 @@ observes:
 runner: cargo-test
 runner-args: tc_268_legacy_store_returns_empty_allowed_tools
 runner-timeout: 30
+last-run: 2026-06-04T09:02:32.005072667+00:00
+last-run-duration: 0.5s
 ---
 
 ## Description
