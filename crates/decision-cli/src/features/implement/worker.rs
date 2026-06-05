@@ -79,6 +79,27 @@ pub struct WorkerResponseJson {
     pub telemetry: TelemetryJson,
     #[serde(default)]
     pub error: Option<ErrorJson>,
+    /// FT-146: token-breakdown sum across every LiteLLM call in the
+    /// dispatch. `None` when the worker did not invoke an LLM (or has
+    /// not yet been updated to surface usage). The harness records the
+    /// four fields onto the cell's `dec:SessionRecord` so cost rollups
+    /// work on cluster-dispatched work.
+    #[serde(default)]
+    pub usage: Option<WorkerResponseUsage>,
+}
+
+/// FT-146: in-band token-breakdown the harness lifts onto the cell's
+/// `dec:SessionRecord`. Matches the Python `WorkerResponseUsage` shape.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct WorkerResponseUsage {
+    #[serde(default)]
+    pub input_tokens_base: u64,
+    #[serde(default)]
+    pub input_tokens_cache_write: u64,
+    #[serde(default)]
+    pub input_tokens_cache_hit: u64,
+    #[serde(default)]
+    pub output_tokens: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]

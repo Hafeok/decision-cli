@@ -7,6 +7,7 @@
 //! validation stage and surfaced to callers via the `provenance violation`
 //! error prefix on `WriteError`.
 
+pub mod cluster_session;
 pub mod session;
 pub mod shacl;
 pub mod violation;

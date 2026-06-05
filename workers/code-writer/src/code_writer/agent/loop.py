@@ -77,6 +77,13 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
     file_writes: list[FileWrite] = []
     started = time.monotonic()
     final_text = ""
+    # FT-146: accumulate token usage across every LiteLLM call so the
+    # harness can persist a SessionRecord with the cluster-cell aggregate.
+    usage_sum_base = 0
+    usage_sum_cache_write = 0
+    usage_sum_cache_hit = 0
+    usage_sum_output = 0
+    usage_observed = False
 
     if litellm is None:
         return build_error_response(
@@ -125,6 +132,24 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
             # contract. No-op on endpoints that don't surface the headers
             # (Anthropic, OpenAI direct, etc.).
             _maybe_throttle(_extract_rate_limit_headers(response))
+            # FT-146: accumulate this call's usage. LiteLLM normalises
+            # `prompt_tokens` / `completion_tokens` across providers; cache
+            # fields are present only on Anthropic (Scaleway → 0).
+            _usage = getattr(response, "usage", None)
+            if _usage is not None:
+                usage_observed = True
+                _base = int(getattr(_usage, "prompt_tokens", 0) or 0)
+                _out = int(getattr(_usage, "completion_tokens", 0) or 0)
+                _cw = int(getattr(_usage, "cache_creation_input_tokens", 0) or 0)
+                _ch = int(getattr(_usage, "cache_read_input_tokens", 0) or 0)
+                # LiteLLM returns prompt_tokens as the FULL input count
+                # (base + cache_write + cache_hit on Anthropic). Subtract
+                # the cache components so input_tokens_base means the
+                # uncached input only — matching FT-057's field semantics.
+                usage_sum_base += max(0, _base - _cw - _ch)
+                usage_sum_cache_write += _cw
+                usage_sum_cache_hit += _ch
+                usage_sum_output += _out
         except Exception as exc:
             latency = time.monotonic() - started
             from ..models import WorkerTelemetry
@@ -159,8 +184,15 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
         if not tool_uses or stop_reason in ("stop", "end_turn"):
             # End of conversation
             latency = time.monotonic() - started
+            usage = _build_usage_if_observed(
+                usage_observed,
+                usage_sum_base,
+                usage_sum_cache_write,
+                usage_sum_cache_hit,
+                usage_sum_output,
+            )
             return build_success_response(
-                payload, file_writes, tool_calls, final_text, latency
+                payload, file_writes, tool_calls, final_text, latency, usage
             )
 
         # Process tool calls
@@ -219,7 +251,37 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
 
     # Max turns exceeded
     latency = time.monotonic() - started
-    return build_max_turns_response(payload, tool_calls, latency)
+    usage = _build_usage_if_observed(
+        usage_observed,
+        usage_sum_base,
+        usage_sum_cache_write,
+        usage_sum_cache_hit,
+        usage_sum_output,
+    )
+    return build_max_turns_response(payload, tool_calls, latency, usage)
+
+
+def _build_usage_if_observed(
+    observed: bool,
+    base: int,
+    cache_write: int,
+    cache_hit: int,
+    output: int,
+):
+    """FT-146: wrap accumulated counts in a ``WorkerResponseUsage`` when at
+    least one LiteLLM call surfaced a ``response.usage`` block. Returns
+    ``None`` when no call did (so the harness records
+    ``dec:usageSource = "unreported"``)."""
+    if not observed:
+        return None
+    from ..models import WorkerResponseUsage
+
+    return WorkerResponseUsage(
+        input_tokens_base=base,
+        input_tokens_cache_write=cache_write,
+        input_tokens_cache_hit=cache_hit,
+        output_tokens=output,
+    )
 
 
 # ---------------------------------------------------------------------------

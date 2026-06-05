@@ -53,7 +53,7 @@ pub use session_show::session_show;
 // can intercept code-writer dispatches without subprocesses.
 pub use worker::{
     install_mock, preflight_implementer, run_worker, AuthorityJson, CodeChangeJson,
-    DispatchPayloadJson, MockGuard, WorkerResponseJson, WorkerRun,
+    DispatchPayloadJson, MockGuard, WorkerResponseJson, WorkerResponseUsage, WorkerRun,
 };
 
 use bundle::persist_store;

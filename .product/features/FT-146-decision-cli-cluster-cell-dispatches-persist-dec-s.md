@@ -2,11 +2,15 @@
 id: FT-146
 title: 'decision-cli: cluster cell dispatches persist dec:SessionRecord with token-breakdown fields for cost rollups'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-081
-tests: []
+tests:
+- TC-383
+- TC-384
+- TC-385
+- TC-386
 domains: []
 domains-acknowledged: {}
 ---

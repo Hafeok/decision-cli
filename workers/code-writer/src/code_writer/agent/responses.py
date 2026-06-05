@@ -14,6 +14,7 @@ from ..models import (
     ToolCall,
     WorkerError,
     WorkerResponse,
+    WorkerResponseUsage,
     WorkerTelemetry,
 )
 
@@ -58,6 +59,7 @@ def build_success_response(
     tool_calls: list[ToolCall],
     final_summary: str,
     latency: float,
+    usage: WorkerResponseUsage | None = None,
 ) -> WorkerResponse:
     """Assemble the `status="ok"` response from the agent loop.
 
@@ -67,6 +69,8 @@ def build_success_response(
         tool_calls: All tool calls made during the session.
         final_summary: The final assistant message text.
         latency: Total session duration in seconds.
+        usage: FT-146 token-breakdown sum across every LiteLLM call in
+            the dispatch. ``None`` when no LLM call surfaced a usage block.
 
     Returns:
         A successful WorkerResponse.
@@ -96,6 +100,7 @@ def build_success_response(
         status="ok",
         code_change=code_change,
         telemetry=telemetry,
+        usage=usage,
     )
 
 
@@ -145,22 +150,31 @@ def build_no_tools_response(payload: DispatchPayload) -> WorkerResponse:
 
 
 def build_max_turns_response(
-    payload: DispatchPayload, tool_calls: list[ToolCall], latency: float
+    payload: DispatchPayload,
+    tool_calls: list[ToolCall],
+    latency: float,
+    usage: WorkerResponseUsage | None = None,
 ) -> WorkerResponse:
-    """Response returned when max_turns is exceeded."""
+    """Response returned when max_turns is exceeded.
+
+    FT-146: carries accumulated ``usage`` so the harness still records the
+    tokens spent before the timeout.
+    """
     telemetry = WorkerTelemetry(
         turn_count=len(tool_calls),
         latency_seconds=latency,
         tool_calls=tool_calls,
         errors=[f"max_turns ({payload.max_turns}) exceeded"],
     )
-    return build_error_response(
+    response = build_error_response(
         payload,
         category="timeout",
         message=f"max_turns ({payload.max_turns}) exceeded",
         retryable=True,
         telemetry=telemetry,
     )
+    response.usage = usage
+    return response
 
 
 def build_missing_litellm_key_response(payload: DispatchPayload) -> WorkerResponse:

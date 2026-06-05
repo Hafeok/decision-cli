@@ -154,6 +154,21 @@ class WorkerTelemetry(BaseModel):
     stderr_excerpt: str = ""
 
 
+class WorkerResponseUsage(BaseModel):
+    """FT-146: token-breakdown sum across every LiteLLM call in the dispatch.
+
+    Reported in-band on `WorkerResponse.usage`. The harness writes the
+    four fields onto the cell's `dec:SessionRecord` so cost rollups
+    work on cluster-dispatched work. Scaleway endpoints zero-fill the
+    cache fields per FT-057 §SHACL.
+    """
+
+    input_tokens_base: int = Field(0, ge=0)
+    input_tokens_cache_write: int = Field(0, ge=0)
+    input_tokens_cache_hit: int = Field(0, ge=0)
+    output_tokens: int = Field(0, ge=0)
+
+
 class WorkerError(BaseModel):
     """Structured error report (ADR-008 §Error handling)."""
 
@@ -185,3 +200,7 @@ class WorkerResponse(BaseModel):
     code_change: CodeChange | None = None
     telemetry: WorkerTelemetry = Field(default_factory=WorkerTelemetry)
     error: WorkerError | None = None
+    # FT-146: optional token-breakdown sum across every LiteLLM call in
+    # the dispatch. None when the worker did not invoke an LLM (or has
+    # not yet been updated to surface usage).
+    usage: WorkerResponseUsage | None = None

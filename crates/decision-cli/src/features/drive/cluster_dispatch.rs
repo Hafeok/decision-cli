@@ -26,15 +26,29 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
+use chrono::Utc;
+use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
 
 use crate::core::drive::PlanContext;
 use crate::core::dispatch::resolve_default_capability;
+use crate::core::dispatch::escalation::triggers::capability_iri;
+use crate::core::graph::cluster_session::{
+    persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
+};
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::task_type::{self, CellDecl, TaskTypeDecl};
 use crate::features::implement::{
-    preflight_implementer, run_worker, AuthorityJson, DispatchPayloadJson, WorkerRun,
+    preflight_implementer, run_worker, AuthorityJson, DispatchPayloadJson, WorkerResponseUsage,
+    WorkerRun,
 };
+
+/// IRI used for mechanical cells' `dec:capability` link so the
+/// SessionRecord round-trips through FT-057 SHACL (which requires a
+/// `dec:capability` non-empty). The synthetic IRI is recognisable in
+/// queries and never resolves to a real capability — mechanical cells
+/// never consult the resolver.
+const MECHANICAL_CAPABILITY_IRI: &str = "urn:dec:capability:mechanical";
 
 /// Execute the cluster for `task_type_name` against `feature_id`.
 ///
@@ -90,8 +104,78 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
     // framing of it (limited to ~2000 chars to keep bundles narrow).
     let feature_framing = load_feature_framing(&ctx.product_root, feature_id)?;
 
+    // FT-146: accumulate per-cell SessionRecord input + clamp open/close
+    // timestamps on the parent cluster activity. Persistence runs in one
+    // mutation after the audit, regardless of cell or audit outcome.
+    let cluster_iri = NamedNode::new_unchecked(format!(
+        "urn:dec:cluster-dispatch:{}/{}",
+        tt.name, feature_id
+    ));
+    let cluster_started = Utc::now();
+    let mut cell_sessions: Vec<CellSessionRecord> = Vec::new();
+
+    let dispatch_result: Result<()> = run_cells(
+        ctx,
+        &argv,
+        &store,
+        tt,
+        feature_id,
+        task_type_name,
+        &order,
+        &cluster_dir,
+        &feature_framing,
+        &mut cell_sessions,
+    );
+
+    let audit_result = dispatch_result.and_then(|()| {
+        run_coherence_audit(tt, &ctx.workdir, &cluster_dir, feature_id, task_type_name)
+    });
+
+    let cluster_ended = Utc::now();
+    let outcome = classify_outcome(&audit_result);
+
+    // FT-146: best-effort persist — a write failure here is logged but
+    // does not override the caller's primary outcome (audit / cell).
+    if let Err(err) = persist_cluster_run(
+        &ctx.workdir,
+        &cluster_iri,
+        feature_id,
+        task_type_name,
+        cluster_started,
+        cluster_ended,
+        outcome,
+        &cell_sessions,
+    ) {
+        tracing::warn!(
+            feature_id,
+            task_type = task_type_name,
+            error = %err,
+            "cluster_dispatch: failed to persist cluster SessionRecords (cluster outcome preserved)"
+        );
+    }
+
+    audit_result
+}
+
+/// Walks the cells in `order`, emits each cell's artifact into the
+/// sandbox, and pushes a `CellSessionRecord` onto `cell_sessions`
+/// regardless of success / failure (PROV-O coverage stays uniform per
+/// FT-146 §Invariants).
+#[allow(clippy::too_many_arguments)]
+fn run_cells(
+    ctx: &PlanContext,
+    argv: &[String],
+    store: &Store,
+    tt: &TaskTypeDecl,
+    feature_id: &str,
+    task_type_name: &str,
+    order: &[String],
+    cluster_dir: &Path,
+    feature_framing: &str,
+    cell_sessions: &mut Vec<CellSessionRecord>,
+) -> Result<()> {
     let mut cell_outputs: BTreeMap<String, String> = BTreeMap::new();
-    for cell_name in &order {
+    for cell_name in order {
         let cell = tt
             .cells
             .iter()
@@ -103,40 +187,117 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
                 )
             })?;
 
-        let output = if cell.model_binding_capability_id.is_empty() {
-            emit_mechanical_cell(tt, cell, &cell_outputs)
-        } else {
-            emit_llm_cell(
-                ctx,
-                &argv,
-                &store,
-                tt,
-                feature_id,
-                cell,
-                &cluster_dir,
-                &feature_framing,
-                &cell_outputs,
-            )?
-        };
+        let cell_iri = NamedNode::new_unchecked(format!(
+            "urn:dec:cluster-session:{}/{}/{}",
+            tt.name, feature_id, cell.name
+        ));
+        let started_at = Utc::now();
 
-        let cell_path = cluster_dir.join(cell_filename(cell));
-        if let Some(parent) = cell_path.parent() {
-            fs::create_dir_all(parent)?;
+        let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
+            if cell.model_binding_capability_id.is_empty() {
+                let body = emit_mechanical_cell(tt, cell, &cell_outputs);
+                let capability =
+                    NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
+                Ok((body, None, capability))
+            } else {
+                emit_llm_cell(
+                    ctx,
+                    argv,
+                    store,
+                    tt,
+                    feature_id,
+                    cell,
+                    cluster_dir,
+                    feature_framing,
+                    &cell_outputs,
+                )
+            };
+
+        match output_result {
+            Ok((output, usage, capability)) => {
+                let ended_at = Utc::now();
+                let status = if cell.model_binding_capability_id.is_empty() {
+                    CellStatus::Mechanical
+                } else {
+                    CellStatus::Succeeded
+                };
+                cell_sessions.push(CellSessionRecord {
+                    iri: cell_iri,
+                    capability,
+                    usage,
+                    status,
+                    started_at,
+                    ended_at,
+                });
+
+                let cell_path = cluster_dir.join(cell_filename(cell));
+                if let Some(parent) = cell_path.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::write(&cell_path, &output).with_context(|| {
+                    format!("write cell {} to {}", cell.name, cell_path.display())
+                })?;
+                cell_outputs.insert(cell.name.clone(), output);
+                tracing::info!(
+                    feature_id,
+                    task_type = task_type_name,
+                    cell = %cell.name,
+                    path = %cell_path.display(),
+                    "cluster cell emitted"
+                );
+            }
+            Err(err) => {
+                let ended_at = Utc::now();
+                // FT-146: record a failed SessionRecord before bubbling
+                // the error — PROV-O coverage stays uniform.
+                let capability = cell_capability_iri_or_fallback(store, cell);
+                cell_sessions.push(CellSessionRecord {
+                    iri: cell_iri,
+                    capability,
+                    usage: None,
+                    status: CellStatus::Failed,
+                    started_at,
+                    ended_at,
+                });
+                return Err(err);
+            }
         }
-        fs::write(&cell_path, &output).with_context(|| {
-            format!("write cell {} to {}", cell.name, cell_path.display())
-        })?;
-        cell_outputs.insert(cell.name.clone(), output);
-        tracing::info!(
-            feature_id,
-            task_type = task_type_name,
-            cell = %cell.name,
-            path = %cell_path.display(),
-            "cluster cell emitted"
-        );
     }
+    Ok(())
+}
 
-    run_coherence_audit(tt, &ctx.workdir, &cluster_dir, feature_id, task_type_name)
+/// Best-effort capability resolution for a *failed* cell — used to fill
+/// `CellSessionRecord.capability` when the dispatch errored before the
+/// worker returned. Falls back to the mechanical IRI on failure so the
+/// SessionRecord always carries a `dec:capability` link.
+fn cell_capability_iri_or_fallback(store: &Store, cell: &CellDecl) -> NamedNode {
+    if cell.model_binding_capability_id.is_empty() {
+        return NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
+    }
+    match resolve_default_capability(store, &cell.model_binding_capability_id) {
+        Ok(cap) => capability_iri(&cap),
+        Err(_) => NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string()),
+    }
+}
+
+/// Map the cluster's overall `Result<()>` into the
+/// `dec:clusterOutcome` enum. Inspects the error message to
+/// distinguish audit vs cell failures (the audit branch is the only
+/// path that produces messages containing "audit").
+fn classify_outcome(result: &Result<()>) -> ClusterOutcome {
+    match result {
+        Ok(()) => ClusterOutcome::Succeeded,
+        Err(err) => {
+            let msg = err.to_string();
+            if msg.contains("audit unrunnable") {
+                ClusterOutcome::AuditUnrunnable
+            } else if msg.contains("audit") {
+                ClusterOutcome::AuditFailed
+            } else {
+                ClusterOutcome::CellFailed
+            }
+        }
+    }
 }
 
 /// Returns the relative path within the cluster sandbox at which the
@@ -211,6 +372,11 @@ fn emit_mechanical_cell(
 
 /// Build a focused per-cell bundle and dispatch the code-writer
 /// subprocess to emit the cell's artifact into the cluster sandbox.
+///
+/// Returns the cell's emitted file body, the worker's reported usage
+/// (FT-146 — `None` when the worker didn't surface a usage block), and
+/// the capability NamedNode that resolved for the cell. The caller
+/// records all three on the per-cell `dec:SessionRecord`.
 #[allow(clippy::too_many_arguments)]
 fn emit_llm_cell(
     ctx: &PlanContext,
@@ -222,7 +388,7 @@ fn emit_llm_cell(
     cluster_dir: &Path,
     feature_framing: &str,
     upstream: &BTreeMap<String, String>,
-) -> Result<String> {
+) -> Result<(String, Option<WorkerResponseUsage>, NamedNode)> {
     let cap = resolve_default_capability(store, &cell.model_binding_capability_id)
         .with_context(|| {
             format!(
@@ -230,6 +396,7 @@ fn emit_llm_cell(
                 cell.model_binding_capability_id, tt.name, cell.name
             )
         })?;
+    let cell_capability_iri = capability_iri(&cap);
 
     // Build the per-cell bundle: framing + upstream cell outputs +
     // instruction telling the worker exactly what to write.
@@ -270,7 +437,7 @@ fn emit_llm_cell(
         ],
     };
 
-    let WorkerRun { response: _, raw_stdout: _ } = run_worker(argv, &payload).with_context(|| {
+    let WorkerRun { response, raw_stdout: _ } = run_worker(argv, &payload).with_context(|| {
         format!(
             "dispatch code-writer for cell {}/{} (feature {})",
             tt.name, cell.name, feature_id
@@ -287,7 +454,7 @@ fn emit_llm_cell(
             written_path.display()
         )
     })?;
-    Ok(body)
+    Ok((body, response.usage, cell_capability_iri))
 }
 
 /// Compose the per-cell bundle markdown: small framing of the parent
