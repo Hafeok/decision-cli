@@ -579,6 +579,24 @@ fn read_task_type_from_routing_config(
     Some(mapped.to_string())
 }
 
+/// FT-164: read `[task_types.<name>] max_turns` override from
+/// `.dec/task-types.toml`. Returns `None` for any IO/parse failure,
+/// missing table, or out-of-range value — caller falls back to the
+/// module-level default in `cluster_dispatch::MAX_CELL_TURNS`.
+#[must_use]
+pub fn read_max_turns_for_task_type(
+    cwd: &std::path::Path,
+    task_type_name: &str,
+) -> Option<u32> {
+    let config_path = cwd.join(".dec").join("task-types.toml");
+    let body = std::fs::read_to_string(&config_path).ok()?;
+    let value: toml::Value = body.parse().ok()?;
+    let task_types = value.get("task_types")?.as_table()?;
+    let tt = task_types.get(task_type_name)?.as_table()?;
+    let n = tt.get("max_turns")?.as_integer()?;
+    u32::try_from(n).ok()
+}
+
 // ---------------------------------------------------------------------
 // FT-139 / ADR-080 — TaskType classifier branch.
 // ---------------------------------------------------------------------

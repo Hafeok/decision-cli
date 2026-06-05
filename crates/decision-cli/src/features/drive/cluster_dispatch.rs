@@ -50,6 +50,26 @@ use crate::features::implement::{
 /// never consult the resolver.
 const MECHANICAL_CAPABILITY_IRI: &str = "urn:dec:capability:mechanical";
 
+/// FT-163: per-cell framing cap for the feature_spec body. The previous
+/// 2000-char cap (the FT-139 prototype default) cut off before the
+/// §Outputs section where prescriptive struct shapes live — witnessed
+/// on the first FT-147 dispatch where the worker drafted a fictional
+/// CRUD struct from the §Description prose alone instead of the spec's
+/// `NamedNode`-based ontology shape. 50k chars covers every current
+/// feature_spec (longest ≈ 12k chars) with 4× headroom and stays well
+/// within qwen3-coder's 256k-token context budget. Specs exceeding the
+/// cap truncate with the same suffix as the old path.
+const MAX_FRAMING_CHARS: usize = 50_000;
+
+/// FT-164: per-cell agentic-loop turn cap. The previous 8-turn cap (the
+/// FT-139 prototype default) is a *cost safety net*, not a tuning dial:
+/// witnessed on FT-147 retries where substrate cells (`emitter`,
+/// `round_trip_tests`) intermittently failed mid-write at turn 9-15.
+/// 40 turns at Scaleway qwen3-coder rates ≈ €0.25/cell worst case (still
+/// "dimes territory"); catches stuck-model runaways without strangling
+/// legitimate work. See FT-164 §Description for the cost analysis.
+const MAX_CELL_TURNS: u32 = 40;
+
 /// Execute the cluster for `task_type_name` against `feature_id`.
 ///
 /// Steps:
@@ -412,6 +432,14 @@ fn emit_llm_cell(
     // are out of scope for the cell dispatcher (one-shot per cell).
     let authority: Option<AuthorityJson> = None;
 
+    // FT-164: per-task-type override from .dec/task-types.toml, falling
+    // back to MAX_CELL_TURNS const when absent or malformed.
+    let max_turns = crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+        &ctx.workdir,
+        &tt.name,
+    )
+    .unwrap_or(MAX_CELL_TURNS);
+
     let payload = DispatchPayloadJson {
         dispatch_id: format!(
             "urn:dec:cluster-dispatch:{}/{}/{}",
@@ -428,7 +456,7 @@ fn emit_llm_cell(
         model_id: cap.model_identifier,
         endpoint: cap.endpoint.as_str().to_string(),
         timeout_seconds: 600,
-        max_turns: 8,
+        max_turns,
         authority,
         defect_feedback: Vec::new(),
         allowed_tools: vec![
@@ -520,7 +548,7 @@ fn load_feature_framing(product_root: &Path, feature_id: &str) -> Result<String>
         anyhow!("cluster_dispatch: feature spec not found via pattern {glob_pattern}")
     })?;
     let raw = fs::read_to_string(&path)?;
-    Ok(truncate_for_framing(&raw, 2000))
+    Ok(truncate_for_framing(&raw, MAX_FRAMING_CHARS))
 }
 
 fn truncate_for_framing(s: &str, max_chars: usize) -> String {
@@ -596,4 +624,214 @@ fn run_coherence_audit(
 pub fn planned_cell_order(task_type_name: &str) -> Option<Vec<String>> {
     let tt = task_type::lookup(task_type_name)?;
     task_type::topo_order(&tt.cells).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// FT-163 TC: pins the framing-cap constant so changes are explicit.
+    /// 50k chars covers every current feature_spec (longest ≈ 12k) with
+    /// 4× headroom — see FT-163 §Description.
+    #[test]
+    fn ft_163_max_framing_chars_is_50k() {
+        assert_eq!(MAX_FRAMING_CHARS, 50_000);
+    }
+
+    /// FT-163 TC: a spec shorter than the cap passes through unchanged.
+    /// No truncation suffix appended.
+    #[test]
+    fn ft_163_short_spec_passes_through_unchanged() {
+        let s = "## Description\n\nA short spec.\n";
+        let out = truncate_for_framing(s, MAX_FRAMING_CHARS);
+        assert_eq!(out, s);
+        assert!(!out.contains("[spec truncated"));
+    }
+
+    /// FT-163 TC: a spec longer than the cap is truncated with the
+    /// witness suffix. Char count of the prefix matches the cap; suffix
+    /// makes the cluster bundle self-documenting about the cut.
+    #[test]
+    fn ft_163_long_spec_truncates_with_witness_suffix() {
+        let big: String = "a".repeat(60_000);
+        let out = truncate_for_framing(&big, MAX_FRAMING_CHARS);
+        assert!(
+            out.contains("[spec truncated for cell framing]"),
+            "truncation suffix missing"
+        );
+        // Prefix is exactly MAX_FRAMING_CHARS chars; suffix follows.
+        let prefix: String = out.chars().take(MAX_FRAMING_CHARS).collect();
+        assert_eq!(prefix.len(), MAX_FRAMING_CHARS);
+    }
+
+    /// FT-164 TC: pins the default turn cap at 40 — operators see the
+    /// per-release default and changes become explicit. Catalog overrides
+    /// take precedence over this default (TC-401).
+    #[test]
+    fn ft_164_max_cell_turns_default_is_40() {
+        assert_eq!(MAX_CELL_TURNS, 40);
+    }
+
+    /// FT-164 TC: empty / missing override → fall back to default. The
+    /// helper degrades to `None` for absent files, missing `[task_types]`
+    /// table, missing per-task entry, or absent `max_turns` key.
+    #[test]
+    fn ft_164_override_absent_returns_none_so_caller_falls_back_to_default() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        // No .dec/task-types.toml at all.
+        let none = crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+            tmp.path(),
+            "add-artifact-type",
+        );
+        assert_eq!(none, None);
+
+        // File present but no [task_types.<name>] table.
+        std::fs::create_dir_all(tmp.path().join(".dec")).unwrap();
+        std::fs::write(
+            tmp.path().join(".dec/task-types.toml"),
+            "[features]\n\"FT-T401\" = \"add-artifact-type\"\n",
+        )
+        .unwrap();
+        let still_none =
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "add-artifact-type",
+            );
+        assert_eq!(still_none, None);
+    }
+
+    /// FT-164 TC: per-task-type override returned when present. Catalog
+    /// is the source of truth — different task types get different caps.
+    #[test]
+    fn ft_164_override_returns_configured_cap_per_task_type() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        std::fs::create_dir_all(tmp.path().join(".dec")).unwrap();
+        std::fs::write(
+            tmp.path().join(".dec/task-types.toml"),
+            r#"[features]
+"FT-T402" = "add-artifact-type"
+
+[task_types.add-artifact-type]
+max_turns = 60
+
+[task_types.add-judge-worker]
+max_turns = 12
+"#,
+        )
+        .unwrap();
+        assert_eq!(
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "add-artifact-type"
+            ),
+            Some(60)
+        );
+        assert_eq!(
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "add-judge-worker"
+            ),
+            Some(12)
+        );
+        // Unknown task type — no override; falls back to default at the
+        // call site.
+        assert_eq!(
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "extend-planner-classifier"
+            ),
+            None
+        );
+    }
+
+    /// FT-164 TC: malformed TOML / out-of-range values degrade to None
+    /// rather than erroring. Dispatch never fails over misconfig — it
+    /// falls back to the const default.
+    #[test]
+    fn ft_164_override_malformed_or_oob_degrades_to_none() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        std::fs::create_dir_all(tmp.path().join(".dec")).unwrap();
+
+        // Garbage TOML.
+        std::fs::write(tmp.path().join(".dec/task-types.toml"), "this is not [valid toml")
+            .unwrap();
+        assert_eq!(
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "add-artifact-type"
+            ),
+            None
+        );
+
+        // Negative integer — fails u32 conversion.
+        std::fs::write(
+            tmp.path().join(".dec/task-types.toml"),
+            "[task_types.add-artifact-type]\nmax_turns = -5\n",
+        )
+        .unwrap();
+        assert_eq!(
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "add-artifact-type"
+            ),
+            None
+        );
+
+        // String value where integer expected.
+        std::fs::write(
+            tmp.path().join(".dec/task-types.toml"),
+            r#"[task_types.add-artifact-type]
+max_turns = "high"
+"#,
+        )
+        .unwrap();
+        assert_eq!(
+            crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
+                tmp.path(),
+                "add-artifact-type"
+            ),
+            None
+        );
+    }
+
+    /// FT-163 TC: the framing cap is large enough to fit FT-147's
+    /// §Outputs section (the witnessed motivating need). Reads the live
+    /// spec file from the workspace and asserts the cap admits it
+    /// without truncation. Guards against the cap silently shrinking
+    /// below the catalog's largest current spec.
+    #[test]
+    fn ft_163_cap_admits_current_archetype_spec() {
+        // Walk up to the workspace root from the test binary's CARGO_MANIFEST_DIR.
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
+        let manifest_path = std::path::Path::new(&manifest_dir);
+        let workspace_root = manifest_path
+            .parent()
+            .and_then(|p| p.parent())
+            .expect("workspace root walks up from CARGO_MANIFEST_DIR");
+        let spec_dir = workspace_root.join(".product").join("features");
+        if !spec_dir.is_dir() {
+            // Spec dir absent — not a regression; the cap is what it is.
+            return;
+        }
+        let prefix = "FT-147-";
+        let entry = std::fs::read_dir(&spec_dir)
+            .expect("read .product/features")
+            .flatten()
+            .find(|e| {
+                e.file_name()
+                    .to_string_lossy()
+                    .starts_with(prefix)
+            });
+        let Some(entry) = entry else {
+            return; // FT-147 spec not present in this checkout
+        };
+        let body = std::fs::read_to_string(entry.path()).expect("read spec");
+        let cell_count = body.chars().count();
+        assert!(
+            cell_count <= MAX_FRAMING_CHARS,
+            "FT-147 spec is {cell_count} chars; MAX_FRAMING_CHARS is {MAX_FRAMING_CHARS} — \
+             the cap must admit the catalog's largest substrate spec without truncation. \
+             Raise MAX_FRAMING_CHARS in cluster_dispatch.rs or shrink the spec."
+        );
+    }
 }

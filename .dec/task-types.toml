@@ -5,3 +5,8 @@
 
 [features]
 "FT-145" = "add-cli-subcommand"
+# FT-147 — first archetype-layer substrate FT. Rides add-artifact-type
+# (FT-141) to emit dec:Archetype struct + SHACL + IRI vocab + parser +
+# emitter + round-trip tests. First "non-prototype" use of the cluster
+# pattern per FT-147's own §Description.
+"FT-147" = "add-artifact-type"
