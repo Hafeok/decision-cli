@@ -516,12 +516,32 @@ fn build_cell_bundle(
         "Emit the `{}` cell of the `{}` task type. The artifact type is `{}`.\n\n",
         cell.name, tt.name, cell.artifact_type
     ));
+    // FT-165: explicit write_file invariant. The previous instruction
+    // ("Write a single file ... When you have written the file, end your
+    // turn") admitted a "I'll paste the content in my response and end my
+    // turn" failure mode that aborted ~50% of FT-147 substrate cells.
+    // The numbered workflow + named tool + forbidden-modes list removes
+    // the ambiguity without changing the cluster's structural contract.
+    out.push_str("### Required workflow\n\n");
     out.push_str(&format!(
-        "Write a single file at the workspace-relative path `{}` containing the cell's content. \
-         Do not produce any other files. Do not edit existing files. \
-         When you have written the file, end your turn.\n",
+        "1. Call the `write_file` tool with:\n   \
+           - `path`: `{}`\n   \
+           - `content`: the **complete** file body — no placeholders, no TODO markers, no \"rest of file unchanged\".\n",
         target_filename.display()
     ));
+    out.push_str(
+        "2. The dispatch is INCOMPLETE until your `write_file` tool call returns success.\n\
+         3. Do not paste the file content into your assistant message text — that is NOT writing the file. Only a `write_file` tool call counts.\n\
+         4. Do not create any other files. The target path is the ONLY file you may write.\n\
+         5. After `write_file` returns success, respond with a single line confirming success and end your turn.\n\n",
+    );
+    out.push_str("### Failure modes to avoid\n\n");
+    out.push_str(
+        "- Responding with file content in markdown but never calling `write_file` → the dispatch reads zero bytes and aborts.\n\
+         - Calling `write_file` with partial content and a placeholder (\"// ... rest unchanged\") → the file fails the audit downstream.\n\
+         - Creating helper / scratch files alongside the target → audit rejects.\n\
+         - Narrating the plan before acting — call the tool first, narrate after.\n",
+    );
     out
 }
 
@@ -791,6 +811,107 @@ max_turns = "high"
                 "add-artifact-type"
             ),
             None
+        );
+    }
+
+    fn fixture_bundle() -> String {
+        let tt = TaskTypeDecl {
+            name: "add-artifact-type".to_string(),
+            cells: vec![],
+            coherence_audit: crate::core::task_type::CoherenceAuditSpec {
+                script_path: PathBuf::from("scripts/checks/x.py"),
+                timeout_seconds: 60,
+            },
+        };
+        let cell = CellDecl {
+            name: "emitter".to_string(),
+            artifact_type: "rust-source".to_string(),
+            prompt_template_path: PathBuf::from("/tmp/x"),
+            model_binding_capability_id: "implementer".to_string(),
+            derived_from: vec![],
+        };
+        let upstream = BTreeMap::new();
+        build_cell_bundle(
+            &tt,
+            &cell,
+            "FT-T403",
+            "## Description\nFixture.\n",
+            &upstream,
+            &PathBuf::from("emitter.rs"),
+        )
+    }
+
+    /// FT-165 TC: bundle names `write_file` and routes through the
+    /// numbered "Required workflow" — pins the explicit-tool-call
+    /// instruction shape. A worker reading this bundle has no
+    /// ambiguity about what to call.
+    #[test]
+    fn ft_165_bundle_requires_write_file_tool_call_explicitly() {
+        let bundle = fixture_bundle();
+        assert!(
+            bundle.contains("### Required workflow"),
+            "bundle must surface the Required workflow heading: {bundle}"
+        );
+        assert!(
+            bundle.contains("Call the `write_file` tool with:"),
+            "bundle must name write_file explicitly: {bundle}"
+        );
+        assert!(
+            bundle.contains("`path`: `emitter.rs`"),
+            "bundle must pin the path argument: {bundle}"
+        );
+    }
+
+    /// FT-165 TC: bundle forbids text-only responses. Pins the
+    /// anti-narrate guard so a worker pasting content into its assistant
+    /// message can't claim that satisfies the dispatch.
+    #[test]
+    fn ft_165_bundle_forbids_pasting_content_in_text() {
+        let bundle = fixture_bundle();
+        assert!(
+            bundle.contains("Do not paste the file content into your assistant message text"),
+            "anti-paste guard missing: {bundle}"
+        );
+        assert!(
+            bundle.contains("Only a `write_file` tool call counts"),
+            "explicit \"only tool call counts\" rule missing: {bundle}"
+        );
+    }
+
+    /// FT-165 TC: bundle caps file creation at the single target.
+    /// Removes the witnessed "let me also create a helper" failure
+    /// mode (stray `product.verify` file on FT-147 retry).
+    #[test]
+    fn ft_165_bundle_caps_writes_at_single_target() {
+        let bundle = fixture_bundle();
+        assert!(
+            bundle.contains("Do not create any other files."),
+            "single-target rule missing: {bundle}"
+        );
+        assert!(
+            bundle.contains("The target path is the ONLY file you may write."),
+            "ONLY-target emphasis missing: {bundle}"
+        );
+    }
+
+    /// FT-165 TC: bundle keeps the dispatch-incomplete-until-tool-success
+    /// invariant + the failure-modes list. These framings together force
+    /// the worker to internalize "tool call = success, anything else =
+    /// failure".
+    #[test]
+    fn ft_165_bundle_emphasises_dispatch_incomplete_until_tool_call() {
+        let bundle = fixture_bundle();
+        assert!(
+            bundle.contains("dispatch is INCOMPLETE until your `write_file` tool call returns success"),
+            "INCOMPLETE-until-tool-success invariant missing: {bundle}"
+        );
+        assert!(
+            bundle.contains("### Failure modes to avoid"),
+            "failure-modes section missing: {bundle}"
+        );
+        assert!(
+            bundle.contains("never calling `write_file`"),
+            "explicit never-calling-write_file mention missing: {bundle}"
         );
     }
 
