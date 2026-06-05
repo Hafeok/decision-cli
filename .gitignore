@@ -28,3 +28,14 @@ __pycache__/
 
 # Local run logs (implement-all.sh, etc.)
 .logs/
+
+# Test-fixture tempdirs that escape /tmp (e.g. TMPDIR=. accidents).
+# The tempdir() helpers in crates/decision-cli/tests/ label fixtures with
+# the FT/TC id; pin the labels at root so a polluted tree gets caught
+# before commit instead of after.
+/decision-cli-ft*-*/
+/env-comments-*/
+/env-good-*/
+/env-malformed-*/
+/env-missing-*/
+/ft-???-*-*/
