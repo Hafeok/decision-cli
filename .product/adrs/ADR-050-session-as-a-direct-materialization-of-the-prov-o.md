@@ -4,6 +4,7 @@ title: Session as a direct materialization of the PROV-O Activity
 status: accepted
 features:
 - FT-078
+- FT-161
 supersedes: []
 superseded-by: []
 domains: []

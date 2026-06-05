@@ -6,6 +6,7 @@
 //! — when available — the verifier's `VerificationVerdict` with its
 //! rationale, violates list, and amendment guidance (FT-025 / ADR-018).
 
+mod cluster;
 mod paired;
 
 use std::fs;
@@ -19,9 +20,25 @@ use super::vocab::DEC_NS;
 
 use paired::{term_iri, term_literal};
 
+/// FT-161: IRI prefix for per-cell cluster sessions persisted by
+/// [`crate::core::graph::cluster_session::persist_cluster_run`].
+const CLUSTER_CELL_PREFIX: &str = "urn:dec:cluster-session:";
+/// FT-161: IRI prefix for the parent cluster activity persisted by
+/// FT-146's `persist_cluster_run`.
+const CLUSTER_DISPATCH_PREFIX: &str = "urn:dec:cluster-dispatch:";
+
 /// `dec session show <iri>` payload — load Session triples and render.
+///
+/// FT-161 routes cluster-shape IRIs to dedicated renderers before
+/// touching the slice-1 implementer-shape SPARQL.
 pub fn session_show(workdir: &Path, session_iri: &str) -> Result<String> {
     let store = load_orchestration_store(workdir)?;
+    if session_iri.starts_with(CLUSTER_CELL_PREFIX) {
+        return cluster::render_cluster_cell(&store, session_iri);
+    }
+    if session_iri.starts_with(CLUSTER_DISPATCH_PREFIX) {
+        return cluster::render_cluster_dispatch(&store, session_iri);
+    }
     let q = build_session_show_query(session_iri);
     let sol = fetch_session_solution(&store, q.as_str(), session_iri)?;
     let mut report = render_session_solution(&sol, session_iri);
