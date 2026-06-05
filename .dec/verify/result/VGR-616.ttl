@@ -1,0 +1,92 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-616>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-204> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-06-04T19:12:19.219Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T19:12:19.261Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-616/step/0> <https://decision-cli.dev/ns/result/VGR-616/step/1> <https://decision-cli.dev/ns/result/VGR-616/step/2> <https://decision-cli.dev/ns/result/VGR-616/step/3> ) ;
+    dec:rationale "step 0 failed with exit 2 (binary refused the invocation before the code ran) on TCs: https://decision-cli.dev/ns/tc/TC-376; this is a graph-design fault, not a code regression — the graph needs editing" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-376> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-616/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-377> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-616/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-378> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-616/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-375> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-616/step/3>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-204/BNCH-002/ts-1780600339217616591> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-06-04T19:12:19.261Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-616/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-204/0> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T19:12:19.219Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T19:12:19.230Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-204/BNCH-002/ts-1780600339217616591> .
+
+<https://decision-cli.dev/ns/result/VGR-616/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-204/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-06-04T19:12:19.231Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T19:12:19.242Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "TC-377 PASS\n" ;
+    dec:stderrExcerpt "" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-204/BNCH-002/ts-1780600339217616591> .
+
+<https://decision-cli.dev/ns/result/VGR-616/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-204/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T19:12:19.242Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T19:12:19.252Z"^^xsd:dateTime ;
+    dec:exitCode 1 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "TC-378 FAIL: status not registered — dispatcher returned 'unknown subcommand'\n" ;
+    dec:errorMessage "expected exit 0, got 1" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-204/BNCH-002/ts-1780600339217616591> .
+
+<https://decision-cli.dev/ns/result/VGR-616/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-204/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T19:12:19.252Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T19:12:19.261Z"^^xsd:dateTime ;
+    dec:exitCode 2 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "" ;
+    dec:errorMessage "expected exit 0, got 2" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-204/BNCH-002/ts-1780600339217616591> .

@@ -2,7 +2,7 @@
 id: FT-145
 title: 'decision-cli: dec product status — surface project summary through the dec wrapper'
 phase: 4
-status: planned
+status: in-progress
 depends-on: []
 adrs: []
 tests:

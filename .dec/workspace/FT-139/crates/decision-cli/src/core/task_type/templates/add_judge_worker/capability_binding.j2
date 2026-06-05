@@ -1,0 +1,10 @@
+{# Template for capability_binding cell #}
+@prefix : <http://example.org/> .
+@prefix cap: <http://example.org/capability/> .
+@prefix dec: <http://decision-cli.org/> .
+
+:{{ feature_id }}-judge-worker-capability
+    a dec:Capability ;
+    dec:bindingName "{{ feature_id }}-judge-worker" ;
+    dec:endpoint "{{ endpoint }}" ;
+    dec:modelId "{{ model_id }}" .

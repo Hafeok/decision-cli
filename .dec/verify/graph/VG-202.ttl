@@ -1,0 +1,46 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-202>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-139> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-202/0> <https://decision-cli.dev/ns/step/VG-202/1> <https://decision-cli.dev/ns/step/VG-202/2> <https://decision-cli.dev/ns/step/VG-202/3> <https://decision-cli.dev/ns/step/VG-202/4> ) .
+
+<https://decision-cli.dev/ns/step/VG-202/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-370> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --lib core::task_type::tests::add_judge_worker_topo_order" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-202/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-371> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --lib features::drive::planners::feature_ship::tests::classifier_returns_dispatch_cluster_for_task_type_frontmatter" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-202/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-372> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/tc-372-cluster-audit-judge-worker-negative.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-202/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-373> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test --package decision-cli --test ft_139_cluster_dispatch_end_to_end cluster_dispatch_add_judge_worker_end_to_end" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-202/4>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-374> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/tc-374-cluster-audit-judge-worker-positive.sh" ;
+    dec:expectExitCode 0 .

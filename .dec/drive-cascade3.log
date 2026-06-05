@@ -1,0 +1,16 @@
+Feature Sweep Results
+=====================
+
+FT-123   550100ms    1 iter  ✓ Done
+FT-129    10163ms    0 iter  ✗ Error: drive: action dispatch:implementer failed at iteration 0: dispatch implementer for FT-129: implement handler: code-writer worker reported failure: invalid_dispatch: LITELLM_API_KEY environment variable is required
+--- worker detail ---
+Set LITELLM_API_KEY to a valid LiteLLM virtual key
+
+Summary
+-------
+Done:        1
+Stuck:       0
+Max iter:    0
+Timeout:     0
+Error:       1
+Total:       2

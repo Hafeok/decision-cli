@@ -1,0 +1,39 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-204>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-145> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-204/0> <https://decision-cli.dev/ns/step/VG-204/1> <https://decision-cli.dev/ns/step/VG-204/2> <https://decision-cli.dev/ns/step/VG-204/3> ) .
+
+<https://decision-cli.dev/ns/step/VG-204/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-376> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/tc-376-dec-product-status-json.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-204/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-377> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/tc-377-dec-product-status-unknown-flag.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-204/2>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-378> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/tc-378-dec-product-status-registered.sh" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-204/3>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-375> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && bash scripts/checks/tc-375-dec-product-status-text.sh" ;
+    dec:expectExitCode 0 .

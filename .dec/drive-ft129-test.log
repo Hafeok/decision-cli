@@ -1,0 +1,3 @@
+dec drive ship: drive: action dispatch:implementer failed at iteration 0: dispatch implementer for FT-129: implement handler: code-writer worker reported failure: invalid_dispatch: LITELLM_API_KEY environment variable is required
+--- worker detail ---
+Set LITELLM_API_KEY to a valid LiteLLM virtual key

@@ -1,0 +1,25 @@
+# decision-cli VerificationGraph artifact.
+# Authored by FT-036 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<https://decision-cli.dev/ns/graph/VG-203>
+    a dec:VerificationGraph ;
+    dec:verifies <https://decision-cli.dev/ns/feature/FT-125> ;
+    dec:bench <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:steps ( <https://decision-cli.dev/ns/step/VG-203/0> <https://decision-cli.dev/ns/step/VG-203/1> ) .
+
+<https://decision-cli.dev/ns/step/VG-203/0>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-283> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && cargo test tc_283_tool_call_quads_persisted_in_session_graph" ;
+    dec:expectExitCode 0 .
+
+<https://decision-cli.dev/ns/step/VG-203/1>
+    a dec:VerificationStep ;
+    dec:stepType "shell-command" ;
+    dec:providesEvidenceFor <https://decision-cli.dev/ns/tc/TC-284> ;
+    dec:command "cd \"$DEC_PROJECT_ROOT\" && pytest workers/code-writer/tests/test_audit.py::test_failed_tool_call_recorded_with_error_status" ;
+    dec:expectExitCode 0 .

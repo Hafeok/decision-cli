@@ -1,0 +1,109 @@
+# decision-cli VerificationGraphResult artifact.
+# Authored by FT-097 / ADR-028. On-disk Turtle is authoritative.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://decision-cli.dev/ns/result/VGR-614>
+    a dec:VerificationGraphResult ;
+    dec:resultOf <https://decision-cli.dev/ns/graph/VG-202> ;
+    dec:ranInEnvironment <https://decision-cli.dev/ns/bench/BNCH-002> ;
+    dec:verdict "amendment-required" ;
+    dec:startedAt "2026-06-04T13:51:52.780Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T13:51:53.257Z"^^xsd:dateTime ;
+    dec:stepTraces ( <https://decision-cli.dev/ns/result/VGR-614/step/0> <https://decision-cli.dev/ns/result/VGR-614/step/1> <https://decision-cli.dev/ns/result/VGR-614/step/2> <https://decision-cli.dev/ns/result/VGR-614/step/3> <https://decision-cli.dev/ns/result/VGR-614/step/4> ) ;
+    dec:rationale "step 2 failed with exit 127 (binary refused the invocation before the code ran) on TCs: https://decision-cli.dev/ns/tc/TC-372; this is a graph-design fault, not a code regression — the graph needs editing" ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-370> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-614/step/0>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-371> ;
+        dec:outcome "pass" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-614/step/1>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-372> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-614/step/2>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-373> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-614/step/3>
+    ] ;
+    dec:evidenceFor [
+        a dec:EvidenceProjection ;
+        dec:tc <https://decision-cli.dev/ns/tc/TC-374> ;
+        dec:outcome "fail" ;
+        dec:fromStep <https://decision-cli.dev/ns/result/VGR-614/step/4>
+    ] ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-202/BNCH-002/ts-1780581112779637966> ;
+    prov:wasAttributedTo <https://decision-cli.dev/ns/agent/verify-graph-runner> ;
+    dcterms:created "2026-06-04T13:51:53.257Z"^^xsd:dateTime .
+
+<https://decision-cli.dev/ns/result/VGR-614/step/0>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-202/0> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-06-04T13:51:52.780Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T13:51:52.949Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 851 filtered out; finished in 0.00s\n\n" ;
+    dec:stderrExcerpt "warning: unused import: `std::path::PathBuf`\n --> crates/decision-cli/src/features/ft_111_drive_ship_all/tests.rs:6:5\n  |\n6 | use std::path::PathBuf;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Dispatch` and `RoundState`\n --> crates/decision-cli/src/features/ft_113_drive_show/tests.rs:5:31\n  |\n5 |     use super::super::model::{Dispatch, Outcome, Round, RoundState};\n  |                               ^^^^^^^^                  ^^^^^^^^^^\n\nwarning: unused imports: `DateTime` and `Utc`\n --> crates/decision-cli/src/features/ft_113_drive_show/tests.rs:8:18\n  |\n8 |     use chrono::{DateTime, Utc};\n  |                  ^^^^^^^^  ^^^\n\nwarning: unused import: `std::time::Duration`\n --> crates/decision-cli/src/features/ft_113_drive_show/tests.rs:9:9\n  |\n9 |     use std::time::Duration;\n  |         ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `baked_capability_ids` is never used\n   --> crates/decision-cli/src/core/bootstrap/ft101_catalog.rs:709:15\n    |\n709 | pub(crate) fn baked_capability_ids() -> Vec<&'static str> {\n    |               ^^^^^^^^^^^^^^^^^^^^\n    |\n    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: field `tc_iri` is never read\n  --> crates/decision-cli/src/features/ft_116_retract_stale_defects/query.rs:15:9\n   |\n11 | pub struct StaleDefect {\n   |            ----------- field in this struct\n...\n15 |     pub tc_iri: String,\n   |         ^^^^^^\n   |\n   = note: `StaleDefect` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis\n\nwarning: method `classify_without_cycle_check` is never used\n   --> crates/decision-cli/src/features/ft_119_drive_def_ready/planner.rs:110:8\n    |\n 80 | impl<I: GraphInspector> FeatureReadyPlanner<I> {\n    | ---------------------------------------------- method in this implementation\n...\n110 |     fn classify_without_cycle_check(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: method `advance` is never used\n    --> crates/decision-cli/src/features/ft_119_drive_def_ready/planner.rs:1007:12\n     |\n1000 |     impl MutableStubInspector {\n     |     ------------------------- method in this implementation\n...\n1007 |         fn advance(&self) {\n     |            ^^^^^^^\n\nwarning: function `payload_defect_feedback_len` is never used\n   --> crates/decision-cli/src/features/implement/worker.rs:324:15\n    |\n324 | pub(crate) fn payload_defect_feedback_len(payload: &DispatchPayloadJson) -> usize {\n    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs`\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:38:5\n   |\n38 |     Failed,\n   |     ^^^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:10:5\n   |\n10 |     Text,\n   |     ^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:11:5\n   |\n11 |     Tsv,\n   |     ^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:12:5\n   |\n12 |     Json,\n   |     ^^^^\n\nwarning: missing documentation for an associated function\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:16:5\n   |\n16 |     pub fn parse(s: &str) -> Result<Self, String> {\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/sweep.rs:19:5\n   |\n19 |     Done,\n   |     ^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-202/BNCH-002/ts-1780581112779637966> .
+
+<https://decision-cli.dev/ns/result/VGR-614/step/1>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-202/1> ;
+    dec:outcome "pass" ;
+    dec:startedAt "2026-06-04T13:51:52.949Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T13:51:53.120Z"^^xsd:dateTime ;
+    dec:exitCode 0 ;
+    dec:stdoutExcerpt "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 851 filtered out; finished in 0.00s\n\n" ;
+    dec:stderrExcerpt "warning: unused import: `std::path::PathBuf`\n --> crates/decision-cli/src/features/ft_111_drive_ship_all/tests.rs:6:5\n  |\n6 | use std::path::PathBuf;\n  |     ^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `Dispatch` and `RoundState`\n --> crates/decision-cli/src/features/ft_113_drive_show/tests.rs:5:31\n  |\n5 |     use super::super::model::{Dispatch, Outcome, Round, RoundState};\n  |                               ^^^^^^^^                  ^^^^^^^^^^\n\nwarning: unused imports: `DateTime` and `Utc`\n --> crates/decision-cli/src/features/ft_113_drive_show/tests.rs:8:18\n  |\n8 |     use chrono::{DateTime, Utc};\n  |                  ^^^^^^^^  ^^^\n\nwarning: unused import: `std::time::Duration`\n --> crates/decision-cli/src/features/ft_113_drive_show/tests.rs:9:9\n  |\n9 |     use std::time::Duration;\n  |         ^^^^^^^^^^^^^^^^^^^\n\nwarning: function `baked_capability_ids` is never used\n   --> crates/decision-cli/src/core/bootstrap/ft101_catalog.rs:709:15\n    |\n709 | pub(crate) fn baked_capability_ids() -> Vec<&'static str> {\n    |               ^^^^^^^^^^^^^^^^^^^^\n    |\n    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: field `tc_iri` is never read\n  --> crates/decision-cli/src/features/ft_116_retract_stale_defects/query.rs:15:9\n   |\n11 | pub struct StaleDefect {\n   |            ----------- field in this struct\n...\n15 |     pub tc_iri: String,\n   |         ^^^^^^\n   |\n   = note: `StaleDefect` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis\n\nwarning: method `classify_without_cycle_check` is never used\n   --> crates/decision-cli/src/features/ft_119_drive_def_ready/planner.rs:110:8\n    |\n 80 | impl<I: GraphInspector> FeatureReadyPlanner<I> {\n    | ---------------------------------------------- method in this implementation\n...\n110 |     fn classify_without_cycle_check(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: method `advance` is never used\n    --> crates/decision-cli/src/features/ft_119_drive_def_ready/planner.rs:1007:12\n     |\n1000 |     impl MutableStubInspector {\n     |     ------------------------- method in this implementation\n...\n1007 |         fn advance(&self) {\n     |            ^^^^^^^\n\nwarning: function `payload_defect_feedback_len` is never used\n   --> crates/decision-cli/src/features/implement/worker.rs:324:15\n    |\n324 | pub(crate) fn payload_defect_feedback_len(payload: &DispatchPayloadJson) -> usize {\n    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `handler_internal` is never used\n  --> crates/decision-cli/src/features/loop_inspect/mod.rs:85:4\n   |\n85 | fn handler_internal(detail: String) -> HandlerError {\n   |    ^^^^^^^^^^^^^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:37:5\n   |\n37 |     Completed,\n   |     ^^^^^^^^^\n   |\n   = note: requested on the command line with `-W missing-docs`\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/core/dispatch_session.rs:38:5\n   |\n38 |     Failed,\n   |     ^^^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:10:5\n   |\n10 |     Text,\n   |     ^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:11:5\n   |\n11 |     Tsv,\n   |     ^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:12:5\n   |\n12 |     Json,\n   |     ^^^^\n\nwarning: missing documentation for an associated function\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/format.rs:16:5\n   |\n16 |     pub fn parse(s: &str) -> Result<Self, String> {\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli/src/features/ft_111_drive_ship_all/sweep.rs:19:5\n   |\n19 |     Done,\n   |     ^^^^\n\nwarning: missing documentation for a variant\n  --> crates/decision-cli" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-202/BNCH-002/ts-1780581112779637966> .
+
+<https://decision-cli.dev/ns/result/VGR-614/step/2>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-202/2> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T13:51:53.120Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T13:51:53.121Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: scripts/checks/tc-372-cluster-audit-judge-worker-negative.sh: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-202/BNCH-002/ts-1780581112779637966> .
+
+<https://decision-cli.dev/ns/result/VGR-614/step/3>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-202/3> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T13:51:53.121Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T13:51:53.255Z"^^xsd:dateTime ;
+    dec:exitCode 101 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "error: no test target named `ft_139_cluster_dispatch_end_to_end` in `decision-cli` package\nhelp: available test targets:\n    anthropic_cache_breakpoint\n    bundle_stakes\n    capability_resolver\n    capability_shape\n    dispatch_no_escalation\n    escalate_confidence_07\n    escalate_foundational_chain\n    escalate_unimplementable_critical\n    feedback_class_vocab\n    feedback_closed_provo\n    feedback_lifecycle\n    ft_019_verifier_role_catalog\n    ft_022_verifier_dispatch_subscription\n    ft_024_agreement_metric\n    ft_025_session_show_paired\n    ft_069_mechanical_provenance\n    ft_070_motivational_vocabulary\n    ft_071_boundary_artifact\n    ft_072_per_type_shapes\n    ft_073_graphwriter_shacl\n    ft_075_full_chain_query\n    ft_076_brief_artifact_type\n    ft_112_migration\n    ft_131_classification_table\n    ft_131_cycle_detection\n    ft_131_dispatch_tc_chain\n    ft_131_dispatch_vg_chain\n    ft_131_no_author_parity\n    ft_131_stuck_reasons\n    ft_136_mcp_merge_no_collision\n    ft_136_product_forwards\n    ft_137_finalize_allowlist\n    ft_138_def_ready_implementer_feedback\n    reasoning_effort_mapping\n    role_binding_shape\n    session_escalation_edges\n    tc_012_session_invariants\n    tc_014_in_stream_invariant\n    tc_015_bootstrap_session\n    tc_018_finalize_commit_and_status\n    tc_019_bootstrap_subscriptions\n    tc_052_every_dec_verify_subcommand_has_paired_cli_and_mcp\n    tc_054_verificationenvironment_shacl_shape_rejects_malfor\n    tc_055_dec_init_seeds_ephemeral_cli_env_idempotently\n    tc_056_each_verificationstep_kind_shacl_shape_validates_i\n    tc_057_verificationgraph_round_trips_turtle_store_preserv\n    tc_058_safety_check_raises_when_step_requiredops_not_subs\n    tc_059_streamwriter_invokes_safety_check_on_every_graph_a\n    tc_060_dec_verify_env_new_produces_identical_artifact_via\n    tc_061_dec_verify_env_list_returns_ordered_envs_with_safe\n    tc_062_dec_verify_env_show_returns_full_env_detail_and_ar\n    tc_063_dec_verify_graph_new_accepts_empty_steps_and_rejec\n    tc_064_dec_verify_graph_list_returns_graphs_with_step_cou\n    tc_065_dec_verify_graph_show_renders_header_and_ordered_s\n    tc_066_dec_verify_step_add_appends_with_per_kind_shacl_va\n    tc_067_dec_verify_step_add_refuses_persistence_on_safetyv\n    tc_068_coverage_primitive_reports_covered_and_uncovered_t\n    tc_069_coverage_primitive_treats_absent_providesevidencef\n    tc_070_matcher_returns_completesingle_when_one_graph_cove\n    tc_071_matcher_returns_completemultiple_deterministic_gre\n    tc_072_matcher_excludes_graphs_in_different_environment_f\n    tc_073_chain_integrity_gate_refuses_dispatch_when_uncover\n    tc_074_chain_integrity_gate_writes_coveragewaiver_artifac\n    tc_075_chain_integrity_gate_rejects_waiver_reason_shorter\n    tc_079_dec_verify_graph_generate_persists_proposed_graph\n    tc_080_dec_verify_graph_generate_skips_worker_when_matche\n    tc_081_dec_verify_graph_generate_rolls_back_graph_when_an\n    tc_082_mcp_generate_then_accept_refuses_stale_proposals_a\n    tc_083_auto_dispatch_subscription_emits_one_event_per_unc\n    tc_084_auto_dispatch_subscription_dedup_ttl_prevents_repe\n    tc_085_auto_dispatched_session_lands_in_pending_review_wi\n    tc_087_internal_product_graph_source_of_truth\n    tc_124_migration_backfills_mechanical_and_flags_orphans\n    tc_128_workerimage_artifact_validates_and_is_discoverable\n    tc_129_workerimagesubmission_validates_as_a_boundaryartif\n    tc_130_worker_oci_image_manifest_exposes_capability_tags\n    tc_131_keyless_cosign_signature_verifies_against_the_trust_list\n    tc_132_identity_verifier_produces_a_signatureverdict_for\n    tc_133_cyclonedx_sbom_is_reachable_as_the_image_s_oci_ref\n    tc_134_workercurator_session_admits_a_clean_submission_an\n    tc_135_reusable_release_workflow_runs_end_to_end\n    tc_136_post_submissions_accepts_a_valid_submission_and_re\n    tc_137_pipeline_cli_workers_run_pulls_a_qualified_image_a\n    tc_138_litellm_proxy_routes_a_worker_call_by_capability_t\n    tc_139_verify_graph_author_worker_is_spawned_through_the\n    tc_140_verify_graph_author_capability_binding\n    tc_150_pipel" ;
+    dec:errorMessage "expected exit 0, got 101" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-202/BNCH-002/ts-1780581112779637966> .
+
+<https://decision-cli.dev/ns/result/VGR-614/step/4>
+    a dec:VerificationStepTrace ;
+    dec:tracesStep <https://decision-cli.dev/ns/step/VG-202/4> ;
+    dec:outcome "fail" ;
+    dec:startedAt "2026-06-04T13:51:53.255Z"^^xsd:dateTime ;
+    dec:endedAt "2026-06-04T13:51:53.257Z"^^xsd:dateTime ;
+    dec:exitCode 127 ;
+    dec:stdoutExcerpt "" ;
+    dec:stderrExcerpt "bash: scripts/checks/tc-374-cluster-audit-judge-worker-positive.sh: No such file or directory\n" ;
+    dec:errorMessage "expected exit 0, got 127" ;
+    prov:wasGeneratedBy <https://decision-cli.dev/ns/activity/verify-graph-run/VG-202/BNCH-002/ts-1780581112779637966> .
