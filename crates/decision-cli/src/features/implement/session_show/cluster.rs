@@ -272,6 +272,11 @@ struct ClusterHeader {
 }
 
 fn fetch_cluster_cell(store: &Store, session_iri: &str) -> Result<Option<CellRow>> {
+    // Mandatory anchor (`<iri> a dec:Session`) is required — without it,
+    // `GRAPH ?g { OPTIONAL ... }` matches every graph including ones
+    // where the cell IRI has zero triples, producing phantom all-None
+    // rows. The mandatory anchor restricts the match to the one graph
+    // where the cell is typed as a Session.
     let q = format!(
         "PREFIX dec: <{DEC_NS}>
 PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -280,6 +285,7 @@ SELECT ?cap ?status ?src ?started ?ended ?parent
        (MAX(?ch) AS ?chMax) (MAX(?out) AS ?outMax)
 WHERE {{
   GRAPH ?g {{
+    <{session_iri}> a dec:Session .
     OPTIONAL {{ <{session_iri}> dec:capability ?cap }}
     OPTIONAL {{ <{session_iri}> dec:cellStatus ?status }}
     OPTIONAL {{ <{session_iri}> dec:usageSource ?src }}
@@ -334,12 +340,16 @@ fn fetch_cluster_header(store: &Store, cluster_iri: &str) -> Result<Option<Clust
     // Multiple outcome triples may exist on the same cluster IRI across
     // re-runs. Pick the most-recent by ?ended ordering; count the total
     // so the renderer can note "(N runs aggregated)".
+    // Mandatory anchor (`<iri> a dec:ClusterDispatch`) restricts the
+    // match to the graph where the cluster is typed (avoiding phantom
+    // all-None rows from cross-graph OPTIONAL).
     let q = format!(
         "PREFIX dec: <{DEC_NS}>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 SELECT ?feature ?taskType ?outcome ?started ?ended
 WHERE {{
   GRAPH ?g {{
+    <{cluster_iri}> a dec:ClusterDispatch .
     OPTIONAL {{ <{cluster_iri}> dec:featureId ?feature }}
     OPTIONAL {{ <{cluster_iri}> dec:taskType ?taskType }}
     OPTIONAL {{ <{cluster_iri}> dec:clusterOutcome ?outcome }}

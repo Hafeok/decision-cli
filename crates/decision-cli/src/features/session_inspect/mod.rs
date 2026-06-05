@@ -85,22 +85,68 @@ pub fn list(workdir: &Path, limit: usize, offset: usize) -> Result<Vec<SessionSu
     Ok(out)
 }
 
-/// Build the SPARQL `SELECT` used by [`list`]. `ORDER BY ?started` keeps
-/// results stable; `OPTIONAL` on feature/status preserves rows for
-/// sessions not yet tagged. Numeric LIMIT/OFFSET are interpolated since
-/// SPARQL has no portable numeric bind.
+/// Build the SPARQL `SELECT` used by [`list`].
+///
+/// FT-162 — three UNION branches so cluster IRIs (FT-146 / FT-161) are
+/// reachable from `dec session list` and cluster cells render with their
+/// parent's feature/status:
+///
+/// 1. **Slice-1 sessions** — `dec:Session` with no `prov:wasInformedBy`
+///    parent. Projects `dec:featureId`, `dec:status`, `prov:atTime`.
+/// 2. **Cluster cell sessions** — `dec:Session` whose parent is reached
+///    via `prov:wasInformedBy`. Lifts `dec:featureId` off the parent and
+///    surfaces `dec:cellStatus` as the row's status.
+/// 3. **Cluster dispatch activities** — `dec:ClusterDispatch` (the
+///    parent activities themselves). Projects `dec:featureId` and
+///    `dec:clusterOutcome` directly.
+///
+/// `GROUP BY ?session` dedupes re-dispatched cells (multiple
+/// `prov:startedAtTime` quads land on the same IRI across runs); MAX
+/// picks the latest start, SAMPLE picks any feature/status across the
+/// duplicates. `ORDER BY ?started` over the union keeps the existing
+/// chronological-ascending semantic.
 fn build_session_list_query(limit: usize, offset: usize) -> String {
     format!(
         "PREFIX dec: <{DEC_NS}>
 PREFIX prov: <{PROV_NS}>
-SELECT ?session ?feature ?started ?status WHERE {{
+SELECT ?session
+       (SAMPLE(?f)  AS ?feature)
+       (MAX(?s)     AS ?started)
+       (SAMPLE(?st) AS ?status)
+WHERE {{
   GRAPH ?g {{
-    ?session a dec:Session .
-    OPTIONAL {{ ?session prov:atTime ?started }}
-    OPTIONAL {{ ?session dec:featureId ?feature }}
-    OPTIONAL {{ ?session dec:status ?status }}
+    {{
+      # Branch 1 — slice-1 dec:Session (implementer / verifier shape).
+      ?session a dec:Session .
+      FILTER NOT EXISTS {{ ?session prov:wasInformedBy ?_parent }}
+      OPTIONAL {{ ?session prov:atTime ?s }}
+      OPTIONAL {{ ?session dec:featureId ?f }}
+      OPTIONAL {{ ?session dec:status ?st }}
+    }}
+    UNION
+    {{
+      # Branch 2 — cluster cell session (FT-146). Lift featureId off
+      # the parent activity via prov:wasInformedBy.
+      ?session a dec:Session ;
+               prov:wasInformedBy ?cluster .
+      OPTIONAL {{ ?cluster dec:featureId ?f }}
+      OPTIONAL {{ ?session prov:startedAtTime ?s }}
+      OPTIONAL {{ ?session dec:cellStatus ?st }}
+    }}
+    UNION
+    {{
+      # Branch 3 — cluster dispatch activity (FT-146 / FT-161). The
+      # parent IRI itself; clusterOutcome reuses the ?status column.
+      ?session a dec:ClusterDispatch .
+      OPTIONAL {{ ?session dec:featureId ?f }}
+      OPTIONAL {{ ?session prov:startedAtTime ?s }}
+      OPTIONAL {{ ?session dec:clusterOutcome ?st }}
+    }}
   }}
-}} ORDER BY ?started LIMIT {limit} OFFSET {offset}"
+}}
+GROUP BY ?session
+ORDER BY ?started
+LIMIT {limit} OFFSET {offset}"
     )
 }
 
