@@ -10,3 +10,9 @@
 # emitter + round-trip tests. First "non-prototype" use of the cluster
 # pattern per FT-147's own §Description.
 "FT-147" = "add-artifact-type"
+
+# FT-166 — per-feature parameter values consumed by cluster_dispatch
+# when resolving cell output_paths. The add-artifact-type cluster's
+# cells reference {artifact_name} in their templated paths.
+[parameters."FT-147"]
+artifact_name = "archetype"

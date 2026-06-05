@@ -16,6 +16,29 @@ pub struct TaskTypeDecl {
     pub cells: Vec<CellDecl>,
     /// Pointer + timeout for the cluster's coherence audit script.
     pub coherence_audit: CoherenceAuditSpec,
+    /// FT-166: parameters cells may reference in their `output_path` via
+    /// `{name}` placeholders. Per-feature values land in
+    /// `.dec/task-types.toml` under `[parameters."<feature_id>"]`.
+    /// Empty list ≡ no parameters; cluster falls back to FT-139 flat
+    /// convention regardless of feature.
+    pub parameters: Vec<TaskTypeParameter>,
+}
+
+/// FT-166: a parameter a TaskType's cells can interpolate into their
+/// `output_path`. Per-feature values land in `.dec/task-types.toml` under
+/// `[parameters."<feature_id>"]`. A parameter with no default value is
+/// required — dispatch fails fast when a feature does not supply it.
+#[derive(Debug, Clone)]
+pub struct TaskTypeParameter {
+    /// Snake-case identifier the cell references via `{name}` in its
+    /// `output_path`.
+    pub name: String,
+    /// Operator-facing description surfaced in dispatch errors when the
+    /// parameter is missing.
+    pub description: String,
+    /// Default value applied when no per-feature override is configured.
+    /// `None` ≡ required parameter.
+    pub default: Option<String>,
 }
 
 /// One cell in a cluster. Each cell emits one typed artifact via one
@@ -38,6 +61,17 @@ pub struct CellDecl {
     /// Names of upstream cells this cell derives from. Used by
     /// `topo::topo_order` to compute dispatch order.
     pub derived_from: Vec<String>,
+    /// FT-166: workspace-relative output path with optional `{parameter}`
+    /// placeholders resolved at dispatch time. Empty path → fall back to
+    /// the FT-139 flat convention `<cell_name>.<ext>` via
+    /// `cluster_dispatch::cell_filename`.
+    ///
+    /// Examples:
+    /// - `"crates/decision-cli/src/core/ontology/{artifact_name}.rs"`
+    /// - `"workers/{worker_name}/src/{worker_name}/agent/loop.py"`
+    /// - `""` (uses flat convention — backwards-compat with FT-145's
+    ///   `add-cli-subcommand` cluster).
+    pub output_path: PathBuf,
 }
 
 /// Pointer to the script that runs the cluster's coherence audit and

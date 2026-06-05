@@ -41,23 +41,23 @@ def check_no_python_files(fixture: Path) -> None:
 
 
 def check_struct_and_shape_present(fixture: Path) -> None:
-    rs_files = list(fixture.glob("*.rs"))
+    rs_files = list(fixture.rglob("*.rs"))
     if not rs_files:
         die(
             "rust_struct",
             "no .rs files in fixture; artifact-type cluster emits Rust struct + parser + emitter",
         )
-    ttl_files = list(fixture.glob("*.ttl"))
+    ttl_files = list(fixture.rglob("*.ttl"))
     if not ttl_files:
         die("shacl_shape", "no .ttl SHACL shape in fixture")
 
 
 def check_shacl_covers_struct_fields(fixture: Path) -> None:
-    struct_file = next((f for f in fixture.glob("*.rs") if "struct" in f.stem), None)
+    struct_file = next((f for f in fixture.rglob("*.rs") if "struct" in f.stem), None)
     if struct_file is None:
         return  # No struct to compare; struct-presence check already fired.
     struct_body = read(struct_file)
-    shape_body = read(next(fixture.glob("*.ttl")))
+    shape_body = read(next(fixture.rglob("*.ttl")))
     fields = set(
         re.findall(r"^\s*pub\s+([A-Za-z_][A-Za-z0-9_]*)\s*:", struct_body, re.MULTILINE)
     )

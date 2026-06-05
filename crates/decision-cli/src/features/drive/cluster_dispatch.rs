@@ -124,6 +124,11 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
     // framing of it (limited to ~2000 chars to keep bundles narrow).
     let feature_framing = load_feature_framing(&ctx.product_root, feature_id)?;
 
+    // FT-166: resolve per-feature parameters before any cell dispatches.
+    // Required parameters with no default + no override fail fast here
+    // with a clean operator diagnostic — saves a botched cluster dispatch.
+    let params = resolve_parameters(tt, &ctx.workdir, feature_id)?;
+
     // FT-146: accumulate per-cell SessionRecord input + clamp open/close
     // timestamps on the parent cluster activity. Persistence runs in one
     // mutation after the audit, regardless of cell or audit outcome.
@@ -144,6 +149,7 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
         &order,
         &cluster_dir,
         &feature_framing,
+        &params,
         &mut cell_sessions,
     );
 
@@ -192,6 +198,7 @@ fn run_cells(
     order: &[String],
     cluster_dir: &Path,
     feature_framing: &str,
+    params: &BTreeMap<String, String>,
     cell_sessions: &mut Vec<CellSessionRecord>,
 ) -> Result<()> {
     let mut cell_outputs: BTreeMap<String, String> = BTreeMap::new();
@@ -206,6 +213,11 @@ fn run_cells(
                     cell_name
                 )
             })?;
+
+        // FT-166: resolve the cell's output path within the sandbox via
+        // {parameter} substitution. Cells with empty output_path fall
+        // back to the FT-139 flat-path convention.
+        let resolved_cell_path = resolve_cell_output_path(cell, params)?;
 
         let cell_iri = NamedNode::new_unchecked(format!(
             "urn:dec:cluster-session:{}/{}/{}",
@@ -230,6 +242,7 @@ fn run_cells(
                     cluster_dir,
                     feature_framing,
                     &cell_outputs,
+                    &resolved_cell_path,
                 )
             };
 
@@ -250,7 +263,7 @@ fn run_cells(
                     ended_at,
                 });
 
-                let cell_path = cluster_dir.join(cell_filename(cell));
+                let cell_path = cluster_dir.join(&resolved_cell_path);
                 if let Some(parent) = cell_path.parent() {
                     fs::create_dir_all(parent)?;
                 }
@@ -346,6 +359,79 @@ fn cell_filename(cell: &CellDecl) -> PathBuf {
     }
 }
 
+/// FT-166: resolve the per-feature parameter map. Merges
+/// `.dec/task-types.toml [parameters."<feature_id>"]` values with the
+/// TaskType-declared defaults. Returns an error naming the missing
+/// parameter when a required parameter (no default) is unset — operator
+/// gets a clean diagnostic before any cell dispatch.
+fn resolve_parameters(
+    tt: &TaskTypeDecl,
+    workdir: &Path,
+    feature_id: &str,
+) -> Result<BTreeMap<String, String>> {
+    let mut resolved =
+        crate::features::drive::planners::feature_ship::read_parameters_for_feature(
+            workdir,
+            feature_id,
+        );
+    for param in &tt.parameters {
+        if !resolved.contains_key(&param.name) {
+            match &param.default {
+                Some(default) => {
+                    resolved.insert(param.name.clone(), default.clone());
+                }
+                None => {
+                    return Err(anyhow!(
+                        "cluster_dispatch: task type {:?} requires parameter `{}` ({}) for {}. \
+                         Set it in .dec/task-types.toml:\n  [parameters.\"{feature_id}\"]\n  {} = \"<value>\"",
+                        tt.name,
+                        param.name,
+                        param.description,
+                        feature_id,
+                        param.name,
+                    ));
+                }
+            }
+        }
+    }
+    Ok(resolved)
+}
+
+/// FT-166: substitute `{name}` placeholders in `template` against the
+/// resolved parameter map. Literal — no escaping, no nesting. Used by
+/// `resolve_cell_output_path`.
+fn substitute_params(template: &str, params: &BTreeMap<String, String>) -> String {
+    let mut out = template.to_string();
+    for (k, v) in params {
+        out = out.replace(&format!("{{{k}}}"), v);
+    }
+    out
+}
+
+/// FT-166: resolve a cell's output path within the sandbox. When the
+/// cell declares an `output_path`, substitute parameters and return.
+/// When empty, fall back to the FT-139 flat-path convention via
+/// `cell_filename`. Rejects paths containing `..` after substitution
+/// (sandbox containment guard).
+fn resolve_cell_output_path(
+    cell: &CellDecl,
+    params: &BTreeMap<String, String>,
+) -> Result<PathBuf> {
+    if cell.output_path.as_os_str().is_empty() {
+        return Ok(cell_filename(cell));
+    }
+    let template = cell.output_path.to_string_lossy().into_owned();
+    let resolved = substitute_params(&template, params);
+    if resolved.split('/').any(|seg| seg == "..") {
+        return Err(anyhow!(
+            "cluster_dispatch: cell {:?} resolved output_path contains `..` segment (sandbox containment guard): {:?}",
+            cell.name,
+            resolved
+        ));
+    }
+    Ok(PathBuf::from(resolved))
+}
+
 /// Emit a deterministic-template cell (no LLM). For now, mechanical
 /// cells produce a placeholder that names their derived_from inputs —
 /// enough for the audit to detect the file's presence. Full template
@@ -408,6 +494,7 @@ fn emit_llm_cell(
     cluster_dir: &Path,
     feature_framing: &str,
     upstream: &BTreeMap<String, String>,
+    resolved_cell_path: &Path,
 ) -> Result<(String, Option<WorkerResponseUsage>, NamedNode)> {
     let cap = resolve_default_capability(store, &cell.model_binding_capability_id)
         .with_context(|| {
@@ -419,9 +506,10 @@ fn emit_llm_cell(
     let cell_capability_iri = capability_iri(&cap);
 
     // Build the per-cell bundle: framing + upstream cell outputs +
-    // instruction telling the worker exactly what to write.
-    let cell_filename = cell_filename(cell);
-    let bundle = build_cell_bundle(tt, cell, feature_id, feature_framing, upstream, &cell_filename);
+    // instruction telling the worker exactly what to write (FT-166: the
+    // resolved path may include subdirectories — the bundle surfaces it
+    // verbatim and the worker creates intermediate dirs via write_file).
+    let bundle = build_cell_bundle(tt, cell, feature_id, feature_framing, upstream, resolved_cell_path);
 
     // The worker's workspace_path is the cluster sandbox dir. It writes
     // the cell's output file directly there via the write_file tool.
@@ -473,7 +561,7 @@ fn emit_llm_cell(
     })?;
 
     // Read back what the worker wrote.
-    let written_path = cluster_dir.join(&cell_filename);
+    let written_path = cluster_dir.join(resolved_cell_path);
     let body = fs::read_to_string(&written_path).with_context(|| {
         format!(
             "cell {}/{} did not produce {} (worker may not have invoked write_file)",
@@ -822,6 +910,7 @@ max_turns = "high"
                 script_path: PathBuf::from("scripts/checks/x.py"),
                 timeout_seconds: 60,
             },
+            parameters: vec![],
         };
         let cell = CellDecl {
             name: "emitter".to_string(),
@@ -829,6 +918,7 @@ max_turns = "high"
             prompt_template_path: PathBuf::from("/tmp/x"),
             model_binding_capability_id: "implementer".to_string(),
             derived_from: vec![],
+            output_path: PathBuf::new(),
         };
         let upstream = BTreeMap::new();
         build_cell_bundle(
@@ -912,6 +1002,118 @@ max_turns = "high"
         assert!(
             bundle.contains("never calling `write_file`"),
             "explicit never-calling-write_file mention missing: {bundle}"
+        );
+    }
+
+    /// FT-166 TC: substitute_params replaces every `{name}` placeholder
+    /// against the resolved map. Literal substitution (no escaping, no
+    /// nesting); leaves unmatched placeholders untouched.
+    #[test]
+    fn ft_166_substitute_params_replaces_placeholders() {
+        let mut params = BTreeMap::new();
+        params.insert("artifact_name".to_string(), "archetype".to_string());
+        params.insert("crate_path".to_string(), "decision-cli".to_string());
+        let template = "crates/{crate_path}/src/core/ontology/{artifact_name}/parser.rs";
+        let resolved = substitute_params(template, &params);
+        assert_eq!(
+            resolved,
+            "crates/decision-cli/src/core/ontology/archetype/parser.rs"
+        );
+        // Unmatched placeholder stays literal — no panic, no silent drop.
+        let untouched = substitute_params("{unknown}/x", &params);
+        assert_eq!(untouched, "{unknown}/x");
+    }
+
+    /// FT-166 TC: resolve_cell_output_path returns the substituted path
+    /// when output_path is set, falls back to flat-path convention when
+    /// empty (backwards-compat with FT-145's add-cli-subcommand cluster).
+    #[test]
+    fn ft_166_resolve_cell_output_path_substitutes_or_falls_back() {
+        let mut params = BTreeMap::new();
+        params.insert("artifact_name".to_string(), "feedback".to_string());
+
+        // Templated path — substituted.
+        let cell_templated = CellDecl {
+            name: "rust_struct".to_string(),
+            artifact_type: "rust-source".to_string(),
+            prompt_template_path: PathBuf::new(),
+            model_binding_capability_id: "implementer".to_string(),
+            derived_from: vec![],
+            output_path: PathBuf::from("crates/decision-cli/src/core/ontology/{artifact_name}.rs"),
+        };
+        let resolved = resolve_cell_output_path(&cell_templated, &params).unwrap();
+        assert_eq!(
+            resolved,
+            PathBuf::from("crates/decision-cli/src/core/ontology/feedback.rs")
+        );
+
+        // Empty output_path — falls back to flat convention (cell_filename).
+        let cell_flat = CellDecl {
+            name: "clap_args_module".to_string(),
+            artifact_type: "rust-source".to_string(),
+            prompt_template_path: PathBuf::new(),
+            model_binding_capability_id: "implementer".to_string(),
+            derived_from: vec![],
+            output_path: PathBuf::new(),
+        };
+        let resolved_flat = resolve_cell_output_path(&cell_flat, &params).unwrap();
+        assert_eq!(resolved_flat, PathBuf::from("clap_args_module.rs"));
+    }
+
+    /// FT-166 TC: required parameter (no default + no override) surfaces
+    /// a clean error before any cell dispatch. Operator gets the
+    /// missing-parameter diagnostic naming the TOML location to populate.
+    #[test]
+    fn ft_166_resolve_parameters_fails_fast_on_missing_required_param() {
+        use crate::core::task_type::TaskTypeParameter;
+        let tt = TaskTypeDecl {
+            name: "test-required-param".to_string(),
+            cells: vec![],
+            coherence_audit: crate::core::task_type::CoherenceAuditSpec {
+                script_path: PathBuf::from("x"),
+                timeout_seconds: 60,
+            },
+            parameters: vec![TaskTypeParameter {
+                name: "artifact_name".to_string(),
+                description: "Test required parameter.".to_string(),
+                default: None,
+            }],
+        };
+        // Tempdir has no .dec/task-types.toml → param absent.
+        let tmp = tempfile::tempdir().unwrap();
+        let err = resolve_parameters(&tt, tmp.path(), "FT-Tmissing").expect_err("required param missing");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("requires parameter `artifact_name`"),
+            "missing-parameter diagnostic does not name the parameter: {msg}"
+        );
+        assert!(
+            msg.contains("[parameters.\"FT-Tmissing\"]"),
+            "diagnostic does not surface the TOML table to populate: {msg}"
+        );
+    }
+
+    /// FT-166 TC: path-traversal guard rejects resolved paths containing
+    /// `..` segments. Sandbox containment is structural; a malicious or
+    /// misconfigured parameter cannot escape the cluster sandbox.
+    #[test]
+    fn ft_166_resolve_cell_output_path_rejects_dotdot_traversal() {
+        let mut params = BTreeMap::new();
+        // Operator typo or hostile config injects "..".
+        params.insert("artifact_name".to_string(), "../../etc/passwd".to_string());
+        let cell = CellDecl {
+            name: "rust_struct".to_string(),
+            artifact_type: "rust-source".to_string(),
+            prompt_template_path: PathBuf::new(),
+            model_binding_capability_id: "implementer".to_string(),
+            derived_from: vec![],
+            output_path: PathBuf::from("crates/{artifact_name}.rs"),
+        };
+        let err = resolve_cell_output_path(&cell, &params).expect_err("traversal must reject");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("sandbox containment guard"),
+            "traversal diagnostic missing: {msg}"
         );
     }
 

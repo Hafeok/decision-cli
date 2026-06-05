@@ -22,6 +22,6 @@ pub mod registry;
 #[cfg(test)]
 pub mod tests;
 
-pub use types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl};
+pub use types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};
 pub use topo::{topo_order, TopoError};
 pub use registry::{lookup, registered_names};

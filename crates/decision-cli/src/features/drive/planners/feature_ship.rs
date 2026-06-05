@@ -597,6 +597,39 @@ pub fn read_max_turns_for_task_type(
     u32::try_from(n).ok()
 }
 
+/// FT-166: read `[parameters."<feature_id>"]` per-feature parameter map
+/// from `.dec/task-types.toml`. Returns an empty map on any IO/parse
+/// failure — defensive so dispatch never errors over misconfig. Cells
+/// requiring a parameter that's not in the map fall back to the
+/// TaskType-declared default; cells without a default fail dispatch
+/// with a clean diagnostic.
+#[must_use]
+pub fn read_parameters_for_feature(
+    cwd: &std::path::Path,
+    feature_id: &str,
+) -> std::collections::BTreeMap<String, String> {
+    let mut out = std::collections::BTreeMap::new();
+    let config_path = cwd.join(".dec").join("task-types.toml");
+    let Ok(body) = std::fs::read_to_string(&config_path) else {
+        return out;
+    };
+    let Ok(value): Result<toml::Value, _> = body.parse() else {
+        return out;
+    };
+    let Some(parameters) = value.get("parameters").and_then(|v| v.as_table()) else {
+        return out;
+    };
+    let Some(feature_params) = parameters.get(feature_id).and_then(|v| v.as_table()) else {
+        return out;
+    };
+    for (k, v) in feature_params {
+        if let Some(s) = v.as_str() {
+            out.insert(k.clone(), s.to_string());
+        }
+    }
+    out
+}
+
 // ---------------------------------------------------------------------
 // FT-139 / ADR-080 — TaskType classifier branch.
 // ---------------------------------------------------------------------

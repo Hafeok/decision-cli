@@ -7,7 +7,7 @@
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use super::types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl};
+use super::types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};
 
 /// Returns the static TaskType registry, lazily built on first
 /// access.
@@ -54,6 +54,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                 ),
                 model_binding_capability_id: String::new(), // mechanical / no LLM
                 derived_from: Vec::new(),
+                output_path: PathBuf::new(),
             },
             CellDecl {
                 name: "pydantic_io_models".to_string(),
@@ -64,6 +65,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                 ),
                 model_binding_capability_id: "implementer".to_string(),
                 derived_from: Vec::new(),
+                output_path: PathBuf::new(),
             },
             CellDecl {
                 name: "system_prompt".to_string(),
@@ -74,6 +76,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                 ),
                 model_binding_capability_id: "implementer".to_string(),
                 derived_from: vec!["pydantic_io_models".to_string()],
+                output_path: PathBuf::new(),
             },
             CellDecl {
                 name: "agent_loop".to_string(),
@@ -88,6 +91,7 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "system_prompt".to_string(),
                     "capability_binding".to_string(),
                 ],
+                output_path: PathBuf::new(),
             },
             CellDecl {
                 name: "unit_tests".to_string(),
@@ -101,12 +105,14 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "pydantic_io_models".to_string(),
                     "system_prompt".to_string(),
                 ],
+                output_path: PathBuf::new(),
             },
         ],
         coherence_audit: CoherenceAuditSpec {
             script_path: PathBuf::from("scripts/checks/cluster-audit-add-judge-worker.py"),
             timeout_seconds: 60,
         },
+        parameters: Vec::new(),
     }
 }
 
@@ -123,16 +129,17 @@ fn add_author_worker() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "add-author-worker".to_string(),
         cells: vec![
-            cell("capability_binding", "n-quads", here, "", &[]),
-            cell("pydantic_io_models", "python-module", here, "implementer", &[]),
-            cell("system_prompt", "markdown", here, "implementer", &["pydantic_io_models"]),
-            cell("fixtures_example_inputs", "json-fixtures", here, "", &["pydantic_io_models"]),
+            cell("capability_binding", "n-quads", here, "", &[], ""),
+            cell("pydantic_io_models", "python-module", here, "implementer", &[], ""),
+            cell("system_prompt", "markdown", here, "implementer", &["pydantic_io_models"], ""),
+            cell("fixtures_example_inputs", "json-fixtures", here, "", &["pydantic_io_models"], ""),
             cell(
                 "agent_loop",
                 "python-module",
                 here,
                 "implementer",
                 &["pydantic_io_models", "system_prompt", "capability_binding"],
+                "",
             ),
             cell(
                 "unit_tests",
@@ -140,12 +147,14 @@ fn add_author_worker() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["pydantic_io_models", "fixtures_example_inputs", "system_prompt"],
+                "",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
             script_path: PathBuf::from("scripts/checks/cluster-audit-add-author-worker.py"),
             timeout_seconds: 60,
         },
+        parameters: Vec::new(),
     }
 }
 
@@ -160,15 +169,40 @@ fn add_artifact_type() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "add-artifact-type".to_string(),
         cells: vec![
-            cell("rust_struct", "rust-source", here, "implementer", &[]),
-            cell("shacl_shape", "turtle", here, "implementer", &["rust_struct"]),
-            cell("iri_module_consts", "rust-source", here, "", &["rust_struct"]),
+            // FT-166: codebase-shaped paths matching the witnessed FT-147
+            // emission. The {artifact_name} placeholder is supplied per
+            // feature via .dec/task-types.toml [parameters."FT-NNN"].
+            cell(
+                "rust_struct",
+                "rust-source",
+                here,
+                "implementer",
+                &[],
+                "crates/decision-cli/src/core/ontology/{artifact_name}.rs",
+            ),
+            cell(
+                "shacl_shape",
+                "turtle",
+                here,
+                "implementer",
+                &["rust_struct"],
+                "crates/decision-cli/src/core/ontology/shapes/{artifact_name}.shacl.ttl",
+            ),
+            cell(
+                "iri_module_consts",
+                "rust-source",
+                here,
+                "",
+                &["rust_struct"],
+                "crates/decision-cli/src/core/vocab/{artifact_name}.rs",
+            ),
             cell(
                 "parser",
                 "rust-source",
                 here,
                 "implementer",
                 &["rust_struct", "iri_module_consts"],
+                "crates/decision-cli/src/core/ontology/{artifact_name}/parser.rs",
             ),
             cell(
                 "emitter",
@@ -176,6 +210,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["rust_struct", "iri_module_consts"],
+                "crates/decision-cli/src/core/ontology/{artifact_name}/emitter.rs",
             ),
             cell(
                 "round_trip_tests",
@@ -183,12 +218,20 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["rust_struct", "shacl_shape", "parser", "emitter"],
+                "crates/decision-cli/src/core/ontology/{artifact_name}/tests.rs",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
             script_path: PathBuf::from("scripts/checks/cluster-audit-add-artifact-type.py"),
             timeout_seconds: 60,
         },
+        parameters: vec![TaskTypeParameter {
+            name: "artifact_name".to_string(),
+            description:
+                "Snake-case identifier for the artifact type (e.g. `archetype`, `feedback`)."
+                    .to_string(),
+            default: None,
+        }],
     }
 }
 
@@ -204,13 +247,14 @@ fn add_cli_subcommand() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "add-cli-subcommand".to_string(),
         cells: vec![
-            cell("clap_args_module", "rust-source", here, "implementer", &[]),
+            cell("clap_args_module", "rust-source", here, "implementer", &[], ""),
             cell(
                 "handler_module",
                 "rust-source",
                 here,
                 "implementer",
                 &["clap_args_module"],
+                "",
             ),
             cell(
                 "registration_wiring",
@@ -218,6 +262,7 @@ fn add_cli_subcommand() -> TaskTypeDecl {
                 here,
                 "",
                 &["clap_args_module", "handler_module"],
+                "",
             ),
             cell(
                 "mcp_tool_shim",
@@ -225,6 +270,7 @@ fn add_cli_subcommand() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["handler_module"],
+                "",
             ),
             cell(
                 "integration_test",
@@ -232,6 +278,7 @@ fn add_cli_subcommand() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["clap_args_module", "handler_module"],
+                "",
             ),
             cell(
                 "help_doc_string",
@@ -239,12 +286,14 @@ fn add_cli_subcommand() -> TaskTypeDecl {
                 here,
                 "",
                 &["clap_args_module"],
+                "",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
             script_path: PathBuf::from("scripts/checks/cluster-audit-add-cli-subcommand.py"),
             timeout_seconds: 60,
         },
+        parameters: Vec::new(),
     }
 }
 
@@ -260,13 +309,14 @@ fn extend_planner_classifier() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "extend-planner-classifier".to_string(),
         cells: vec![
-            cell("inspector_trait_method", "rust-source", here, "implementer", &[]),
+            cell("inspector_trait_method", "rust-source", here, "implementer", &[], ""),
             cell(
                 "inspector_default_impl",
                 "rust-source",
                 here,
                 "",
                 &["inspector_trait_method"],
+                "",
             ),
             cell(
                 "inspector_production_impl",
@@ -274,6 +324,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["inspector_trait_method"],
+                "",
             ),
             cell(
                 "classifier_row",
@@ -281,6 +332,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["inspector_trait_method", "inspector_production_impl"],
+                "",
             ),
             cell(
                 "state_hash_update",
@@ -288,6 +340,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["inspector_trait_method", "classifier_row"],
+                "",
             ),
             cell(
                 "unit_tests",
@@ -299,6 +352,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
                     "classifier_row",
                     "state_hash_update",
                 ],
+                "",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
@@ -307,6 +361,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
             ),
             timeout_seconds: 60,
         },
+        parameters: Vec::new(),
     }
 }
 
@@ -323,13 +378,14 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "extend-role-catalog-seed".to_string(),
         cells: vec![
-            cell("iri_constants", "rust-source", here, "", &[]),
+            cell("iri_constants", "rust-source", here, "", &[], ""),
             cell(
                 "seed_quad_function",
                 "rust-source",
                 here,
                 "implementer",
                 &["iri_constants"],
+                "",
             ),
             cell(
                 "init_pipeline_wiring",
@@ -337,6 +393,7 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
                 here,
                 "",
                 &["seed_quad_function"],
+                "",
             ),
             cell(
                 "shacl_shape_extension",
@@ -344,6 +401,7 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["iri_constants", "seed_quad_function"],
+                "",
             ),
             cell(
                 "role_struct_field_extension",
@@ -351,6 +409,7 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["iri_constants"],
+                "",
             ),
             cell(
                 "round_trip_tests",
@@ -363,6 +422,7 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
                     "shacl_shape_extension",
                     "role_struct_field_extension",
                 ],
+                "",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
@@ -371,18 +431,21 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
             ),
             timeout_seconds: 60,
         },
+        parameters: Vec::new(),
     }
 }
 
 /// Local helper for terser registry entries. Captures the common
 /// shape of a CellDecl construction so each TaskType's `vec![]`
-/// stays readable.
+/// stays readable. Backwards-compat: pass `""` for `output_path` to
+/// fall back to FT-139's flat-path convention.
 fn cell(
     name: &str,
     artifact_type: &str,
     template_dir: &str,
     capability_id: &str,
     derived_from: &[&str],
+    output_path: &str,
 ) -> super::types::CellDecl {
     super::types::CellDecl {
         name: name.to_string(),
@@ -390,5 +453,6 @@ fn cell(
         prompt_template_path: PathBuf::from(format!("{template_dir}/{name}.tmpl")),
         model_binding_capability_id: capability_id.to_string(),
         derived_from: derived_from.iter().map(|s| (*s).to_string()).collect(),
+        output_path: PathBuf::from(output_path),
     }
 }
