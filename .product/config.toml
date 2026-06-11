@@ -53,4 +53,6 @@ completeness-severity = "warning"
 # Per-feature opt-out via the feature's `adrs-rejected:` frontmatter list.
 # ADR-072 (≥4 linked TCs) is a universal quality gate — every feature
 # respects it; per-feature acknowledgement is noise.
-default-acknowledged-cross-cutting = ["ADR-072"]
+# ADR-086 (crate topology) is a workspace-wide structural rule enforced by
+# Cargo + TC-411/TC-412; per-feature acknowledgement is likewise noise.
+default-acknowledged-cross-cutting = ["ADR-072", "ADR-086"]
