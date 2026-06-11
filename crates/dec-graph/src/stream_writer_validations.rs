@@ -12,6 +12,7 @@ use crate::ontology::verdict::validate_quads as validate_verdict_quads;
 use crate::ontology::verification_bench::validate_quads as validate_env_quads;
 use crate::ontology::verification_graph::validate_quads as validate_graph_quads;
 use crate::ontology::verification_result::validate_quads_with_store as validate_result_quads_with_store;
+use dec_ontology::ontology::archetype::validate_quads as validate_archetype_quads;
 use dec_ontology::ontology::feedback::validate_quads as validate_feedback_quads;
 use oxigraph::store::Store;
 
@@ -23,6 +24,17 @@ pub(super) fn validate_verdicts(quads: &[Quad]) -> Result<()> {
     validate_verdict_quads(quads).map_err(|err| {
         anyhow!(
             "SHACL violation: verification verdict mutation refused\n{}",
+            err.report
+        )
+    })
+}
+
+/// SHACL-validate every `dec:Archetype` subject present in `quads`
+/// (FT-147 / ADR-082 / ADR-084 §1 — E102 fires here).
+pub(super) fn validate_archetypes(quads: &[Quad]) -> Result<()> {
+    validate_archetype_quads(quads).map_err(|err| {
+        anyhow!(
+            "SHACL violation: archetype mutation refused\n{}",
             err.report
         )
     })

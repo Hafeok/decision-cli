@@ -2,14 +2,18 @@
 id: FT-147
 title: 'decision-cli: Archetype artifact type and SHACL shape — the catalog layer above TaskType'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-167
 adrs:
 - ADR-082
 - ADR-084
 - ADR-085
-tests: []
+tests:
+- TC-421
+- TC-422
+- TC-423
+- TC-424
 domains:
 - api
 - data-model

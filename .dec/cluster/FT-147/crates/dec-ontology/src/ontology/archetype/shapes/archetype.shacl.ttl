@@ -1,0 +1,65 @@
+@prefix : <https://decisionframework.com/ontology/archetype#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:ArchetypeShape
+    a sh:NodeShape ;
+    sh:targetClass :Archetype ;
+    sh:property [
+        sh:path :title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :status ;
+        sh:in ("candidate" "standard" "quarantined") ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :applicationContract ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :infrastructureContractTemplate ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :infrastructureContractInstances ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path :applicationTaskTypes ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path :infrastructureTaskTypes ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path :archetypeAudits ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path :seamAudits ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :archetypeLayerEstimate ;
+        sh:datatype xsd:float ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :instanceVariance ;
+        sh:in ("low" "medium" "high") ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :applicationContractHeldInvariant ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path :coverageNote ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] .

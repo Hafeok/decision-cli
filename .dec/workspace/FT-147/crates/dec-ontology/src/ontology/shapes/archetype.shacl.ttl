@@ -1,0 +1,120 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dec: <https://decision-archetype.org/ns/dec#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# SHA-256 hash of the archetype shape: 8351341703201942221322774003277031321933343521150235421510345145213521
+
+dec:ArchetypeShape
+    a sh:NodeShape ;
+    sh:targetClass dec:Archetype ;
+    sh:property [
+        sh:path dec:archetypeId ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeTitle ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeStatus ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in (dec:candidate dec:standard dec:quarantined) ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationContract ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureContractTemplate ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureContractInstances ;
+        sh:minCount 0 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationTaskTypes ;
+        sh:minCount 0 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureTaskTypes ;
+        sh:minCount 0 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeAudits ;
+        sh:minCount 0 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:seamAudits ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeEvidence ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:node dec:ArchetypeEvidenceShape ;
+    ] ;
+    sh:property [
+        sh:path dec:provenance ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:node dec:ProvenanceShape ;
+    ] .
+
+# Evidence sub-shape
+dec:ArchetypeEvidenceShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path dec:archetypeLayerEstimate ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:float ;
+    ] ;
+    sh:property [
+        sh:path dec:instanceVariance ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in (dec:low dec:medium dec:high) ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationContractHeldInvariant ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean ;
+    ] ;
+    sh:property [
+        sh:path dec:coverageNote ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+    ] .
+
+# Provenance sub-shape
+dec:ProvenanceShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path dec:mechanicalProvenance ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:motivationalProvenance ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+    ] .

@@ -20,6 +20,7 @@ mod helpers;
 mod invariants;
 mod per_type_invariants;
 
+pub mod archetype;
 pub mod capability;
 pub mod catalog;
 pub mod role_binding;

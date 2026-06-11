@@ -8,6 +8,7 @@
 //! `core::ontology::OntologyHandle`, which sits above the store
 //! boundary this crate must not cross (ADR-086).
 
+pub mod archetype;
 pub mod boundary_artifact;
 pub mod capability;
 pub mod catalog;
@@ -16,6 +17,7 @@ pub mod coverage_waiver;
 pub mod feedback;
 pub mod mechanical_provenance;
 pub mod per_type_shapes;
+pub mod provenance;
 pub mod role_binding;
 pub mod session_record;
 pub mod verdict;

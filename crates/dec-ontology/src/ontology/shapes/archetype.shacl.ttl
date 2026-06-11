@@ -1,0 +1,78 @@
+# FT-147 / ADR-082 / ADR-084 — dec:Archetype SHACL shape.
+#
+# Cluster-authored under FT-141's add-artifact-type TaskType; namespace
+# corrected at promotion to the canonical dec vocabulary. The Rust-side
+# mirror enforced at the stream-writer chokepoint is
+# dec_ontology::ontology::archetype::shacl (E102 = ADR-084 §1).
+# Dual provenance composes per FT-072: the mechanical fragment
+# (mechanical-provenance.ttl) targets every dec artifact class.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+dec:ArchetypeShape
+    a sh:NodeShape ;
+    sh:targetClass dec:Archetype ;
+    sh:property [
+        sh:path dec:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:status ;
+        sh:in ("candidate" "standard" "quarantined") ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationContract ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureContractTemplate ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureContractInstance ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationTaskType ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureTaskType ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeAudit ;
+        sh:nodeKind sh:IRI ;
+    ] ;
+    # ADR-084 §1 — E102_ArchetypeMissingSeamAudits.
+    sh:property [
+        sh:path dec:seamAudit ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeLayerEstimate ;
+        sh:datatype xsd:float ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:instanceVariance ;
+        sh:in ("low" "medium" "high") ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationContractHeldInvariant ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:coverageNote ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] .
