@@ -36,7 +36,7 @@ pub mod config;
 pub mod drift;
 pub mod frontmatter;
 
-pub use algorithm::{evaluate_cross_cutting, CrossCuttingRow, CoverageStatus};
+pub use algorithm::{evaluate_cross_cutting, CoverageStatus, CrossCuttingRow};
 pub use config::{load_default_acknowledge, DefaultAcknowledgeConfig};
 pub use drift::{check_drift, AdrSnapshot, DriftWarning, FeatureRejectionRecord};
 pub use frontmatter::{parse_adrs_rejected, AdrsRejectedError, RejectedAdr};

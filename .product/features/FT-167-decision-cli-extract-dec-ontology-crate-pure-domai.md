@@ -2,7 +2,7 @@
 id: FT-167
 title: 'decision-cli: Extract dec-ontology crate — pure domain types, vocab, and SHACL shapes at the center of the workspace'
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-086
@@ -11,12 +11,13 @@ tests:
 - TC-411
 - TC-412
 - TC-413
+- TC-416
 domains: []
 domains-acknowledged:
   ADR-083: ADR-083 governs tech-detail binding levels for archetypes. FT-167 is a pure relocation of existing ontology/vocab modules; no tech detail is bound at any level.
-  ADR-081: ADR-081 governs CLI enumerate/lookup verb pairs. FT-167 is a pure source-tree relocation (core/ontology + core/vocab into crates/dec-ontology) adding no CLI verbs; the dec command surface is byte-identical before and after.
-  ADR-084: ADR-084 mandates seam audits for archetypes. FT-167 ships no archetype; the E102 seam-audit gate lands with FT-147 in the crate this slice creates.
   ADR-082: ADR-082 governs archetype-layer semantics. FT-167 only prepares the crate the archetype artifact types will land in (FT-147–FT-152); it implements no archetype behaviour itself.
+  ADR-084: ADR-084 mandates seam audits for archetypes. FT-167 ships no archetype; the E102 seam-audit gate lands with FT-147 in the crate this slice creates.
+  ADR-081: ADR-081 governs CLI enumerate/lookup verb pairs. FT-167 is a pure source-tree relocation (core/ontology + core/vocab into crates/dec-ontology) adding no CLI verbs; the dec command surface is byte-identical before and after.
 ---
 
 ## Description

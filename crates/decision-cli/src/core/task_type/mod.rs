@@ -15,13 +15,13 @@
 //! Future slices add more TaskTypes (FT-140..FT-144 author them as
 //! feature_specs; their implementation extends the registry here).
 
-pub mod types;
-pub mod topo;
 pub mod registry;
+pub mod topo;
+pub mod types;
 
 #[cfg(test)]
 pub mod tests;
 
-pub use types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};
-pub use topo::{topo_order, TopoError};
 pub use registry::{lookup, registered_names};
+pub use topo::{topo_order, TopoError};
+pub use types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};

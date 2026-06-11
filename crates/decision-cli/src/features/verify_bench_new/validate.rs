@@ -40,16 +40,22 @@ fn validate_fixture_source(
     };
     let trimmed = raw.trim();
     if trimmed.is_empty() {
-        return Err(invalid_fixture_source("fixture_source must be a non-empty string"));
+        return Err(invalid_fixture_source(
+            "fixture_source must be a non-empty string",
+        ));
     }
     if trimmed.starts_with('/') {
-        return Err(invalid_fixture_source("fixture_source must be repo-relative"));
+        return Err(invalid_fixture_source(
+            "fixture_source must be repo-relative",
+        ));
     }
     let p = std::path::Path::new(trimmed);
     if p.components()
         .any(|c| matches!(c, std::path::Component::ParentDir))
     {
-        return Err(invalid_fixture_source("fixture_source must not contain `..`"));
+        return Err(invalid_fixture_source(
+            "fixture_source must not contain `..`",
+        ));
     }
     let Some(workdir) = workdir else {
         return Ok(());

@@ -97,11 +97,11 @@ pub fn all_for_role(
     Ok(out)
 }
 
-fn find_all_iris(
-    store: &Store,
-    role_id: &str,
-) -> Result<Vec<NamedNode>, RoleBindingReadError> {
-    let filter_clause = format!("?b dec:role_id {lit} . ", lit = format_sparql_string(role_id));
+fn find_all_iris(store: &Store, role_id: &str) -> Result<Vec<NamedNode>, RoleBindingReadError> {
+    let filter_clause = format!(
+        "?b dec:role_id {lit} . ",
+        lit = format_sparql_string(role_id)
+    );
     let q = format!(
         "PREFIX dec: <https://decision-cli.dev/ns#> \
          SELECT DISTINCT ?b WHERE {{ \
@@ -165,7 +165,13 @@ fn find_active_iris(
 fn load_binding(store: &Store, iri: &NamedNode) -> Result<RoleBinding, RoleBindingReadError> {
     let quads = collect_subject_quads(store, iri)?;
     require_type(iri, &quads)?;
-    let role_id = take_one_str(iri, &quads, iri, IRI_DEC_ROLE_BINDING_ROLE_ID, "dec:role_id")?;
+    let role_id = take_one_str(
+        iri,
+        &quads,
+        iri,
+        IRI_DEC_ROLE_BINDING_ROLE_ID,
+        "dec:role_id",
+    )?;
     let default_capability = take_one_iri(
         iri,
         &quads,

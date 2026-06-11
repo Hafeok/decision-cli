@@ -79,9 +79,7 @@ fn admitted_identity() -> SignatureIdentity {
 
 fn off_list_identity() -> SignatureIdentity {
     SignatureIdentity::new(
-        format!(
-            "https://github.com/attacker/fork/{WORKFLOW_PATH}@refs/tags/implementer-v9.9.9"
-        ),
+        format!("https://github.com/attacker/fork/{WORKFLOW_PATH}@refs/tags/implementer-v9.9.9"),
         GITHUB_ACTIONS_ISSUER_URI,
     )
 }
@@ -146,8 +144,7 @@ fn assert_dual_provenance(verdict: &SignatureVerdict) {
     // Mechanical: prov:generatedAtTime → xsd:dateTime literal.
     assert!(
         quads.iter().any(|q| {
-            q.subject == subj.clone().into()
-                && q.predicate.as_str() == IRI_PROV_GENERATED_AT_TIME
+            q.subject == subj.clone().into() && q.predicate.as_str() == IRI_PROV_GENERATED_AT_TIME
         }),
         "missing prov:generatedAtTime literal for {}",
         verdict.id
@@ -179,7 +176,8 @@ fn run_class(
     let (class, rationale) = classify(&evidence, trust_list)
         .unwrap_or_else(|err| panic!("classifier failed for {id}: {err}"));
     assert_eq!(
-        class, expected,
+        class,
+        expected,
         "wrong verdict class for {id}: got {}, want {}",
         class.as_str(),
         expected.as_str()
@@ -317,7 +315,10 @@ fn five_verdicts_round_trip_through_store(verdicts: &[SignatureVerdict]) {
         .map(|v| v.verdict_class.as_str().to_string())
         .collect();
     expected.sort();
-    assert_eq!(seen, expected, "round-tripped verdict classes must match input");
+    assert_eq!(
+        seen, expected,
+        "round-tripped verdict classes must match input"
+    );
 }
 
 /// Belt-and-braces — confirm each verdict's serialisation carries the
@@ -366,7 +367,10 @@ fn tc_132_identity_verifier_produces_a_signatureverdict_for() {
         "valid",
     ];
     expected.sort();
-    assert_eq!(seen, expected, "all five outcome classes must appear exactly once");
+    assert_eq!(
+        seen, expected,
+        "all five outcome classes must appear exactly once"
+    );
 
     every_verdict_serialises_a_rationale_literal(&verdicts);
     five_verdicts_round_trip_through_store(&verdicts);

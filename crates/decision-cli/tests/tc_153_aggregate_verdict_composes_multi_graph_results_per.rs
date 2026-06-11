@@ -76,7 +76,8 @@ fn feature_row_1_empty_results() {
     let agg = aggregate_verdict(feature_target(), &[]);
     assert_eq!(agg.verdict, Verdict::Rejected, "row 1: verdict");
     assert!(
-        agg.rationale.contains("no verification graph result covers"),
+        agg.rationale
+            .contains("no verification graph result covers"),
         "row 1: rationale = {:?}",
         agg.rationale
     );
@@ -102,8 +103,14 @@ fn feature_row_2_two_results_each_covers_one_tc_all_approved() {
     assert_eq!(agg.verdict, Verdict::Approved, "row 2: verdict");
     assert!(agg.coverage_gaps.is_empty(), "row 2: no gaps");
     let contributors = as_set(&agg.contributing_results);
-    assert!(contributors.contains(&r1.id), "row 2: contributors include r1");
-    assert!(contributors.contains(&r2.id), "row 2: contributors include r2");
+    assert!(
+        contributors.contains(&r1.id),
+        "row 2: contributors include r1"
+    );
+    assert!(
+        contributors.contains(&r2.id),
+        "row 2: contributors include r2"
+    );
 }
 
 fn feature_row_3_one_result_one_tc_uncovered() {
@@ -188,7 +195,8 @@ fn tc_row_10_uncovered_tc() {
     let agg = aggregate_verdict(AggregationTarget::Tc(TC_A.into()), &[r]);
     assert_eq!(agg.verdict, Verdict::Rejected, "row 10: verdict");
     assert!(
-        agg.rationale.contains("no verification graph result covers"),
+        agg.rationale
+            .contains("no verification graph result covers"),
         "row 10: rationale = {:?}",
         agg.rationale
     );

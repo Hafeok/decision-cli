@@ -69,10 +69,7 @@ fn admitted_identity() -> SignatureIdentity {
 
 fn well_formed_rekor_ref() -> RekorEntryRef {
     // 64 lowercase hex digits — the cosign-canonical Rekor entry UUID shape.
-    RekorEntryRef::sigstore_default(
-        "a".repeat(64),
-        Some(987_654_321),
-    )
+    RekorEntryRef::sigstore_default("a".repeat(64), Some(987_654_321))
 }
 
 /// Success criterion 1: matching identity + well-formed Rekor reference
@@ -85,7 +82,10 @@ fn admits_well_formed_keyless_signature() {
     let outcome = match_signature_identity(&admitted_identity(), &trust)
         .expect("well-formed keyless signature must match the trust list");
     assert_eq!(outcome.entry_index, 0);
-    assert_eq!(outcome.note.as_deref(), Some("implementer worker release line"));
+    assert_eq!(
+        outcome.note.as_deref(),
+        Some("implementer worker release line")
+    );
 
     validate_rekor_entry_ref(&well_formed_rekor_ref())
         .expect("well-formed Rekor entry reference must validate");

@@ -26,8 +26,10 @@ fn tc_194_loop_show_short_id_resolution() {
         short_for_session("https://decision-cli.dev/ns/activity/verify-graph-generate/VG-098"),
         "verify-graph-author@VG-098"
     );
-    assert!(short_for_session("https://decision-cli.dev/ns/activity/implement/disp-abcdef0123456789")
-        .starts_with("implement@"));
+    assert!(short_for_session(
+        "https://decision-cli.dev/ns/activity/implement/disp-abcdef0123456789"
+    )
+    .starts_with("implement@"));
 
     // Artifact IRIs.
     assert_eq!(

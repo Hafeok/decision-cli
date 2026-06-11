@@ -50,8 +50,8 @@ pub use config::{
 };
 pub use enumerate::{enumerate_covering_tuples, EnumerateError, GraphTuple};
 pub use ledger::{
-    entry_iri as ledger_entry_iri, get_entry as ledger_get_entry,
-    record_dispatch as ledger_record, within_ttl as ledger_within_ttl, LedgerEntry, LedgerError,
+    entry_iri as ledger_entry_iri, get_entry as ledger_get_entry, record_dispatch as ledger_record,
+    within_ttl as ledger_within_ttl, LedgerEntry, LedgerError,
 };
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -166,7 +166,13 @@ pub fn dispatch_for_code_change(
         let store = load_store_from_dump(&orchestration_dump_path(workdir))
             .map_err(|e| CodeChangeDispatchError::Store(format!("{e:#}")))?;
         let store = Arc::new(store);
-        if ledger::within_ttl(&store, code_change_iri, feature_id, cfg.dedup_ttl_seconds, now)? {
+        if ledger::within_ttl(
+            &store,
+            code_change_iri,
+            feature_id,
+            cfg.dedup_ttl_seconds,
+            now,
+        )? {
             return Ok(AggregateOutcome {
                 disabled: false,
                 aggregate_session: None,
@@ -214,13 +220,7 @@ pub fn dispatch_for_code_change(
     let mut partial_failures: Vec<String> = Vec::new();
 
     for tuple in &tuples {
-        match dispatch_single_tuple(
-            workdir,
-            tuple,
-            &code_change_node,
-            feature_id,
-            &now_rfc3339,
-        ) {
+        match dispatch_single_tuple(workdir, tuple, &code_change_node, feature_id, &now_rfc3339) {
             Ok((dispatch, result_artifact)) => {
                 if let Some(ra) = result_artifact {
                     runner_results.push(ra);
@@ -246,8 +246,8 @@ pub fn dispatch_for_code_change(
     let store = load_store_from_dump(&orchestration_dump_path(workdir))
         .map_err(|e| CodeChangeDispatchError::Store(format!("{e:#}")))?;
     let store = Arc::new(store);
-    let scope = ActiveScope::load(workdir)
-        .map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
+    let scope =
+        ActiveScope::load(workdir).map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
     let stream_iri = NamedNode::new(&scope.stream_iri)
         .map_err(|e| CodeChangeDispatchError::IriMint(format!("stream iri: {e}")))?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
@@ -281,9 +281,7 @@ pub fn dispatch_for_code_change(
             &feature_iri,
             &agg_session_iri,
             "regression",
-            &format!(
-                "code-change {code_change_iri} produced rejected aggregate for {feature_id}"
-            ),
+            &format!("code-change {code_change_iri} produced rejected aggregate for {feature_id}"),
             &now_rfc3339,
         )?;
         feedback_iris.push(fb);
@@ -314,8 +312,8 @@ fn dispatch_single_tuple(
     let store = load_store_from_dump(&orchestration_dump_path(workdir))
         .map_err(|e| CodeChangeDispatchError::Store(format!("{e:#}")))?;
     let store = Arc::new(store);
-    let scope = ActiveScope::load(workdir)
-        .map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
+    let scope =
+        ActiveScope::load(workdir).map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
     let stream_iri = NamedNode::new(&scope.stream_iri)
         .map_err(|e| CodeChangeDispatchError::IriMint(format!("stream iri: {e}")))?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
@@ -336,15 +334,16 @@ fn dispatch_single_tuple(
     let graph = graph_from_turtle(&graph_path)
         .map_err(|e| CodeChangeDispatchError::Store(format!("parsing graph: {e}")))?;
 
-    let dispatch_quads = crate::core::subscriptions::graph_accepted_dispatch::build_dispatch_event_quads(
-        &event_iri,
-        &graph,
-        &env_node,
-        None,
-        now_rfc3339,
-        TRIGGER_KIND_CODE_CHANGE_COMMITTED,
-        Some(code_change),
-    );
+    let dispatch_quads =
+        crate::core::subscriptions::graph_accepted_dispatch::build_dispatch_event_quads(
+            &event_iri,
+            &graph,
+            &env_node,
+            None,
+            now_rfc3339,
+            TRIGGER_KIND_CODE_CHANGE_COMMITTED,
+            Some(code_change),
+        );
     let mutation = Mutation::insert(dispatch_quads.iter().cloned())
         .with_cause("FT-100 code-change-committed dispatch event");
     writer
@@ -387,27 +386,25 @@ fn dispatch_single_tuple(
     let store_after = load_store_from_dump(&orchestration_dump_path(workdir))
         .map_err(|e| CodeChangeDispatchError::Store(format!("post-run load: {e:#}")))?;
     let store_after = Arc::new(store_after);
-    let scope_after = ActiveScope::load(workdir)
-        .map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
-    let stream_iri_after = NamedNode::new(&scope_after.stream_iri).map_err(|e| {
-        CodeChangeDispatchError::IriMint(format!("post-run stream iri: {e}"))
-    })?;
+    let scope_after =
+        ActiveScope::load(workdir).map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
+    let stream_iri_after = NamedNode::new(&scope_after.stream_iri)
+        .map_err(|e| CodeChangeDispatchError::IriMint(format!("post-run stream iri: {e}")))?;
     let writer_after = StreamWriter::open(Arc::clone(&store_after), stream_iri_after)
         .map_err(|e| CodeChangeDispatchError::Commit(format!("opening writer: {e}")))?;
 
     let session_iri = mint_per_graph_session_iri(&tuple.graph_short, &tuple.env_short);
-    let session_quads =
-        crate::core::subscriptions::graph_accepted_dispatch::build_session_quads(
-            &session_iri,
-            &event_iri,
-            &run_activity,
-            feature_id,
-            &tuple.env_short,
-            now_rfc3339,
-            if completed { "completed" } else { "failed" },
-            result_iri.as_ref(),
-            verdict.as_deref(),
-        );
+    let session_quads = crate::core::subscriptions::graph_accepted_dispatch::build_session_quads(
+        &session_iri,
+        &event_iri,
+        &run_activity,
+        feature_id,
+        &tuple.env_short,
+        now_rfc3339,
+        if completed { "completed" } else { "failed" },
+        result_iri.as_ref(),
+        verdict.as_deref(),
+    );
     let mutation = Mutation::insert(session_quads.iter().cloned())
         .with_cause("FT-100 per-graph verify-graph-runner session");
     writer_after
@@ -440,8 +437,8 @@ fn persist_coverage_gap_aggregate(
     let store = load_store_from_dump(&orchestration_dump_path(workdir))
         .map_err(|e| CodeChangeDispatchError::Store(format!("{e:#}")))?;
     let store = Arc::new(store);
-    let scope = ActiveScope::load(workdir)
-        .map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
+    let scope =
+        ActiveScope::load(workdir).map_err(|e| CodeChangeDispatchError::Scope(format!("{e:#}")))?;
     let stream_iri = NamedNode::new(&scope.stream_iri)
         .map_err(|e| CodeChangeDispatchError::IriMint(format!("stream iri: {e}")))?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
@@ -483,7 +480,13 @@ fn persist_coverage_gap_aggregate(
         feedback_iris.push(fb);
     }
 
-    ledger::record_dispatch(&writer, &store, code_change.as_str(), feature_id, now_rfc3339)?;
+    ledger::record_dispatch(
+        &writer,
+        &store,
+        code_change.as_str(),
+        feature_id,
+        now_rfc3339,
+    )?;
     persist_store(&store, &orchestration_dump_path(workdir))
         .map_err(|e| CodeChangeDispatchError::Commit(format!("persist: {e:#}")))?;
 
@@ -555,12 +558,7 @@ fn persist_aggregate_feedback(
         Literal::new_simple_literal(class),
         g.clone(),
     ));
-    quads.push(Quad::new(
-        fb_iri.clone(),
-        target_pred,
-        feature_node,
-        g,
-    ));
+    quads.push(Quad::new(fb_iri.clone(), target_pred, feature_node, g));
     let mutation = Mutation::insert(quads).with_cause("FT-100 aggregate feedback");
     writer
         .commit(mutation)
@@ -594,7 +592,12 @@ fn build_aggregate_session_quads(
     let _ = in_stream();
 
     let mut quads = vec![
-        Quad::new(session_iri.clone(), rdf_type.clone(), session_cls, g.clone()),
+        Quad::new(
+            session_iri.clone(),
+            rdf_type.clone(),
+            session_cls,
+            g.clone(),
+        ),
         Quad::new(session_iri.clone(), rdf_type, activity_cls, g.clone()),
         Quad::new(
             session_iri.clone(),
@@ -737,7 +740,12 @@ fn mint_aggregate_session_iri(feature_id: &str, code_change_iri: &str) -> NamedN
     use sha2::{Digest, Sha256};
     let mut h = Sha256::new();
     h.update(code_change_iri.as_bytes());
-    let hex: String = h.finalize().iter().take(6).map(|b| format!("{b:02x}")).collect();
+    let hex: String = h
+        .finalize()
+        .iter()
+        .take(6)
+        .map(|b| format!("{b:02x}"))
+        .collect();
     NamedNode::new_unchecked(format!(
         "urn:dec:session/verify-graph-runner-aggregate/{feature_id}/{hex}/{uuid}"
     ))

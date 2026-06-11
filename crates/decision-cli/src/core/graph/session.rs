@@ -116,12 +116,11 @@ pub fn escalation_chain(
             // invariants, but better than infinite-loop.
             break;
         }
-        let next = load_session_optional(store, prior)?.ok_or_else(|| {
-            SessionError::ChainBroken {
+        let next =
+            load_session_optional(store, prior)?.ok_or_else(|| SessionError::ChainBroken {
                 session_id: root.iri.as_str().to_string(),
                 missing_ref: prior.as_str().to_string(),
-            }
-        })?;
+            })?;
         visited.push(next.iri.as_str().to_string());
         root = next;
     }
@@ -133,12 +132,11 @@ pub fn escalation_chain(
         if chain.iter().any(|s| s.iri == next_iri) {
             break; // cycle guard
         }
-        let next = load_session_optional(store, &next_iri)?.ok_or_else(|| {
-            SessionError::ChainBroken {
+        let next =
+            load_session_optional(store, &next_iri)?.ok_or_else(|| SessionError::ChainBroken {
                 session_id: current.iri.as_str().to_string(),
                 missing_ref: next_iri.as_str().to_string(),
-            }
-        })?;
+            })?;
         chain.push(next.clone());
         current = next;
     }
@@ -365,4 +363,3 @@ fn session_exists(store: &Store, iri: &NamedNode) -> Result<bool, SessionError> 
         _ => Ok(false),
     }
 }
-

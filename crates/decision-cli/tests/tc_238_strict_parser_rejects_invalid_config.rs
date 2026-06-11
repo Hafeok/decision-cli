@@ -25,10 +25,7 @@ fn tc_238_strict_parser_rejects_invalid_config() {
     let content = fs::read_to_string(&config_path).unwrap();
 
     // Verify structure matches ADR-068 inventory by checking for section headers
-    assert!(
-        content.contains("[driver]"),
-        "Should have driver section"
-    );
+    assert!(content.contains("[driver]"), "Should have driver section");
     assert!(content.contains("[sweep]"), "Should have sweep section");
     assert!(content.contains("[show]"), "Should have show section");
     assert!(content.contains("[init]"), "Should have init section");

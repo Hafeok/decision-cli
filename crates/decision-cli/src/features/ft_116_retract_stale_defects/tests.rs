@@ -11,10 +11,10 @@ use oxigraph::store::Store;
 
 use crate::core::feedback::lifecycle::LifecycleState;
 use crate::core::feedback::transition::read_prior_state;
+use crate::core::ontology::verdict::Verdict;
 use crate::core::ontology::verification_result::{
     EvidenceProjection, StepOutcome, VerificationGraphResult,
 };
-use crate::core::ontology::verdict::Verdict;
 use crate::core::vocab::{lifecycle_state, orchestration_graph};
 use crate::core::StreamWriter;
 
@@ -66,13 +66,7 @@ fn seed_feedback(
 }
 
 // Test helper: seed a VGR in the store
-fn seed_vgr(
-    store: &Store,
-    vgr_iri: &str,
-    graph_iri: &str,
-    session_iri: &str,
-    verdict: &str,
-) {
+fn seed_vgr(store: &Store, vgr_iri: &str, graph_iri: &str, session_iri: &str, verdict: &str) {
     let g: GraphName = orchestration_graph().into_owned().into();
     let vgr = NamedNode::new_unchecked(vgr_iri);
     let graph = NamedNode::new_unchecked(graph_iri);
@@ -85,8 +79,7 @@ fn seed_vgr(
         Quad::new(
             vgr.clone(),
             NamedNodeRef::new_unchecked(rdf_type).into_owned(),
-            NamedNodeRef::new_unchecked(&format!("{dec_ns}VerificationGraphResult"))
-                .into_owned(),
+            NamedNodeRef::new_unchecked(&format!("{dec_ns}VerificationGraphResult")).into_owned(),
             g.clone(),
         ),
         Quad::new(
@@ -129,7 +122,13 @@ fn tc_239_approved_vgr_closes_prior_open_defects() {
 
     // Seed VGR-1 and defect
     seed_vgr(&store, vgr1_iri, graph_iri, session1_iri, "rejected");
-    seed_feedback(&store, fb_iri, tc_iri, session1_iri, LifecycleState::Produced);
+    seed_feedback(
+        &store,
+        fb_iri,
+        tc_iri,
+        session1_iri,
+        LifecycleState::Produced,
+    );
 
     // Build VGR-2 with passing evidence
     let vgr2 = VerificationGraphResult {
@@ -170,9 +169,8 @@ fn tc_239_approved_vgr_closes_prior_open_defects() {
     );
 
     // Check for closedByEvidenceRetraction triple
-    let close_pred = NamedNodeRef::new_unchecked(
-        "https://decision-cli.dev/ns#closedByEvidenceRetraction",
-    );
+    let close_pred =
+        NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#closedByEvidenceRetraction");
     let has_retraction_triple = store
         .quads_for_pattern(Some(fb.as_ref().into()), Some(close_pred), None, None)
         .filter_map(Result::ok)
@@ -214,8 +212,20 @@ fn tc_240_failing_tc_leaves_prior_defects_unchanged() {
 
     // Seed VGR-1 and two defects
     seed_vgr(&store, vgr1_iri, graph_iri, session1_iri, "rejected");
-    seed_feedback(&store, fb_a_iri, tc_a_iri, session1_iri, LifecycleState::Produced);
-    seed_feedback(&store, fb_b_iri, tc_b_iri, session1_iri, LifecycleState::Produced);
+    seed_feedback(
+        &store,
+        fb_a_iri,
+        tc_a_iri,
+        session1_iri,
+        LifecycleState::Produced,
+    );
+    seed_feedback(
+        &store,
+        fb_b_iri,
+        tc_b_iri,
+        session1_iri,
+        LifecycleState::Produced,
+    );
 
     // Build VGR-2 with mixed evidence: TC-A passes, TC-B fails
     let vgr2 = VerificationGraphResult {
@@ -489,7 +499,13 @@ fn tc_243_auto_close_is_idempotent() {
         session1_iri,
         "rejected",
     );
-    seed_feedback(&store, fb_iri, tc_iri, session1_iri, LifecycleState::Produced);
+    seed_feedback(
+        &store,
+        fb_iri,
+        tc_iri,
+        session1_iri,
+        LifecycleState::Produced,
+    );
 
     // Build VGR-2 with passing evidence
     let vgr2 = VerificationGraphResult {
@@ -527,7 +543,10 @@ fn tc_243_auto_close_is_idempotent() {
 
     // Second invocation (idempotent test)
     let closed_count_2 = retract_stale_defects_in_transaction(&store, &writer, &vgr2).unwrap();
-    assert_eq!(closed_count_2, 0, "second call should close 0 (already closed)");
+    assert_eq!(
+        closed_count_2, 0,
+        "second call should close 0 (already closed)"
+    );
 
     // Verify quads unchanged
     let quads_after_second: Vec<Quad> = store
@@ -542,14 +561,16 @@ fn tc_243_auto_close_is_idempotent() {
     );
 
     // Verify no duplicate closedByEvidenceRetraction triples
-    let close_pred = NamedNodeRef::new_unchecked(
-        "https://decision-cli.dev/ns#closedByEvidenceRetraction",
-    );
+    let close_pred =
+        NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#closedByEvidenceRetraction");
     let retraction_count = store
         .quads_for_pattern(Some(fb.as_ref().into()), Some(close_pred), None, None)
         .filter_map(Result::ok)
         .count();
-    assert_eq!(retraction_count, 1, "should have exactly 1 retraction triple");
+    assert_eq!(
+        retraction_count, 1,
+        "should have exactly 1 retraction triple"
+    );
 }
 
 // TC-244 — Auto-close lands atomically with VGR write
@@ -578,7 +599,13 @@ fn tc_244_auto_close_atomic_with_vgr_write() {
         session1_iri,
         "rejected",
     );
-    seed_feedback(&store, fb_iri, tc_iri, session1_iri, LifecycleState::Produced);
+    seed_feedback(
+        &store,
+        fb_iri,
+        tc_iri,
+        session1_iri,
+        LifecycleState::Produced,
+    );
 
     // Build VGR-2
     let vgr2 = VerificationGraphResult {
@@ -614,12 +641,7 @@ fn tc_244_auto_close_atomic_with_vgr_write() {
     // Verify both VGR-2 exists and fb-1 is closed
     let vgr2_node = NamedNode::new_unchecked("https://decision-cli.dev/ns/result/VGR-501");
     let vgr2_exists = store
-        .quads_for_pattern(
-            Some(vgr2_node.as_ref().into()),
-            None,
-            None,
-            None,
-        )
+        .quads_for_pattern(Some(vgr2_node.as_ref().into()), None, None, None)
         .any(|q| q.is_ok());
     assert!(vgr2_exists, "VGR-2 should exist");
 

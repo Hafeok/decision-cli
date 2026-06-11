@@ -193,7 +193,11 @@ mod tests {
     fn one_record_per_upstream_target_category() {
         let violations = vec![
             v(0, ViolationKind::DecSubcommand, "dec verify result inspect"),
-            v(1, ViolationKind::SparqlNamespace, "https://fake.example/ns#"),
+            v(
+                1,
+                ViolationKind::SparqlNamespace,
+                "https://fake.example/ns#",
+            ),
             v(2, ViolationKind::FilePath, "/etc/passwd"),
             v(3, ViolationKind::DecSubcommand, "dec foo bar"),
         ];

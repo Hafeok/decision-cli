@@ -31,14 +31,21 @@ use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
 
 use crate::core::ontology::verdict::Verdict;
-use crate::core::ontology::verification_bench::{from_turtle as bench_from_turtle, VerificationBench};
-use crate::core::ontology::verification_graph::{from_turtle as graph_from_turtle, VerificationGraph};
+use crate::core::ontology::verification_bench::{
+    from_turtle as bench_from_turtle, VerificationBench,
+};
+use crate::core::ontology::verification_graph::{
+    from_turtle as graph_from_turtle, VerificationGraph,
+};
 use crate::core::ontology::verification_result::{
     to_canonical_turtle, StepOutcome, VerificationGraphResult,
 };
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
-use crate::core::vocab::{verify_result_graph, IRI_DEC_BENCH_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX, IRI_DEC_VERIFY_RESULT_PREFIX};
+use crate::core::vocab::{
+    verify_result_graph, IRI_DEC_BENCH_PREFIX, IRI_DEC_VERIFY_GRAPH_PREFIX,
+    IRI_DEC_VERIFY_RESULT_PREFIX,
+};
 use crate::core::StreamWriter;
 
 use self::context::RunContext;
@@ -68,9 +75,9 @@ pub fn run_graph(req: &RunGraphRequest) -> Result<RunGraphResponse, RunnerError>
     if let Err(safety_err) = runtime_safety::check(&graph, &env) {
         // Phase-1 abort path: persist a rejected VGR with empty traces.
         let safety_label = match &safety_err {
-            RunnerError::SafetyViolation { step, op } => format!(
-                "safety: step <{step}> requires op <{op}> not in env.allowedOps"
-            ),
+            RunnerError::SafetyViolation { step, op } => {
+                format!("safety: step <{step}> requires op <{op}> not in env.allowedOps")
+            }
             _ => "safety: unknown op token rejected at runtime".to_string(),
         };
         persist_rejected(
@@ -129,8 +136,7 @@ pub fn run_graph(req: &RunGraphRequest) -> Result<RunGraphResponse, RunnerError>
         if ctx.prior_outputs.len() <= i {
             ctx.record_output(context::PriorOutput::default());
         }
-        let halts = trace.stop_on_fail
-            && matches!(trace.outcome, StepOutcome::Fail);
+        let halts = trace.stop_on_fail && matches!(trace.outcome, StepOutcome::Fail);
         traces.push(trace);
         if halts {
             ctx.stop_on_fail_index = Some(i);
@@ -207,10 +213,7 @@ fn load_graph(workdir: &Path, graph_iri: &NamedNode) -> Result<VerificationGraph
     })
 }
 
-fn load_env(
-    workdir: &Path,
-    graph: &VerificationGraph,
-) -> Result<VerificationBench, RunnerError> {
+fn load_env(workdir: &Path, graph: &VerificationGraph) -> Result<VerificationBench, RunnerError> {
     let env_iri = graph.environment.as_str();
     let env_id = env_iri
         .strip_prefix(IRI_DEC_BENCH_PREFIX)
@@ -315,11 +318,10 @@ fn persist_rejected(
     let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| RunnerError::Internal {
         detail: format!("active stream iri: {e}"),
     })?;
-    let writer = StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| {
-        RunnerError::Internal {
+    let writer =
+        StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| RunnerError::Internal {
             detail: format!("opening stream writer: {e}"),
-        }
-    })?;
+        })?;
     let quads = result.to_quads(verify_result_graph());
     let mutation = Mutation::insert(quads);
     writer
@@ -327,8 +329,10 @@ fn persist_rejected(
         .map_err(|source| RunnerError::ResultWriteFailed {
             source: anyhow!("{source:#}"),
         })?;
-    persist_store(&store, &orchestration_dump_path(workdir)).map_err(|e| RunnerError::Internal {
-        detail: format!("persisting store: {e}"),
+    persist_store(&store, &orchestration_dump_path(workdir)).map_err(|e| {
+        RunnerError::Internal {
+            detail: format!("persisting store: {e}"),
+        }
     })?;
     let dir = workdir.join(".dec").join("verify").join("result");
     let _ = std::fs::create_dir_all(&dir);

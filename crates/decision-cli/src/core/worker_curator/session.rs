@@ -60,8 +60,7 @@ pub const WORKER_CURATOR_ROLE_ID: &str = "worker-curator";
 /// (`prov:wasAttributedTo` target on every artifact produced by a
 /// Curator session). Mirrors the `identity-verifier` agent IRI shape
 /// (FT-090).
-pub const WORKER_CURATOR_AGENT_IRI: &str =
-    "https://decision-cli.dev/ns/agent/worker-curator";
+pub const WORKER_CURATOR_AGENT_IRI: &str = "https://decision-cli.dev/ns/agent/worker-curator";
 
 /// Default routing target for rejection Feedback. ADR-026's table maps
 /// `defect → verifier`; for Curator rejections we route to the worker
@@ -203,12 +202,7 @@ fn run_admit(
     let mint_id = minted_image_id(bundle, context);
     let worker_image = build_worker_image(bundle, &mint_id);
     let audit_id = format!("{mint_id}-audit-001");
-    let conformance_audit = build_conformance_audit(
-        &audit_id,
-        &worker_image,
-        rationale,
-        context,
-    );
+    let conformance_audit = build_conformance_audit(&audit_id, &worker_image, rationale, context);
     let worker_image_with_audit = attach_audit_link(worker_image, conformance_audit.iri());
 
     let mut updated_submission = bundle.submission.clone();
@@ -229,7 +223,10 @@ fn run_reject(
     context: &CuratorSessionContext,
 ) -> Result<RejectionOutcome, CuratorSessionError> {
     require_nonempty(&rationale, "Reject.rationale")?;
-    require_nonempty(&disqualification_evidence, "Reject.disqualification_evidence")?;
+    require_nonempty(
+        &disqualification_evidence,
+        "Reject.disqualification_evidence",
+    )?;
 
     let feedback_iri = NamedNode::new_unchecked(format!(
         "https://decision-cli.dev/ns/feedback/curator/{id}",
@@ -330,9 +327,7 @@ fn require_nonempty(value: &str, field: &'static str) -> Result<(), CuratorSessi
     }
 }
 
-fn require_valid_signature_verdict(
-    bundle: &CuratorBundle,
-) -> Result<(), CuratorSessionError> {
+fn require_valid_signature_verdict(bundle: &CuratorBundle) -> Result<(), CuratorSessionError> {
     use crate::core::identity_verifier::SignatureVerdictClass;
     if bundle.signature_verdict.verdict_class != SignatureVerdictClass::Valid {
         return Err(CuratorSessionError::AdmissionRequiresValidSignature {

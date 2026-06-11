@@ -4,9 +4,6 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::Context as AnyhowContext;
-use oxi_events::Mutation;
-use oxigraph::model::NamedNode;
 use crate::core::ontology::verdict::Verdict;
 use crate::core::ontology::verification_bench::VerificationBench;
 use crate::core::ontology::verification_graph::VerificationGraph;
@@ -18,6 +15,9 @@ use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use crate::core::vocab::{verify_result_graph, IRI_DEC_VERIFY_RESULT_PREFIX};
 use crate::core::StreamWriter;
+use anyhow::Context as AnyhowContext;
+use oxi_events::Mutation;
+use oxigraph::model::NamedNode;
 
 use super::kinds::StepRunTrace;
 use super::request::RunnerError;
@@ -54,7 +54,8 @@ pub(crate) fn write_result(
             was_generated_by: run_activity.as_str().to_string(),
         })
         .collect();
-    let evidence_for: Vec<EvidenceProjection> = build_evidence_projections(graph, traces, &result_iri);
+    let evidence_for: Vec<EvidenceProjection> =
+        build_evidence_projections(graph, traces, &result_iri);
 
     let result = VerificationGraphResult {
         id: result_iri.clone(),
@@ -71,10 +72,11 @@ pub(crate) fn write_result(
         created_at: ended_at,
     };
 
-    let store = load_store_from_dump(&orchestration_dump_path(workdir))
-        .map_err(|e| RunnerError::Internal {
+    let store = load_store_from_dump(&orchestration_dump_path(workdir)).map_err(|e| {
+        RunnerError::Internal {
             detail: format!("loading orchestration store: {e:#}"),
-        })?;
+        }
+    })?;
     let store = Arc::new(store);
     let scope = ActiveScope::load(workdir).map_err(|e| RunnerError::Internal {
         detail: format!("loading active scope: {e}"),
@@ -82,11 +84,10 @@ pub(crate) fn write_result(
     let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| RunnerError::Internal {
         detail: format!("active stream iri: {e}"),
     })?;
-    let writer = StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| {
-        RunnerError::Internal {
+    let writer =
+        StreamWriter::open(Arc::clone(&store), stream_iri).map_err(|e| RunnerError::Internal {
             detail: format!("opening stream writer: {e:#}"),
-        }
-    })?;
+        })?;
     let quads = result.to_quads(verify_result_graph());
     let mutation = Mutation::insert(quads);
     writer
@@ -95,13 +96,17 @@ pub(crate) fn write_result(
 
     // FT-116: Auto-close stale defects after VGR commit (within same transaction)
     use crate::features::ft_116_retract_stale_defects::retract_stale_defects_in_transaction;
-    let _closed_count = retract_stale_defects_in_transaction(&store, &writer, &result)
-        .map_err(|e| RunnerError::Internal {
-            detail: format!("auto-closing stale defects: {e}"),
+    let _closed_count =
+        retract_stale_defects_in_transaction(&store, &writer, &result).map_err(|e| {
+            RunnerError::Internal {
+                detail: format!("auto-closing stale defects: {e}"),
+            }
         })?;
 
-    persist_store(&store, &orchestration_dump_path(workdir)).map_err(|e| RunnerError::Internal {
-        detail: format!("persisting orchestration store: {e:#}"),
+    persist_store(&store, &orchestration_dump_path(workdir)).map_err(|e| {
+        RunnerError::Internal {
+            detail: format!("persisting orchestration store: {e:#}"),
+        }
     })?;
 
     // Write the canonical Turtle file too, mirroring the env/graph

@@ -39,7 +39,11 @@ pub fn run(workdir: &Path, scope: CliScope<'_>, dry_run: bool) -> ExitCode {
 }
 
 fn report(summary: &RetractSummary, dry_run: bool) {
-    let verb = if dry_run { "would retract" } else { "retracted" };
+    let verb = if dry_run {
+        "would retract"
+    } else {
+        "retracted"
+    };
 
     if summary.per_graph.is_empty() {
         println!("No orphan defects found.");

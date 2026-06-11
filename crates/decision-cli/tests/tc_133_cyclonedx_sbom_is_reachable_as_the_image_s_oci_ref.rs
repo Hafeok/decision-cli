@@ -39,8 +39,7 @@ use decision_cli::core::sbom_referrer::{
 use decision_cli::vocab::{worker_image_submission_graph, IRI_DEC_CLAIMED_SBOM_REF};
 
 /// 64 lowercase hex digits — the cosign-canonical sha256 digest body.
-const SBOM_DIGEST_HEX: &str =
-    "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
+const SBOM_DIGEST_HEX: &str = "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
 
 /// Canonical SBOM referrer descriptor URI per FT-091 / ADR-059: a
 /// digest-pinned OCI reference of the form `<host>/<repo>@sha256:<hex>`.
@@ -123,8 +122,8 @@ fn shacl_rejects_submission_with_short_digest_sbom_ref() {
         "ghcr.io/example/worker@sha256:cafe", // too short
     );
     let quads = sub.to_quads(worker_image_submission_graph());
-    let err = validate_quads(&quads)
-        .expect_err("Submission with short-digest SBOM ref must be refused");
+    let err =
+        validate_quads(&quads).expect_err("Submission with short-digest SBOM ref must be refused");
     assert!(err
         .violations
         .iter()
@@ -141,8 +140,8 @@ fn shacl_rejects_submission_with_non_sha256_sbom_ref() {
         &format!("ghcr.io/example/worker@sha512:{}", "a".repeat(128)),
     );
     let quads = sub.to_quads(worker_image_submission_graph());
-    let err = validate_quads(&quads)
-        .expect_err("Submission with non-sha256 SBOM ref must be refused");
+    let err =
+        validate_quads(&quads).expect_err("Submission with non-sha256 SBOM ref must be refused");
     assert!(err
         .violations
         .iter()
@@ -220,7 +219,10 @@ fn tc_133_cyclonedx_sbom_is_reachable_as_the_image_s_oci_ref() {
     //    algorithm. Each rejection cites dec:claimed_sbom_ref.
     for (label, ref_value) in [
         ("mutable-tag", "ghcr.io/example/worker:latest".to_string()),
-        ("short-digest", "ghcr.io/example/worker@sha256:cafe".to_string()),
+        (
+            "short-digest",
+            "ghcr.io/example/worker@sha256:cafe".to_string(),
+        ),
         (
             "non-sha256",
             format!("ghcr.io/example/worker@sha512:{}", "a".repeat(128)),
@@ -228,8 +230,7 @@ fn tc_133_cyclonedx_sbom_is_reachable_as_the_image_s_oci_ref() {
     ] {
         let sub = submission_with_sbom("sub-001", &ref_value);
         let bad_quads = sub.to_quads(worker_image_submission_graph());
-        let err = validate_quads(&bad_quads)
-            .unwrap_err_or_else_label_failure(label);
+        let err = validate_quads(&bad_quads).unwrap_err_or_else_label_failure(label);
         assert!(
             err.violations
                 .iter()

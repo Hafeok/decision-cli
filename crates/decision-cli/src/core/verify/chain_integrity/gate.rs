@@ -104,10 +104,7 @@ fn render_next_actions(out: &mut String, feature: &str, known_envs: &[String]) {
         return;
     }
     for env in known_envs {
-        let _ = writeln!(
-            out,
-            "  * dec verify graph generate {feature} --bench {env}"
-        );
+        let _ = writeln!(out, "  * dec verify graph generate {feature} --bench {env}");
     }
 }
 

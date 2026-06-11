@@ -38,7 +38,10 @@ fn admits_well_formed_manifest() {
 fn capability_tag_extraction_is_deterministic() {
     let m = well_formed();
     let tags: Vec<String> = m.capability_tags().into_iter().collect();
-    assert_eq!(tags, vec!["code-writer".to_string(), "implementer".to_string()]);
+    assert_eq!(
+        tags,
+        vec!["code-writer".to_string(), "implementer".to_string()]
+    );
 }
 
 #[test]
@@ -49,7 +52,9 @@ fn rejects_missing_capability_tags() {
     let err =
         validate_worker_oci_manifest(&m).expect_err("manifest with no capability tags must fail");
     assert!(
-        err.violations.iter().any(|v| v.code == "ddd:capability-tag"),
+        err.violations
+            .iter()
+            .any(|v| v.code == "ddd:capability-tag"),
         "expected ddd:capability-tag violation: {:?}",
         err.violations
     );
@@ -68,8 +73,7 @@ fn rejects_non_semver_sdk_version() {
     let mut m = well_formed();
     m.labels
         .insert(LABEL_DDD_SDK_VERSION.to_string(), "latest".to_string());
-    let err =
-        validate_worker_oci_manifest(&m).expect_err("non-semver sdk-version must fail");
+    let err = validate_worker_oci_manifest(&m).expect_err("non-semver sdk-version must fail");
     assert!(err.report.contains("semver"), "{}", err.report);
 }
 
@@ -99,8 +103,7 @@ fn rejects_missing_source_annotation() {
 fn rejects_missing_revision_annotation() {
     let mut m = well_formed();
     m.annotations.remove(OCI_ANNOTATION_REVISION);
-    let err =
-        validate_worker_oci_manifest(&m).expect_err("missing revision annotation must fail");
+    let err = validate_worker_oci_manifest(&m).expect_err("missing revision annotation must fail");
     assert!(
         err.violations
             .iter()

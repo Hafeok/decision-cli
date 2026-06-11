@@ -17,8 +17,7 @@ use crate::core::vocab::{
     IRI_DEC_CONFIGURABLE_EFFORT, IRI_DEC_CONTEXT_WINDOW, IRI_DEC_COST_CACHE_HIT_PER_M,
     IRI_DEC_COST_CACHE_WRITE_5M, IRI_DEC_COST_CURRENCY, IRI_DEC_COST_INPUT_PER_M,
     IRI_DEC_COST_OUTPUT_PER_M, IRI_DEC_EXPOSES_REASONING_TRACE, IRI_DEC_MAX_OUTPUT,
-    IRI_DEC_MODEL_IDENTIFIER, IRI_DEC_SUPPORTS_TOOL_CALLING, IRI_DEC_SUPPORTS_VISION,
-    IRI_DEC_TIER,
+    IRI_DEC_MODEL_IDENTIFIER, IRI_DEC_SUPPORTS_TOOL_CALLING, IRI_DEC_SUPPORTS_VISION, IRI_DEC_TIER,
 };
 
 use super::take::{
@@ -189,15 +188,25 @@ fn parse_identity(
     quads: &[Quad],
     subject: &NamedNode,
 ) -> Result<Identity, CapabilityReadError> {
-    let id = take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_ID, "dec:capability_id")?;
-    let endpoint_raw =
-        take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_ENDPOINT, "dec:endpoint")?;
-    let endpoint = Endpoint::try_from_str(&endpoint_raw).ok_or_else(|| {
-        CapabilityReadError::Malformed {
+    let id = take_one_str(
+        iri,
+        quads,
+        subject,
+        IRI_DEC_CAPABILITY_ID,
+        "dec:capability_id",
+    )?;
+    let endpoint_raw = take_one_str(
+        iri,
+        quads,
+        subject,
+        IRI_DEC_CAPABILITY_ENDPOINT,
+        "dec:endpoint",
+    )?;
+    let endpoint =
+        Endpoint::try_from_str(&endpoint_raw).ok_or_else(|| CapabilityReadError::Malformed {
             iri: iri.to_string(),
             detail: format!("unknown dec:endpoint value {endpoint_raw:?}"),
-        }
-    })?;
+        })?;
     let model_identifier = take_one_str(
         iri,
         quads,
@@ -219,8 +228,13 @@ fn parse_capacity(
     quads: &[Quad],
     subject: &NamedNode,
 ) -> Result<Capacity, CapabilityReadError> {
-    let context_window =
-        take_one_u32(iri, quads, subject, IRI_DEC_CONTEXT_WINDOW, "dec:context_window")?;
+    let context_window = take_one_u32(
+        iri,
+        quads,
+        subject,
+        IRI_DEC_CONTEXT_WINDOW,
+        "dec:context_window",
+    )?;
     let max_output = take_one_u32(iri, quads, subject, IRI_DEC_MAX_OUTPUT, "dec:max_output")?;
     let supports_vision = take_one_bool(
         iri,
@@ -265,10 +279,14 @@ fn parse_pricing(
     )?;
     let cost_cache_hit_per_m =
         take_optional_str(iri, quads, subject, IRI_DEC_COST_CACHE_HIT_PER_M)?;
-    let cost_cache_write_5m =
-        take_optional_str(iri, quads, subject, IRI_DEC_COST_CACHE_WRITE_5M)?;
-    let cost_currency_raw =
-        take_one_str(iri, quads, subject, IRI_DEC_COST_CURRENCY, "dec:cost_currency")?;
+    let cost_cache_write_5m = take_optional_str(iri, quads, subject, IRI_DEC_COST_CACHE_WRITE_5M)?;
+    let cost_currency_raw = take_one_str(
+        iri,
+        quads,
+        subject,
+        IRI_DEC_COST_CURRENCY,
+        "dec:cost_currency",
+    )?;
     let cost_currency = CostCurrency::try_from_str(&cost_currency_raw).ok_or_else(|| {
         CapabilityReadError::Malformed {
             iri: iri.to_string(),
@@ -292,15 +310,20 @@ fn parse_lifecycle(
     let configurable_effort = take_optional_bool(iri, quads, subject, IRI_DEC_CONFIGURABLE_EFFORT)?;
     let exposes_reasoning_trace =
         take_optional_bool(iri, quads, subject, IRI_DEC_EXPOSES_REASONING_TRACE)?;
-    let status_raw =
-        take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_STATUS, "dec:status")?;
+    let status_raw = take_one_str(iri, quads, subject, IRI_DEC_CAPABILITY_STATUS, "dec:status")?;
     let status = CapabilityStatus::try_from_str(&status_raw).ok_or_else(|| {
         CapabilityReadError::Malformed {
             iri: iri.to_string(),
             detail: format!("unknown dec:status value {status_raw:?}"),
         }
     })?;
-    let version = take_one_u32(iri, quads, subject, IRI_DEC_CAPABILITY_VERSION, "dec:version")?;
+    let version = take_one_u32(
+        iri,
+        quads,
+        subject,
+        IRI_DEC_CAPABILITY_VERSION,
+        "dec:version",
+    )?;
     let supersedes = take_optional_iri(iri, quads, subject, IRI_DEC_CAPABILITY_SUPERSEDES)?;
     let bootstrap_source = take_optional_str(iri, quads, subject, IRI_DEC_BOOTSTRAP_SOURCE)?;
     let notes = take_optional_str(iri, quads, subject, IRI_DEC_CAPABILITY_NOTES)?;
@@ -330,4 +353,3 @@ fn require_type(subject: &NamedNode, quads: &[Quad]) -> Result<(), CapabilityRea
         })
     }
 }
-

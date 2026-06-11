@@ -135,18 +135,37 @@ fn tc_392_session_list_renders_cluster_cells_with_parent_feature_and_status() {
     let wd = WorkdirGuard::new("cell");
     bootstrap(&wd);
     let cells = vec![
-        make_cell("add-judge-worker", "FT-T392", "agent_loop", CellStatus::Succeeded),
-        make_cell("add-judge-worker", "FT-T392", "system_prompt", CellStatus::Mechanical),
+        make_cell(
+            "add-judge-worker",
+            "FT-T392",
+            "agent_loop",
+            CellStatus::Succeeded,
+        ),
+        make_cell(
+            "add-judge-worker",
+            "FT-T392",
+            "system_prompt",
+            CellStatus::Mechanical,
+        ),
     ];
-    let _ = persist_one_run(wd.path(), "add-judge-worker", "FT-T392", cells, ClusterOutcome::Succeeded);
+    let _ = persist_one_run(
+        wd.path(),
+        "add-judge-worker",
+        "FT-T392",
+        cells,
+        ClusterOutcome::Succeeded,
+    );
 
     let rows = list(wd.path(), 100, 0).expect("list");
-    let agent =
-        rows.iter()
-            .find(|r| r.iri.ends_with("/agent_loop"))
-            .expect("expected agent_loop cell row");
+    let agent = rows
+        .iter()
+        .find(|r| r.iri.ends_with("/agent_loop"))
+        .expect("expected agent_loop cell row");
     assert_eq!(agent.feature_id, "FT-T392", "feature lifted from parent");
-    assert_eq!(agent.status, "succeeded", "cellStatus projected onto ?status");
+    assert_eq!(
+        agent.status, "succeeded",
+        "cellStatus projected onto ?status"
+    );
 
     let prompt = rows
         .iter()
@@ -189,7 +208,10 @@ fn tc_393_cluster_cell_with_multiple_dispatches_dedupes_to_single_row() {
     );
 
     let rows = list(wd.path(), 100, 0).expect("list");
-    let handler_rows: Vec<_> = rows.iter().filter(|r| r.iri.ends_with("/handler")).collect();
+    let handler_rows: Vec<_> = rows
+        .iter()
+        .filter(|r| r.iri.ends_with("/handler"))
+        .collect();
     assert_eq!(
         handler_rows.len(),
         1,
@@ -220,9 +242,24 @@ fn tc_394_every_listed_iri_resolves_via_show() {
         "add-cli-subcommand",
         "FT-T394",
         vec![
-            make_cell("add-cli-subcommand", "FT-T394", "clap_args", CellStatus::Succeeded),
-            make_cell("add-cli-subcommand", "FT-T394", "handler", CellStatus::Succeeded),
-            make_cell("add-cli-subcommand", "FT-T394", "wiring", CellStatus::Mechanical),
+            make_cell(
+                "add-cli-subcommand",
+                "FT-T394",
+                "clap_args",
+                CellStatus::Succeeded,
+            ),
+            make_cell(
+                "add-cli-subcommand",
+                "FT-T394",
+                "handler",
+                CellStatus::Succeeded,
+            ),
+            make_cell(
+                "add-cli-subcommand",
+                "FT-T394",
+                "wiring",
+                CellStatus::Mechanical,
+            ),
         ],
         ClusterOutcome::Succeeded,
     );

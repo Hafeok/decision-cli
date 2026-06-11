@@ -139,7 +139,10 @@ mod tests {
         assert_eq!(plan.binary, "docker");
         assert_eq!(
             plan.pull_args,
-            vec!["pull".to_string(), "ghcr.io/example/img@sha256:cafeb0de".to_string()]
+            vec![
+                "pull".to_string(),
+                "ghcr.io/example/img@sha256:cafeb0de".to_string()
+            ]
         );
         assert_eq!(
             plan.run_args,

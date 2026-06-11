@@ -353,6 +353,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dec-ontology"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "oxrdf",
+ "serde",
+ "thiserror 1.0.69",
+ "uuid",
+]
+
+[[package]]
 name = "decision-cli"
 version = "0.1.0"
 dependencies = [
@@ -361,6 +372,7 @@ dependencies = [
  "chrono",
  "clap",
  "ctrlc",
+ "dec-ontology",
  "http-body-util",
  "oxi-events",
  "oxigraph",

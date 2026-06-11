@@ -1,5 +1,4 @@
 ///! Value-stream generation from .product/ discovery (FT-114).
-
 use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
@@ -36,7 +35,7 @@ fn discover_product_dir(start: &Path) -> Result<std::path::PathBuf, InitError> {
             current = parent.to_path_buf();
         } else {
             return Err(InitError::Internal(
-                "No .product/ graph discovered. Run `product feature new ...` first.".to_string()
+                "No .product/ graph discovered. Run `product feature new ...` first.".to_string(),
             ));
         }
     }
@@ -50,7 +49,11 @@ fn get_repo_name(product_dir: &Path) -> Result<String, InitError> {
     // Try to parse the name field from product.toml
     for line in content.lines() {
         if let Some(name) = line.strip_prefix("name") {
-            if let Some(quoted) = name.trim().strip_prefix("=").and_then(|s| s.trim().strip_prefix('"')) {
+            if let Some(quoted) = name
+                .trim()
+                .strip_prefix("=")
+                .and_then(|s| s.trim().strip_prefix('"'))
+            {
                 if let Some(name_val) = quoted.strip_suffix('"') {
                     return Ok(name_val.to_string());
                 }
@@ -79,7 +82,8 @@ fn scan_tc_runners(product_dir: &Path) -> Result<HashSet<String>, InitError> {
         .map_err(|e| InitError::Internal(format!("Failed to read tests directory: {}", e)))?;
 
     for entry in entries {
-        let entry = entry.map_err(|e| InitError::Internal(format!("Failed to read directory entry: {}", e)))?;
+        let entry = entry
+            .map_err(|e| InitError::Internal(format!("Failed to read directory entry: {}", e)))?;
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) == Some("md") {
             if let Some(runner) = extract_runner_from_tc(&path) {
@@ -110,21 +114,37 @@ fn extract_runner_from_tc(path: &Path) -> Option<String> {
 }
 
 fn generate_ttl(repo_name: &str, runners: &HashSet<String>) -> String {
-    let stream_iri = format!("https://decision-cli.dev/ns/streams/{}-development", repo_name);
+    let stream_iri = format!(
+        "https://decision-cli.dev/ns/streams/{}-development",
+        repo_name
+    );
 
     let mut ttl = String::new();
-    ttl.push_str(&format!("# Generated value-stream definition by dec init (FT-114).\n"));
+    ttl.push_str(&format!(
+        "# Generated value-stream definition by dec init (FT-114).\n"
+    ));
     ttl.push_str(&format!("# Auto-discovered from .product/ graph.\n"));
-    ttl.push_str(&format!("# Timestamp: {}\n\n", chrono::Utc::now().to_rfc3339()));
+    ttl.push_str(&format!(
+        "# Timestamp: {}\n\n",
+        chrono::Utc::now().to_rfc3339()
+    ));
     ttl.push_str("@prefix dec:   <https://decision-cli.dev/ns#> .\n");
     ttl.push_str("@prefix va:    <https://decision-cli.dev/ns/value-actions/> .\n");
     ttl.push_str("@prefix role:  <https://decision-cli.dev/ns/roles/> .\n");
     ttl.push_str("@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .\n\n");
 
     ttl.push_str(&format!("<{}> a dec:ValueStream ;\n", stream_iri));
-    ttl.push_str(&format!("    dec:name                \"{}-development\" ;\n", repo_name));
-    ttl.push_str(&format!("    dec:title               \"{} Development\" ;\n", repo_name));
-    ttl.push_str("    dec:description         \"Auto-generated value stream for development.\" ;\n");
+    ttl.push_str(&format!(
+        "    dec:name                \"{}-development\" ;\n",
+        repo_name
+    ));
+    ttl.push_str(&format!(
+        "    dec:title               \"{} Development\" ;\n",
+        repo_name
+    ));
+    ttl.push_str(
+        "    dec:description         \"Auto-generated value stream for development.\" ;\n",
+    );
     ttl.push_str("    dec:terminalValueAction va:shipped-feature ;\n");
     ttl.push_str("    dec:authorizedGoals     \"ship\" , \"land\" .\n\n");
 

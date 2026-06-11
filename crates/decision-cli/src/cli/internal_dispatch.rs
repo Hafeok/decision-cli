@@ -85,7 +85,10 @@ fn run_graph_accepted(workdir: &Path, args: &GraphAcceptedArgs) -> ExitCode {
                     tup.graph_short,
                     tup.env_short,
                     tup.session_iri.as_str(),
-                    tup.result_iri.as_ref().map(|n| n.as_str()).unwrap_or("(none)"),
+                    tup.result_iri
+                        .as_ref()
+                        .map(|n| n.as_str())
+                        .unwrap_or("(none)"),
                     tup.verdict.as_deref().unwrap_or("(none)"),
                 );
             }
@@ -102,7 +105,8 @@ fn run_graph_accepted(workdir: &Path, args: &GraphAcceptedArgs) -> ExitCode {
 }
 
 fn run_code_change(workdir: &Path, args: &CodeChangeCommittedArgs) -> ExitCode {
-    match subscriptions::dispatch_for_code_change(workdir, &args.feature_id, &args.code_change_iri) {
+    match subscriptions::dispatch_for_code_change(workdir, &args.feature_id, &args.code_change_iri)
+    {
         Ok(outcome) => {
             if outcome.disabled {
                 println!("disabled");
@@ -158,15 +162,8 @@ fn run_ledger_graph(workdir: &Path, args: &LedgerGraphAcceptedArgs) -> ExitCode 
         "https://decision-cli.dev/ns/graph/{graph}",
         graph = args.graph_id
     );
-    let env_iri = format!(
-        "https://decision-cli.dev/ns/bench/{env}",
-        env = args.env
-    );
-    match subscriptions::graph_accepted_dispatch::ledger::get_entry(
-        &store,
-        &graph_iri,
-        &env_iri,
-    ) {
+    let env_iri = format!("https://decision-cli.dev/ns/bench/{env}", env = args.env);
+    match subscriptions::graph_accepted_dispatch::ledger::get_entry(&store, &graph_iri, &env_iri) {
         Ok(Some(entry)) => {
             println!(
                 "entry graph={} env={} last_dispatch_at={}",

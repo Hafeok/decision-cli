@@ -17,7 +17,6 @@ pub mod quads;
 
 pub use caching::{should_cache, split_bundle_for_caching, CacheableBlock};
 pub use capability_resolver::{resolve_default_capability, ResolvedCapability, ResolverError};
-pub use params::{compute_reasoning_effort, ReasoningEffort};
 pub use escalation::{
     build_enriched_bundle_quads, build_session_linkage_quads, collect_signals, dispatch_role,
     enrich_bundle_with_prior_attempt, evaluate_trigger, find_next_escalation_step,
@@ -27,6 +26,7 @@ pub use escalation::{
 };
 pub use group::{DispatchGroup, GroupError};
 pub use lifecycle::{DispatchEvent, DispatchStatus, LifecycleError};
+pub use params::{compute_reasoning_effort, ReasoningEffort};
 pub use pause::{
     list_blocked_by, list_paused_groups_for_feedback, pause_on_feedback, resume_check, PauseError,
     ResumeError, ResumeOutcome,

@@ -314,10 +314,12 @@ pub(super) fn finalise_orchestration_dir(
         // FT-114: Preserve config.toml if it exists
         let existing_config = dec_dir.join("config.toml");
         if existing_config.exists() {
-            let config_content = fs::read(&existing_config)
-                .map_err(|e| InitError::PersistFailed(format!("Failed to read existing config.toml: {}", e)))?;
-            fs::write(tmp_dec.join("config.toml"), config_content)
-                .map_err(|e| InitError::PersistFailed(format!("Failed to preserve config.toml: {}", e)))?;
+            let config_content = fs::read(&existing_config).map_err(|e| {
+                InitError::PersistFailed(format!("Failed to read existing config.toml: {}", e))
+            })?;
+            fs::write(tmp_dec.join("config.toml"), config_content).map_err(|e| {
+                InitError::PersistFailed(format!("Failed to preserve config.toml: {}", e))
+            })?;
         }
         // Remove old .dec and replace with new
         fs::remove_dir_all(dec_dir).map_err(|e| InitError::PersistFailed(e.to_string()))?;
@@ -345,14 +347,20 @@ fn merge_with_existing_store(dec_dir: &Path, new_store: &Store) -> Result<Store,
     // Add new quads from new_store
     for q in new_store.iter() {
         let q = q.map_err(|e| InitError::Internal(e.to_string()))?;
-        merged.insert(&q).map_err(|e| InitError::Internal(e.to_string()))?;
+        merged
+            .insert(&q)
+            .map_err(|e| InitError::Internal(e.to_string()))?;
     }
 
     Ok(merged)
 }
 
 /// FT-114: Save the generated stream file to .dec/streams/<repo-name>-development.ttl
-fn save_generated_stream(tmp_dec: &Path, definition_bytes: &[u8], workdir: &Path) -> Result<(), InitError> {
+fn save_generated_stream(
+    tmp_dec: &Path,
+    definition_bytes: &[u8],
+    workdir: &Path,
+) -> Result<(), InitError> {
     // Extract repo name from the generated TTL
     let ttl_str = std::str::from_utf8(definition_bytes)
         .map_err(|e| InitError::Internal(format!("Invalid UTF-8 in generated stream: {}", e)))?;

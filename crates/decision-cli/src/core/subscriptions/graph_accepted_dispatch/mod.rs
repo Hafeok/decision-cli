@@ -24,19 +24,19 @@ use oxi_events::Mutation;
 use oxigraph::model::{GraphName, Literal, NamedNode, NamedNodeRef, Quad};
 use thiserror::Error;
 
-use crate::core::ontology::verification_graph::{from_turtle as graph_from_turtle, VerificationGraph};
+use crate::core::ontology::verification_graph::{
+    from_turtle as graph_from_turtle, VerificationGraph,
+};
 use crate::core::scope::ActiveScope;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use crate::core::stream_writer::StreamWriter;
 use crate::core::verify::runner::{run_graph, RunGraphRequest, RunnerError, TriggerKind};
 use crate::core::vocab::{
     aggregate_verdict_pred, code_change_pred, emitted_at, event_class, in_stream,
-    orchestration_graph, run_activity_pred, target_role, trigger_kind_pred,
-    verify_graph_ref, verify_graph_run_dispatch_event_class,
-    EVENT_CLASS_VERIFY_GRAPH_RUN_DISPATCH, IRI_DEC_EVENT, IRI_DEC_SESSION,
-    IRI_DEC_VERIFY_GRAPH_PREFIX, IRI_PROV_WAS_INFORMED_BY,
-    SESSION_ROLE_VERIFY_GRAPH_RUNNER, TRIGGER_KIND_GRAPH_ACCEPTED,
-    VERIFY_GRAPH_RUNNER_TARGET_ROLE,
+    orchestration_graph, run_activity_pred, target_role, trigger_kind_pred, verify_graph_ref,
+    verify_graph_run_dispatch_event_class, EVENT_CLASS_VERIFY_GRAPH_RUN_DISPATCH, IRI_DEC_EVENT,
+    IRI_DEC_SESSION, IRI_DEC_VERIFY_GRAPH_PREFIX, IRI_PROV_WAS_INFORMED_BY,
+    SESSION_ROLE_VERIFY_GRAPH_RUNNER, TRIGGER_KIND_GRAPH_ACCEPTED, VERIFY_GRAPH_RUNNER_TARGET_ROLE,
 };
 
 pub use config::{
@@ -44,8 +44,8 @@ pub use config::{
     GraphAcceptedDispatchConfig, DEFAULT_DEDUP_TTL_SECONDS, ENV_WILDCARD,
 };
 pub use ledger::{
-    entry_iri as ledger_entry_iri, get_entry as ledger_get_entry,
-    record_dispatch as ledger_record, within_ttl as ledger_within_ttl, LedgerEntry, LedgerError,
+    entry_iri as ledger_entry_iri, get_entry as ledger_get_entry, record_dispatch as ledger_record,
+    within_ttl as ledger_within_ttl, LedgerEntry, LedgerError,
 };
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -176,13 +176,18 @@ pub fn dispatch_for_graph(
         let store = Arc::new(store);
         let scope = ActiveScope::load(workdir)
             .map_err(|e| GraphAcceptedDispatchError::Scope(format!("{e:#}")))?;
-        let stream_iri = NamedNode::new(&scope.stream_iri).map_err(|e| {
-            GraphAcceptedDispatchError::IriMint(format!("active stream iri: {e}"))
-        })?;
+        let stream_iri = NamedNode::new(&scope.stream_iri)
+            .map_err(|e| GraphAcceptedDispatchError::IriMint(format!("active stream iri: {e}")))?;
         let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
             .map_err(|e| GraphAcceptedDispatchError::Commit(format!("opening writer: {e}")))?;
 
-        if ledger::within_ttl(&store, graph.id.as_str(), env.iri.as_str(), cfg.dedup_ttl_seconds, now)? {
+        if ledger::within_ttl(
+            &store,
+            graph.id.as_str(),
+            env.iri.as_str(),
+            cfg.dedup_ttl_seconds,
+            now,
+        )? {
             outcome
                 .skipped_dedup
                 .push((graph.id_str().to_string(), env.short.clone()));
@@ -397,9 +402,8 @@ fn load_graph(
             graph: graph_id.to_string(),
         });
     }
-    graph_from_turtle(&path).map_err(|e| {
-        GraphAcceptedDispatchError::Store(format!("parsing graph turtle: {e}"))
-    })
+    graph_from_turtle(&path)
+        .map_err(|e| GraphAcceptedDispatchError::Store(format!("parsing graph turtle: {e}")))
 }
 
 fn mint_event_iri() -> Result<NamedNode, GraphAcceptedDispatchError> {
@@ -543,7 +547,12 @@ pub fn build_session_quads(
     let _ = in_stream();
 
     let mut quads = vec![
-        Quad::new(session_iri.clone(), rdf_type.clone(), session_cls, g.clone()),
+        Quad::new(
+            session_iri.clone(),
+            rdf_type.clone(),
+            session_cls,
+            g.clone(),
+        ),
         Quad::new(session_iri.clone(), rdf_type, activity_cls, g.clone()),
         Quad::new(
             session_iri.clone(),

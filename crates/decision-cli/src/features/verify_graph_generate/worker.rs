@@ -120,11 +120,9 @@ fn invoke_real_subprocess(
 
 fn spawn_worker_subprocess() -> Result<std::process::Child, HandlerError> {
     let argv = resolve_worker_argv()?;
-    let (head, tail) = argv
-        .split_first()
-        .ok_or_else(|| HandlerError::Internal {
-            detail: "worker: resolved verify-graph-author argv was empty".to_string(),
-        })?;
+    let (head, tail) = argv.split_first().ok_or_else(|| HandlerError::Internal {
+        detail: "worker: resolved verify-graph-author argv was empty".to_string(),
+    })?;
     let mut cmd = Command::new(head);
     cmd.args(tail)
         .arg("--stdin")

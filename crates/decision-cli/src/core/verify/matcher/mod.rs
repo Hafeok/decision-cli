@@ -12,8 +12,8 @@
 //! considered, even if it would cover everything.
 
 mod assemble;
-mod candidates;
 mod bench_lookup;
+mod candidates;
 mod greedy;
 mod query;
 mod report;

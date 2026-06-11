@@ -27,7 +27,9 @@ pub enum LedgerError {
     #[error("code-change-committed ledger commit failed: {0}")]
     Commit(String),
     /// Stored timestamp not RFC3339.
-    #[error("code-change-committed ledger timestamp invalid for {code_change}/{feature}: {detail}")]
+    #[error(
+        "code-change-committed ledger timestamp invalid for {code_change}/{feature}: {detail}"
+    )]
     BadTimestamp {
         /// Code-change IRI.
         code_change: String,

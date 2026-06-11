@@ -95,8 +95,22 @@ fn validate_result_subject(
     check_result_rationale(quads, subject, &mut violations);
     let parent_graph = check_result_of(quads, subject, &mut violations);
     let trace_iris = collect_step_trace_list(quads, subject);
-    check_step_traces_length_parity(quads, subject, parent_graph.as_ref(), &trace_iris, store, &mut violations);
-    check_step_trace_membership(quads, subject, parent_graph.as_ref(), &trace_iris, store, &mut violations);
+    check_step_traces_length_parity(
+        quads,
+        subject,
+        parent_graph.as_ref(),
+        &trace_iris,
+        store,
+        &mut violations,
+    );
+    check_step_trace_membership(
+        quads,
+        subject,
+        parent_graph.as_ref(),
+        &trace_iris,
+        store,
+        &mut violations,
+    );
     check_verdict_trace_consistency(quads, subject, &trace_iris, &mut violations);
     violations
 }
@@ -122,9 +136,13 @@ fn check_result_verdict(
             &format!("expected exactly one dec:verdict, found {}", values.len()),
         ));
     }
-    let allowed: BTreeSet<&str> = [VERDICT_APPROVED, VERDICT_REJECTED, VERDICT_AMENDMENT_REQUIRED]
-        .into_iter()
-        .collect();
+    let allowed: BTreeSet<&str> = [
+        VERDICT_APPROVED,
+        VERDICT_REJECTED,
+        VERDICT_AMENDMENT_REQUIRED,
+    ]
+    .into_iter()
+    .collect();
     for v in &values {
         if !allowed.contains(v.as_str()) {
             violations.push(result_violation(
@@ -243,8 +261,10 @@ fn check_step_trace_membership(
     let Some(parent_steps) = lookup_parent_steps(quads, graph, store) else {
         return;
     };
-    let parent_set: BTreeSet<String> =
-        parent_steps.iter().map(|n| n.as_str().to_string()).collect();
+    let parent_set: BTreeSet<String> = parent_steps
+        .iter()
+        .map(|n| n.as_str().to_string())
+        .collect();
     for trace_iri in trace_iris {
         // The traces_step value is a property of the trace itself, but
         // we can look it up either via the local quads or via the store.
@@ -356,7 +376,10 @@ fn validate_trace_subject(
         violations.push(trace_violation(
             subject,
             IRI_DEC_TRACES_STEP,
-            &format!("expected exactly one dec:tracesStep, found {}", values.len()),
+            &format!(
+                "expected exactly one dec:tracesStep, found {}",
+                values.len()
+            ),
         ));
     }
     // outcome — required, allowed enum
@@ -374,9 +397,7 @@ fn validate_trace_subject(
                 violations.push(trace_violation(
                     subject,
                     IRI_DEC_OUTCOME,
-                    &format!(
-                        "dec:outcome must be one of {{pass, fail, unrunnable}}, got {v:?}"
-                    ),
+                    &format!("dec:outcome must be one of {{pass, fail, unrunnable}}, got {v:?}"),
                 ));
             }
         }
@@ -568,7 +589,12 @@ fn walk_store_list(store: &Store, head: &Term) -> Vec<NamedNode> {
         };
         let mut first: Option<NamedNode> = None;
         for q in store
-            .quads_for_pattern(Some(head_subj.as_ref()), Some(rdf_first.as_ref()), None, None)
+            .quads_for_pattern(
+                Some(head_subj.as_ref()),
+                Some(rdf_first.as_ref()),
+                None,
+                None,
+            )
             .filter_map(Result::ok)
         {
             if let Term::NamedNode(n) = q.object {
@@ -580,7 +606,12 @@ fn walk_store_list(store: &Store, head: &Term) -> Vec<NamedNode> {
         out.push(f);
         let mut rest: Option<Term> = None;
         for q in store
-            .quads_for_pattern(Some(head_subj.as_ref()), Some(rdf_rest.as_ref()), None, None)
+            .quads_for_pattern(
+                Some(head_subj.as_ref()),
+                Some(rdf_rest.as_ref()),
+                None,
+                None,
+            )
             .filter_map(Result::ok)
         {
             rest = Some(q.object);

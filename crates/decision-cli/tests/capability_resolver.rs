@@ -13,9 +13,7 @@
 
 use std::sync::Arc;
 
-use decision_cli::core::dispatch::{
-    resolve_default_capability, ResolvedCapability, ResolverError,
-};
+use decision_cli::core::dispatch::{resolve_default_capability, ResolvedCapability, ResolverError};
 use decision_cli::core::ontology::capability::{
     Capability, CapabilityStatus, CostCurrency, Endpoint,
 };

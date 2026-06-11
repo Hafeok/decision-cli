@@ -82,11 +82,7 @@ pub(super) fn collect_non_empty(
 /// Returns true iff `<graph_dir>/<graph_short>.ttl` parses cleanly
 /// and at least one of its steps has `dec:providesEvidenceFor`
 /// pointing at one of the listed TCs.
-fn graph_has_disk_evidence_for(
-    graph_dir: &Path,
-    graph_short: &str,
-    expected_tcs: &[TcId],
-) -> bool {
+fn graph_has_disk_evidence_for(graph_dir: &Path, graph_short: &str, expected_tcs: &[TcId]) -> bool {
     use crate::core::ontology::verification_graph::io::from_turtle;
     let path = graph_dir.join(format!("{graph_short}.ttl"));
     let Ok(graph) = from_turtle(&path) else {

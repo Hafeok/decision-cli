@@ -20,9 +20,7 @@ use decision_cli::core::dispatch::{
 use decision_cli::core::ontology::capability::{
     Capability, CapabilityStatus, CostCurrency, Endpoint,
 };
-use decision_cli::core::ontology::role_binding::{
-    EscalationStep, RoleBinding, TriggerSignal,
-};
+use decision_cli::core::ontology::role_binding::{EscalationStep, RoleBinding, TriggerSignal};
 use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::vocab::{capability_graph, role_binding_graph};
 use decision_cli::StreamWriter;
@@ -153,7 +151,10 @@ fn commit(w: &StreamWriter, quads: Vec<Quad>) {
 
 fn seed(w: &StreamWriter) {
     commit(w, code_writer().to_quads(capability_graph()));
-    commit(w, standard_reasoning_frontier().to_quads(capability_graph()));
+    commit(
+        w,
+        standard_reasoning_frontier().to_quads(capability_graph()),
+    );
     commit(w, deep_reasoning().to_quads(capability_graph()));
     commit(w, verifier_binding().to_quads(role_binding_graph()));
 }
@@ -172,7 +173,11 @@ impl WorkerRunner for CannedVerifier {
         session_id: &SessionId,
     ) -> Result<DispatchAttempt, EscalationError> {
         let idx = prior.len();
-        let (kind, confidence) = self.calls.get(idx).copied().unwrap_or((Verdict::Approved, Some(1.0)));
+        let (kind, confidence) = self
+            .calls
+            .get(idx)
+            .copied()
+            .unwrap_or((Verdict::Approved, Some(1.0)));
         Ok(DispatchAttempt {
             session_id: session_id.clone(),
             capability: capability.clone(),
@@ -203,24 +208,31 @@ fn foundational_low_confidence_escalates_twice() {
         ],
     };
     // Different cache token counts per tier to validate FT-057 fields.
-    let chain = dispatch_role(&store, &w, "verifier", foundational_bundle(), &mut runner, |a| {
-        // Scaleway tiers have no cache; Anthropic third tier writes cache.
-        if a.capability.endpoint == Endpoint::Anthropic {
-            AttemptTokens {
-                input_base: 200,
-                input_cache_write: 3000,
-                input_cache_hit: 0,
-                output: 100,
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "verifier",
+        foundational_bundle(),
+        &mut runner,
+        |a| {
+            // Scaleway tiers have no cache; Anthropic third tier writes cache.
+            if a.capability.endpoint == Endpoint::Anthropic {
+                AttemptTokens {
+                    input_base: 200,
+                    input_cache_write: 3000,
+                    input_cache_hit: 0,
+                    output: 100,
+                }
+            } else {
+                AttemptTokens {
+                    input_base: 100,
+                    input_cache_write: 0,
+                    input_cache_hit: 0,
+                    output: 50,
+                }
             }
-        } else {
-            AttemptTokens {
-                input_base: 100,
-                input_cache_write: 0,
-                input_cache_hit: 0,
-                output: 50,
-            }
-        }
-    })
+        },
+    )
     .expect("dispatch ok");
 
     assert_eq!(chain.attempts.len(), 3, "expected three sessions");
@@ -248,9 +260,14 @@ fn three_session_chain_is_bidirectionally_linked() {
             (Verdict::Approved, Some(0.95)),
         ],
     };
-    let chain = dispatch_role(&store, &w, "verifier", foundational_bundle(), &mut runner, |_| {
-        AttemptTokens::default()
-    })
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "verifier",
+        foundational_bundle(),
+        &mut runner,
+        |_| AttemptTokens::default(),
+    )
     .expect("dispatch ok");
 
     let s1 = chain.attempts[0].session_id.as_str();
@@ -299,18 +316,25 @@ fn deep_reasoning_step_records_cache_write_tokens() {
             (Verdict::Approved, Some(0.95)),
         ],
     };
-    let chain = dispatch_role(&store, &w, "verifier", foundational_bundle(), &mut runner, |a| {
-        if a.capability.endpoint == Endpoint::Anthropic {
-            AttemptTokens {
-                input_base: 200,
-                input_cache_write: 3000,
-                input_cache_hit: 0,
-                output: 100,
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "verifier",
+        foundational_bundle(),
+        &mut runner,
+        |a| {
+            if a.capability.endpoint == Endpoint::Anthropic {
+                AttemptTokens {
+                    input_base: 200,
+                    input_cache_write: 3000,
+                    input_cache_hit: 0,
+                    output: 100,
+                }
+            } else {
+                AttemptTokens::default()
             }
-        } else {
-            AttemptTokens::default()
-        }
-    })
+        },
+    )
     .expect("dispatch ok");
 
     let s3 = chain.attempts[2].session_id.as_str();
@@ -332,7 +356,10 @@ fn deep_reasoning_step_records_cache_write_tokens() {
             }
         }
     }
-    assert_eq!(found, 3000, "deep-reasoning session must record cache-write tokens");
+    assert_eq!(
+        found, 3000,
+        "deep-reasoning session must record cache-write tokens"
+    );
 
     // Scaleway tiers have zero cache writes.
     for s in &[

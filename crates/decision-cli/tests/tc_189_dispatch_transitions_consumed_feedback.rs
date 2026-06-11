@@ -97,7 +97,9 @@ fn seed_produced_defect_for_implementer(workdir: &Path, iri: &str, source_tc_iri
         in_stream: stream_iri,
     };
     let quads = fb.to_quads(orchestration_graph());
-    writer.commit(Mutation::insert(quads)).expect("commit feedback");
+    writer
+        .commit(Mutation::insert(quads))
+        .expect("commit feedback");
     persist_store(&store, &dump).expect("persist store");
 }
 
@@ -143,9 +145,8 @@ fn tc_189_dispatch_transitions_consumed_feedback() {
 
     // Simulate the implementer's accept path: a fresh CodeChange just
     // landed and the worker cited this feedback. Walk it through.
-    let code_change_iri = NamedNode::new_unchecked(
-        "https://decision-cli.dev/ns/code-change/test-tc189-codechange-1",
-    );
+    let code_change_iri =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/code-change/test-tc189-codechange-1");
     let session_iri = NamedNode::new_unchecked(
         "https://decision-cli.dev/ns/activity/implement/test-tc189-session",
     );

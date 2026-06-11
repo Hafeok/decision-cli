@@ -92,8 +92,8 @@ fn tc_193_worker_dispatch_sessions_materialize() {
     .expect("vga re-materialize");
     assert!(!again, "second call against already-typed IRI is a no-op");
 
-    let dump_body = fs::read_to_string(wd.path().join(".dec/store/orchestration.nq"))
-        .expect("read dump");
+    let dump_body =
+        fs::read_to_string(wd.path().join(".dec/store/orchestration.nq")).expect("read dump");
     // dec:Session typing quad lands.
     let session_class_line = format!(
         "<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://decision-cli.dev/ns#Session>",
@@ -119,9 +119,8 @@ fn tc_193_worker_dispatch_sessions_materialize() {
     )));
 
     // ----- Scenario B: implementer dispatch IRI with `Failed` status -----
-    let imp_iri = NamedNode::new_unchecked(
-        "https://decision-cli.dev/ns/activity/implement/disp-T193b",
-    );
+    let imp_iri =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/activity/implement/disp-T193b");
     materialize(
         wd.path(),
         &imp_iri,
@@ -133,8 +132,8 @@ fn tc_193_worker_dispatch_sessions_materialize() {
     )
     .expect("implementer materialize");
 
-    let dump_body = fs::read_to_string(wd.path().join(".dec/store/orchestration.nq"))
-        .expect("read dump");
+    let dump_body =
+        fs::read_to_string(wd.path().join(".dec/store/orchestration.nq")).expect("read dump");
     assert!(
         dump_body.contains(&format!(
             "<{}> <https://decision-cli.dev/ns#roleId> \"implementer\"",

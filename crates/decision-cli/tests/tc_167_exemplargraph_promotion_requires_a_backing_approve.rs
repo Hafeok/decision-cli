@@ -19,9 +19,7 @@ use decision_cli::vocab::{
 };
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
-use oxigraph::model::{
-    GraphName, GraphNameRef, Literal, NamedNode, NamedNodeRef, Quad,
-};
+use oxigraph::model::{GraphName, GraphNameRef, Literal, NamedNode, NamedNodeRef, Quad};
 use oxigraph::store::Store;
 
 const STREAM_IRI: &str = "https://decision-cli.dev/stream/tc-167";
@@ -48,7 +46,10 @@ fn rationale_text() -> String {
 }
 
 fn vg_iri(id: &str) -> NamedNode {
-    NamedNode::new(format!("https://decision-cli.dev/ns/graph/verify-graph/{id}")).unwrap()
+    NamedNode::new(format!(
+        "https://decision-cli.dev/ns/graph/verify-graph/{id}"
+    ))
+    .unwrap()
 }
 
 fn vgr_iri(id: &str) -> NamedNode {
@@ -123,7 +124,9 @@ fn scenario_a_promotion_of_a_proven_vg_succeeds() {
             Some(oxigraph::model::Subject::NamedNode(ex_iri).as_ref()),
             None,
             None,
-            Some(GraphNameRef::NamedNode(NamedNodeRef::new_unchecked(g.as_str()))),
+            Some(GraphNameRef::NamedNode(NamedNodeRef::new_unchecked(
+                g.as_str(),
+            ))),
         )
         .count();
     assert!(count > 0, "EX-001 must be persisted in catalog graph");
@@ -147,8 +150,7 @@ fn scenario_b_promotion_of_unproven_vg_is_rejected() {
         supersedes: None,
     };
 
-    let err = commit(&w, ex.to_quads())
-        .expect_err("promotion of unproven VG must be rejected");
+    let err = commit(&w, ex.to_quads()).expect_err("promotion of unproven VG must be rejected");
     assert!(
         err.contains("SHACL violation"),
         "error must be tagged as SHACL violation; got: {err}"
@@ -179,13 +181,13 @@ fn scenario_c_latest_verdict_counts_after_prior_failure() {
         exemplar_of: vg.clone(),
         applies_to_safety_class: SafetyClassTag::Isolated,
         pattern_name: "recovered".to_string(),
-        rationale: "Demonstrates that the latest verdict is what counts; prior failures do not block."
-            .to_string(),
+        rationale:
+            "Demonstrates that the latest verdict is what counts; prior failures do not block."
+                .to_string(),
         based_on_approved_result: latest_vgr.clone(),
         supersedes: None,
     };
-    commit(&w, ex.to_quads())
-        .expect("promotion succeeds when latest VGR is approved");
+    commit(&w, ex.to_quads()).expect("promotion succeeds when latest VGR is approved");
 
     // basedOnApprovedResult resolves to VGR-003.
     let bound = read_based_on(&store, &ex.iri());
@@ -208,8 +210,7 @@ fn scenario_d_rationale_too_short_is_rejected() {
         based_on_approved_result: vgr,
         supersedes: None,
     };
-    let err = commit(&w, ex.to_quads())
-        .expect_err("rationale too short must be rejected");
+    let err = commit(&w, ex.to_quads()).expect_err("rationale too short must be rejected");
     assert!(
         err.contains("SHACL violation"),
         "error must be tagged as SHACL violation; got: {err}"

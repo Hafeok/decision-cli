@@ -223,10 +223,13 @@ mod tests {
                     - id: ADR-013\n    \
                     reason: \"because reasons\"\n";
         let got = parse_adrs_rejected(body).expect("parse");
-        assert_eq!(got, vec![RejectedAdr {
-            id: "ADR-013".into(),
-            reason: "because reasons".into(),
-        }]);
+        assert_eq!(
+            got,
+            vec![RejectedAdr {
+                id: "ADR-013".into(),
+                reason: "because reasons".into(),
+            }]
+        );
     }
 
     #[test]

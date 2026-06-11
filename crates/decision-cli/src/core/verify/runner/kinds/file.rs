@@ -58,11 +58,7 @@ impl StepKindHandler for FileHandler {
             Ok(b) => b,
             Err(e) => {
                 let ended = iso_now();
-                return StepRunTrace::unrunnable(
-                    started,
-                    ended,
-                    format!("read failed: {e}"),
-                );
+                return StepRunTrace::unrunnable(started, ended, format!("read failed: {e}"));
             }
         };
         if let Some(expected) = expect_hash {

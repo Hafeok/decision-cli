@@ -24,8 +24,8 @@
 use std::cell::RefCell;
 use std::collections::VecDeque;
 
-use crate::core::drive::{Action, ArtifactKind, ArtifactRef, PlanContext, Planner};
 use crate::core::drive::planner::PlanError;
+use crate::core::drive::{Action, ArtifactKind, ArtifactRef, PlanContext, Planner};
 
 use super::super::inspect::{FeatureVerdict, GraphInspector};
 
@@ -97,11 +97,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
 
     /// Core classification — separated from the `Planner` trait impl
     /// so tests can call it without a `PlanContext`.
-    pub fn classify(
-        &self,
-        feature_id: &str,
-        default_env_id: &str,
-    ) -> Result<Action, PlanError> {
+    pub fn classify(&self, feature_id: &str, default_env_id: &str) -> Result<Action, PlanError> {
         // FT-139 / ADR-080: TaskType classifier branch — first priority.
         // Reads `task_type:` from the feature_spec front-matter and, if it
         // matches a registered TaskType in `core::task_type::registry`,
@@ -140,9 +136,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         // cruft from past sessions.
         let needs_graphs_check = matches!(
             verdict,
-            FeatureVerdict::NeverRun
-                | FeatureVerdict::Rejected
-                | FeatureVerdict::AmendmentRequired
+            FeatureVerdict::NeverRun | FeatureVerdict::Rejected | FeatureVerdict::AmendmentRequired
         );
         let graphs_exist = if needs_graphs_check {
             self.inspector
@@ -242,19 +236,18 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
             .filter(|p| p.feature_id == feature_id)
             .map_or(false, |p| p.escalated_in_chain);
 
-        let mut final_action = match self
-            .detect_no_progress(feature_id, verdict, impl_open, vga_open, &intended)
-        {
-            Some(NoProgress::Stuck { reason }) => Action::Stuck { reason },
-            Some(NoProgress::EscalateVgaToImplementer) => Action::EscalateVgaToImplementer {
-                feature_id: feature_id.to_string(),
-            },
-            Some(NoProgress::EscalateImplementerToVga) => Action::EscalateImplementerToVga {
-                feature_id: feature_id.to_string(),
-                env_id: default_env_id.to_string(),
-            },
-            None => intended.clone(),
-        };
+        let mut final_action =
+            match self.detect_no_progress(feature_id, verdict, impl_open, vga_open, &intended) {
+                Some(NoProgress::Stuck { reason }) => Action::Stuck { reason },
+                Some(NoProgress::EscalateVgaToImplementer) => Action::EscalateVgaToImplementer {
+                    feature_id: feature_id.to_string(),
+                },
+                Some(NoProgress::EscalateImplementerToVga) => Action::EscalateImplementerToVga {
+                    feature_id: feature_id.to_string(),
+                    env_id: default_env_id.to_string(),
+                },
+                None => intended.clone(),
+            };
 
         // Graph-theoretic cycle backstop. The pairwise no-progress
         // detector above catches two-in-a-row repeats; this catches
@@ -316,10 +309,7 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
     /// Buffer is per-feature: a stale buffer from an earlier
     /// classify on a different feature is cleared on the first call
     /// for the new feature.
-    fn detect_state_hash_cycle(
-        &self,
-        feature_id: &str,
-    ) -> Result<Option<usize>, PlanError> {
+    fn detect_state_hash_cycle(&self, feature_id: &str) -> Result<Option<usize>, PlanError> {
         let hash = self
             .inspector
             .state_hash_for_feature(feature_id)
@@ -375,24 +365,19 @@ impl<I: GraphInspector> FeatureShipPlanner<I> {
         // post-escalation observations and detect normally.
         if matches!(
             prev.final_action,
-            Action::EscalateVgaToImplementer { .. }
-                | Action::EscalateImplementerToVga { .. }
+            Action::EscalateVgaToImplementer { .. } | Action::EscalateImplementerToVga { .. }
         ) {
             return None;
         }
         match (&prev.final_action, intended) {
-            (
-                Action::DispatchImplementer { .. },
-                Action::DispatchImplementer { .. },
-            ) => no_progress_for_impl(prev, feature_id, impl_open),
+            (Action::DispatchImplementer { .. }, Action::DispatchImplementer { .. }) => {
+                no_progress_for_impl(prev, feature_id, impl_open)
+            }
             (
                 Action::DispatchVerifyGraphAuthor { .. },
                 Action::DispatchVerifyGraphAuthor { .. },
             ) => no_progress_for_vga(prev, feature_id, vga_open),
-            (
-                Action::DispatchVerifier { .. },
-                Action::DispatchVerifier { .. },
-            ) => {
+            (Action::DispatchVerifier { .. }, Action::DispatchVerifier { .. }) => {
                 if verdict == prev.verdict
                     && impl_open == prev.impl_open
                     && vga_open == prev.vga_open
@@ -564,10 +549,7 @@ fn read_task_type_from_frontmatter(cwd: &std::path::Path, feature_id: &str) -> O
     None
 }
 
-fn read_task_type_from_routing_config(
-    cwd: &std::path::Path,
-    feature_id: &str,
-) -> Option<String> {
+fn read_task_type_from_routing_config(cwd: &std::path::Path, feature_id: &str) -> Option<String> {
     let config_path = cwd.join(".dec").join("task-types.toml");
     let body = std::fs::read_to_string(&config_path).ok()?;
     let value: toml::Value = body.parse().ok()?;
@@ -584,10 +566,7 @@ fn read_task_type_from_routing_config(
 /// missing table, or out-of-range value — caller falls back to the
 /// module-level default in `cluster_dispatch::MAX_CELL_TURNS`.
 #[must_use]
-pub fn read_max_turns_for_task_type(
-    cwd: &std::path::Path,
-    task_type_name: &str,
-) -> Option<u32> {
+pub fn read_max_turns_for_task_type(cwd: &std::path::Path, task_type_name: &str) -> Option<u32> {
     let config_path = cwd.join(".dec").join("task-types.toml");
     let body = std::fs::read_to_string(&config_path).ok()?;
     let value: toml::Value = body.parse().ok()?;
@@ -672,8 +651,8 @@ pub fn classify_for_task_type_value(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::super::inspect::InspectError;
+    use super::*;
 
     /// Stub inspector returning fixed (verdict, impl_count, vga_count).
     struct StubInspector {
@@ -683,10 +662,7 @@ mod tests {
     }
 
     impl GraphInspector for StubInspector {
-        fn aggregate_verdict_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<FeatureVerdict, InspectError> {
+        fn aggregate_verdict_for_feature(&self, _: &str) -> Result<FeatureVerdict, InspectError> {
             Ok(self.verdict)
         }
         fn open_defect_feedback_count(
@@ -778,10 +754,7 @@ mod tests {
             fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
                 Ok(stub_hash(self.verdict, self.impl_count, self.vga_count))
             }
-            fn product_verify_passes_for_feature(
-                &self,
-                _: &str,
-            ) -> Result<bool, InspectError> {
+            fn product_verify_passes_for_feature(&self, _: &str) -> Result<bool, InspectError> {
                 Ok(true)
             }
         }
@@ -827,11 +800,7 @@ mod tests {
             ) -> Result<FeatureVerdict, InspectError> {
                 Ok(FeatureVerdict::Approved)
             }
-            fn open_defect_feedback_count(
-                &self,
-                _: &str,
-                _: &str,
-            ) -> Result<usize, InspectError> {
+            fn open_defect_feedback_count(&self, _: &str, _: &str) -> Result<usize, InspectError> {
                 Ok(0)
             }
             fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
@@ -840,10 +809,7 @@ mod tests {
             fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
                 Ok(stub_hash(FeatureVerdict::Approved, 0, 0))
             }
-            fn product_verify_passes_for_feature(
-                &self,
-                _: &str,
-            ) -> Result<bool, InspectError> {
+            fn product_verify_passes_for_feature(&self, _: &str) -> Result<bool, InspectError> {
                 Ok(false)
             }
         }
@@ -853,9 +819,9 @@ mod tests {
             Action::DispatchImplementer { feature_id } => {
                 assert_eq!(feature_id, "FT-TEST");
             }
-            other => panic!(
-                "expected DispatchImplementer when product verify fails, got {other:?}"
-            ),
+            other => {
+                panic!("expected DispatchImplementer when product verify fails, got {other:?}")
+            }
         }
     }
 
@@ -867,7 +833,10 @@ mod tests {
             FeatureVerdict::NeverRun,
         ] {
             let action = run_case(verdict, 2, 0);
-            assert!(matches!(action, Action::DispatchImplementer { .. }), "{verdict:?}");
+            assert!(
+                matches!(action, Action::DispatchImplementer { .. }),
+                "{verdict:?}"
+            );
         }
     }
 
@@ -913,13 +882,19 @@ mod tests {
         // (Verifier, Verifier) no-state-change detector handles the
         // case where the re-run also produces nothing.
         let action = run_case(FeatureVerdict::Rejected, 0, 0);
-        assert!(matches!(action, Action::DispatchVerifier { .. }), "got {action:?}");
+        assert!(
+            matches!(action, Action::DispatchVerifier { .. }),
+            "got {action:?}"
+        );
     }
 
     #[test]
     fn amendment_required_with_no_open_feedback_redispatches_verifier() {
         let action = run_case(FeatureVerdict::AmendmentRequired, 0, 0);
-        assert!(matches!(action, Action::DispatchVerifier { .. }), "got {action:?}");
+        assert!(
+            matches!(action, Action::DispatchVerifier { .. }),
+            "got {action:?}"
+        );
     }
 
     #[test]
@@ -967,10 +942,7 @@ mod tests {
     }
 
     impl GraphInspector for MutableStubInspector {
-        fn aggregate_verdict_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<FeatureVerdict, InspectError> {
+        fn aggregate_verdict_for_feature(&self, _: &str) -> Result<FeatureVerdict, InspectError> {
             Ok(self.verdict.get())
         }
         fn open_defect_feedback_count(
@@ -1034,7 +1006,10 @@ mod tests {
         let a3 = planner.classify("FT-TEST", "ENV-002").unwrap();
         // Settling round — detection skipped; planner dispatches
         // implementer against the rerouted defects.
-        assert!(matches!(a3, Action::DispatchImplementer { .. }), "got {a3:?}");
+        assert!(
+            matches!(a3, Action::DispatchImplementer { .. }),
+            "got {a3:?}"
+        );
         // Implementer ran but couldn't reduce impl_open. Now the
         // detector fires terminal Stuck because escalation was used.
         let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
@@ -1063,7 +1038,10 @@ mod tests {
         planner.inspector.impl_count.set(0);
         planner.inspector.vga_count.set(3);
         let a3 = planner.classify("FT-TEST", "ENV-002").unwrap();
-        assert!(matches!(a3, Action::DispatchVerifyGraphAuthor { .. }), "got {a3:?}");
+        assert!(
+            matches!(a3, Action::DispatchVerifyGraphAuthor { .. }),
+            "got {a3:?}"
+        );
         let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
         match a4 {
             Action::Stuck { reason } => {
@@ -1156,7 +1134,10 @@ mod tests {
         // Simulate the bootstrap result: graphs now exist, the auto-run
         // emitted 3 verifier-defects.
         planner.inspector.graphs_exist.set(true);
-        planner.inspector.verdict.set(FeatureVerdict::AmendmentRequired);
+        planner
+            .inspector
+            .verdict
+            .set(FeatureVerdict::AmendmentRequired);
         planner.inspector.vga_count.set(3);
         let a2 = planner.classify("FT-104", "ENV-002").unwrap();
         assert!(
@@ -1246,10 +1227,7 @@ mod tests {
         let a3 = planner.classify("FT-TEST", "ENV-002").unwrap();
         match a3 {
             Action::Stuck { reason } => {
-                assert!(
-                    reason.contains("state-hash cycle"),
-                    "reason: {reason}"
-                );
+                assert!(reason.contains("state-hash cycle"), "reason: {reason}");
                 assert!(reason.contains("period 2"), "reason: {reason}");
             }
             other => panic!("expected Stuck from cycle detector, got {other:?}"),
@@ -1282,10 +1260,7 @@ mod tests {
         let a4 = planner.classify("FT-TEST", "ENV-002").unwrap();
         match a4 {
             Action::Stuck { reason } => {
-                assert!(
-                    reason.contains("state-hash cycle"),
-                    "reason: {reason}"
-                );
+                assert!(reason.contains("state-hash cycle"), "reason: {reason}");
                 assert!(reason.contains("period 3"), "reason: {reason}");
             }
             other => panic!("expected Stuck from cycle detector, got {other:?}"),
@@ -1322,9 +1297,7 @@ mod tests {
         // Pairwise wins: this is escalation, not "state-hash cycle".
         match a2 {
             Action::EscalateImplementerToVga { .. } => {}
-            other => panic!(
-                "expected pairwise EscalateImplementerToVga, got {other:?}"
-            ),
+            other => panic!("expected pairwise EscalateImplementerToVga, got {other:?}"),
         }
     }
 
@@ -1346,8 +1319,8 @@ mod tests {
 
     #[test]
     fn classifier_returns_dispatch_cluster_for_task_type_frontmatter() {
-        use crate::core::drive::Action;
         use super::classify_for_task_type_value;
+        use crate::core::drive::Action;
 
         // Positive: known TaskType in registry.
         let action = classify_for_task_type_value("FT-T371", Some("add-judge-worker"))
@@ -1391,8 +1364,8 @@ mod tests {
 
     #[test]
     fn author_worker_classifier_branch() {
-        use crate::core::drive::Action;
         use super::classify_for_task_type_value;
+        use crate::core::drive::Action;
 
         // Positive: registered add-author-worker → DispatchCluster.
         let action = classify_for_task_type_value("FT-T353", Some("add-author-worker"))

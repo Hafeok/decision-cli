@@ -32,8 +32,7 @@ use crate::core::drive::planner::PlanError;
 use crate::core::drive::{Action, PlanContext, Planner};
 
 use crate::features::drive::inspect::{
-    CoveringGraphState, GraphInspector, PreflightGap, PreflightStatus,
-    TcsLinkedState,
+    CoveringGraphState, GraphInspector, PreflightGap, PreflightStatus, TcsLinkedState,
 };
 
 /// How many prior state hashes to retain (matches FT-119).
@@ -75,15 +74,9 @@ impl<I: GraphInspector> FeatureReadyOrchestratorPlanner<I> {
     }
 
     /// Pure classification (testable without PlanContext).
-    pub fn classify(
-        &self,
-        feature_id: &str,
-        default_env_id: &str,
-    ) -> Result<Action, PlanError> {
-        let (proposed, state_hash) =
-            self.classify_and_hash(feature_id, default_env_id)?;
-        let final_action =
-            self.apply_cycle_detection_with_hash(feature_id, proposed, state_hash);
+    pub fn classify(&self, feature_id: &str, default_env_id: &str) -> Result<Action, PlanError> {
+        let (proposed, state_hash) = self.classify_and_hash(feature_id, default_env_id)?;
+        let final_action = self.apply_cycle_detection_with_hash(feature_id, proposed, state_hash);
         self.record_observation_with_hash(feature_id, &final_action, state_hash);
         Ok(final_action)
     }
@@ -339,7 +332,8 @@ impl<I: GraphInspector> FeatureReadyOrchestratorPlanner<I> {
 
         // If no quality verdicts but VGs are accepted (old-style),
         // treat as ready for backward compatibility.
-        let vgs_quality_ready = vg_verdicts_count > 0 || matches!(vgs, CoveringGraphState::AcceptedAll);
+        let vgs_quality_ready =
+            vg_verdicts_count > 0 || matches!(vgs, CoveringGraphState::AcceptedAll);
 
         if !vgs_quality_ready {
             return Ok((
@@ -387,10 +381,7 @@ impl<I: GraphInspector> FeatureReadyOrchestratorPlanner<I> {
         }
         if let Some(period) = position_from_head(&buf.hashes, state_hash) {
             return Action::Stuck {
-                reason: format!(
-                    "cycle: {period} rounds on {tag}",
-                    tag = proposed.tag()
-                ),
+                reason: format!("cycle: {period} rounds on {tag}", tag = proposed.tag()),
             };
         }
 
@@ -422,7 +413,11 @@ impl<I: GraphInspector> FeatureReadyOrchestratorPlanner<I> {
 }
 
 impl<I: GraphInspector> Planner for FeatureReadyOrchestratorPlanner<I> {
-    fn plan(&self, ctx: &PlanContext, artifact: &crate::core::drive::ArtifactRef) -> Result<Action, PlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanContext,
+        artifact: &crate::core::drive::ArtifactRef,
+    ) -> Result<Action, PlanError> {
         let feature_id = artifact
             .short_id
             .strip_prefix("FT-")

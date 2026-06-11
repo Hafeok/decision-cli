@@ -7,9 +7,9 @@
 //! module automatically transitions those defects to `closed` at VGR-write
 //! time, citing the new VGR as the retracting authority.
 
+mod pipeline;
 mod query;
 mod transition;
-mod pipeline;
 
 pub mod cli;
 

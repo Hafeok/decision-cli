@@ -50,7 +50,12 @@ pub fn slice1_type_shapes() -> BTreeMap<String, TypeShape> {
 /// per-type TTL files in `core::ontology::assets::shapes/`.
 const SLICE1_TYPE_ROWS: &[(&str, &[&str], bool, bool)] = &[
     ("Acknowledgement", &["motivatedBy"], true, false),
-    ("ADR", &["addresses", "decidesFor", "supersedes"], true, false),
+    (
+        "ADR",
+        &["addresses", "decidesFor", "supersedes"],
+        true,
+        false,
+    ),
     ("Brief", &["respondsTo"], true, false),
     ("ConformanceAudit", &["audits"], true, false),
     ("Dependency", &["requiredBy"], true, false),
@@ -58,7 +63,12 @@ const SLICE1_TYPE_ROWS: &[(&str, &[&str], bool, bool)] = &[
     ("Dispatch", &[], false, true),
     (
         "Feature",
-        &["addresses", "decomposesFrom", "originatedFrom", "respondsTo"],
+        &[
+            "addresses",
+            "decomposesFrom",
+            "originatedFrom",
+            "respondsTo",
+        ],
         true,
         false,
     ),
@@ -70,7 +80,12 @@ const SLICE1_TYPE_ROWS: &[(&str, &[&str], bool, bool)] = &[
     ),
     ("Model", &["addresses", "decomposesFrom"], true, false),
     ("Policy", &["addresses", "decomposesFrom"], true, false),
-    ("QueryTemplate", &["decomposesFrom", "addresses"], true, false),
+    (
+        "QueryTemplate",
+        &["decomposesFrom", "addresses"],
+        true,
+        false,
+    ),
     ("Question", &["raisedIn", "raisedBy"], true, false),
     ("Session", &[], false, true),
     ("Subscription", &["motivatedBy"], true, false),

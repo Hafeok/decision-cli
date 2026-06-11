@@ -113,9 +113,7 @@ fn classify_image_layer(probe: &RegistryProbeOutcome) -> Option<(SignatureVerdic
 
 /// Cosign-layer triage: a cryptographic failure renders the signature
 /// unconditionally invalid; identity-trust evaluation cannot rescue it.
-fn classify_cosign_layer(
-    cosign: &CosignVerifyOutcome,
-) -> Option<(SignatureVerdictClass, String)> {
+fn classify_cosign_layer(cosign: &CosignVerifyOutcome) -> Option<(SignatureVerdictClass, String)> {
     match cosign {
         CosignVerifyOutcome::SignatureValid { .. } => None,
         CosignVerifyOutcome::SignatureInvalid { detail } => Some((
@@ -129,9 +127,7 @@ fn classify_cosign_layer(
 /// `rekor-entry-missing` regardless of whether the cosign verify itself
 /// succeeded. The inclusion proof is a load-bearing part of trusting a
 /// keyless signature.
-fn classify_rekor_layer(
-    rekor: &RekorLookupOutcome,
-) -> Option<(SignatureVerdictClass, String)> {
+fn classify_rekor_layer(rekor: &RekorLookupOutcome) -> Option<(SignatureVerdictClass, String)> {
     match rekor {
         RekorLookupOutcome::Confirmed => None,
         RekorLookupOutcome::Missing { detail } => Some((
@@ -164,10 +160,7 @@ fn classify_identity_layer(
                 "signature cryptographically valid, Rekor inclusion confirmed, \
                  identity matches trust-list entry #{idx}{note}.",
                 idx = outcome.entry_index,
-                note = outcome
-                    .note
-                    .map(|n| format!(" ({n})"))
-                    .unwrap_or_default(),
+                note = outcome.note.map(|n| format!(" ({n})")).unwrap_or_default(),
             ),
         )),
         Err(IdentityMatchError::EmptyTrustList) => {

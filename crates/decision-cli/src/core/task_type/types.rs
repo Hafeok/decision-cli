@@ -67,7 +67,7 @@ pub struct CellDecl {
     /// `cluster_dispatch::cell_filename`.
     ///
     /// Examples:
-    /// - `"crates/decision-cli/src/core/ontology/{artifact_name}.rs"`
+    /// - `"crates/dec-ontology/src/ontology/{artifact_name}.rs"`
     /// - `"workers/{worker_name}/src/{worker_name}/agent/loop.py"`
     /// - `""` (uses flat convention — backwards-compat with FT-145's
     ///   `add-cli-subcommand` cluster).

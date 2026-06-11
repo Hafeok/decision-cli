@@ -115,7 +115,6 @@ pub(super) fn validate_bundles(quads: &[Quad]) -> Result<()> {
 /// uniqueness across the active set, the single-active OntologyDescription
 /// rule, and ExemplarGraph backing-result resolution.
 pub(super) fn validate_catalog(quads: &[Quad], store: Option<&Store>) -> Result<()> {
-    validate_catalog_quads_with_store(quads, store).map_err(|err| {
-        anyhow!("SHACL violation: catalog mutation refused\n{}", err.report)
-    })
+    validate_catalog_quads_with_store(quads, store)
+        .map_err(|err| anyhow!("SHACL violation: catalog mutation refused\n{}", err.report))
 }

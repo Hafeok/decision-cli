@@ -37,8 +37,7 @@ const STREAM_IRI: &str = "https://decision-cli.dev/stream/tc-102";
 // ---------------------------------------------------------------------------
 
 fn focal() -> NamedNode {
-    NamedNode::new("https://decision-cli.dev/ns/capability/code-writer/v1")
-        .expect("focal iri")
+    NamedNode::new("https://decision-cli.dev/ns/capability/code-writer/v1").expect("focal iri")
 }
 
 fn writer() -> (Arc<Store>, StreamWriter) {
@@ -93,12 +92,7 @@ fn well_formed_bundle_commits_through_stream_writer() {
         .build();
     commit_quads(&w, b.to_quads(bundle_graph())).expect("bundle commits");
     let n = store
-        .quads_for_pattern(
-            Some(Subject::NamedNode(b.iri()).as_ref()),
-            None,
-            None,
-            None,
-        )
+        .quads_for_pattern(Some(Subject::NamedNode(b.iri()).as_ref()), None, None, None)
         .count();
     assert!(n > 0, "bundle must persist after commit");
 }
@@ -260,8 +254,7 @@ fn default_ladder_is_pure_and_deterministic() {
 fn builder_with_stakes_overrides_default() {
     // A focal artifact whose default would be Routine — overridden to
     // Foundational by the explicit call.
-    let unknown_focal =
-        NamedNode::new("https://example.com/focal/unknown").expect("focal iri");
+    let unknown_focal = NamedNode::new("https://example.com/focal/unknown").expect("focal iri");
     let b = BundleBuilder::new("hash-override", unknown_focal)
         .with_stakes(Stakes::Foundational)
         .build();

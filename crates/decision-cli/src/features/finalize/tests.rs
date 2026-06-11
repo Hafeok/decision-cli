@@ -61,11 +61,7 @@ fn summary_picks_first_nonblank_line() {
 #[test]
 fn scope_guard_allows_in_scope_modification() {
     use super::{finalize_run, FinalizeError, FinalizeInput};
-    let repo = scope_test_setup_repo(
-        "FT-200",
-        &["crates/feature_200/lib.rs"],
-        "initial impl",
-    );
+    let repo = scope_test_setup_repo("FT-200", &["crates/feature_200/lib.rs"], "initial impl");
     // Worker modifies the in-scope file.
     std::fs::write(
         repo.join("crates/feature_200/lib.rs"),
@@ -95,11 +91,7 @@ fn scope_guard_allows_in_scope_modification() {
 #[test]
 fn scope_guard_blocks_out_of_scope_modification() {
     use super::{finalize_run, FinalizeError, FinalizeInput};
-    let repo = scope_test_setup_repo(
-        "FT-201",
-        &["crates/feature_201/lib.rs"],
-        "initial impl",
-    );
+    let repo = scope_test_setup_repo("FT-201", &["crates/feature_201/lib.rs"], "initial impl");
     // A DIFFERENT feature added the unrelated file later — FT-201's
     // allowlist must not include it.
     std::fs::create_dir_all(repo.join("crates/unrelated")).unwrap();
@@ -115,7 +107,12 @@ fn scope_guard_blocks_out_of_scope_modification() {
         .unwrap();
     std::process::Command::new("git")
         .current_dir(&repo)
-        .args(["commit", "-m", "[FT-other] unrelated touch", "--no-gpg-sign"])
+        .args([
+            "commit",
+            "-m",
+            "[FT-other] unrelated touch",
+            "--no-gpg-sign",
+        ])
         .output()
         .unwrap();
     // Worker (running for FT-201 with defect feedback) modifies the
@@ -394,8 +391,8 @@ fn scope_guard_permits_system_path_modifications() {
         defect_scoped: true,
         scope_guard_extras: &[],
     };
-    let outcome = finalize_run(&input)
-        .expect("finalize succeeds: .dec/ and .product/ are system paths");
+    let outcome =
+        finalize_run(&input).expect("finalize succeeds: .dec/ and .product/ are system paths");
     assert!(
         outcome.commit_sha.is_some(),
         "expected commit, got outcome: {outcome:?}"
@@ -405,11 +402,7 @@ fn scope_guard_permits_system_path_modifications() {
 /// Build a fresh git repo with one `[FT-XXX]` commit that touches
 /// `files`. Returns the repo path. Each file gets created with
 /// trivial contents so the commit succeeds.
-fn scope_test_setup_repo(
-    feature_id: &str,
-    files: &[&str],
-    msg: &str,
-) -> std::path::PathBuf {
+fn scope_test_setup_repo(feature_id: &str, files: &[&str], msg: &str) -> std::path::PathBuf {
     use std::process::Command;
     let base = std::env::temp_dir().join(format!(
         "decision-cli-scope-{feature_id}-{}-{}",
@@ -441,7 +434,12 @@ fn scope_test_setup_repo(
     run(&["add", "-A"]);
     Command::new("git")
         .current_dir(&base)
-        .args(["commit", "-m", &format!("[{feature_id}] {msg}"), "--no-gpg-sign"])
+        .args([
+            "commit",
+            "-m",
+            &format!("[{feature_id}] {msg}"),
+            "--no-gpg-sign",
+        ])
         .output()
         .unwrap();
     base
@@ -549,10 +547,7 @@ fn is_always_allowed_config_extras() {
 
     // `**` glob covers descendants at any depth.
     assert!(is_always_allowed("scripts/checks/foo.sh", &extras));
-    assert!(is_always_allowed(
-        "scripts/checks/nested/bar.sh",
-        &extras
-    ));
+    assert!(is_always_allowed("scripts/checks/nested/bar.sh", &extras));
 
     // Exact match.
     assert!(is_always_allowed("deny.toml", &extras));

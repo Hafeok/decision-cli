@@ -188,12 +188,13 @@ impl FeatureVerifyResponse {
 
 /// Parse the structured `Request` envelope into [`FeatureVerifyRequest`].
 pub fn parse_request(req: &Request) -> Result<FeatureVerifyRequest, HandlerError> {
-    let mut parsed: FeatureVerifyRequest = serde_json::from_value(req.arguments.clone()).map_err(
-        |e| HandlerError::InvalidArgument {
-            field: "arguments".to_string(),
-            detail: format!("malformed dec_verify_feature arguments: {e}"),
-        },
-    )?;
+    let mut parsed: FeatureVerifyRequest =
+        serde_json::from_value(req.arguments.clone()).map_err(|e| {
+            HandlerError::InvalidArgument {
+                field: "arguments".to_string(),
+                detail: format!("malformed dec_verify_feature arguments: {e}"),
+            }
+        })?;
     if parsed.workdir.is_none() {
         parsed.workdir = std::env::current_dir().ok();
     }
@@ -265,13 +266,8 @@ pub fn run(req: &FeatureVerifyRequest) -> Result<FeatureVerifyResponse, HandlerE
         return Ok(dry_run_response(req, &tuples));
     }
 
-    let outcome = orchestrate::execute_and_aggregate(
-        &workdir,
-        &req.feature_id,
-        &feature_iri,
-        &tcs,
-        &tuples,
-    )?;
+    let outcome =
+        orchestrate::execute_and_aggregate(&workdir, &req.feature_id, &feature_iri, &tcs, &tuples)?;
     Ok(FeatureVerifyResponse {
         session_id: None,
         feature_id: req.feature_id.clone(),
@@ -394,4 +390,3 @@ mod tests {
         assert!(validate_feature_id("foo").is_err());
     }
 }
-

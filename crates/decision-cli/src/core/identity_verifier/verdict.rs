@@ -144,14 +144,24 @@ impl SignatureVerdict {
 
     fn mechanical_quads(&self, subject: &NamedNode, g: &GraphName) -> Vec<Quad> {
         vec![
-            named_quad(subject, was_generated_by_pred(), &self.generated_by_session, g),
+            named_quad(
+                subject,
+                was_generated_by_pred(),
+                &self.generated_by_session,
+                g,
+            ),
             named_quad(
                 subject,
                 was_attributed_to_pred(),
                 &self.attributed_to_agent,
                 g,
             ),
-            datetime_quad(subject, generated_at_time_pred(), &self.generated_at_time, g),
+            datetime_quad(
+                subject,
+                generated_at_time_pred(),
+                &self.generated_at_time,
+                g,
+            ),
         ]
     }
 

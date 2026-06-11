@@ -155,7 +155,10 @@ fn seed_vg_with_steps(store: &Store, vg_iri: &str, step_provides: &[(&str, &str)
         let rest = if i + 1 == step_provides.len() {
             NamedNode::new_unchecked(RDF_NIL).into()
         } else {
-            oxigraph::model::Term::BlankNode(BlankNode::new_unchecked(format!("list-head-{}", i + 1)))
+            oxigraph::model::Term::BlankNode(BlankNode::new_unchecked(format!(
+                "list-head-{}",
+                i + 1
+            )))
         };
         let rest_object: oxigraph::model::Term = rest;
         quads.push(Quad::new(
@@ -229,11 +232,9 @@ fn tc_260_orphan_query_identifies_candidates() {
     assert_eq!(scoped.len(), 1);
 
     // A different graph IRI returns nothing.
-    let other = find_orphan_defects_for_graph(
-        &store,
-        "https://decision-cli.dev/ns/verify/graph/VG-OTHER",
-    )
-    .unwrap();
+    let other =
+        find_orphan_defects_for_graph(&store, "https://decision-cli.dev/ns/verify/graph/VG-OTHER")
+            .unwrap();
     assert!(other.is_empty());
 }
 
@@ -330,7 +331,10 @@ fn tc_260_non_vgr_session_not_returned() {
     // wired to this session.
 
     let orphans = find_orphan_defects_all(&store).unwrap();
-    assert!(orphans.is_empty(), "implementer-emitted defect must not be orphan");
+    assert!(
+        orphans.is_empty(),
+        "implementer-emitted defect must not be orphan"
+    );
 }
 
 // ----------------------------------------------------------------------
@@ -428,7 +432,11 @@ fn tc_261_predicate_set_with_subpropertyof_relationship() {
     )
     .unwrap();
 
-    let predicates = ["supersededByTopologyChange", "supersededAt", "supersededReason"];
+    let predicates = [
+        "supersededByTopologyChange",
+        "supersededAt",
+        "supersededReason",
+    ];
     for pred_local in predicates {
         let pred = NamedNodeRef::new_unchecked(&format!("{DEC_NS}{pred_local}")).into_owned();
         let count = store

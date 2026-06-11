@@ -109,10 +109,7 @@ fn run_cutover_mode(workdir: &Path, args: &ProvenanceArgs) -> Result<ProvenanceO
     Ok(ProvenanceOutcome {
         message: format!(
             "cutover complete: {} orphan(s) remaining (threshold {}); warn-only={}, flipped={}",
-            outcome.orphan_count,
-            args.cutover_threshold,
-            outcome.warn_only_after,
-            outcome.flipped
+            outcome.orphan_count, args.cutover_threshold, outcome.warn_only_after, outcome.flipped
         ),
     })
 }

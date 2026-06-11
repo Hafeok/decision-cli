@@ -156,9 +156,13 @@ fn extract_conflict_paths(workdir: &std::path::Path) -> Vec<String> {
         .filter(|line| {
             // Conflict markers: UU (both modified), AA (both added), DD (both deleted)
             // Also check for U? ?U patterns
-            line.starts_with("UU ") || line.starts_with("AA ") || line.starts_with("DD ")
-                || line.starts_with("AU ") || line.starts_with("UA ")
-                || line.starts_with("DU ") || line.starts_with("UD ")
+            line.starts_with("UU ")
+                || line.starts_with("AA ")
+                || line.starts_with("DD ")
+                || line.starts_with("AU ")
+                || line.starts_with("UA ")
+                || line.starts_with("DU ")
+                || line.starts_with("UD ")
         })
         .map(|line| {
             line.split_whitespace()

@@ -85,8 +85,7 @@ impl StepKindHandler for HttpHandler {
                 let expected = expect_status.unwrap_or(200);
                 if status == expected {
                     super::StepRunTrace {
-                        outcome:
-                            crate::core::ontology::verification_result::StepOutcome::Pass,
+                        outcome: crate::core::ontology::verification_result::StepOutcome::Pass,
                         started_at: started,
                         ended_at: ended,
                         stdout_excerpt: String::new(),
@@ -97,8 +96,7 @@ impl StepKindHandler for HttpHandler {
                     }
                 } else {
                     super::StepRunTrace {
-                        outcome:
-                            crate::core::ontology::verification_result::StepOutcome::Fail,
+                        outcome: crate::core::ontology::verification_result::StepOutcome::Fail,
                         started_at: started,
                         ended_at: ended,
                         stdout_excerpt: String::new(),

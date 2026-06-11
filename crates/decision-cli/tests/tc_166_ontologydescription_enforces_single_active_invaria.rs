@@ -52,7 +52,10 @@ fn scenario_a_first_ontology_description_succeeds() {
     let (store, w) = writer();
     let first = od("OD-001", "0.3.0");
     commit(&w, first.to_quads()).expect("first OD commits cleanly");
-    assert_eq!(active_ods(&store), vec!["https://decision-cli.dev/ns/od/OD-001".to_string()]);
+    assert_eq!(
+        active_ods(&store),
+        vec!["https://decision-cli.dev/ns/od/OD-001".to_string()]
+    );
 }
 
 #[test]
@@ -62,8 +65,7 @@ fn scenario_b_parallel_active_write_is_rejected() {
     commit(&w, first.to_quads()).expect("first OD commits");
 
     let second = od("OD-002", "0.3.1");
-    let err =
-        commit(&w, second.to_quads()).expect_err("parallel active OD must be rejected");
+    let err = commit(&w, second.to_quads()).expect_err("parallel active OD must be rejected");
     assert!(
         err.contains("SHACL violation"),
         "error must be tagged as SHACL violation; got: {err}"
@@ -74,7 +76,10 @@ fn scenario_b_parallel_active_write_is_rejected() {
     );
 
     // The active set must remain unchanged.
-    assert_eq!(active_ods(&store), vec!["https://decision-cli.dev/ns/od/OD-001".to_string()]);
+    assert_eq!(
+        active_ods(&store),
+        vec!["https://decision-cli.dev/ns/od/OD-001".to_string()]
+    );
 }
 
 #[test]
@@ -89,7 +94,10 @@ fn scenario_c_supersession_unblocks_a_fresh_active_author() {
     };
     commit(&w, second.to_quads()).expect("OD-002 superseding OD-001 commits");
 
-    assert_eq!(active_ods(&store), vec!["https://decision-cli.dev/ns/od/OD-002".to_string()]);
+    assert_eq!(
+        active_ods(&store),
+        vec!["https://decision-cli.dev/ns/od/OD-002".to_string()]
+    );
     let all = all_ods(&store);
     assert!(all.contains(&"https://decision-cli.dev/ns/od/OD-001".to_string()));
     assert!(all.contains(&"https://decision-cli.dev/ns/od/OD-002".to_string()));

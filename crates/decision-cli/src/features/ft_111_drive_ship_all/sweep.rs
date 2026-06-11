@@ -17,11 +17,17 @@ use crate::drive::{run, DriveError, RunArgs};
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Outcome {
     Done,
-    Stuck { reason: String },
+    Stuck {
+        reason: String,
+    },
     #[serde(rename = "max_iter")]
     HitMaxIter,
-    Timeout { after_secs: u64 },
-    Error { detail: String },
+    Timeout {
+        after_secs: u64,
+    },
+    Error {
+        detail: String,
+    },
 }
 
 /// Per-feature row in the sweep result.
@@ -216,9 +222,8 @@ pub fn resolve_features(product_root: &Path) -> Result<Vec<String>, SweepError> 
 
     let mut features: Vec<String> = Vec::new();
     for entry in entries {
-        let entry = entry.map_err(|e| {
-            SweepError::PlanContext(format!("failed to read directory entry: {e}"))
-        })?;
+        let entry = entry
+            .map_err(|e| SweepError::PlanContext(format!("failed to read directory entry: {e}")))?;
         let filename = entry.file_name();
         let filename_str = filename.to_string_lossy();
 
@@ -229,9 +234,7 @@ pub fn resolve_features(product_root: &Path) -> Result<Vec<String>, SweepError> 
         // "not found" and the inspector then can't parse).
         if let Some(ft_id) = filename_str.strip_prefix("FT-").and_then(|s| {
             let num_part = s.split('-').next()?;
-            if num_part.is_empty()
-                || !num_part.chars().all(|c| c.is_ascii_digit())
-            {
+            if num_part.is_empty() || !num_part.chars().all(|c| c.is_ascii_digit()) {
                 return None;
             }
             Some(format!("FT-{num_part}"))

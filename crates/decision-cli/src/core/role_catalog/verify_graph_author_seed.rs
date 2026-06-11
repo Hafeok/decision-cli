@@ -73,7 +73,12 @@ fn verify_graph_author_role_quads(role: &NamedNode, g: &GraphName) -> Vec<Quad> 
         test_criterion,
         g.clone(),
     ));
-    quads.push(Quad::new(role.clone(), role_in, verification_bench, g.clone()));
+    quads.push(Quad::new(
+        role.clone(),
+        role_in,
+        verification_bench,
+        g.clone(),
+    ));
     // Output is the proposal artifact; no authority link (ADR-030 §7
     // makes Level-3 review the only acceptance path, so the
     // verify-graph-author role does not carry an authority declaration).

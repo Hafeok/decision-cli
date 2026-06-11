@@ -64,7 +64,11 @@ pub fn retract_orphans_for_feature(
     feature_id: &str,
     dry_run: bool,
 ) -> Result<RetractSummary, String> {
-    run_scope(workdir, &RetractScope::Feature(feature_id.to_string()), dry_run)
+    run_scope(
+        workdir,
+        &RetractScope::Feature(feature_id.to_string()),
+        dry_run,
+    )
 }
 
 /// Retract orphan defects across every VG in the store.
@@ -99,8 +103,8 @@ fn run_scope(
 
     let scope_obj = crate::core::scope::ActiveScope::load(workdir)
         .map_err(|e| format!("loading scope: {e}"))?;
-    let stream_iri = NamedNode::new(&scope_obj.stream_iri)
-        .map_err(|e| format!("invalid stream IRI: {e}"))?;
+    let stream_iri =
+        NamedNode::new(&scope_obj.stream_iri).map_err(|e| format!("invalid stream IRI: {e}"))?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
         .map_err(|e| format!("opening writer: {e:#}"))?;
 
@@ -138,10 +142,7 @@ fn run_scope(
     Ok(RetractSummary { per_graph, total })
 }
 
-fn find_candidates(
-    store: &Store,
-    scope: &RetractScope,
-) -> Result<Vec<OrphanDefect>, String> {
+fn find_candidates(store: &Store, scope: &RetractScope) -> Result<Vec<OrphanDefect>, String> {
     match scope {
         RetractScope::Graph(vg_id) => {
             let vg_iri = if vg_id.starts_with("https://") {

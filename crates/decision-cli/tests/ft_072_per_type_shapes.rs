@@ -18,7 +18,7 @@
 //!      shape's `sh:or` list is `[ a sh:NodeShape ; sh:class
 //!      dec:BoundaryArtifact ]`.
 //!   4. The Rust source directory
-//!      `crates/decision-cli/src/core/ontology/assets/shapes/` matches
+//!      `crates/dec-ontology/src/ontology/assets/shapes/` matches
 //!      the Python copy `workers/_shared/shapes/` byte-for-byte (the
 //!      dual-validator-agreement fitness check from FT-072 §Behaviour
 //!      step 3).
@@ -289,8 +289,7 @@ fn declared_ranges_in_motivational_file() -> HashMap<String, HashSet<String>> {
     let mut out: HashMap<String, HashSet<String>> = HashMap::new();
     for sol in sols {
         let sol = sol.expect("sol");
-        let (Some(Term::NamedNode(p)), Some(Term::NamedNode(r))) =
-            (sol.get("p"), sol.get("r"))
+        let (Some(Term::NamedNode(p)), Some(Term::NamedNode(r))) = (sol.get("p"), sol.get("r"))
         else {
             continue;
         };
@@ -309,7 +308,7 @@ fn assert_shape_directories_match() {
         .and_then(|p| p.parent())
         .expect("repo root from CARGO_MANIFEST_DIR")
         .to_path_buf();
-    let rust_shapes = repo_root.join("crates/decision-cli/src/core/ontology/assets/shapes");
+    let rust_shapes = repo_root.join("crates/dec-ontology/src/ontology/assets/shapes");
     let py_shapes = repo_root.join("workers/_shared/shapes");
 
     assert!(
@@ -327,7 +326,8 @@ fn assert_shape_directories_match() {
     let py_files = collect_ttl_files(&py_shapes);
 
     assert_eq!(
-        rust_files, py_files,
+        rust_files,
+        py_files,
         "Rust shapes directory and Python copy must contain identical file \
          sets (FT-072 byte-identical invariant). \
          Rust-only: {:?}, Python-only: {:?}",
@@ -339,8 +339,7 @@ fn assert_shape_directories_match() {
         let r = fs::read(rust_shapes.join(name)).expect("read rust");
         let p = fs::read(py_shapes.join(name)).expect("read python");
         assert_eq!(
-            r,
-            p,
+            r, p,
             "shape file '{name}' differs between Rust source and Python copy \
              — FT-072 §Behaviour step 3 requires byte-identical content"
         );

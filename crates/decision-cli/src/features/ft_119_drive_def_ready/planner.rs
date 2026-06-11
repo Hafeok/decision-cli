@@ -90,15 +90,9 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
     /// Pure classification — separated from the `Planner` trait
     /// impl so tests can call it without constructing a
     /// `PlanContext`. First match wins per the module-top table.
-    pub fn classify(
-        &self,
-        feature_id: &str,
-        default_env_id: &str,
-    ) -> Result<Action, PlanError> {
-        let (proposed, state_hash) =
-            self.classify_and_hash(feature_id, default_env_id)?;
-        let final_action =
-            self.apply_cycle_detection_with_hash(feature_id, proposed, state_hash);
+    pub fn classify(&self, feature_id: &str, default_env_id: &str) -> Result<Action, PlanError> {
+        let (proposed, state_hash) = self.classify_and_hash(feature_id, default_env_id)?;
+        let final_action = self.apply_cycle_detection_with_hash(feature_id, proposed, state_hash);
         self.record_observation_with_hash(feature_id, &final_action, state_hash);
         Ok(final_action)
     }
@@ -295,9 +289,7 @@ impl<I: GraphInspector> FeatureReadyPlanner<I> {
         }
         if let Some(period) = position_from_head(&buf.hashes, state_hash) {
             return Action::Stuck {
-                reason: format!(
-                    "state-hash cycle detected for {feature_id}: period {period}"
-                ),
+                reason: format!("state-hash cycle detected for {feature_id}: period {period}"),
             };
         }
 
@@ -432,9 +424,7 @@ fn action_kind(a: &Action) -> &'static str {
 /// rediscovery). `None` when the hash is absent.
 fn position_from_head(buf: &VecDeque<u64>, target: u64) -> Option<usize> {
     let len = buf.len();
-    buf.iter()
-        .position(|h| *h == target)
-        .map(|idx| len - idx)
+    buf.iter().position(|h| *h == target).map(|idx| len - idx)
 }
 
 /// First `(feature_id, status)` pair whose status is not the literal
@@ -548,17 +538,10 @@ mod tests {
     }
 
     impl GraphInspector for StubInspector {
-        fn aggregate_verdict_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<FeatureVerdict, InspectError> {
+        fn aggregate_verdict_for_feature(&self, _: &str) -> Result<FeatureVerdict, InspectError> {
             Ok(FeatureVerdict::NeverRun)
         }
-        fn open_defect_feedback_count(
-            &self,
-            _: &str,
-            _: &str,
-        ) -> Result<usize, InspectError> {
+        fn open_defect_feedback_count(&self, _: &str, _: &str) -> Result<usize, InspectError> {
             Ok(0)
         }
         fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
@@ -570,16 +553,10 @@ mod tests {
         fn state_hash_for_feature(&self, _: &str) -> Result<u64, InspectError> {
             Ok(self.state_hash)
         }
-        fn feature_spec_completeness(
-            &self,
-            _: &str,
-        ) -> Result<SpecCompleteness, InspectError> {
+        fn feature_spec_completeness(&self, _: &str) -> Result<SpecCompleteness, InspectError> {
             Ok(self.spec.clone())
         }
-        fn preflight_status_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<PreflightStatus, InspectError> {
+        fn preflight_status_for_feature(&self, _: &str) -> Result<PreflightStatus, InspectError> {
             Ok(self.preflight.clone())
         }
         fn dependency_statuses_for_feature(
@@ -588,10 +565,7 @@ mod tests {
         ) -> Result<Vec<(String, String)>, InspectError> {
             Ok(self.deps.clone())
         }
-        fn tcs_linked_state_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<TcsLinkedState, InspectError> {
+        fn tcs_linked_state_for_feature(&self, _: &str) -> Result<TcsLinkedState, InspectError> {
             Ok(self.tcs.clone())
         }
         fn covering_graph_state_for_feature(
@@ -601,10 +575,7 @@ mod tests {
         ) -> Result<CoveringGraphState, InspectError> {
             Ok(self.vgs.clone())
         }
-        fn has_open_implementer_feedback_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<bool, InspectError> {
+        fn has_open_implementer_feedback_for_feature(&self, _: &str) -> Result<bool, InspectError> {
             Ok(self.open_feedback)
         }
     }
@@ -1014,17 +985,10 @@ mod tests {
     }
 
     impl GraphInspector for MutableStubInspector {
-        fn aggregate_verdict_for_feature(
-            &self,
-            _: &str,
-        ) -> Result<FeatureVerdict, InspectError> {
+        fn aggregate_verdict_for_feature(&self, _: &str) -> Result<FeatureVerdict, InspectError> {
             Ok(FeatureVerdict::NeverRun)
         }
-        fn open_defect_feedback_count(
-            &self,
-            _: &str,
-            _: &str,
-        ) -> Result<usize, InspectError> {
+        fn open_defect_feedback_count(&self, _: &str, _: &str) -> Result<usize, InspectError> {
             Ok(0)
         }
         fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {

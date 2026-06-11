@@ -207,8 +207,7 @@ pub fn assemble_bundle(
     let step_vocabulary = default_step_vocabulary();
     let max_tokens = clamp_max_tokens(capability.max_output);
     let enrichment = assemble_enrichment_for(workdir, env_struct.as_ref(), env_short)?;
-    let defect_feedback =
-        super::defect_feedback::load_for(workdir, feature_id, env_short);
+    let defect_feedback = super::defect_feedback::load_for(workdir, feature_id, env_short);
     let mut bundle = VerifyGraphAuthorInputJson {
         feature_id: feature_id.to_string(),
         feature_spec,
@@ -415,7 +414,6 @@ fn find_prefixed_tc_path(tests_dir: &Path, tc_id: &str) -> Option<std::path::Pat
     }
     None
 }
-
 
 fn find_prefixed_feature_path(
     features_dir: &Path,

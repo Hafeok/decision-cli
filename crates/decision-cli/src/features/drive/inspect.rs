@@ -170,10 +170,7 @@ pub trait GraphInspector {
     /// supply this dimension drop through to verdict/open-feedback
     /// classification, preserving the pre-gate test expectations.
     /// Production overrides shell out to `product`.
-    fn product_verify_passes_for_feature(
-        &self,
-        _feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn product_verify_passes_for_feature(&self, _feature_id: &str) -> Result<bool, InspectError> {
         Ok(false)
     }
 
@@ -260,48 +257,33 @@ pub trait GraphInspector {
 
     /// Count of accepted quality verdicts on TCs linked to this
     /// feature (FT-131 `tcs_ready` dimension expansion).
-    fn tc_quality_verdicts_count(
-        &self,
-        _feature_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn tc_quality_verdicts_count(&self, _feature_id: &str) -> Result<usize, InspectError> {
         Ok(0)
     }
 
     /// Count of accepted quality verdicts on VGs covering this
     /// feature (FT-131 `vgs_ready` dimension expansion).
-    fn vg_quality_verdicts_count(
-        &self,
-        _feature_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn vg_quality_verdicts_count(&self, _feature_id: &str) -> Result<usize, InspectError> {
         Ok(0)
     }
 
     /// Whether the feature_spec has an accepted quality verdict
     /// (FT-131 `spec_ready` dimension, Slice B).
-    fn spec_quality_approved(
-        &self,
-        _feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn spec_quality_approved(&self, _feature_id: &str) -> Result<bool, InspectError> {
         Ok(true)
     }
 
     /// Whether all preflight gaps have accepted ADR
     /// acknowledgements with quality verdicts (FT-131
     /// `adr_acks_ready` dimension, Slice B).
-    fn adr_acks_quality_approved(
-        &self,
-        _feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn adr_acks_quality_approved(&self, _feature_id: &str) -> Result<bool, InspectError> {
         Ok(true)
     }
 
     /// Count of pending proposals (TC, VG, spec, ADR) for this
     /// feature that have no paired verdict yet (FT-131
     /// author-dispatch gating).
-    fn pending_proposals_count(
-        &self,
-        _feature_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn pending_proposals_count(&self, _feature_id: &str) -> Result<usize, InspectError> {
         Ok(0)
     }
 }
@@ -331,10 +313,7 @@ impl<T: GraphInspector + ?Sized> GraphInspector for &T {
     fn state_hash_for_feature(&self, feature_id: &str) -> Result<u64, InspectError> {
         (**self).state_hash_for_feature(feature_id)
     }
-    fn product_verify_passes_for_feature(
-        &self,
-        feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn product_verify_passes_for_feature(&self, feature_id: &str) -> Result<bool, InspectError> {
         (**self).product_verify_passes_for_feature(feature_id)
     }
     fn feature_spec_completeness(
@@ -374,34 +353,19 @@ impl<T: GraphInspector + ?Sized> GraphInspector for &T {
     ) -> Result<bool, InspectError> {
         (**self).has_open_implementer_feedback_for_feature(feature_id)
     }
-    fn tc_quality_verdicts_count(
-        &self,
-        feature_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn tc_quality_verdicts_count(&self, feature_id: &str) -> Result<usize, InspectError> {
         (**self).tc_quality_verdicts_count(feature_id)
     }
-    fn vg_quality_verdicts_count(
-        &self,
-        feature_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn vg_quality_verdicts_count(&self, feature_id: &str) -> Result<usize, InspectError> {
         (**self).vg_quality_verdicts_count(feature_id)
     }
-    fn spec_quality_approved(
-        &self,
-        feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn spec_quality_approved(&self, feature_id: &str) -> Result<bool, InspectError> {
         (**self).spec_quality_approved(feature_id)
     }
-    fn adr_acks_quality_approved(
-        &self,
-        feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn adr_acks_quality_approved(&self, feature_id: &str) -> Result<bool, InspectError> {
         (**self).adr_acks_quality_approved(feature_id)
     }
-    fn pending_proposals_count(
-        &self,
-        feature_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn pending_proposals_count(&self, feature_id: &str) -> Result<usize, InspectError> {
         (**self).pending_proposals_count(feature_id)
     }
 }
@@ -616,11 +580,12 @@ SELECT ?verdict WHERE {{
             resolve_feature_tcs_short, tc_iri_for,
         };
 
-        let tc_shorts = resolve_feature_tcs_short(self.product_root(), feature_id).map_err(|e| {
-            InspectError::Store {
-                detail: format!("resolve TCs for {feature_id}: {e}"),
-            }
-        })?;
+        let tc_shorts =
+            resolve_feature_tcs_short(self.product_root(), feature_id).map_err(|e| {
+                InspectError::Store {
+                    detail: format!("resolve TCs for {feature_id}: {e}"),
+                }
+            })?;
         if tc_shorts.is_empty() {
             return Ok(0);
         }
@@ -639,7 +604,10 @@ SELECT ?verdict WHERE {{
             .into_iter()
             .filter(|fb| fb.target_role == role_id)
             .filter(|fb| {
-                matches!(fb.lifecycle_state.as_str(), "produced" | "routed" | "received")
+                matches!(
+                    fb.lifecycle_state.as_str(),
+                    "produced" | "routed" | "received"
+                )
             })
             .filter(|fb| {
                 fb.source_artifact
@@ -651,8 +619,7 @@ SELECT ?verdict WHERE {{
             // bundle loaders hide them too, so counting them here would
             // make the planner dispatch workers that see nothing to do.
             .filter(|fb| {
-                let short =
-                    extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
+                let short = extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
                 short.is_empty() || !superseded.contains(&short)
             })
             .count();
@@ -697,7 +664,10 @@ SELECT ?verdict WHERE {{
         let open_iris: BTreeSet<String> = defects
             .into_iter()
             .filter(|fb| {
-                matches!(fb.lifecycle_state.as_str(), "produced" | "routed" | "received")
+                matches!(
+                    fb.lifecycle_state.as_str(),
+                    "produced" | "routed" | "received"
+                )
             })
             .filter(|fb| {
                 fb.source_artifact
@@ -706,8 +676,7 @@ SELECT ?verdict WHERE {{
                     .unwrap_or(false)
             })
             .filter(|fb| {
-                let short =
-                    extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
+                let short = extract_graph_short_id(fb.source_session.as_str()).unwrap_or_default();
                 short.is_empty() || !superseded.contains(&short)
             })
             .map(|fb| fb.iri.as_str().to_string())
@@ -834,10 +803,7 @@ SELECT ?verdict WHERE {{
         )
     }
 
-    fn product_verify_passes_for_feature(
-        &self,
-        feature_id: &str,
-    ) -> Result<bool, InspectError> {
+    fn product_verify_passes_for_feature(&self, feature_id: &str) -> Result<bool, InspectError> {
         use std::process::Command;
         let product = match which_on_path("product") {
             Some(p) => p,
@@ -939,9 +905,7 @@ fn latest_feature_commit_sha(repo_root: &Path, feature_id: &str) -> String {
 
 /// Set of graph short ids (`VG-NNN`) in the store with a
 /// `dec:supersededBy` edge.
-fn superseded_graph_shorts(
-    store: &oxigraph::store::Store,
-) -> std::collections::HashSet<String> {
+fn superseded_graph_shorts(store: &oxigraph::store::Store) -> std::collections::HashSet<String> {
     use oxigraph::sparql::QueryResults;
     let q = r#"PREFIX dec: <https://decision-cli.dev/ns#>
 SELECT ?graph WHERE { GRAPH ?g { ?graph dec:supersededBy ?_succ . } }"#;

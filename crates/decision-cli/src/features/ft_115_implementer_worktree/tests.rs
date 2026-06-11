@@ -133,8 +133,10 @@ fn tc_229_worktree_created_at_baseline() {
     record_worktree_created(&writer, &store, &dump_path, &session_iri, &worktree).unwrap();
 
     // Verify store contains worktree metadata
-    let worktree_path_pred = NamedNode::new_unchecked("https://purl.org/ddd/decision-cli#worktreePath");
-    let worktree_baseline_pred = NamedNode::new_unchecked("https://purl.org/ddd/decision-cli#worktreeBaseline");
+    let worktree_path_pred =
+        NamedNode::new_unchecked("https://purl.org/ddd/decision-cli#worktreePath");
+    let worktree_baseline_pred =
+        NamedNode::new_unchecked("https://purl.org/ddd/decision-cli#worktreeBaseline");
 
     let mut found_path = false;
     let mut found_baseline = false;
@@ -224,7 +226,11 @@ fn tc_230_edits_isolated_to_worktree() {
         .lines()
         .filter(|line| !line.contains(".dec/"))
         .collect();
-    assert!(main_changes.is_empty(), "main should have no changes outside .dec/: {:?}", main_changes);
+    assert!(
+        main_changes.is_empty(),
+        "main should have no changes outside .dec/: {:?}",
+        main_changes
+    );
 
     // Assert git status in worktree shows changes
     let output = Command::new("git")
@@ -300,7 +306,10 @@ fn tc_231_successful_merge_and_cleanup() {
     assert_eq!(main_head, worker_sha);
 
     // Assert main/src/lib.rs contains "fixed"
-    assert_eq!(fs::read_to_string(repo_path.join("src/lib.rs")).unwrap(), "fixed");
+    assert_eq!(
+        fs::read_to_string(repo_path.join("src/lib.rs")).unwrap(),
+        "fixed"
+    );
 
     // Record merge in store
     record_worktree_merged(&writer, &store, &dump_path, &session_iri, &worker_sha).unwrap();
@@ -368,7 +377,10 @@ fn tc_232_failed_dispatch_cleanup() {
         assert_eq!(main_head, baseline_sha);
 
         // Assert main/src/lib.rs unchanged
-        assert_eq!(fs::read_to_string(repo_path.join("src/lib.rs")).unwrap(), "original");
+        assert_eq!(
+            fs::read_to_string(repo_path.join("src/lib.rs")).unwrap(),
+            "original"
+        );
 
         // Assert worktree gone
         assert!(!worktree.path.exists());
@@ -425,7 +437,11 @@ fn tc_233_store_shared_between_main_and_worktree() {
     let file = std::fs::File::create(&dump_path).unwrap();
     let writer_io = std::io::BufWriter::new(file);
     store
-        .dump_graph_to_writer(&GraphName::DefaultGraph, oxigraph::io::RdfFormat::NQuads, writer_io)
+        .dump_graph_to_writer(
+            &GraphName::DefaultGraph,
+            oxigraph::io::RdfFormat::NQuads,
+            writer_io,
+        )
         .unwrap();
 
     // Create worktree
@@ -441,7 +457,10 @@ fn tc_233_store_shared_between_main_and_worktree() {
     let store_from_worktree = Store::new().unwrap();
     let store_file = std::fs::File::open(&dump_path).unwrap();
     store_from_worktree
-        .load_from_reader(oxigraph::io::RdfFormat::NQuads, std::io::BufReader::new(store_file))
+        .load_from_reader(
+            oxigraph::io::RdfFormat::NQuads,
+            std::io::BufReader::new(store_file),
+        )
         .unwrap();
 
     // Assert marker triple is present
@@ -454,7 +473,10 @@ fn tc_233_store_shared_between_main_and_worktree() {
     ) {
         found = true;
     }
-    assert!(found, "marker triple not found when reading from worktree context");
+    assert!(
+        found,
+        "marker triple not found when reading from worktree context"
+    );
 
     // Simulate worker writing a new triple
     let worker_subj = NamedNode::new_unchecked("urn:worker:triple");
@@ -470,14 +492,21 @@ fn tc_233_store_shared_between_main_and_worktree() {
     let file = std::fs::File::create(&dump_path).unwrap();
     let writer_io = std::io::BufWriter::new(file);
     store
-        .dump_graph_to_writer(&GraphName::DefaultGraph, oxigraph::io::RdfFormat::NQuads, writer_io)
+        .dump_graph_to_writer(
+            &GraphName::DefaultGraph,
+            oxigraph::io::RdfFormat::NQuads,
+            writer_io,
+        )
         .unwrap();
 
     // Re-read from "main's context"
     let store_from_main = Store::new().unwrap();
     let store_file = std::fs::File::open(&dump_path).unwrap();
     store_from_main
-        .load_from_reader(oxigraph::io::RdfFormat::NQuads, std::io::BufReader::new(store_file))
+        .load_from_reader(
+            oxigraph::io::RdfFormat::NQuads,
+            std::io::BufReader::new(store_file),
+        )
         .unwrap();
 
     // Assert both triples are visible
@@ -493,7 +522,10 @@ fn tc_233_store_shared_between_main_and_worktree() {
             }
         }
     }
-    assert!(found_marker && found_worker, "both triples should be visible");
+    assert!(
+        found_marker && found_worker,
+        "both triples should be visible"
+    );
 
     // Cleanup
     abort_worktree(&repo_path, &worktree).unwrap();
@@ -502,7 +534,10 @@ fn tc_233_store_shared_between_main_and_worktree() {
     let store_final = Store::new().unwrap();
     let store_file = std::fs::File::open(&dump_path).unwrap();
     store_final
-        .load_from_reader(oxigraph::io::RdfFormat::NQuads, std::io::BufReader::new(store_file))
+        .load_from_reader(
+            oxigraph::io::RdfFormat::NQuads,
+            std::io::BufReader::new(store_file),
+        )
         .unwrap();
 
     let mut found_marker_final = false;
@@ -517,7 +552,10 @@ fn tc_233_store_shared_between_main_and_worktree() {
             }
         }
     }
-    assert!(found_marker_final && found_worker_final, "triples should survive worktree cleanup");
+    assert!(
+        found_marker_final && found_worker_final,
+        "triples should survive worktree cleanup"
+    );
 }
 
 /// TC-234: Cherry-pick fallback merges worker commit when main moved during dispatch
@@ -578,7 +616,10 @@ fn tc_234_cherry_pick_when_main_moves() {
 
     // Should be cherry-picked (not fast-forwarded)
     match outcome {
-        MergeOutcome::CherryPicked { onto, picked_sha: _ } => {
+        MergeOutcome::CherryPicked {
+            onto,
+            picked_sha: _,
+        } => {
             assert_eq!(onto, concurrent_sha);
             // picked_sha should be different from worker's original commit
         }
@@ -586,8 +627,14 @@ fn tc_234_cherry_pick_when_main_moves() {
     }
 
     // Assert main carries both edits
-    assert_eq!(fs::read_to_string(repo_path.join("src/lib.rs")).unwrap(), "fixed");
-    assert_eq!(fs::read_to_string(repo_path.join("src/main.rs")).unwrap(), "B");
+    assert_eq!(
+        fs::read_to_string(repo_path.join("src/lib.rs")).unwrap(),
+        "fixed"
+    );
+    assert_eq!(
+        fs::read_to_string(repo_path.join("src/main.rs")).unwrap(),
+        "B"
+    );
 
     // Conflict case: main edits the same file
     let worktree2 = create_worktree(&repo_path, "sess-conflict", &baseline_sha).unwrap();

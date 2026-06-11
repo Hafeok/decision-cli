@@ -6,7 +6,9 @@ use std::process::ExitCode;
 use clap::Subcommand;
 
 use decision_cli::core::store::{load_store_from_dump, orchestration_dump_path};
-use decision_cli::features::ft_115_implementer_worktree::{handle_worktree_list, handle_worktree_prune};
+use decision_cli::features::ft_115_implementer_worktree::{
+    handle_worktree_list, handle_worktree_prune,
+};
 
 #[derive(Debug, Subcommand)]
 pub enum WorktreeCmd {

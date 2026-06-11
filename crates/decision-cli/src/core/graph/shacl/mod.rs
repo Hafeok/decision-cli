@@ -80,10 +80,8 @@ impl Validator {
         let _ontology = OntologyHandle::load()
             .map_err(|err| ValidatorError::ShapeLoadFailure(err.to_string()))?;
         let type_shapes = slice1_type_shapes();
-        let boundary_class_set = slice1_boundary_class_set(
-            BOUNDARY_ARTIFACT_CLASS,
-            BOUNDARY_ARTIFACT_SUBCLASSES,
-        );
+        let boundary_class_set =
+            slice1_boundary_class_set(BOUNDARY_ARTIFACT_CLASS, BOUNDARY_ARTIFACT_SUBCLASSES);
         Ok(Self {
             type_shapes,
             boundary_class_set,
@@ -264,7 +262,9 @@ fn artifact_subjects(delta: &[Quad]) -> BTreeMap<NamedNode, BTreeSet<String>> {
         let Term::NamedNode(cls) = &q.object else {
             continue;
         };
-        out.entry(s.clone()).or_default().insert(cls.as_str().to_string());
+        out.entry(s.clone())
+            .or_default()
+            .insert(cls.as_str().to_string());
     }
     out
 }
@@ -276,9 +276,9 @@ fn motivational_predicates_for(shape: Option<&TypeShape>) -> Vec<String> {
 }
 
 fn has_any_value(delta: &[Quad], subject: &NamedNode, predicate: &str) -> bool {
-    delta.iter().any(|q| {
-        q.predicate.as_str() == predicate && matches_subject(&q.subject, subject)
-    })
+    delta
+        .iter()
+        .any(|q| q.predicate.as_str() == predicate && matches_subject(&q.subject, subject))
 }
 
 fn matches_subject(subject: &Subject, target: &NamedNode) -> bool {

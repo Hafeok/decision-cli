@@ -83,15 +83,15 @@ fn print_init_success(outcome: &init::InitOutcome) {
     // FT-114: Make it clear when loading from a file vs auto-discovering
     let source_prefix = if outcome.definition_source.starts_with("auto-") {
         "Generated from"
-    } else if outcome.definition_source.contains('/') || outcome.definition_source.contains(".ttl") {
+    } else if outcome.definition_source.contains('/') || outcome.definition_source.contains(".ttl")
+    {
         "Loaded from"
     } else {
         "Definition source:"
     };
     println!(
         "  {}: {} (sha256:{short}…)",
-        source_prefix,
-        outcome.definition_source
+        source_prefix, outcome.definition_source
     );
     println!("  Ontology version:  {}", outcome.ontology_version);
     println!(

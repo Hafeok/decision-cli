@@ -16,6 +16,7 @@ oxi-events = { workspace = true }
 product-core = { workspace = true }
 product-mcp = { workspace = true }
 oxigraph = { workspace = true }
+dec-ontology = { workspace = true }
 tokio = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }

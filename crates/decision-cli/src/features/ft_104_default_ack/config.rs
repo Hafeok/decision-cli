@@ -114,10 +114,7 @@ fn parse_toml(body: &str) -> Result<BTreeSet<String>, String> {
 }
 
 fn collect_from_inline(text: &str, out: &mut BTreeSet<String>) {
-    let inner = text
-        .trim_start_matches('[')
-        .trim_end_matches(']')
-        .trim();
+    let inner = text.trim_start_matches('[').trim_end_matches(']').trim();
     for token in inner.split(',') {
         let token = token.trim().trim_matches('"').trim_matches('\'').trim();
         if !token.is_empty() {
@@ -188,7 +185,10 @@ mod tests {
             .map_or(0, |d| d.as_nanos());
         let n = COUNTER.fetch_add(1, Ordering::Relaxed);
         let mut base = std::env::temp_dir();
-        base.push(format!("decision-cli-ft104-cfg-{}-{nanos}-{n}", std::process::id()));
+        base.push(format!(
+            "decision-cli-ft104-cfg-{}-{nanos}-{n}",
+            std::process::id()
+        ));
         std::fs::create_dir_all(&base).expect("create tempdir");
         base
     }

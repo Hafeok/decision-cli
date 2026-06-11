@@ -8,9 +8,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 use decision_cli::core::handler::Error as HandlerError;
-use decision_cli::verify_feature::{
-    self, FeatureVerifyRequest, OutputFormat as FeatureFormat,
-};
+use decision_cli::verify_feature::{self, FeatureVerifyRequest, OutputFormat as FeatureFormat};
 
 use super::exit_code_for;
 

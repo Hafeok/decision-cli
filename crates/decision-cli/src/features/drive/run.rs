@@ -43,12 +43,11 @@ pub fn run_with_executor(
     args: &RunArgs,
     executor: &mut dyn Executor,
 ) -> Result<DriveOutcome, DriveError> {
-    let planner = planner_for(args.artifact.kind, args.goal, ctx).ok_or(
-        DriveError::NoPlannerRegistered {
+    let planner =
+        planner_for(args.artifact.kind, args.goal, ctx).ok_or(DriveError::NoPlannerRegistered {
             kind: args.artifact.kind.as_str(),
             goal: args.goal.as_str(),
-        },
-    )?;
+        })?;
     run_with_planner_and_executor(ctx, args, planner.as_ref(), executor)
 }
 

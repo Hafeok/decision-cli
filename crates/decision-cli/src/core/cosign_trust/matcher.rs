@@ -157,8 +157,9 @@ fn entry_admits(
     parsed_cache: &mut Option<super::parse::GithubActionsSubject>,
 ) -> Result<bool, IdentityMatchError> {
     match &entry.origin {
-        TrustOrigin::LocalKey { subject } => Ok(candidate.issuer == LOCAL_KEY_ISSUER_SENTINEL
-            && subject == &candidate.subject),
+        TrustOrigin::LocalKey { subject } => {
+            Ok(candidate.issuer == LOCAL_KEY_ISSUER_SENTINEL && subject == &candidate.subject)
+        }
         TrustOrigin::GithubActions {
             repo,
             workflow_path,

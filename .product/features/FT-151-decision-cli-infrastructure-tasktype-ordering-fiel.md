@@ -32,7 +32,7 @@ Decision-cli has no infrastructure-family TaskType yet — every existing TaskTy
 
 ### Outputs
 
-**Rust struct extension** (`crates/decision-cli/src/core/ontology/task_type.rs`):
+**Rust struct extension** (`crates/dec-ontology/src/ontology/task_type.rs`):
 
 ```rust
 pub struct TaskType {

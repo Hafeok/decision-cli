@@ -28,11 +28,7 @@ use super::inspect::{
 /// re-reading `product.toml`.
 ///
 /// [`default_required_sections`]: https://github.com/Hafeok/product-cli/blob/main/src/config_features.rs
-const REQUIRED_H2_SECTIONS: &[&str] = &[
-    "Description",
-    "Functional Specification",
-    "Out of scope",
-];
+const REQUIRED_H2_SECTIONS: &[&str] = &["Description", "Functional Specification", "Out of scope"];
 
 // ---------------------------------------------------------------------
 // Preflight — shells out to `product preflight FT-XXX --format json`.
@@ -89,10 +85,9 @@ pub(super) fn preflight_status(
             detail: format!("spawn `product preflight {feature_id}`: {e}"),
         })?;
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let parsed: PreflightJson =
-        serde_json::from_str(&stdout).map_err(|e| InspectError::Store {
-            detail: format!("parse preflight JSON for {feature_id}: {e}"),
-        })?;
+    let parsed: PreflightJson = serde_json::from_str(&stdout).map_err(|e| InspectError::Store {
+        detail: format!("parse preflight JSON for {feature_id}: {e}"),
+    })?;
     let mut gaps: Vec<PreflightGap> = Vec::new();
     for g in parsed.cross_cutting_gaps {
         if g.status == "gap" {
@@ -344,9 +339,7 @@ fn on_disk_covering_graph_present(
 ) -> Result<bool, InspectError> {
     use crate::core::ontology::verification_graph::io::from_turtle;
     use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-    use crate::core::verify::coverage::feature_resolver::{
-        resolve_feature_tcs_short, tc_iri_for,
-    };
+    use crate::core::verify::coverage::feature_resolver::{resolve_feature_tcs_short, tc_iri_for};
 
     let tc_shorts =
         resolve_feature_tcs_short(product_root, feature_id).map_err(|e| InspectError::Store {
@@ -498,7 +491,10 @@ fn find_feature_file(product_root: &Path, feature_id: &str) -> Result<PathBuf, S
             }
         }
     }
-    Err(format!("feature {feature_id} not found under {d}", d = dir.display()))
+    Err(format!(
+        "feature {feature_id} not found under {d}",
+        d = dir.display()
+    ))
 }
 
 fn extract_frontmatter(body: &str) -> Option<&str> {
@@ -568,9 +564,7 @@ pub(super) fn has_open_implementer_feedback(
     feature_id: &str,
 ) -> Result<bool, InspectError> {
     use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-    use crate::core::verify::coverage::feature_resolver::{
-        resolve_feature_tcs_short, tc_iri_for,
-    };
+    use crate::core::verify::coverage::feature_resolver::{resolve_feature_tcs_short, tc_iri_for};
 
     let tc_shorts =
         resolve_feature_tcs_short(product_root, feature_id).map_err(|e| InspectError::Store {
@@ -587,10 +581,7 @@ pub(super) fn has_open_implementer_feedback(
         Err(_) => return Ok(false),
     };
 
-    let tc_iris_quoted: Vec<String> = tc_iris
-        .iter()
-        .map(|iri| format!("<{iri}>"))
-        .collect();
+    let tc_iris_quoted: Vec<String> = tc_iris.iter().map(|iri| format!("<{iri}>")).collect();
     let tc_filter = tc_iris_quoted.join(", ");
 
     let q = format!(

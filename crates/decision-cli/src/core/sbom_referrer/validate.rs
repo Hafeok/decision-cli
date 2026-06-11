@@ -129,10 +129,7 @@ fn check_reference<'a>(
 }
 
 /// Validate the `sha256:<64 hex>` digest component.
-fn check_digest<'a>(
-    digest_with_algo: &'a str,
-    v: &mut Vec<OciReferrerUriViolation>,
-) -> &'a str {
+fn check_digest<'a>(digest_with_algo: &'a str, v: &mut Vec<OciReferrerUriViolation>) -> &'a str {
     let Some(hex) = digest_with_algo.strip_prefix(DIGEST_ALGORITHM_PREFIX) else {
         v.push(OciReferrerUriViolation {
             code: "sbom:digest-algorithm",
@@ -172,15 +169,13 @@ fn check_digest<'a>(
 /// etc.) — this is a "common typo classes" check that catches the broad
 /// failure modes without becoming a full OCI reference parser.
 fn is_lowercase_oci_repo(s: &str) -> bool {
-    s.chars().all(|c| {
-        c.is_ascii_lowercase()
-            || c.is_ascii_digit()
-            || matches!(c, '.' | '_' | '-' | '/')
-    })
+    s.chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '_' | '-' | '/'))
 }
 
 fn is_lowercase_hex(s: &str) -> bool {
-    s.chars().all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
+    s.chars()
+        .all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
 }
 
 fn render(violations: &[OciReferrerUriViolation]) -> String {

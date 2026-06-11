@@ -10,9 +10,7 @@ use std::process::ExitCode;
 
 use clap::Subcommand;
 
-use decision_cli::workers_run::{
-    self, SystemDockerRunner, WorkersRunArgs, WorkersRunError,
-};
+use decision_cli::workers_run::{self, SystemDockerRunner, WorkersRunArgs, WorkersRunError};
 
 /// `dec workers <subcommand>` — slice 1 surface (only `run`).
 #[derive(Debug, Subcommand)]
@@ -55,9 +53,7 @@ fn run_subcommand(workdir: &Path, args: RunArgs) -> ExitCode {
         Ok(outcome) => {
             println!(
                 "dec workers run: container exited cleanly for {}@v{} ({})",
-                outcome.image.id,
-                outcome.image.version,
-                outcome.plan.registry_ref,
+                outcome.image.id, outcome.image.version, outcome.plan.registry_ref,
             );
             ExitCode::SUCCESS
         }

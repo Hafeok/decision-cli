@@ -216,7 +216,10 @@ fn aggregate_for_tc(
     if covering.is_empty() {
         return AggregateVerdict {
             verdict: Verdict::Rejected,
-            rationale: format!("no verification graph result covers <{label}>", label = target.label()),
+            rationale: format!(
+                "no verification graph result covers <{label}>",
+                label = target.label()
+            ),
             contributing_results: Vec::new(),
             coverage_gaps: vec![tc_iri.to_string()],
         };
@@ -433,16 +436,8 @@ pub fn verdict_from_result(
     result: &VerificationGraphResult,
     steps: &[VerificationStep],
 ) -> (Verdict, String) {
-    let outcomes: Vec<StepOutcome> = result
-        .step_traces
-        .iter()
-        .map(|t| t.outcome)
-        .collect();
-    let exit_codes: Vec<Option<i64>> = result
-        .step_traces
-        .iter()
-        .map(|t| t.exit_code)
-        .collect();
+    let outcomes: Vec<StepOutcome> = result.step_traces.iter().map(|t| t.outcome).collect();
+    let exit_codes: Vec<Option<i64>> = result.step_traces.iter().map(|t| t.exit_code).collect();
     let evidence: Vec<Vec<String>> = steps
         .iter()
         .map(|s| {
@@ -454,4 +449,3 @@ pub fn verdict_from_result(
         .collect();
     single_graph_verdict_with_exit_codes(&outcomes, &evidence, &exit_codes)
 }
-

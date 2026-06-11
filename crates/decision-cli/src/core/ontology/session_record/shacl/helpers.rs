@@ -13,11 +13,7 @@ pub struct SessionRecordViolation {
     pub detail: String,
 }
 
-pub(super) fn iri_objects_for(
-    quads: &[Quad],
-    subject: &NamedNode,
-    predicate: &str,
-) -> Vec<String> {
+pub(super) fn iri_objects_for(quads: &[Quad], subject: &NamedNode, predicate: &str) -> Vec<String> {
     quads
         .iter()
         .filter_map(|q| {

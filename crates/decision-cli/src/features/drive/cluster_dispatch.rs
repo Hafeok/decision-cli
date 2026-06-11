@@ -30,9 +30,9 @@ use chrono::Utc;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
 
-use crate::core::drive::PlanContext;
-use crate::core::dispatch::resolve_default_capability;
 use crate::core::dispatch::escalation::triggers::capability_iri;
+use crate::core::dispatch::resolve_default_capability;
+use crate::core::drive::PlanContext;
 use crate::core::graph::cluster_session::{
     persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
 };
@@ -99,23 +99,17 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
         )
     })?;
 
-    let cluster_dir = ctx
-        .workdir
-        .join(".dec")
-        .join("cluster")
-        .join(feature_id);
+    let cluster_dir = ctx.workdir.join(".dec").join("cluster").join(feature_id);
     if cluster_dir.exists() {
         // Clean re-runs so a stale prior sandbox doesn't confuse the audit.
-        fs::remove_dir_all(&cluster_dir).with_context(|| {
-            format!("clean prior cluster sandbox at {}", cluster_dir.display())
-        })?;
+        fs::remove_dir_all(&cluster_dir)
+            .with_context(|| format!("clean prior cluster sandbox at {}", cluster_dir.display()))?;
     }
     fs::create_dir_all(&cluster_dir)?;
 
     // Resolve the worker argv once; spawned once per LLM cell.
-    let argv = preflight_implementer(&ctx.workdir, None).map_err(|e| {
-        anyhow!("preflight failed for code-writer: {e}")
-    })?;
+    let argv = preflight_implementer(&ctx.workdir, None)
+        .map_err(|e| anyhow!("preflight failed for code-writer: {e}"))?;
 
     // Load orchestration store for capability resolution.
     let store = load_orchestration_store(&ctx.workdir)?;
@@ -228,8 +222,7 @@ fn run_cells(
         let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
             if cell.model_binding_capability_id.is_empty() {
                 let body = emit_mechanical_cell(tt, cell, &cell_outputs);
-                let capability =
-                    NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
+                let capability = NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
                 Ok((body, None, capability))
             } else {
                 emit_llm_cell(
@@ -369,11 +362,9 @@ fn resolve_parameters(
     workdir: &Path,
     feature_id: &str,
 ) -> Result<BTreeMap<String, String>> {
-    let mut resolved =
-        crate::features::drive::planners::feature_ship::read_parameters_for_feature(
-            workdir,
-            feature_id,
-        );
+    let mut resolved = crate::features::drive::planners::feature_ship::read_parameters_for_feature(
+        workdir, feature_id,
+    );
     for param in &tt.parameters {
         if !resolved.contains_key(&param.name) {
             match &param.default {
@@ -413,10 +404,7 @@ fn substitute_params(template: &str, params: &BTreeMap<String, String>) -> Strin
 /// When empty, fall back to the FT-139 flat-path convention via
 /// `cell_filename`. Rejects paths containing `..` after substitution
 /// (sandbox containment guard).
-fn resolve_cell_output_path(
-    cell: &CellDecl,
-    params: &BTreeMap<String, String>,
-) -> Result<PathBuf> {
+fn resolve_cell_output_path(cell: &CellDecl, params: &BTreeMap<String, String>) -> Result<PathBuf> {
     if cell.output_path.as_os_str().is_empty() {
         return Ok(cell_filename(cell));
     }
@@ -496,20 +484,28 @@ fn emit_llm_cell(
     upstream: &BTreeMap<String, String>,
     resolved_cell_path: &Path,
 ) -> Result<(String, Option<WorkerResponseUsage>, NamedNode)> {
-    let cap = resolve_default_capability(store, &cell.model_binding_capability_id)
-        .with_context(|| {
+    let cap = resolve_default_capability(store, &cell.model_binding_capability_id).with_context(
+        || {
             format!(
                 "resolve capability {:?} for cell {}/{}",
                 cell.model_binding_capability_id, tt.name, cell.name
             )
-        })?;
+        },
+    )?;
     let cell_capability_iri = capability_iri(&cap);
 
     // Build the per-cell bundle: framing + upstream cell outputs +
     // instruction telling the worker exactly what to write (FT-166: the
     // resolved path may include subdirectories — the bundle surfaces it
     // verbatim and the worker creates intermediate dirs via write_file).
-    let bundle = build_cell_bundle(tt, cell, feature_id, feature_framing, upstream, resolved_cell_path);
+    let bundle = build_cell_bundle(
+        tt,
+        cell,
+        feature_id,
+        feature_framing,
+        upstream,
+        resolved_cell_path,
+    );
 
     // The worker's workspace_path is the cluster sandbox dir. It writes
     // the cell's output file directly there via the write_file tool.
@@ -547,13 +543,13 @@ fn emit_llm_cell(
         max_turns,
         authority,
         defect_feedback: Vec::new(),
-        allowed_tools: vec![
-            "read_file".to_string(),
-            "write_file".to_string(),
-        ],
+        allowed_tools: vec!["read_file".to_string(), "write_file".to_string()],
     };
 
-    let WorkerRun { response, raw_stdout: _ } = run_worker(argv, &payload).with_context(|| {
+    let WorkerRun {
+        response,
+        raw_stdout: _,
+    } = run_worker(argv, &payload).with_context(|| {
         format!(
             "dispatch code-writer for cell {}/{} (feature {})",
             tt.name, cell.name, feature_id
@@ -586,7 +582,10 @@ fn build_cell_bundle(
     target_filename: &Path,
 ) -> String {
     let mut out = String::new();
-    out.push_str(&format!("# Cluster dispatch: {} / {}\n\n", tt.name, cell.name));
+    out.push_str(&format!(
+        "# Cluster dispatch: {} / {}\n\n",
+        tt.name, cell.name
+    ));
     out.push_str(&format!("**Feature:** `{feature_id}`\n\n"));
     out.push_str("## Feature framing\n\n");
     out.push_str(feature_framing);
@@ -636,10 +635,7 @@ fn build_cell_bundle(
 /// Read the feature spec's body (truncated) to use as context framing
 /// in every cell's bundle.
 fn load_feature_framing(product_root: &Path, feature_id: &str) -> Result<String> {
-    let glob_pattern = format!(
-        ".product/features/{}-*.md",
-        feature_id
-    );
+    let glob_pattern = format!(".product/features/{}-*.md", feature_id);
     let spec_dir = product_root.join(".product").join("features");
     let mut found: Option<PathBuf> = None;
     if spec_dir.is_dir() {
@@ -861,8 +857,11 @@ max_turns = 12
         std::fs::create_dir_all(tmp.path().join(".dec")).unwrap();
 
         // Garbage TOML.
-        std::fs::write(tmp.path().join(".dec/task-types.toml"), "this is not [valid toml")
-            .unwrap();
+        std::fs::write(
+            tmp.path().join(".dec/task-types.toml"),
+            "this is not [valid toml",
+        )
+        .unwrap();
         assert_eq!(
             crate::features::drive::planners::feature_ship::read_max_turns_for_task_type(
                 tmp.path(),
@@ -992,7 +991,9 @@ max_turns = "high"
     fn ft_165_bundle_emphasises_dispatch_incomplete_until_tool_call() {
         let bundle = fixture_bundle();
         assert!(
-            bundle.contains("dispatch is INCOMPLETE until your `write_file` tool call returns success"),
+            bundle.contains(
+                "dispatch is INCOMPLETE until your `write_file` tool call returns success"
+            ),
             "INCOMPLETE-until-tool-success invariant missing: {bundle}"
         );
         assert!(
@@ -1012,12 +1013,12 @@ max_turns = "high"
     fn ft_166_substitute_params_replaces_placeholders() {
         let mut params = BTreeMap::new();
         params.insert("artifact_name".to_string(), "archetype".to_string());
-        params.insert("crate_path".to_string(), "decision-cli".to_string());
-        let template = "crates/{crate_path}/src/core/ontology/{artifact_name}/parser.rs";
+        params.insert("crate_path".to_string(), "dec-ontology".to_string());
+        let template = "crates/{crate_path}/src/ontology/{artifact_name}/parser.rs";
         let resolved = substitute_params(template, &params);
         assert_eq!(
             resolved,
-            "crates/decision-cli/src/core/ontology/archetype/parser.rs"
+            "crates/dec-ontology/src/ontology/archetype/parser.rs"
         );
         // Unmatched placeholder stays literal — no panic, no silent drop.
         let untouched = substitute_params("{unknown}/x", &params);
@@ -1039,12 +1040,12 @@ max_turns = "high"
             prompt_template_path: PathBuf::new(),
             model_binding_capability_id: "implementer".to_string(),
             derived_from: vec![],
-            output_path: PathBuf::from("crates/decision-cli/src/core/ontology/{artifact_name}.rs"),
+            output_path: PathBuf::from("crates/dec-ontology/src/ontology/{artifact_name}.rs"),
         };
         let resolved = resolve_cell_output_path(&cell_templated, &params).unwrap();
         assert_eq!(
             resolved,
-            PathBuf::from("crates/decision-cli/src/core/ontology/feedback.rs")
+            PathBuf::from("crates/dec-ontology/src/ontology/feedback.rs")
         );
 
         // Empty output_path — falls back to flat convention (cell_filename).
@@ -1081,7 +1082,8 @@ max_turns = "high"
         };
         // Tempdir has no .dec/task-types.toml → param absent.
         let tmp = tempfile::tempdir().unwrap();
-        let err = resolve_parameters(&tt, tmp.path(), "FT-Tmissing").expect_err("required param missing");
+        let err =
+            resolve_parameters(&tt, tmp.path(), "FT-Tmissing").expect_err("required param missing");
         let msg = format!("{err}");
         assert!(
             msg.contains("requires parameter `artifact_name`"),
@@ -1140,11 +1142,7 @@ max_turns = "high"
         let entry = std::fs::read_dir(&spec_dir)
             .expect("read .product/features")
             .flatten()
-            .find(|e| {
-                e.file_name()
-                    .to_string_lossy()
-                    .starts_with(prefix)
-            });
+            .find(|e| e.file_name().to_string_lossy().starts_with(prefix));
         let Some(entry) = entry else {
             return; // FT-147 spec not present in this checkout
         };

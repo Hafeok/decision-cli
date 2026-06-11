@@ -265,11 +265,7 @@ fn collect_rows(results: QueryResults, subj_var: &str, kind_var: &str, via_var: 
             Some(oxigraph::model::Term::Literal(l)) => l.value().to_string(),
             _ => String::new(),
         };
-        out.push(Row {
-            subject,
-            kind,
-            via,
-        });
+        out.push(Row { subject, kind, via });
     }
     out
 }

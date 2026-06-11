@@ -48,9 +48,17 @@ const EXPECTED_MODULES: &[(&str, &str, &str)] = &[
     ("acknowledgement.ttl", "acknowledgement", "Acknowledgement"),
     ("adr.ttl", "adr", "ADR"),
     ("brief.ttl", "brief", "Brief"),
-    ("conformance-audit.ttl", "conformance_audit", "ConformanceAudit"),
+    (
+        "conformance-audit.ttl",
+        "conformance_audit",
+        "ConformanceAudit",
+    ),
     ("dependency.ttl", "dependency", "Dependency"),
-    ("discovery-finding.ttl", "discovery_finding", "DiscoveryFinding"),
+    (
+        "discovery-finding.ttl",
+        "discovery_finding",
+        "DiscoveryFinding",
+    ),
     ("dispatch.ttl", "dispatch", "Dispatch"),
     ("feature.ttl", "feature", "Feature"),
     ("feedback.ttl", "feedback", "Feedback"),
@@ -122,10 +130,8 @@ fn tc_150_pipeline_worker_sdk_build_time_codegen_of_typed_bu() {
         let dir = repo_root.join(pkg_rel);
         for (_, mod_name, _) in EXPECTED_MODULES {
             let path = dir.join(format!("{mod_name}.py"));
-            let body =
-                fs::read_to_string(&path).unwrap_or_else(|e| {
-                    panic!("FT-085: cannot read {}: {e}", path.display())
-                });
+            let body = fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("FT-085: cannot read {}: {e}", path.display()));
             assert!(
                 body.contains(GENERATED_BANNER),
                 "FT-085: {} must contain banner '{GENERATED_BANNER}' — \

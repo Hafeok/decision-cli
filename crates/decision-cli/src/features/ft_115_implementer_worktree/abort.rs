@@ -2,7 +2,7 @@
 
 use std::process::Command;
 
-use super::{worktree_branch_name, WorktreePath, WorktreeError};
+use super::{worktree_branch_name, WorktreeError, WorktreePath};
 
 /// Remove a worktree directory and its associated branch.
 ///
@@ -28,7 +28,9 @@ pub fn abort_worktree(
         .arg("--force")
         .arg(&worktree.path)
         .output()
-        .map_err(|e| WorktreeError::GitFailed(format!("failed to spawn git worktree remove: {}", e)))?;
+        .map_err(|e| {
+            WorktreeError::GitFailed(format!("failed to spawn git worktree remove: {}", e))
+        })?;
 
     if !remove_output.status.success() {
         let stderr = String::from_utf8_lossy(&remove_output.stderr);
@@ -53,10 +55,7 @@ pub fn abort_worktree(
     if !branch_output.status.success() {
         let stderr = String::from_utf8_lossy(&branch_output.stderr);
         // Also log-only — branch might already be gone
-        eprintln!(
-            "warning: git branch -D {} failed: {}",
-            branch_name, stderr
-        );
+        eprintln!("warning: git branch -D {} failed: {}", branch_name, stderr);
     }
 
     Ok(())

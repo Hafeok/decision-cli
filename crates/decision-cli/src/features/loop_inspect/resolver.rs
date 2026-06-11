@@ -19,7 +19,9 @@ pub fn short_for_session(iri: &str) -> String {
         }
         return rest.to_string();
     }
-    if let Some(rest) = iri.strip_prefix("https://decision-cli.dev/ns/activity/verify-graph-generate/") {
+    if let Some(rest) =
+        iri.strip_prefix("https://decision-cli.dev/ns/activity/verify-graph-generate/")
+    {
         return format!("verify-graph-author@{rest}");
     }
     if let Some(rest) = iri.strip_prefix("https://decision-cli.dev/ns/activity/implement/") {
@@ -90,7 +92,9 @@ pub fn emitted_at_from_session_iri(iri: &str) -> Option<String> {
     let digits = &iri[start + ts_marker.len()..];
     // Some IRIs append a trailing slash or further path — stop at the
     // first non-digit character.
-    let end = digits.find(|c: char| !c.is_ascii_digit()).unwrap_or(digits.len());
+    let end = digits
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(digits.len());
     let nanos: u128 = digits[..end].parse().ok()?;
     let secs = (nanos / 1_000_000_000) as i64;
     let sub_ns = (nanos % 1_000_000_000) as u32;
@@ -104,7 +108,8 @@ mod ts_tests {
 
     #[test]
     fn extracts_nanos_from_verify_run_iri() {
-        let iri = "https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815";
+        let iri =
+            "https://decision-cli.dev/ns/activity/verify-graph-run/VG-100/ts-1779870270205239815";
         let stamp = emitted_at_from_session_iri(iri).expect("parses");
         // Order-of-magnitude check: nanos ≈ 1.78e18 → year 2026.
         assert!(stamp.starts_with("2026-"), "got {stamp}");

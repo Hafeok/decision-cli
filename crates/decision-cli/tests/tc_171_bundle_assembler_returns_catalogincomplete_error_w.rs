@@ -17,9 +17,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use decision_cli::core::handler::Error as HandlerError;
 use decision_cli::core::ontology::catalog::{CapabilityReference, OntologyDescription};
-use decision_cli::core::store::{
-    load_store_from_dump, orchestration_dump_path, persist_store,
-};
+use decision_cli::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use decision_cli::init::{run as init_run, DefinitionSource};
 use decision_cli::verify_graph_generate::bundle::assemble_enrichment_for;
 use decision_cli::verify_graph_generate::enrichment::set_strict_override;
@@ -69,12 +67,11 @@ fn write_seed_definition(dir: &Path) -> PathBuf {
 
 fn seed_capability_only(workdir: &Path) {
     let dump = orchestration_dump_path(workdir);
-    let store =
-        std::sync::Arc::new(load_store_from_dump(&dump).expect("load store"));
+    let store = std::sync::Arc::new(load_store_from_dump(&dump).expect("load store"));
     let stream = NamedNode::new("https://decision-cli.dev/stream/decision-cli-development")
         .expect("stream iri");
-    let writer = StreamWriter::bootstrap(std::sync::Arc::clone(&store), stream)
-        .expect("stream writer");
+    let writer =
+        StreamWriter::bootstrap(std::sync::Arc::clone(&store), stream).expect("stream writer");
     let cr = CapabilityReference {
         id: "CR-001".to_string(),
         command: "dec verify graph new".to_string(),
@@ -90,12 +87,11 @@ fn seed_capability_only(workdir: &Path) {
 
 fn seed_ontology_only(workdir: &Path) {
     let dump = orchestration_dump_path(workdir);
-    let store =
-        std::sync::Arc::new(load_store_from_dump(&dump).expect("load store"));
+    let store = std::sync::Arc::new(load_store_from_dump(&dump).expect("load store"));
     let stream = NamedNode::new("https://decision-cli.dev/stream/decision-cli-development")
         .expect("stream iri");
-    let writer = StreamWriter::bootstrap(std::sync::Arc::clone(&store), stream)
-        .expect("stream writer");
+    let writer =
+        StreamWriter::bootstrap(std::sync::Arc::clone(&store), stream).expect("stream writer");
     let od = OntologyDescription {
         id: "OD-001".to_string(),
         namespace: "https://decision-cli.dev/ns#".to_string(),

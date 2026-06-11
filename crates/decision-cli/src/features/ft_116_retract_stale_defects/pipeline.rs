@@ -66,8 +66,7 @@ pub fn retract_stale_defects(
     dry_run: bool,
 ) -> Result<RetractResult, String> {
     let dump_path = orchestration_dump_path(workdir);
-    let store = load_store_from_dump(&dump_path)
-        .map_err(|e| format!("loading store: {e:#}"))?;
+    let store = load_store_from_dump(&dump_path).map_err(|e| format!("loading store: {e:#}"))?;
     let store = Arc::new(store);
 
     // Find the latest VGR for this graph
@@ -85,15 +84,18 @@ pub fn retract_stale_defects(
         return Ok(RetractResult {
             vgr_id: extract_vgr_id(&vgr.id),
             closed_count: stale_defects.len(),
-            defect_iris: stale_defects.iter().map(|d| d.feedback_iri.to_string()).collect(),
+            defect_iris: stale_defects
+                .iter()
+                .map(|d| d.feedback_iri.to_string())
+                .collect(),
         });
     }
 
     // Open writer and run the auto-close
     let scope = crate::core::scope::ActiveScope::load(workdir)
         .map_err(|e| format!("loading scope: {e}"))?;
-    let stream_iri = NamedNode::new(&scope.stream_iri)
-        .map_err(|e| format!("invalid stream IRI: {e}"))?;
+    let stream_iri =
+        NamedNode::new(&scope.stream_iri).map_err(|e| format!("invalid stream IRI: {e}"))?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri)
         .map_err(|e| format!("opening writer: {e:#}"))?;
 
@@ -103,7 +105,10 @@ pub fn retract_stale_defects(
         .filter(|p| p.outcome.as_str() == "pass")
         .collect();
     let stale_defects = find_stale_defects_for_vgr(&store, &graph_iri, &passing_tcs)?;
-    let defect_iris: Vec<String> = stale_defects.iter().map(|d| d.feedback_iri.to_string()).collect();
+    let defect_iris: Vec<String> = stale_defects
+        .iter()
+        .map(|d| d.feedback_iri.to_string())
+        .collect();
 
     let mut closed_count = 0;
     for defect in &stale_defects {
@@ -113,8 +118,7 @@ pub fn retract_stale_defects(
     }
 
     // Persist the store
-    persist_store(&store, &dump_path)
-        .map_err(|e| format!("persisting store: {e:#}"))?;
+    persist_store(&store, &dump_path).map_err(|e| format!("persisting store: {e:#}"))?;
 
     Ok(RetractResult {
         vgr_id: extract_vgr_id(&vgr.id),
@@ -142,8 +146,8 @@ fn find_latest_approved_vgr(
     store: &Store,
     graph_iri: &str,
 ) -> Result<VerificationGraphResult, String> {
-    use oxigraph::sparql::QueryResults;
     use crate::core::ontology::verification_result::StepOutcome;
+    use oxigraph::sparql::QueryResults;
 
     // Find the most recent approved VGR for this graph
     let q = format!(
@@ -173,32 +177,95 @@ LIMIT 1"#
 
     if let QueryResults::Solutions(mut solutions) = results {
         if let Some(Ok(solution)) = solutions.next() {
-            let vgr_iri = solution.get("vgr")
-                .and_then(|t| if let oxigraph::model::Term::NamedNode(n) = t { Some(n) } else { None })
+            let vgr_iri = solution
+                .get("vgr")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::NamedNode(n) = t {
+                        Some(n)
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing vgr")?;
-            let env = solution.get("env")
-                .and_then(|t| if let oxigraph::model::Term::NamedNode(n) = t { Some(n.as_str().to_string()) } else { None })
+            let env = solution
+                .get("env")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::NamedNode(n) = t {
+                        Some(n.as_str().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing env")?;
-            let verdict_str = solution.get("verdict")
-                .and_then(|t| if let oxigraph::model::Term::Literal(l) = t { Some(l.value().to_string()) } else { None })
+            let verdict_str = solution
+                .get("verdict")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::Literal(l) = t {
+                        Some(l.value().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing verdict")?;
-            let started = solution.get("started")
-                .and_then(|t| if let oxigraph::model::Term::Literal(l) = t { Some(l.value().to_string()) } else { None })
+            let started = solution
+                .get("started")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::Literal(l) = t {
+                        Some(l.value().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing started")?;
-            let ended = solution.get("ended")
-                .and_then(|t| if let oxigraph::model::Term::Literal(l) = t { Some(l.value().to_string()) } else { None })
+            let ended = solution
+                .get("ended")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::Literal(l) = t {
+                        Some(l.value().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing ended")?;
-            let rationale = solution.get("rationale")
-                .and_then(|t| if let oxigraph::model::Term::Literal(l) = t { Some(l.value().to_string()) } else { None })
+            let rationale = solution
+                .get("rationale")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::Literal(l) = t {
+                        Some(l.value().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing rationale")?;
-            let gen = solution.get("gen")
-                .and_then(|t| if let oxigraph::model::Term::NamedNode(n) = t { Some(n.as_str().to_string()) } else { None })
+            let gen = solution
+                .get("gen")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::NamedNode(n) = t {
+                        Some(n.as_str().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing gen")?;
-            let attr = solution.get("attr")
-                .and_then(|t| if let oxigraph::model::Term::NamedNode(n) = t { Some(n.as_str().to_string()) } else { None })
+            let attr = solution
+                .get("attr")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::NamedNode(n) = t {
+                        Some(n.as_str().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing attr")?;
-            let created = solution.get("created")
-                .and_then(|t| if let oxigraph::model::Term::Literal(l) = t { Some(l.value().to_string()) } else { None })
+            let created = solution
+                .get("created")
+                .and_then(|t| {
+                    if let oxigraph::model::Term::Literal(l) = t {
+                        Some(l.value().to_string())
+                    } else {
+                        None
+                    }
+                })
                 .ok_or_else(|| "missing created")?;
 
             // Query for evidence projections
@@ -215,20 +282,43 @@ SELECT ?tc ?outcome ?fromStep WHERE {{
                 vgr_iri = vgr_iri.as_str()
             );
 
-            let evidence_results = store.query(&evidence_q).map_err(|e| format!("evidence query error: {e}"))?;
+            let evidence_results = store
+                .query(&evidence_q)
+                .map_err(|e| format!("evidence query error: {e}"))?;
             let mut evidence_for = Vec::new();
 
             if let QueryResults::Solutions(ev_solutions) = evidence_results {
                 for ev_sol in ev_solutions {
                     let ev_sol = ev_sol.map_err(|e| format!("evidence solution error: {e}"))?;
-                    let tc = ev_sol.get("tc")
-                        .and_then(|t| if let oxigraph::model::Term::NamedNode(n) = t { Some(n.as_str().to_string()) } else { None })
+                    let tc = ev_sol
+                        .get("tc")
+                        .and_then(|t| {
+                            if let oxigraph::model::Term::NamedNode(n) = t {
+                                Some(n.as_str().to_string())
+                            } else {
+                                None
+                            }
+                        })
                         .ok_or_else(|| "missing tc")?;
-                    let outcome_str = ev_sol.get("outcome")
-                        .and_then(|t| if let oxigraph::model::Term::Literal(l) = t { Some(l.value()) } else { None })
+                    let outcome_str = ev_sol
+                        .get("outcome")
+                        .and_then(|t| {
+                            if let oxigraph::model::Term::Literal(l) = t {
+                                Some(l.value())
+                            } else {
+                                None
+                            }
+                        })
                         .ok_or_else(|| "missing outcome")?;
-                    let from_step = ev_sol.get("fromStep")
-                        .and_then(|t| if let oxigraph::model::Term::NamedNode(n) = t { Some(n.as_str().to_string()) } else { None })
+                    let from_step = ev_sol
+                        .get("fromStep")
+                        .and_then(|t| {
+                            if let oxigraph::model::Term::NamedNode(n) = t {
+                                Some(n.as_str().to_string())
+                            } else {
+                                None
+                            }
+                        })
                         .ok_or_else(|| "missing fromStep")?;
 
                     let outcome = match outcome_str {

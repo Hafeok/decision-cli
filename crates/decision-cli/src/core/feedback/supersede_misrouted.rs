@@ -62,10 +62,8 @@ pub fn supersede_misrouted_implementer_defects(
     let store = load_store_from_dump(&dump)
         .with_context(|| format!("loading orchestration store at {}", dump.display()))?;
     let store = Arc::new(store);
-    let scope =
-        ActiveScope::load(workdir).context("loading active scope for supersession")?;
-    let stream_iri =
-        NamedNode::new(&scope.stream_iri).context("active stream iri")?;
+    let scope = ActiveScope::load(workdir).context("loading active scope for supersession")?;
+    let stream_iri = NamedNode::new(&scope.stream_iri).context("active stream iri")?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri.clone())
         .context("opening writer for supersession")?;
 
@@ -199,8 +197,7 @@ fn escalate_for_target_role(
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri.clone())
         .context("opening writer for escalation")?;
 
-    let tc_set: std::collections::HashSet<&str> =
-        tc_iris.iter().map(String::as_str).collect();
+    let tc_set: std::collections::HashSet<&str> = tc_iris.iter().map(String::as_str).collect();
 
     let defects = list_by_class(&store, "defect")
         .map_err(|e| anyhow::anyhow!("listing defect feedback: {e}"))?;
@@ -226,8 +223,7 @@ fn escalate_for_target_role(
         }
     }
     if escalated > 0 {
-        persist_store(&store, &dump)
-            .context("persisting store after escalation")?;
+        persist_store(&store, &dump).context("persisting store after escalation")?;
     }
     Ok(escalated)
 }
@@ -257,10 +253,7 @@ fn supersede_with_role_twin(
     // Step 1: mint the corrected twin. Same source artifact + evidence
     // + source session, but `targetRole` is replaced so the dispatch
     // gate routes the twin to the new worker next iteration.
-    let twin_iri = NamedNode::new_unchecked(format!(
-        "urn:dec:feedback:{}",
-        Uuid::new_v4()
-    ));
+    let twin_iri = NamedNode::new_unchecked(format!("urn:dec:feedback:{}", Uuid::new_v4()));
     let twin = Feedback {
         iri: twin_iri.clone(),
         class: old.class.clone(),

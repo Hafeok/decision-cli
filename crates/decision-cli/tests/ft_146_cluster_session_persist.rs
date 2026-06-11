@@ -21,8 +21,8 @@ use oxigraph::model::NamedNode;
 use oxigraph::sparql::QueryResults;
 
 use decision_cli::core::graph::cluster_session::{
-    persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
-    IRI_DEC_CELL_STATUS, IRI_DEC_CLUSTER_DISPATCH, IRI_DEC_CLUSTER_OUTCOME, IRI_DEC_USAGE_SOURCE,
+    persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome, IRI_DEC_CELL_STATUS,
+    IRI_DEC_CLUSTER_DISPATCH, IRI_DEC_CLUSTER_OUTCOME, IRI_DEC_USAGE_SOURCE,
 };
 use decision_cli::core::store::{load_store_from_dump, orchestration_dump_path};
 use decision_cli::features::implement::WorkerResponseUsage;
@@ -75,8 +75,7 @@ fn ft_146_cluster_dispatch_persists_session_records_with_token_breakdown() {
     let wd = WorkdirGuard::new("persist");
     bootstrap_workdir(&wd);
 
-    let cluster_iri =
-        NamedNode::new("urn:dec:cluster-dispatch:add-judge-worker/FT-T146a").unwrap();
+    let cluster_iri = NamedNode::new("urn:dec:cluster-dispatch:add-judge-worker/FT-T146a").unwrap();
     let scaleway_cap =
         NamedNode::new("https://decision-cli.dev/ns/capability/qwen3-coder/v1").unwrap();
     let mechanical_cap = NamedNode::new("urn:dec:capability:mechanical").unwrap();
@@ -101,10 +100,8 @@ fn ft_146_cluster_dispatch_persists_session_records_with_token_breakdown() {
         // LLM-backed cell — Scaleway endpoint, cache fields zero, usage
         // worker-reported.
         CellSessionRecord {
-            iri: NamedNode::new(
-                "urn:dec:cluster-session:add-judge-worker/FT-T146a/agent_loop",
-            )
-            .unwrap(),
+            iri: NamedNode::new("urn:dec:cluster-session:add-judge-worker/FT-T146a/agent_loop")
+                .unwrap(),
             capability: scaleway_cap.clone(),
             usage: Some(WorkerResponseUsage {
                 input_tokens_base: 3210,
@@ -135,11 +132,7 @@ fn ft_146_cluster_dispatch_persists_session_records_with_token_breakdown() {
     let store = load_store_from_dump(&dump).expect("reload store");
 
     // Cluster activity carries the outcome enum.
-    let outcome = ask_literal(
-        &store,
-        &cluster_iri,
-        IRI_DEC_CLUSTER_OUTCOME,
-    );
+    let outcome = ask_literal(&store, &cluster_iri, IRI_DEC_CLUSTER_OUTCOME);
     assert_eq!(outcome.as_deref(), Some("succeeded"));
 
     let cluster_type_count = count_type(&store, &cluster_iri, IRI_DEC_CLUSTER_DISPATCH);
@@ -176,8 +169,7 @@ fn ft_146_cluster_dispatch_persists_session_records_with_token_breakdown() {
     assert_eq!(output.as_deref(), Some("987"));
 
     // FT-146 framing: usageSource + cellStatus + parent activity link.
-    let agent_loop_usage_source =
-        ask_literal(&store, agent_loop_iri, IRI_DEC_USAGE_SOURCE);
+    let agent_loop_usage_source = ask_literal(&store, agent_loop_iri, IRI_DEC_USAGE_SOURCE);
     assert_eq!(agent_loop_usage_source.as_deref(), Some("worker-reported"));
     let agent_loop_status = ask_literal(&store, agent_loop_iri, IRI_DEC_CELL_STATUS);
     assert_eq!(agent_loop_status.as_deref(), Some("succeeded"));
@@ -210,15 +202,12 @@ fn ft_146_failed_cell_still_persists_session_record() {
     let wd = WorkdirGuard::new("failed");
     bootstrap_workdir(&wd);
 
-    let cluster_iri =
-        NamedNode::new("urn:dec:cluster-dispatch:add-judge-worker/FT-T146b").unwrap();
+    let cluster_iri = NamedNode::new("urn:dec:cluster-dispatch:add-judge-worker/FT-T146b").unwrap();
     let cap = NamedNode::new("https://decision-cli.dev/ns/capability/qwen3-coder/v1").unwrap();
     let started = Utc::now();
 
-    let failed_iri = NamedNode::new(
-        "urn:dec:cluster-session:add-judge-worker/FT-T146b/agent_loop",
-    )
-    .unwrap();
+    let failed_iri =
+        NamedNode::new("urn:dec:cluster-session:add-judge-worker/FT-T146b/agent_loop").unwrap();
     let cells = vec![CellSessionRecord {
         iri: failed_iri.clone(),
         capability: cap.clone(),
@@ -382,11 +371,7 @@ fn ask_literal(
     None
 }
 
-fn count_type(
-    store: &oxigraph::store::Store,
-    subject: &NamedNode,
-    class: &str,
-) -> usize {
+fn count_type(store: &oxigraph::store::Store, subject: &NamedNode, class: &str) -> usize {
     let q = format!(
         "SELECT ?s WHERE {{ {{ <{s}> a <{c}> }} UNION {{ GRAPH ?g {{ <{s}> a <{c}> }} }} }}",
         s = subject.as_str(),

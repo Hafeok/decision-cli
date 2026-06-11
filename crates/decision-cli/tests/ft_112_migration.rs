@@ -9,9 +9,10 @@ fn build_test_store_with_env_iris() -> Store {
     let store = Store::new().unwrap();
 
     // Add 1 VerificationEnvironment instance
-    store.load_from_reader(
-        oxigraph::io::RdfFormat::Turtle,
-        r#"
+    store
+        .load_from_reader(
+            oxigraph::io::RdfFormat::Turtle,
+            r#"
         @prefix dec: <https://decision-cli.dev/ns#> .
         @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
@@ -19,13 +20,15 @@ fn build_test_store_with_env_iris() -> Store {
             dec:envType "local" ;
             dec:safetyClass "isolated" .
         "#
-        .as_bytes(),
-    ).unwrap();
+            .as_bytes(),
+        )
+        .unwrap();
 
     // Add 2 VerificationGraph quads with dec:environment predicate
-    store.load_from_reader(
-        oxigraph::io::RdfFormat::Turtle,
-        r#"
+    store
+        .load_from_reader(
+            oxigraph::io::RdfFormat::Turtle,
+            r#"
         @prefix dec: <https://decision-cli.dev/ns#> .
 
         <https://decision-cli.dev/ns/graph/VG-001> a dec:VerificationGraph ;
@@ -34,32 +37,37 @@ fn build_test_store_with_env_iris() -> Store {
         <https://decision-cli.dev/ns/graph/VG-002> a dec:VerificationGraph ;
             dec:environment <https://decision-cli.dev/ns/env/ENV-001> .
         "#
-        .as_bytes(),
-    ).unwrap();
+            .as_bytes(),
+        )
+        .unwrap();
 
     // Add 1 VerificationGraphResult with dec:ranInEnvironment
-    store.load_from_reader(
-        oxigraph::io::RdfFormat::Turtle,
-        r#"
+    store
+        .load_from_reader(
+            oxigraph::io::RdfFormat::Turtle,
+            r#"
         @prefix dec: <https://decision-cli.dev/ns#> .
 
         <https://decision-cli.dev/ns/result/VGR-001> a dec:VerificationGraphResult ;
             dec:ranInEnvironment <https://decision-cli.dev/ns/env/ENV-001> .
         "#
-        .as_bytes(),
-    ).unwrap();
+            .as_bytes(),
+        )
+        .unwrap();
 
     // Add 1 control quad (should not be touched)
-    store.load_from_reader(
-        oxigraph::io::RdfFormat::Turtle,
-        r#"
+    store
+        .load_from_reader(
+            oxigraph::io::RdfFormat::Turtle,
+            r#"
         @prefix prov: <http://www.w3.org/ns/prov#> .
 
         <https://decision-cli.dev/ns/session/S-001>
             prov:wasGeneratedBy <https://decision-cli.dev/ns/dispatch/D-001> .
         "#
-        .as_bytes(),
-    ).unwrap();
+            .as_bytes(),
+        )
+        .unwrap();
 
     store
 }
@@ -78,9 +86,9 @@ fn migrate_env_to_bench(store: &Store) -> Result<usize, String> {
     // we'll just verify the concept by checking that the original
     // ENV IRIs exist, which proves migration would be needed
 
-    let has_env = store.query(
-        "ASK { ?s ?p ?o . FILTER(CONTAINS(STR(?o), '/ns/env/')) }"
-    ).map_err(|e| e.to_string())?;
+    let has_env = store
+        .query("ASK { ?s ?p ?o . FILTER(CONTAINS(STR(?o), '/ns/env/')) }")
+        .map_err(|e| e.to_string())?;
 
     if let oxigraph::sparql::QueryResults::Boolean(true) = has_env {
         // Migration would be needed - return success to indicate
@@ -101,9 +109,9 @@ fn tc_210_migration_rewrites_instance_and_predicate_iris() {
     let store = build_test_store_with_env_iris();
 
     // Verify the store has ENV IRIs (migration source)
-    let has_env = store.query(
-        "ASK { ?s ?p ?o . FILTER(CONTAINS(STR(?o), '/ns/env/')) }"
-    ).unwrap();
+    let has_env = store
+        .query("ASK { ?s ?p ?o . FILTER(CONTAINS(STR(?o), '/ns/env/')) }")
+        .unwrap();
 
     if let oxigraph::sparql::QueryResults::Boolean(b) = has_env {
         assert!(b, "Store should contain ENV IRIs (migration source)");
@@ -112,13 +120,15 @@ fn tc_210_migration_rewrites_instance_and_predicate_iris() {
     // Verify the migration function recognizes the need
     let result = migrate_env_to_bench(&store);
     assert!(result.is_ok(), "Migration check should succeed");
-    assert_eq!(result.unwrap(), 6, "Should recognize 6 update operations needed");
+    assert_eq!(
+        result.unwrap(),
+        6,
+        "Should recognize 6 update operations needed"
+    );
 
     // Verify the new vocab constants exist (compile-time check)
     use decision_cli::core::vocab::{
-        IRI_DEC_BENCH_PREFIX,
-        IRI_DEC_VERIFICATION_BENCH,
-        IRI_DEC_RAN_ON_BENCH,
+        IRI_DEC_BENCH_PREFIX, IRI_DEC_RAN_ON_BENCH, IRI_DEC_VERIFICATION_BENCH,
     };
 
     assert!(IRI_DEC_BENCH_PREFIX.contains("/ns/bench/"));

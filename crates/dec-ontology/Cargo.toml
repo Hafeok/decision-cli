@@ -1,0 +1,22 @@
+[package]
+name = "dec-ontology"
+version = "0.1.0"
+description = "decision-cli domain layer: typed artifact definitions, IRI vocabulary, SHACL shapes, parsers and emitters (ADR-086)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# ADR-086: this crate is the pure center of the workspace. Its dependency
+# tree must never contain a store (oxigraph), an async runtime (tokio),
+# HTTP (axum/reqwest), CLI (clap), or any workspace crate. Enforced by
+# scripts/checks/dec-ontology-purity.sh (TC-412).
+[dependencies]
+oxrdf = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+[lints]
+workspace = true

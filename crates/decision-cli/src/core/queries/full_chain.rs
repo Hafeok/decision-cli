@@ -20,23 +20,19 @@ pub const QUERY_TEMPLATE_CLASS_IRI: &str = "https://decision-cli.dev/ns#QueryTem
 pub const FULL_CHAIN_BACKWARD_ID: &str = "qt:full-chain-backward-v1";
 
 /// Stable IRI of the slice-1 backward traversal instance.
-pub const FULL_CHAIN_BACKWARD_IRI: &str =
-    "https://decision-cli.dev/ns/qt/full-chain-backward-v1";
+pub const FULL_CHAIN_BACKWARD_IRI: &str = "https://decision-cli.dev/ns/qt/full-chain-backward-v1";
 
 /// Bootstrap Turtle bytes for the backward template, seeded at `dec init`.
-pub const FULL_CHAIN_BACKWARD_TTL: &str =
-    include_str!("bootstrap/qt-full-chain-backward-v1.ttl");
+pub const FULL_CHAIN_BACKWARD_TTL: &str = include_str!("bootstrap/qt-full-chain-backward-v1.ttl");
 
 /// Shorthand identifier for the slice-1 forward traversal.
 pub const FULL_CHAIN_FORWARD_ID: &str = "qt:full-chain-forward-v1";
 
 /// Stable IRI of the slice-1 forward traversal instance.
-pub const FULL_CHAIN_FORWARD_IRI: &str =
-    "https://decision-cli.dev/ns/qt/full-chain-forward-v1";
+pub const FULL_CHAIN_FORWARD_IRI: &str = "https://decision-cli.dev/ns/qt/full-chain-forward-v1";
 
 /// Bootstrap Turtle bytes for the forward template, seeded at `dec init`.
-pub const FULL_CHAIN_FORWARD_TTL: &str =
-    include_str!("bootstrap/qt-full-chain-forward-v1.ttl");
+pub const FULL_CHAIN_FORWARD_TTL: &str = include_str!("bootstrap/qt-full-chain-forward-v1.ttl");
 
 const DEC_QUERY_SPEC: &str = "https://decision-cli.dev/ns#querySpec";
 const DEC_QUERY_LANGUAGE: &str = "https://decision-cli.dev/ns#queryLanguage";
@@ -65,9 +61,7 @@ pub enum QueryTemplateError {
     #[error("QueryTemplate `{id}` not found in the orchestration store")]
     TemplateNotFound { id: String },
 
-    #[error(
-        "QueryTemplate `{id}` is malformed: missing required field {field}"
-    )]
+    #[error("QueryTemplate `{id}` is malformed: missing required field {field}")]
     MalformedTemplate { id: String, field: &'static str },
 
     #[error("SPARQL execution failed for QueryTemplate `{id}`: {detail}")]
@@ -169,10 +163,7 @@ fn parse_list_solution(sol: &oxigraph::sparql::QuerySolution) -> Option<QueryTem
 /// Fetch a single `dec:QueryTemplate` by id (shorthand `qt:foo` or full
 /// IRI) from `store`. Returns [`QueryTemplateError::TemplateNotFound`]
 /// when no matching instance exists.
-pub fn fetch_query_template(
-    store: &Store,
-    id: &str,
-) -> Result<QueryTemplate, QueryTemplateError> {
+pub fn fetch_query_template(store: &Store, id: &str) -> Result<QueryTemplate, QueryTemplateError> {
     let iri = resolve_id_to_iri(id);
     let q = build_fetch_query(&iri);
     let results = store

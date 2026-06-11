@@ -186,7 +186,12 @@ fn run_deactivate(workdir: &Path, role_id: &str, version: u32) -> Result<bool, S
         lit_true,
         GraphName::from(bind_graph),
     );
-    let insert_quad = Quad::new(target.iri(), active_pred, lit_false, GraphName::from(bind_graph));
+    let insert_quad = Quad::new(
+        target.iri(),
+        active_pred,
+        lit_false,
+        GraphName::from(bind_graph),
+    );
 
     store
         .transaction(|mut tx| {

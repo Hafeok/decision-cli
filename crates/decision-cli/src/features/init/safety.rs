@@ -1,5 +1,4 @@
 ///! Safety checks for .env and .gitignore (FT-114).
-
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
@@ -56,11 +55,12 @@ pub fn ensure_env_gitignored(
     }
 
     // Check if .gitignore is actually a file (not a directory)
-    let metadata = fs::metadata(&gitignore)
-        .map_err(|e| InitError::PersistFailed(format!("Failed to read .gitignore metadata: {}", e)))?;
+    let metadata = fs::metadata(&gitignore).map_err(|e| {
+        InitError::PersistFailed(format!("Failed to read .gitignore metadata: {}", e))
+    })?;
     if !metadata.is_file() {
         return Err(InitError::PersistFailed(
-            ".gitignore exists but is not a file (directory or symlink?)".to_string()
+            ".gitignore exists but is not a file (directory or symlink?)".to_string(),
         ));
     }
 
@@ -85,7 +85,7 @@ pub fn ensure_env_gitignored(
 
     if !should_append {
         return Err(InitError::PersistFailed(
-            "Operator declined to append .env to .gitignore".to_string()
+            "Operator declined to append .env to .gitignore".to_string(),
         ));
     }
 
@@ -93,13 +93,16 @@ pub fn ensure_env_gitignored(
     let mut file = fs::OpenOptions::new()
         .append(true)
         .open(&gitignore)
-        .map_err(|e| InitError::PersistFailed(format!("Failed to open .gitignore for append: {}", e)))?;
+        .map_err(|e| {
+            InitError::PersistFailed(format!("Failed to open .gitignore for append: {}", e))
+        })?;
 
     // Ensure the file ends with a newline before appending
     let needs_newline = !content.is_empty() && !content.ends_with('\n');
     if needs_newline {
-        file.write_all(b"\n")
-            .map_err(|e| InitError::PersistFailed(format!("Failed to write to .gitignore: {}", e)))?;
+        file.write_all(b"\n").map_err(|e| {
+            InitError::PersistFailed(format!("Failed to write to .gitignore: {}", e))
+        })?;
     }
 
     file.write_all(b".env\n")

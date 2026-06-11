@@ -44,7 +44,12 @@ fn diff_capability_strings(yaml: &Capability, stored: &Capability, out: &mut Vec
 }
 
 fn diff_capability_numerics(yaml: &Capability, stored: &Capability, out: &mut Vec<FieldDiff>) {
-    push_if(out, "tier", &opt_string(yaml.tier), &opt_string(stored.tier));
+    push_if(
+        out,
+        "tier",
+        &opt_string(yaml.tier),
+        &opt_string(stored.tier),
+    );
     push_if(
         out,
         "context_window",
@@ -120,7 +125,12 @@ fn diff_capability_booleans(yaml: &Capability, stored: &Capability, out: &mut Ve
 }
 
 fn diff_capability_enums(yaml: &Capability, stored: &Capability, out: &mut Vec<FieldDiff>) {
-    push_if(out, "endpoint", yaml.endpoint.as_str(), stored.endpoint.as_str());
+    push_if(
+        out,
+        "endpoint",
+        yaml.endpoint.as_str(),
+        stored.endpoint.as_str(),
+    );
     push_if(
         out,
         "cost_currency",

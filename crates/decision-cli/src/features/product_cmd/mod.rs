@@ -412,7 +412,10 @@ fn preflight_check(id: &str) -> ExitCode {
     } else {
         println!("{id}: coverage gaps detected:");
         for finding in findings {
-            println!("  - {} ({:?}): {}", finding.code, finding.severity, finding.description);
+            println!(
+                "  - {} ({:?}): {}",
+                finding.code, finding.severity, finding.description
+            );
         }
     }
     ExitCode::SUCCESS
@@ -439,7 +442,11 @@ fn graph_check() -> ExitCode {
     if result.errors.is_empty() {
         println!("Graph check: clean ({} warnings)", result.warnings.len());
     } else {
-        println!("Graph check: {} errors, {} warnings", result.errors.len(), result.warnings.len());
+        println!(
+            "Graph check: {} errors, {} warnings",
+            result.errors.len(),
+            result.warnings.len()
+        );
         for error in &result.errors {
             eprintln!("  ERROR: {error}");
         }

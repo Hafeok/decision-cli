@@ -71,12 +71,7 @@ adrs-rejected:
     assert_eq!(rejections[0].id, ADR_CC);
     let reason_a = rejections[0].reason.clone();
 
-    let rows = evaluate_cross_cutting(
-        &[ADR_CC.into()],
-        &[],
-        &rejections,
-        &cfg(&[ADR_CC]),
-    );
+    let rows = evaluate_cross_cutting(&[ADR_CC.into()], &[], &rejections, &cfg(&[ADR_CC]));
     assert_eq!(rows.len(), 1, "one cross-cutting row");
 
     // The status must be `Intentional` (not `Missing`) and the literal
@@ -147,12 +142,7 @@ adrs-rejected:
     // regular `missing`-severity gap (the rejection has no effect
     // because there was nothing to default-acknowledge) and the drift
     // validator owns the user-visible warning surface.
-    let rows = evaluate_cross_cutting(
-        &[ADR_CC.into()],
-        &[],
-        &rejections,
-        &cfg(&[]),
-    );
+    let rows = evaluate_cross_cutting(&[ADR_CC.into()], &[], &rejections, &cfg(&[]));
     assert_eq!(
         rows[0].status,
         CoverageStatus::Missing,

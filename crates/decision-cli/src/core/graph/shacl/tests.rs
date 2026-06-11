@@ -7,8 +7,8 @@ use super::{Validator, RDF_TYPE};
 use crate::core::graph::violation::ViolationKind;
 use crate::core::ontology::{BOUNDARY_ARTIFACT_CLASS, EXTERNAL_ORIGIN_PROP};
 use crate::core::vocab::{
-    IRI_DEC_GRAPH_ORCHESTRATION, IRI_PROV_GENERATED_AT_TIME,
-    IRI_PROV_WAS_ATTRIBUTED_TO_MECHANICAL, IRI_PROV_WAS_GENERATED_BY,
+    IRI_DEC_GRAPH_ORCHESTRATION, IRI_PROV_GENERATED_AT_TIME, IRI_PROV_WAS_ATTRIBUTED_TO_MECHANICAL,
+    IRI_PROV_WAS_GENERATED_BY,
 };
 
 const FEATURE_IRI: &str = "https://decision-cli.dev/ns#Feature";
@@ -77,8 +77,7 @@ fn rejects_feature_missing_motivational() {
     let report = v.validate(&delta, None);
     assert!(!report.conforms, "delta missing motivational must fail");
     assert!(report.violations.iter().any(|viol| {
-        matches!(viol.kind, ViolationKind::MissingMotivational)
-            && viol.artifact == FEATURE_INSTANCE
+        matches!(viol.kind, ViolationKind::MissingMotivational) && viol.artifact == FEATURE_INSTANCE
     }));
     let violation = report
         .violations
@@ -120,7 +119,11 @@ fn accepts_boundary_feature_without_motivational() {
     ];
     delta.extend(mechanical(BOUNDARY_INSTANCE));
     let report = v.validate(&delta, None);
-    assert!(report.conforms, "boundary artifact should conform: {:?}", report);
+    assert!(
+        report.conforms,
+        "boundary artifact should conform: {:?}",
+        report
+    );
 }
 
 #[test]

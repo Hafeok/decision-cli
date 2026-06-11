@@ -10,9 +10,7 @@
 
 use std::sync::Arc;
 
-use decision_cli::core::ontology::catalog::{
-    validate_quads_with_store, CapabilityReference,
-};
+use decision_cli::core::ontology::catalog::{validate_quads_with_store, CapabilityReference};
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
 use oxigraph::model::{NamedNode, Quad};
@@ -111,7 +109,10 @@ fn scenario_c_supersession_unblocks_a_fresh_active_author() {
 
     // Active-set query: only CR-002 should remain active.
     let active = active_capability_refs(&store);
-    assert_eq!(active, vec!["https://decision-cli.dev/ns/cr/CR-002".to_string()]);
+    assert_eq!(
+        active,
+        vec!["https://decision-cli.dev/ns/cr/CR-002".to_string()]
+    );
 
     // include-superseded: both visible.
     let all = all_capability_refs(&store);

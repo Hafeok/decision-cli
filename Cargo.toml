@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/oxi-events",
+    "crates/dec-ontology",
     "crates/decision-cli",
 ]
 
@@ -17,6 +18,10 @@ repository = "https://github.com/Hafeok/decision-cli"
 # RocksDB requires libclang at build time; install via `sudo apt install libclang-dev cmake`
 # and switch back to `default-features = true` when implementing on-disk persistence.
 oxigraph = { version = "0.4", default-features = false }
+# RDF model types only (NamedNode, Quad, Literal) — the dec-ontology domain
+# crate speaks these natively without pulling in the store (ADR-086). Pinned
+# to the version oxigraph 0.4 re-exports so the types are identical.
+oxrdf = { version = "0.2.4", features = ["rdf-star"] }
 tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 axum = "0.7"
@@ -53,6 +58,7 @@ tempfile = "3"
 
 # Internal
 oxi-events = { path = "crates/oxi-events" }
+dec-ontology = { path = "crates/dec-ontology" }
 
 # FT-136: Consume product-core and product-mcp as Cargo git dependencies (ADR-077)
 product-core = { git = "https://github.com/Hafeok/product-cli", rev = "5fad7aa11ca8787ff74e87bb00e1cc0bdfb8b2c1" }

@@ -36,7 +36,7 @@ This is the IaC cell from `briefs/system-archetype-spec-v2.md §5` made first-cl
 
 ### Outputs
 
-**Rust structs** (`crates/decision-cli/src/core/ontology/infrastructure_contract.rs`):
+**Rust structs** (`crates/dec-ontology/src/ontology/infrastructure_contract.rs`):
 
 ```rust
 pub struct InfrastructureContractTemplate {

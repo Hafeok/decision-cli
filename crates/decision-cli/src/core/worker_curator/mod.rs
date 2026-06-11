@@ -44,7 +44,7 @@ mod tests;
 pub use bundle::{assemble_curator_bundle, CuratorBundle, CuratorBundleError};
 pub use session::{
     run_curator_session, AdmissionOutcome, CuratorOutcome, CuratorSessionContext,
-    CuratorSessionError, RejectionOutcome, WORKER_AUTHOR_TARGET_ROLE,
-    WORKER_CURATOR_AGENT_IRI, WORKER_CURATOR_ROLE_ID,
+    CuratorSessionError, RejectionOutcome, WORKER_AUTHOR_TARGET_ROLE, WORKER_CURATOR_AGENT_IRI,
+    WORKER_CURATOR_ROLE_ID,
 };
 pub use verdict::CuratorVerdict;

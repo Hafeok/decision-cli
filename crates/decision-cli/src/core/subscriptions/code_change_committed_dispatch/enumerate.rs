@@ -13,7 +13,9 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{
+    IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX,
+};
 
 const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
@@ -139,8 +141,7 @@ fn run_select_tuples(
         .map_err(|e| EnumerateError::Store(format!("enumerate SPARQL: {e}")))?;
     if let QueryResults::Solutions(sols) = results {
         for sol in sols {
-            let sol = sol
-                .map_err(|e| EnumerateError::Store(format!("enumerate row: {e}")))?;
+            let sol = sol.map_err(|e| EnumerateError::Store(format!("enumerate row: {e}")))?;
             let graph = match sol.get("graph") {
                 Some(Term::NamedNode(n)) => n.as_str().to_string(),
                 _ => continue,

@@ -84,7 +84,10 @@ fn tc_124_migration_backfills_mechanical_and_flags_orphans() {
         .get(ADR_BACKFILL)
         .expect("backfill entry present");
     let AuditVerdict::BackfillableMechanical { edges } = backfill else {
-        panic!("backfill ADR must classify as BackfillableMechanical; got {:?}", backfill);
+        panic!(
+            "backfill ADR must classify as BackfillableMechanical; got {:?}",
+            backfill
+        );
     };
     assert!(
         edges.iter().any(|e| e.predicate == IRI_DECIDES_FOR),
@@ -127,7 +130,12 @@ fn tc_124_migration_backfills_mechanical_and_flags_orphans() {
         "synthetic :HistoricalSession must be committed"
     );
     assert!(
-        triple_present(&store, ADR_BACKFILL, IRI_PROV_WAS_GENERATED_BY, &session_iri),
+        triple_present(
+            &store,
+            ADR_BACKFILL,
+            IRI_PROV_WAS_GENERATED_BY,
+            &session_iri
+        ),
         "backfilled ADR must have prov:wasGeneratedBy pointing at the :HistoricalSession"
     );
     assert!(
@@ -203,8 +211,8 @@ fn tc_124_migration_backfills_mechanical_and_flags_orphans() {
 
     // ----- (5) Repair the orphan, retry cutover, flip warn-only off ----
     remove_orphan_marker(&store, FEATURE_ORPHAN).expect("repair orphan");
-    let outcome = run_cutover(&store, /*threshold=*/ 0)
-        .expect("cutover must succeed once orphans drop to 0");
+    let outcome =
+        run_cutover(&store, /*threshold=*/ 0).expect("cutover must succeed once orphans drop to 0");
     assert_eq!(
         outcome.orphan_count, 0,
         "cutover outcome must report zero unrepaired orphans"
@@ -229,7 +237,12 @@ fn seed_fixture(store: &Store) -> Result<()> {
     // Conformant (mechanical + motivational) so it does not show up as
     // a separate orphan in the audit scope — we want exactly one orphan
     // (FEATURE_ORPHAN) in the fixture.
-    quads.push(typed_quad(FEATURE_TARGET, RDF_TYPE, FEATURE_CLASS, g.clone()));
+    quads.push(typed_quad(
+        FEATURE_TARGET,
+        RDF_TYPE,
+        FEATURE_CLASS,
+        g.clone(),
+    ));
     quads.push(named_quad(
         FEATURE_TARGET,
         IRI_PROV_WAS_GENERATED_BY,
@@ -265,8 +278,18 @@ fn seed_fixture(store: &Store) -> Result<()> {
 
     // Real session + agent used by the conformant ADR — gives it a
     // mechanical block without flagging it as a migration backfill.
-    quads.push(typed_quad(SESSION_REAL, RDF_TYPE, "https://decision-cli.dev/ns#Session", g.clone()));
-    quads.push(typed_quad(AGENT_REAL, RDF_TYPE, "https://decision-cli.dev/ns#Agent", g.clone()));
+    quads.push(typed_quad(
+        SESSION_REAL,
+        RDF_TYPE,
+        "https://decision-cli.dev/ns#Session",
+        g.clone(),
+    ));
+    quads.push(typed_quad(
+        AGENT_REAL,
+        RDF_TYPE,
+        "https://decision-cli.dev/ns#Agent",
+        g.clone(),
+    ));
 
     // --- Conformant ADR (mechanical + motivational both present) --------
     quads.push(typed_quad(ADR_CONFORMANT, RDF_TYPE, ADR_CLASS, g.clone()));
@@ -362,8 +385,8 @@ fn index_by_artifact(
 
 fn count_all_triples(store: &Store) -> usize {
     let mut n = 0usize;
-    if let Ok(QueryResults::Solutions(sols)) =
-        store.query("SELECT (COUNT(*) AS ?c) WHERE { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }")
+    if let Ok(QueryResults::Solutions(sols)) = store
+        .query("SELECT (COUNT(*) AS ?c) WHERE { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }")
     {
         for sol in sols.flatten() {
             if let Some(oxigraph::model::Term::Literal(lit)) = sol.get("c") {

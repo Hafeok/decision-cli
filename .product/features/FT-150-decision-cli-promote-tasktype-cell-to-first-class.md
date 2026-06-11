@@ -36,7 +36,7 @@ The new fields enable: (a) routing the dispatcher per family (application = pure
 
 ### Outputs
 
-**Rust structs** (`crates/decision-cli/src/core/ontology/task_type.rs` — replaces the FT-139 substrate's `TaskTypeDecl`):
+**Rust structs** (`crates/dec-ontology/src/ontology/task_type.rs` — replaces the FT-139 substrate's `TaskTypeDecl`):
 
 ```rust
 pub struct TaskType {

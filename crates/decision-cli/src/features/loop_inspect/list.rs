@@ -127,9 +127,10 @@ pub fn run(req: &LoopListRequest) -> Result<LoopListResponse, HandlerError> {
         // so feedback that's still `produced` (never routed to a
         // worker) still shows a sensible emission timestamp instead of
         // a bare `-`.
-        let stamp = fb.routed_at.clone().or_else(|| {
-            super::resolver::emitted_at_from_session_iri(fb.source_session.as_str())
-        });
+        let stamp = fb
+            .routed_at
+            .clone()
+            .or_else(|| super::resolver::emitted_at_from_session_iri(fb.source_session.as_str()));
         if let Some(s) = stamp {
             if entry.last_emitted.as_ref().is_none_or(|cur| *cur < s) {
                 entry.last_emitted = Some(s);
@@ -159,8 +160,12 @@ pub fn run(req: &LoopListRequest) -> Result<LoopListResponse, HandlerError> {
     rows.sort_by(|a, b| {
         b.open_count
             .cmp(&a.open_count)
-            .then(b.last_emitted_at.clone().unwrap_or_default()
-                .cmp(&a.last_emitted_at.clone().unwrap_or_default()))
+            .then(
+                b.last_emitted_at
+                    .clone()
+                    .unwrap_or_default()
+                    .cmp(&a.last_emitted_at.clone().unwrap_or_default()),
+            )
             .then(a.feature_id.cmp(&b.feature_id))
     });
 
@@ -191,11 +196,7 @@ fn build_tc_to_feature_map(product_root: &std::path::Path) -> HashMap<String, St
             continue;
         };
         // Files are named TC-NNN-<slug>.md; extract the TC short id.
-        let tc_short = name
-            .split('-')
-            .take(2)
-            .collect::<Vec<_>>()
-            .join("-");
+        let tc_short = name.split('-').take(2).collect::<Vec<_>>().join("-");
         if !tc_short.starts_with("TC-") {
             continue;
         }

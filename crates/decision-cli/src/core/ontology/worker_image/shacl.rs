@@ -8,8 +8,8 @@ use thiserror::Error;
 use crate::core::sbom_referrer::validate_oci_referrer_uri;
 use crate::core::vocab::{
     ELIGIBILITY_CANDIDATE, ELIGIBILITY_DEPRECATED, ELIGIBILITY_PULLED, ELIGIBILITY_QUALIFIED,
-    IRI_DEC_BUILD_RUN_URL, IRI_DEC_CAPABILITY_TAG, IRI_DEC_ELIGIBILITY_STATUS, IRI_DEC_REGISTRY_REF,
-    IRI_DEC_SBOM_REF, IRI_DEC_SIGNED_BY_ISSUER, IRI_DEC_SIGNED_BY_SUBJECT,
+    IRI_DEC_BUILD_RUN_URL, IRI_DEC_CAPABILITY_TAG, IRI_DEC_ELIGIBILITY_STATUS,
+    IRI_DEC_REGISTRY_REF, IRI_DEC_SBOM_REF, IRI_DEC_SIGNED_BY_ISSUER, IRI_DEC_SIGNED_BY_SUBJECT,
     IRI_DEC_SOURCE_COMMIT_HASH, IRI_DEC_SOURCE_REPO_URI, IRI_DEC_WORKER_IMAGE,
     IRI_DEC_WORKER_IMAGE_ID, IRI_DEC_WORKER_IMAGE_NAME, IRI_DEC_WORKER_IMAGE_VERSION,
 };
@@ -83,38 +83,68 @@ fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<WorkerImageViola
     v
 }
 
-fn require_identity_fields(
-    quads: &[Quad],
-    subject: &NamedNode,
-    v: &mut Vec<WorkerImageViolation>,
-) {
-    require_string_one(quads, subject, IRI_DEC_WORKER_IMAGE_ID, "dec:worker_image_id", v);
-    require_string_one(quads, subject, IRI_DEC_WORKER_IMAGE_NAME, "dec:worker_image_name", v);
+fn require_identity_fields(quads: &[Quad], subject: &NamedNode, v: &mut Vec<WorkerImageViolation>) {
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_WORKER_IMAGE_ID,
+        "dec:worker_image_id",
+        v,
+    );
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_WORKER_IMAGE_NAME,
+        "dec:worker_image_name",
+        v,
+    );
     require_semver(quads, subject, v);
     require_registry_ref(quads, subject, v);
     require_eligibility(quads, subject, v);
     require_min_one_capability_tag(quads, subject, v);
 }
 
-fn require_signing_fields(
-    quads: &[Quad],
-    subject: &NamedNode,
-    v: &mut Vec<WorkerImageViolation>,
-) {
-    require_string_one(quads, subject, IRI_DEC_SIGNED_BY_SUBJECT, "dec:signed_by_subject", v);
-    require_string_one(quads, subject, IRI_DEC_SIGNED_BY_ISSUER, "dec:signed_by_issuer", v);
+fn require_signing_fields(quads: &[Quad], subject: &NamedNode, v: &mut Vec<WorkerImageViolation>) {
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_SIGNED_BY_SUBJECT,
+        "dec:signed_by_subject",
+        v,
+    );
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_SIGNED_BY_ISSUER,
+        "dec:signed_by_issuer",
+        v,
+    );
     require_string_one(quads, subject, IRI_DEC_SBOM_REF, "dec:sbom_ref", v);
     require_sbom_referrer_shape(quads, subject, v);
 }
 
-fn require_source_fields(
-    quads: &[Quad],
-    subject: &NamedNode,
-    v: &mut Vec<WorkerImageViolation>,
-) {
-    require_string_one(quads, subject, IRI_DEC_SOURCE_REPO_URI, "dec:source_repo_uri", v);
-    require_string_one(quads, subject, IRI_DEC_SOURCE_COMMIT_HASH, "dec:source_commit_hash", v);
-    require_string_one(quads, subject, IRI_DEC_BUILD_RUN_URL, "dec:build_run_url", v);
+fn require_source_fields(quads: &[Quad], subject: &NamedNode, v: &mut Vec<WorkerImageViolation>) {
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_SOURCE_REPO_URI,
+        "dec:source_repo_uri",
+        v,
+    );
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_SOURCE_COMMIT_HASH,
+        "dec:source_commit_hash",
+        v,
+    );
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_BUILD_RUN_URL,
+        "dec:build_run_url",
+        v,
+    );
 }
 
 fn require_string_one(
@@ -149,11 +179,7 @@ fn require_string_one(
     }
 }
 
-fn require_semver(
-    quads: &[Quad],
-    subject: &NamedNode,
-    violations: &mut Vec<WorkerImageViolation>,
-) {
+fn require_semver(quads: &[Quad], subject: &NamedNode, violations: &mut Vec<WorkerImageViolation>) {
     let values = literal_values(quads, subject, IRI_DEC_WORKER_IMAGE_VERSION);
     if values.is_empty() {
         violations.push(violation(
@@ -186,7 +212,10 @@ fn require_semver(
 
 fn is_semver(s: &str) -> bool {
     let parts: Vec<&str> = s.split('.').collect();
-    parts.len() == 3 && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+    parts.len() == 3
+        && parts
+            .iter()
+            .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
 fn require_registry_ref(
@@ -207,7 +236,10 @@ fn require_registry_ref(
         violations.push(violation(
             subject,
             IRI_DEC_REGISTRY_REF,
-            &format!("expected exactly one dec:registry_ref, found {}", values.len()),
+            &format!(
+                "expected exactly one dec:registry_ref, found {}",
+                values.len()
+            ),
         ));
     }
     for v in &values {

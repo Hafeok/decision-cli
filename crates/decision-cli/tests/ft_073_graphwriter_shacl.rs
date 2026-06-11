@@ -107,11 +107,7 @@ fn tc_123_graphwriter_rejects_writes_missing_motivational_pr() {
         subject_present(&store, FEEDBACK_VIOLATION_IRI),
         "violation Feedback must be emitted to the orchestration store"
     );
-    let feedback_class = literal_value_of(
-        &store,
-        FEEDBACK_VIOLATION_IRI,
-        IRI_DEC_FEEDBACK_CLASS,
-    );
+    let feedback_class = literal_value_of(&store, FEEDBACK_VIOLATION_IRI, IRI_DEC_FEEDBACK_CLASS);
     assert_eq!(
         feedback_class.as_deref(),
         Some(PROVENANCE_VIOLATION_CLASS),
@@ -339,9 +335,7 @@ fn dual_validator_agreement_check() {
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
     if status == Some(2) {
-        eprintln!(
-            "[FT-073] dual-validator check skipped — script reports deps missing\n{stderr}"
-        );
+        eprintln!("[FT-073] dual-validator check skipped — script reports deps missing\n{stderr}");
         return;
     }
     assert_eq!(

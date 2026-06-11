@@ -80,7 +80,11 @@ fn count_submissions(store: &Store) -> usize {
     sols.count()
 }
 
-async fn do_post(app: axum::Router, headers: Vec<(&str, &str)>, body: Value) -> (StatusCode, Value) {
+async fn do_post(
+    app: axum::Router,
+    headers: Vec<(&str, &str)>,
+    body: Value,
+) -> (StatusCode, Value) {
     let mut req = Request::builder()
         .method("POST")
         .uri("/submissions")
@@ -89,7 +93,9 @@ async fn do_post(app: axum::Router, headers: Vec<(&str, &str)>, body: Value) -> 
         req = req.header(k, v);
     }
     let req = req
-        .body(Body::from(serde_json::to_vec(&body).expect("serialise body")))
+        .body(Body::from(
+            serde_json::to_vec(&body).expect("serialise body"),
+        ))
         .expect("build request");
 
     let resp = app.oneshot(req).await.expect("send request");
@@ -144,7 +150,11 @@ async fn well_formed_post_returns_200_and_lands_in_graph() {
         "dispatch_event_id should be a UUID urn: {dispatch_event_id}"
     );
 
-    assert_eq!(count_submissions(&harness.store), 1, "exactly one Submission in graph");
+    assert_eq!(
+        count_submissions(&harness.store),
+        1,
+        "exactly one Submission in graph"
+    );
 
     // The persisted lifecycle state must be `received` — client cannot
     // influence the initial state.
@@ -161,7 +171,10 @@ async fn well_formed_post_returns_200_and_lands_in_graph() {
             seen.push(lit.value().to_string());
         }
     }
-    assert_eq!(seen, vec![SubmissionLifecycleState::Received.as_str().to_string()]);
+    assert_eq!(
+        seen,
+        vec![SubmissionLifecycleState::Received.as_str().to_string()]
+    );
 
     // The InitialRequest co-type makes the Submission a BoundaryArtifact
     // subclass — verify it is declared.
@@ -187,7 +200,11 @@ async fn missing_bearer_returns_401_and_writes_nothing() {
     let harness = build_harness();
     let (status, body) = do_post(harness.app, vec![], well_formed_body(REPO)).await;
 
-    assert_eq!(status, StatusCode::UNAUTHORIZED, "missing token must be 401");
+    assert_eq!(
+        status,
+        StatusCode::UNAUTHORIZED,
+        "missing token must be 401"
+    );
     assert_eq!(
         body.get("error").and_then(Value::as_str),
         Some("unauthorised"),
@@ -224,7 +241,11 @@ async fn identity_mismatch_returns_403_and_writes_nothing() {
     )
     .await;
 
-    assert_eq!(status, StatusCode::FORBIDDEN, "identity mismatch must be 403");
+    assert_eq!(
+        status,
+        StatusCode::FORBIDDEN,
+        "identity mismatch must be 403"
+    );
     let error = body.get("error").and_then(Value::as_str).unwrap_or("");
     assert_eq!(error, "identity_mismatch");
     let detail = body.get("detail").and_then(Value::as_str).unwrap_or("");

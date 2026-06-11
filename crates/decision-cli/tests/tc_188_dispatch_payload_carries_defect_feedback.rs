@@ -100,7 +100,9 @@ fn seed_feedback(
         in_stream: stream_iri,
     };
     let quads = fb.to_quads(orchestration_graph());
-    writer.commit(Mutation::insert(quads)).expect("commit feedback");
+    writer
+        .commit(Mutation::insert(quads))
+        .expect("commit feedback");
     persist_store(&store, &dump).expect("persist store");
 }
 

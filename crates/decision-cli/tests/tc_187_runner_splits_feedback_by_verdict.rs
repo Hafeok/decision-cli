@@ -107,7 +107,10 @@ fn target_roles_for(workdir: &Path, feedback_iris: &[NamedNode]) -> Vec<String> 
         std::fs::read_to_string(workdir.join(".dec/store/orchestration.nq")).expect("read dump");
     let mut out: Vec<String> = Vec::new();
     for iri in feedback_iris {
-        let needle = format!("<{}> <https://decision-cli.dev/ns#targetRole>", iri.as_str());
+        let needle = format!(
+            "<{}> <https://decision-cli.dev/ns#targetRole>",
+            iri.as_str()
+        );
         for line in dump_body.lines() {
             if line.starts_with(&needle) {
                 if let Some(start) = line.find('"') {

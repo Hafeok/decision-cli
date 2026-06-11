@@ -64,7 +64,10 @@ impl SubmissionPayload {
     /// not a valid IRI. Other invariants (digest pin, capability-tag
     /// cardinality, etc.) are deferred to the SHACL layer so the
     /// validator reports a structured 422 response body for the client.
-    pub fn into_submission(self, id_default: impl FnOnce() -> String) -> Result<WorkerImageSubmission, BadRoleIri> {
+    pub fn into_submission(
+        self,
+        id_default: impl FnOnce() -> String,
+    ) -> Result<WorkerImageSubmission, BadRoleIri> {
         let id = self.id.unwrap_or_else(id_default);
         let external_origin = self
             .external_origin
@@ -121,7 +124,8 @@ mod payload_unit_tests {
             claimed_capability_tags: vec!["code-writer".to_string()],
             claimed_compatible_roles: vec![],
             claimed_sbom_ref: "ghcr.io/example/worker@sha256:cafebabe".to_string(),
-            claimed_signature_subject: "https://github.com/example/.github/workflows/build.yml@refs/heads/main".to_string(),
+            claimed_signature_subject:
+                "https://github.com/example/.github/workflows/build.yml@refs/heads/main".to_string(),
             claimed_signature_issuer: "https://token.actions.githubusercontent.com".to_string(),
             claimed_source_repo_uri: "https://github.com/example/worker".to_string(),
             claimed_source_commit_hash: "abc123".to_string(),

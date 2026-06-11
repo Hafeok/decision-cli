@@ -1,16 +1,16 @@
 //! TC-239 — Approved VGR closes prior open defects from same graph against same passing TC.
 
-use std::sync::Arc;
 use chrono::Utc;
 use oxigraph::model::{NamedNode, NamedNodeRef, Subject};
 use oxigraph::store::Store;
+use std::sync::Arc;
 
 use decision_cli::core::feedback::artifact::{Feedback, Severity};
 use decision_cli::core::feedback::lifecycle::LifecycleState;
+use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::core::ontology::verification_result::{
     EvidenceProjection, StepOutcome, VerificationGraphResult,
 };
-use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::core::vocab::{lifecycle_state as lifecycle_state_pred, orchestration_graph};
 use decision_cli::core::StreamWriter;
 use decision_cli::features::ft_116_retract_stale_defects::retract_stale_defects_in_transaction;
@@ -46,7 +46,7 @@ fn tc_239_approved_vgr_closes_prior_open_defects() {
         was_attributed_to: "https://decision-cli.dev/ns/agent/runner".to_string(),
         created_at: Utc::now().to_rfc3339(),
     };
-    
+
     let quads = vgr_1.to_quads(NamedNodeRef::new_unchecked(
         "https://decision-cli.dev/ns/graph/verify-result",
     ));
@@ -75,7 +75,7 @@ fn tc_239_approved_vgr_closes_prior_open_defects() {
         disposition_rationale: None,
         in_stream: NamedNode::new_unchecked("https://decision-cli.dev/ns/stream/default"),
     };
-    
+
     let fb_quads = feedback.to_quads(orchestration_graph());
     for quad in fb_quads {
         store.insert(&quad).unwrap();
@@ -100,7 +100,7 @@ fn tc_239_approved_vgr_closes_prior_open_defects() {
         was_attributed_to: "https://decision-cli.dev/ns/agent/runner".to_string(),
         created_at: Utc::now().to_rfc3339(),
     };
-    
+
     let vgr_2_quads = vgr_2.to_quads(NamedNodeRef::new_unchecked(
         "https://decision-cli.dev/ns/graph/verify-result",
     ));
@@ -135,6 +135,10 @@ fn tc_239_approved_vgr_closes_prior_open_defects() {
             }
         }
     }
-    
-    assert_eq!(state, Some("closed".to_string()), "feedback should be closed");
+
+    assert_eq!(
+        state,
+        Some("closed".to_string()),
+        "feedback should be closed"
+    );
 }

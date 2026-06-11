@@ -2,7 +2,7 @@
 id: TC-412
 title: dec-ontology purity — domain crate declares no store, runtime, HTTP, CLI, or workspace dependencies
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-167
@@ -15,6 +15,8 @@ runner-timeout: 30
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-11T13:27:53.033915894+00:00
+last-run-duration: 0.0s
 ---
 
 ## Purpose

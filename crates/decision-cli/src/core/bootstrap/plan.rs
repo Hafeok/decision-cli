@@ -218,8 +218,8 @@ fn plan_deactivations(
 ) -> Result<Vec<Quad>, BootstrapError> {
     use oxigraph::model::{Literal, NamedNode};
     let bind_graph = role_binding_graph();
-    let all_bindings = all_for_role(store, role_id)
-        .map_err(|e| BootstrapError::Internal(e.to_string()))?;
+    let all_bindings =
+        all_for_role(store, role_id).map_err(|e| BootstrapError::Internal(e.to_string()))?;
     let mut deactivation_quads = Vec::new();
     for binding in all_bindings {
         // Skip if it's not active (already deactivated) or if it's the new one
@@ -229,8 +229,14 @@ fn plan_deactivations(
         // Generate a quad that sets dec:active to false
         let subject = binding.iri();
         let predicate = NamedNode::new_unchecked("https://decision-cli.dev/ns#active");
-        let old_value = Literal::new_typed_literal("true", NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean"));
-        let new_value = Literal::new_typed_literal("false", NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean"));
+        let old_value = Literal::new_typed_literal(
+            "true",
+            NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean"),
+        );
+        let new_value = Literal::new_typed_literal(
+            "false",
+            NamedNode::new_unchecked("http://www.w3.org/2001/XMLSchema#boolean"),
+        );
 
         // We need to both remove the old triple and insert the new one
         deactivation_quads.push(Quad::new(
@@ -239,12 +245,7 @@ fn plan_deactivations(
             old_value,
             bind_graph,
         ));
-        deactivation_quads.push(Quad::new(
-            subject,
-            predicate,
-            new_value,
-            bind_graph,
-        ));
+        deactivation_quads.push(Quad::new(subject, predicate, new_value, bind_graph));
     }
     Ok(deactivation_quads)
 }

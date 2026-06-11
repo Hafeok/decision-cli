@@ -201,12 +201,7 @@ fn tc_141_pipeline_worker_sdk_add_the_brief_artifact_type_to_product_cli_catalog
         Quad::new(brief_iri.clone(), rdf_type.clone(), dec_brief, g.clone()),
         // Boundary-origin Briefs (the common case per ADR-040) carry the
         // BoundaryArtifact class membership AND dec:external_origin.
-        Quad::new(
-            brief_iri.clone(),
-            rdf_type.clone(),
-            dec_boundary,
-            g.clone(),
-        ),
+        Quad::new(brief_iri.clone(), rdf_type.clone(), dec_boundary, g.clone()),
         Quad::new(
             brief_iri.clone(),
             p_external,
@@ -223,7 +218,9 @@ fn tc_141_pipeline_worker_sdk_add_the_brief_artifact_type_to_product_cli_catalog
         Quad::new(
             brief_iri.clone(),
             p_premise,
-            Literal::new_simple_literal("Workers are stateless bundle-in / artifact-out functions."),
+            Literal::new_simple_literal(
+                "Workers are stateless bundle-in / artifact-out functions.",
+            ),
             g.clone(),
         ),
         Quad::new(
@@ -235,7 +232,9 @@ fn tc_141_pipeline_worker_sdk_add_the_brief_artifact_type_to_product_cli_catalog
         Quad::new(
             brief_iri.clone(),
             p_success,
-            Literal::new_simple_literal("A worker compiled against the SDK can subscribe, complete, and report."),
+            Literal::new_simple_literal(
+                "A worker compiled against the SDK can subscribe, complete, and report.",
+            ),
             g.clone(),
         ),
         // Forward edges (Brief → Feature[], Brief → Acknowledgement[], …).
@@ -245,12 +244,7 @@ fn tc_141_pipeline_worker_sdk_add_the_brief_artifact_type_to_product_cli_catalog
             dec_feature.clone(),
             g.clone(),
         ),
-        Quad::new(
-            feature_b.clone(),
-            rdf_type.clone(),
-            dec_feature,
-            g.clone(),
-        ),
+        Quad::new(feature_b.clone(), rdf_type.clone(), dec_feature, g.clone()),
         Quad::new(ack_iri.clone(), rdf_type, dec_ack, g.clone()),
         Quad::new(
             brief_iri.clone(),
@@ -258,12 +252,7 @@ fn tc_141_pipeline_worker_sdk_add_the_brief_artifact_type_to_product_cli_catalog
             feature_a.clone(),
             g.clone(),
         ),
-        Quad::new(
-            brief_iri.clone(),
-            p_excludes,
-            feature_b.clone(),
-            g.clone(),
-        ),
+        Quad::new(brief_iri.clone(), p_excludes, feature_b.clone(), g.clone()),
         Quad::new(brief_iri.clone(), p_acks, ack_iri.clone(), g.clone()),
         Quad::new(brief_iri.clone(), p_refs, ref_iri.clone(), g.clone()),
     ];
@@ -341,9 +330,8 @@ fn parse_motivational_ttl() -> Store {
 }
 
 fn node_shape_present_in_shapes_graph(store: &Store, shape_iri: &str) -> bool {
-    let q = format!(
-        "ASK {{ GRAPH ?g {{ <{shape_iri}> a <http://www.w3.org/ns/shacl#NodeShape> }} }}"
-    );
+    let q =
+        format!("ASK {{ GRAPH ?g {{ <{shape_iri}> a <http://www.w3.org/ns/shacl#NodeShape> }} }}");
     matches!(store.query(q.as_str()), Ok(QueryResults::Boolean(true)))
 }
 

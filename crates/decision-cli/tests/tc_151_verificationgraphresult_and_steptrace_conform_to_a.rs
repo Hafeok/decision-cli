@@ -155,7 +155,8 @@ fn scenario_a_well_formed_result_is_accepted() {
         .quads_for_pattern(
             Some(oxigraph::model::Subject::NamedNode(result_iri).as_ref()),
             Some(
-                NamedNode::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").as_ref(),
+                NamedNode::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+                    .as_ref(),
             ),
             None,
             None,
@@ -194,10 +195,9 @@ fn scenario_c_unknown_step_iri_is_rejected() {
     let (_store, writer) = writer_with_graph_seeded(&graph);
     let mut result = well_formed_result(&graph);
     // Re-point trace 2 at an IRI that doesn't exist in the parent graph.
-    result.step_traces[2].traces_step =
-        "https://decision-cli.dev/ns/step/VG-FIXTURE-001/99".into();
-    let err = commit_result(&writer, &result)
-        .expect_err("Scenario C: unknown step IRI must be rejected");
+    result.step_traces[2].traces_step = "https://decision-cli.dev/ns/step/VG-FIXTURE-001/99".into();
+    let err =
+        commit_result(&writer, &result).expect_err("Scenario C: unknown step IRI must be rejected");
     assert!(
         err.contains("SHACL violation"),
         "Scenario C: expected SHACL violation, got {err}"
@@ -233,8 +233,8 @@ fn scenario_e_short_rationale_is_rejected() {
     let (_store, writer) = writer_with_graph_seeded(&graph);
     let mut result = well_formed_result(&graph);
     result.rationale = "ok".into();
-    let err = commit_result(&writer, &result)
-        .expect_err("Scenario E: short rationale must be rejected");
+    let err =
+        commit_result(&writer, &result).expect_err("Scenario E: short rationale must be rejected");
     assert!(
         err.contains("SHACL violation"),
         "Scenario E: expected SHACL violation, got {err}"

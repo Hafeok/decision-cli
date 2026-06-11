@@ -14,17 +14,10 @@ struct StubInspector {
 }
 
 impl GraphInspector for StubInspector {
-    fn aggregate_verdict_for_feature(
-        &self,
-        _: &str,
-    ) -> Result<FeatureVerdict, InspectError> {
+    fn aggregate_verdict_for_feature(&self, _: &str) -> Result<FeatureVerdict, InspectError> {
         Ok(self.verdict)
     }
-    fn open_defect_feedback_count(
-        &self,
-        _: &str,
-        role_id: &str,
-    ) -> Result<usize, InspectError> {
+    fn open_defect_feedback_count(&self, _: &str, role_id: &str) -> Result<usize, InspectError> {
         Ok(match role_id {
             "implementer" => self.impl_count,
             "verifier" => self.vga_count,
@@ -51,7 +44,9 @@ fn classify(verdict: FeatureVerdict, impl_c: usize, vga_c: usize) -> Action {
         impl_count: impl_c,
         vga_count: vga_c,
     });
-    planner.classify("FT-T196", "BNCH-002").expect("classify ok")
+    planner
+        .classify("FT-T196", "BNCH-002")
+        .expect("classify ok")
 }
 
 #[test]
@@ -83,7 +78,9 @@ fn tc_196_feature_ship_planner_state_table() {
                 Action::DispatchImplementer { feature_id } => {
                     assert_eq!(feature_id, "FT-T196");
                 }
-                other => panic!("{verdict:?} 2 {vga_c} should be DispatchImplementer; got {other:?}"),
+                other => {
+                    panic!("{verdict:?} 2 {vga_c} should be DispatchImplementer; got {other:?}")
+                }
             }
         }
     }

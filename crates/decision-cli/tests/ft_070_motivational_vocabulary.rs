@@ -126,7 +126,9 @@ fn tc_120_motivational_predicates_declared_subpropertyof_was() {
         g = g_iri,
         shapes = SHAPES_GRAPH_IRI,
     );
-    store.update(update.as_str()).expect("materialise wasDerivedFrom");
+    store
+        .update(update.as_str())
+        .expect("materialise wasDerivedFrom");
 
     // The query uses ONLY `prov:wasDerivedFrom*` — no motivational
     // predicate names appear in the query text.
@@ -258,10 +260,8 @@ fn declared_ranges_by_predicate() -> HashMap<String, HashSet<String>> {
     let mut out: HashMap<String, HashSet<String>> = HashMap::new();
     for sol in sols {
         let sol = sol.expect("solution");
-        let (
-            Some(oxigraph::model::Term::NamedNode(p)),
-            Some(oxigraph::model::Term::NamedNode(r)),
-        ) = (sol.get("p"), sol.get("r"))
+        let (Some(oxigraph::model::Term::NamedNode(p)), Some(oxigraph::model::Term::NamedNode(r))) =
+            (sol.get("p"), sol.get("r"))
         else {
             continue;
         };

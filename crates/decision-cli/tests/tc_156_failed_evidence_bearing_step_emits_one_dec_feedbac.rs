@@ -120,11 +120,7 @@ fn tc_156_failed_evidence_bearing_step_emits_one_dec_feedbac() {
         id: Some(ENV_ID.into()),
         bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
-        allowed_ops: vec![
-            "shell".into(),
-            "filesystem".into(),
-            "sparql-local".into(),
-        ],
+        allowed_ops: vec!["shell".into(), "filesystem".into(), "sparql-local".into()],
         setup: None,
         teardown: None,
         endpoint: None,
@@ -168,9 +164,7 @@ fn tc_156_failed_evidence_bearing_step_emits_one_dec_feedbac() {
         std::process::id()
     ));
     let response = run_graph(&RunGraphRequest {
-        graph: NamedNode::new_unchecked(format!(
-            "https://decision-cli.dev/ns/graph/{VG_ID}"
-        )),
+        graph: NamedNode::new_unchecked(format!("https://decision-cli.dev/ns/graph/{VG_ID}")),
         triggered_by: TriggerKind::Manual,
         capture_bindings: HashMap::new(),
         run_activity: activity.clone(),
@@ -192,7 +186,10 @@ fn tc_156_failed_evidence_bearing_step_emits_one_dec_feedbac() {
     let body = std::fs::read_to_string(&dump).expect("read dump");
     let defect_count = body.matches("\"defect\"").count();
     let gap_count = body.matches("\"gap\"").count();
-    assert!(defect_count >= 2, "at least 2 defect-class feedbacks in dump");
+    assert!(
+        defect_count >= 2,
+        "at least 2 defect-class feedbacks in dump"
+    );
     assert!(gap_count >= 1, "at least 1 gap-class feedback in dump");
     assert!(
         body.contains("TC-EVI-A") && body.contains("TC-EVI-B") && body.contains("TC-EVI-C"),

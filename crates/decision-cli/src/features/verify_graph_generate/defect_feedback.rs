@@ -30,11 +30,7 @@ pub use crate::core::feedback::DefectFeedbackRecord;
 ///
 /// Best-effort: I/O / parse failures yield an empty vec. The handler
 /// treats "no defect feedback" as "use today's matcher behaviour".
-pub fn load_for(
-    workdir: &Path,
-    feature_short: &str,
-    env_short: &str,
-) -> Vec<DefectFeedbackRecord> {
+pub fn load_for(workdir: &Path, feature_short: &str, env_short: &str) -> Vec<DefectFeedbackRecord> {
     let store_path = crate::core::store::orchestration_dump_path(workdir);
     let Ok(store) = crate::core::store::load_store_from_dump(&store_path) else {
         return Vec::new();
@@ -92,9 +88,7 @@ pub fn load_for(
 
 /// Set of graph short ids in the store with a `dec:supersededBy`
 /// edge (i.e., retired graphs).
-fn superseded_graph_shorts(
-    store: &oxigraph::store::Store,
-) -> std::collections::HashSet<String> {
+fn superseded_graph_shorts(store: &oxigraph::store::Store) -> std::collections::HashSet<String> {
     use oxigraph::sparql::QueryResults;
     let q = r#"PREFIX dec: <https://decision-cli.dev/ns#>
 SELECT ?graph WHERE { GRAPH ?g { ?graph dec:supersededBy ?_succ . } }"#;
@@ -151,11 +145,7 @@ fn collect_candidate_graphs(
         let Ok(graph) = from_turtle(&path) else {
             continue;
         };
-        let verifies_match = graph
-            .verifies
-            .0
-            .as_str()
-            .ends_with(&feature_iri_suffix);
+        let verifies_match = graph.verifies.0.as_str().ends_with(&feature_iri_suffix);
         let env_match = graph.environment.as_str().ends_with(&env_iri_suffix);
         if !(verifies_match && env_match) {
             continue;

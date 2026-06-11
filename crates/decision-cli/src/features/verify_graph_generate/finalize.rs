@@ -11,7 +11,9 @@ use std::path::Path;
 use crate::core::handler::Error as HandlerError;
 use crate::core::verify::matcher::MatchReport;
 
-use super::internal::{coverage_preview_from_report, preview_bundle_hash_for_match, run_matcher, short_graph_id};
+use super::internal::{
+    coverage_preview_from_report, preview_bundle_hash_for_match, run_matcher, short_graph_id,
+};
 use super::persist::{persist_new_proposal, Persisted};
 use super::proposal::{CoverageReportSummary, GraphProposal, MatchProposal, ProposalKind};
 use super::{GenerateMode, GenerateRequest, GenerateResponse, PersistedSummary};

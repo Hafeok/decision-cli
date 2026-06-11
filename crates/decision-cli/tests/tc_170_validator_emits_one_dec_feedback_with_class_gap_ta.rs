@@ -20,9 +20,7 @@
 use decision_cli::verify_graph_generate::feedback::{
     drain_captured, emit_gap_feedback, with_capture,
 };
-use decision_cli::verify_graph_generate::validator::{
-    UpstreamTarget, Violation, ViolationKind,
-};
+use decision_cli::verify_graph_generate::validator::{UpstreamTarget, Violation, ViolationKind};
 
 fn v(step: usize, kind: ViolationKind, thing: &str) -> Violation {
     Violation {
@@ -56,9 +54,7 @@ fn scenario_a_single_dec_subcommand_violation() {
         records[0].target,
         UpstreamTarget::CapabilityReference.as_str()
     );
-    assert!(records[0]
-        .evidence
-        .contains("dec verify result inspect"));
+    assert!(records[0].evidence.contains("dec verify result inspect"));
     let drained = drain_captured();
     assert_eq!(drained.len(), 1, "capture buffer mirrors the emission");
 }
@@ -77,9 +73,7 @@ fn scenario_b_single_sparql_namespace_violation() {
         records[0].target,
         UpstreamTarget::OntologyDescription.as_str()
     );
-    assert!(records[0]
-        .evidence
-        .contains("https://fake.example/ns#"));
+    assert!(records[0].evidence.contains("https://fake.example/ns#"));
 }
 
 #[test]
@@ -88,7 +82,11 @@ fn scenario_c_multi_category_violations_one_per_target() {
     // Three violations in three different categories ⇒ three records.
     let records = emit_gap_feedback(&[
         v(0, ViolationKind::DecSubcommand, "dec verify result inspect"),
-        v(1, ViolationKind::SparqlNamespace, "https://fake.example/ns#"),
+        v(
+            1,
+            ViolationKind::SparqlNamespace,
+            "https://fake.example/ns#",
+        ),
         v(2, ViolationKind::FilePath, "/etc/passwd"),
     ]);
     assert_eq!(records.len(), 3, "one record per upstream-target category");
@@ -109,7 +107,11 @@ fn scenario_d_each_record_carries_violation_detail() {
         v(0, ViolationKind::DecSubcommand, "dec foo bar"),
         v(3, ViolationKind::DecSubcommand, "dec baz qux"),
     ]);
-    assert_eq!(records.len(), 1, "both DecSubcommand violations land in one record");
+    assert_eq!(
+        records.len(),
+        1,
+        "both DecSubcommand violations land in one record"
+    );
     assert_eq!(records[0].violations.len(), 2);
     // Evidence mentions both.
     assert!(records[0].evidence.contains("dec foo bar"));

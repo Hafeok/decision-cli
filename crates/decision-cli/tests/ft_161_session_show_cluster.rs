@@ -17,9 +17,7 @@ use decision_cli::core::graph::cluster_session::{
     persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
 };
 use decision_cli::core::scope::ActiveScope;
-use decision_cli::core::store::{
-    load_store_from_dump, orchestration_dump_path, persist_store,
-};
+use decision_cli::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use decision_cli::features::implement::session_show;
 use decision_cli::features::implement::WorkerResponseUsage;
 use decision_cli::init::{run as init_run, DefinitionSource};
@@ -70,7 +68,13 @@ fn bootstrap(wd: &WorkdirGuard) {
 /// renderer reads (`cost_input_per_m`, `cost_output_per_m`,
 /// `cost_currency`). Goes through StreamWriter so the orchestration
 /// store dump is consistent after the call.
-fn seed_capability_cost(wd: &Path, cap_iri: &str, input_per_m: &str, output_per_m: &str, currency: &str) {
+fn seed_capability_cost(
+    wd: &Path,
+    cap_iri: &str,
+    input_per_m: &str,
+    output_per_m: &str,
+    currency: &str,
+) {
     let dump = orchestration_dump_path(wd);
     let store = load_store_from_dump(&dump).unwrap();
     let store = Arc::new(store);
@@ -85,13 +89,15 @@ fn seed_capability_cost(wd: &Path, cap_iri: &str, input_per_m: &str, output_per_
     let quads = vec![
         Quad::new(
             cap.clone(),
-            NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#cost_input_per_m").into_owned(),
+            NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#cost_input_per_m")
+                .into_owned(),
             lit_decimal(input_per_m),
             g.clone(),
         ),
         Quad::new(
             cap.clone(),
-            NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#cost_output_per_m").into_owned(),
+            NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#cost_output_per_m")
+                .into_owned(),
             lit_decimal(output_per_m),
             g.clone(),
         ),
@@ -180,16 +186,29 @@ fn tc_387_cluster_cell_iri_renders_breakdown_and_parent_link() {
     );
 
     let out = session_show(wd.path(), cell_iri).expect("render cell");
-    assert!(out.contains("Cell session"), "expected cell-session header: {out}");
+    assert!(
+        out.contains("Cell session"),
+        "expected cell-session header: {out}"
+    );
     assert!(out.contains(cell_iri), "expected cell IRI in output");
-    assert!(out.contains("urn:dec:cluster-dispatch:add-judge-worker/FT-T387"),
-        "expected parent cluster IRI in output");
-    assert!(out.contains("Capability     https://decision-cli.dev/ns/capability/qwen3-coder/v1"),
-        "expected capability line: {out}");
+    assert!(
+        out.contains("urn:dec:cluster-dispatch:add-judge-worker/FT-T387"),
+        "expected parent cluster IRI in output"
+    );
+    assert!(
+        out.contains("Capability     https://decision-cli.dev/ns/capability/qwen3-coder/v1"),
+        "expected capability line: {out}"
+    );
     assert!(out.contains("succeeded"), "expected status line: {out}");
-    assert!(out.contains("worker-reported"), "expected usage source: {out}");
+    assert!(
+        out.contains("worker-reported"),
+        "expected usage source: {out}"
+    );
     // Token values appear with right-aligned formatting.
-    assert!(out.contains("4321"), "expected input_tokens_base value: {out}");
+    assert!(
+        out.contains("4321"),
+        "expected input_tokens_base value: {out}"
+    );
     assert!(out.contains("765"), "expected output_tokens value: {out}");
 }
 
@@ -209,29 +228,56 @@ fn tc_388_cluster_dispatch_iri_renders_table_with_currency_total() {
         "FT-T388",
         "add-cli-subcommand",
         vec![
-            cell("add-cli-subcommand", "FT-T388", "clap_args_module", cap,
-                 Some((1000, 200)), CellStatus::Succeeded),
-            cell("add-cli-subcommand", "FT-T388", "handler_module", cap,
-                 Some((3000, 600)), CellStatus::Succeeded),
-            cell("add-cli-subcommand", "FT-T388", "registration_wiring", mech,
-                 None, CellStatus::Mechanical),
+            cell(
+                "add-cli-subcommand",
+                "FT-T388",
+                "clap_args_module",
+                cap,
+                Some((1000, 200)),
+                CellStatus::Succeeded,
+            ),
+            cell(
+                "add-cli-subcommand",
+                "FT-T388",
+                "handler_module",
+                cap,
+                Some((3000, 600)),
+                CellStatus::Succeeded,
+            ),
+            cell(
+                "add-cli-subcommand",
+                "FT-T388",
+                "registration_wiring",
+                mech,
+                None,
+                CellStatus::Mechanical,
+            ),
         ],
         ClusterOutcome::Succeeded,
     );
 
     let out = session_show(wd.path(), cluster).expect("render cluster");
     assert!(out.contains("Cluster        urn:dec:cluster-dispatch:add-cli-subcommand/FT-T388"));
-    assert!(out.contains("Feature        FT-T388"), "expected feature line: {out}");
+    assert!(
+        out.contains("Feature        FT-T388"),
+        "expected feature line: {out}"
+    );
     assert!(out.contains("Task type      add-cli-subcommand"));
     assert!(out.contains("Outcome        succeeded"));
-    assert!(out.contains("Cells (3):"), "expected cell count header: {out}");
+    assert!(
+        out.contains("Cells (3):"),
+        "expected cell count header: {out}"
+    );
     // Per-cell rows render the short cell name.
     assert!(out.contains("clap_args_module"));
     assert!(out.contains("handler_module"));
     assert!(out.contains("registration_wiring"));
     // Mechanical cell carries em-dash for cost; non-mechanical carry €.
     assert!(out.contains("€"), "expected EUR currency symbol: {out}");
-    assert!(out.contains("TOTAL EUR"), "expected currency-tagged TOTAL row: {out}");
+    assert!(
+        out.contains("TOTAL EUR"),
+        "expected currency-tagged TOTAL row: {out}"
+    );
     // Totals: 4000 base, 800 output across the two priced cells.
     assert!(out.contains("4000"), "expected total base = 4000: {out}");
     assert!(out.contains("800"), "expected total output = 800: {out}");
@@ -311,8 +357,10 @@ fn tc_390_non_cluster_iri_falls_through_to_existing_renderer() {
         msg.contains("no Session with IRI"),
         "expected slice-1 error verb for non-cluster IRI, got: {msg}"
     );
-    assert!(!msg.contains("cluster"),
-        "non-cluster IRI must not produce a cluster-flavoured error: {msg}");
+    assert!(
+        !msg.contains("cluster"),
+        "non-cluster IRI must not produce a cluster-flavoured error: {msg}"
+    );
 
     // Verify the FT-146 store integrity check too — orchestration dump is
     // readable post-bootstrap (sanity).

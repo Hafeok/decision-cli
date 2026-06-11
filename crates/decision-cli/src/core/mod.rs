@@ -26,15 +26,17 @@ pub mod ontology;
 pub mod queries;
 pub mod role_catalog;
 pub mod sbom_referrer;
-pub mod task_type;
 pub mod scope;
 pub mod sparql;
 pub mod store;
 pub mod stream_writer;
 mod stream_writer_validations;
 pub mod subscriptions;
+pub mod task_type;
 pub mod verify;
-pub mod vocab;
+// ADR-086: the IRI vocabulary is pure domain data and lives in dec-ontology.
+// Re-exported so existing crate::core::vocab::… paths keep working.
+pub use dec_ontology::vocab;
 pub mod worker;
 pub mod worker_curator;
 pub mod worker_manifest;

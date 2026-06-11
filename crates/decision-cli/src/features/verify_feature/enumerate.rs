@@ -15,7 +15,9 @@ use oxigraph::store::Store;
 
 use crate::core::handler::Error as HandlerError;
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
-use crate::core::vocab::{IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX};
+use crate::core::vocab::{
+    IRI_DEC_BENCH_PREFIX, IRI_DEC_GRAPH_VERIFY_GRAPH, IRI_DEC_VERIFY_GRAPH_PREFIX,
+};
 
 const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
@@ -150,11 +152,9 @@ fn run_select_tuples(
     sparql: &str,
     out: &mut Vec<GraphTuple>,
 ) -> Result<(), HandlerError> {
-    let results = store
-        .query(sparql)
-        .map_err(|e| HandlerError::Internal {
-            detail: format!("enumerate SPARQL: {e}"),
-        })?;
+    let results = store.query(sparql).map_err(|e| HandlerError::Internal {
+        detail: format!("enumerate SPARQL: {e}"),
+    })?;
     if let QueryResults::Solutions(sols) = results {
         for sol in sols {
             let sol = sol.map_err(|e| HandlerError::Internal {
@@ -172,7 +172,10 @@ fn run_select_tuples(
                 .strip_prefix(IRI_DEC_VERIFY_GRAPH_PREFIX)
                 .unwrap_or(&graph)
                 .to_string();
-            let env_short = env.strip_prefix(IRI_DEC_BENCH_PREFIX).unwrap_or(&env).to_string();
+            let env_short = env
+                .strip_prefix(IRI_DEC_BENCH_PREFIX)
+                .unwrap_or(&env)
+                .to_string();
             let tuple = GraphTuple {
                 graph_iri: graph,
                 graph_short,

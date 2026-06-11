@@ -2,8 +2,7 @@
 
 use decision_cli::core::drive::Action;
 use decision_cli::features::drive::inspect::{
-    CoveringGraphState, GraphInspector, InspectError, PreflightGap, PreflightStatus,
-    TcsLinkedState,
+    CoveringGraphState, GraphInspector, InspectError, PreflightGap, PreflightStatus, TcsLinkedState,
 };
 use decision_cli::features::ft_131_readiness_orchestrator::FeatureReadyOrchestratorPlanner;
 

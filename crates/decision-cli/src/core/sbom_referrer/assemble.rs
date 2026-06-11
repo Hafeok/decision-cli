@@ -106,11 +106,12 @@ pub fn assemble_curator_submission_bundle(
             submission_id: submission.id.clone(),
         });
     }
-    let sbom_referrer =
-        validate_oci_referrer_uri(raw).map_err(|source| CuratorSubmissionBundleError::SbomMalformed {
+    let sbom_referrer = validate_oci_referrer_uri(raw).map_err(|source| {
+        CuratorSubmissionBundleError::SbomMalformed {
             submission_id: submission.id.clone(),
             source,
-        })?;
+        }
+    })?;
     Ok(CuratorSubmissionBundle {
         submission_id: submission.id.clone(),
         sbom_referrer,

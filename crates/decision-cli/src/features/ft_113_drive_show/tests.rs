@@ -35,10 +35,7 @@ mod tests {
         let round2 = test_round(
             2,
             "verifier",
-            Outcome::VerifierResults {
-                pass: 10,
-                fail: 2,
-            },
+            Outcome::VerifierResults { pass: 10, fail: 2 },
         );
 
         let rounds = vec![round0.clone(), round1.clone(), round2.clone()];
@@ -194,7 +191,10 @@ mod tests {
 
         // Check outcome is a tagged enum
         let outcome = round0.get("outcome").unwrap();
-        assert_eq!(outcome.get("type").unwrap().as_str().unwrap(), "vga-produced");
+        assert_eq!(
+            outcome.get("type").unwrap().as_str().unwrap(),
+            "vga-produced"
+        );
         assert_eq!(outcome.get("graph_id").unwrap().as_str().unwrap(), "VG-167");
         assert_eq!(outcome.get("steps").unwrap().as_u64().unwrap(), 8);
 

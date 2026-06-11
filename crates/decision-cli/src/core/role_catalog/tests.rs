@@ -174,7 +174,13 @@ fn tc_266_role_catalog_lookup_returns_seeded_allowed_tools() {
 
     // Implementer gets the canonical five-tool list.
     assert_eq!(implementer.allowed_tools.len(), 5);
-    let expected_implementer = vec!["read_file", "write_file", "run_build", "run_lint", "run_tests"];
+    let expected_implementer = vec![
+        "read_file",
+        "write_file",
+        "run_build",
+        "run_lint",
+        "run_tests",
+    ];
     for tool in &expected_implementer {
         assert!(
             implementer.allowed_tools.contains(&tool.to_string()),
@@ -217,7 +223,14 @@ fn tc_267_shacl_refuses_role_without_role_tool() {
     );
 
     // Assert the shape is well-formed Turtle that references all required predicates.
-    for pred in ["dec:roleId", "dec:roleInputType", "dec:roleOutputType", "dec:roleModelBinding", "dec:authority", "dec:roleTool"] {
+    for pred in [
+        "dec:roleId",
+        "dec:roleInputType",
+        "dec:roleOutputType",
+        "dec:roleModelBinding",
+        "dec:authority",
+        "dec:roleTool",
+    ] {
         assert!(
             ROLE_SHAPE_TTL.contains(pred),
             "role shape missing predicate {pred}"
@@ -240,7 +253,9 @@ fn tc_268_legacy_store_returns_empty_allowed_tools() {
 
     // Create a role instance with all predicates EXCEPT dec:roleTool (simulating legacy).
     let role_iri = NamedNode::new_unchecked("https://decision-cli.dev/ns/role/legacy");
-    let g: GraphName = crate::core::vocab::orchestration_graph().into_owned().into();
+    let g: GraphName = crate::core::vocab::orchestration_graph()
+        .into_owned()
+        .into();
     let rdf_type = NamedNodeRef::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     let role_class = NamedNode::new_unchecked(ROLE_CLASS_IRI);
     let role_id_pred = NamedNode::new_unchecked(ROLE_ID_IRI);
@@ -254,12 +269,60 @@ fn tc_268_legacy_store_returns_empty_allowed_tools() {
 
     store
         .transaction(|mut tx| {
-            tx.insert(Quad::new(role_iri.clone(), rdf_type.clone(), role_class.clone(), g.clone()).as_ref())?;
-            tx.insert(Quad::new(role_iri.clone(), role_id_pred.clone(), Literal::new_simple_literal("legacy"), g.clone()).as_ref())?;
-            tx.insert(Quad::new(role_iri.clone(), role_input_pred.clone(), feature_spec.clone(), g.clone()).as_ref())?;
-            tx.insert(Quad::new(role_iri.clone(), role_input_pred.clone(), bundle_hash.clone(), g.clone()).as_ref())?;
-            tx.insert(Quad::new(role_iri.clone(), role_output_pred.clone(), code_change.clone(), g.clone()).as_ref())?;
-            tx.insert(Quad::new(role_iri.clone(), role_model_pred.clone(), Literal::new_simple_literal("claude-sonnet-4-5"), g.clone()).as_ref())?;
+            tx.insert(
+                Quad::new(
+                    role_iri.clone(),
+                    rdf_type.clone(),
+                    role_class.clone(),
+                    g.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    role_iri.clone(),
+                    role_id_pred.clone(),
+                    Literal::new_simple_literal("legacy"),
+                    g.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    role_iri.clone(),
+                    role_input_pred.clone(),
+                    feature_spec.clone(),
+                    g.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    role_iri.clone(),
+                    role_input_pred.clone(),
+                    bundle_hash.clone(),
+                    g.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    role_iri.clone(),
+                    role_output_pred.clone(),
+                    code_change.clone(),
+                    g.clone(),
+                )
+                .as_ref(),
+            )?;
+            tx.insert(
+                Quad::new(
+                    role_iri.clone(),
+                    role_model_pred.clone(),
+                    Literal::new_simple_literal("claude-sonnet-4-5"),
+                    g.clone(),
+                )
+                .as_ref(),
+            )?;
             // No dec:roleTool quads, no dec:authority (simulating pre-FT-121 seed).
             Ok::<_, oxigraph::store::StorageError>(())
         })
@@ -270,7 +333,11 @@ fn tc_268_legacy_store_returns_empty_allowed_tools() {
         .expect("lookup ok")
         .expect("legacy role present");
 
-    assert_eq!(role.allowed_tools, Vec::<String>::new(), "legacy role should have empty allowed_tools");
+    assert_eq!(
+        role.allowed_tools,
+        Vec::<String>::new(),
+        "legacy role should have empty allowed_tools"
+    );
     assert_eq!(role.role_id, "legacy");
     assert_eq!(role.output_type, code_change.as_str());
     assert_eq!(role.model_binding, "claude-sonnet-4-5");

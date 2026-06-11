@@ -28,8 +28,8 @@ use std::sync::Arc;
 
 use decision_cli::core::bundle::{Bundle, Stakes};
 use decision_cli::core::dispatch::{
-    capability_resolver::ResolvedCapability,
     caching::{should_cache, split_bundle_for_caching, CacheableBlock},
+    capability_resolver::ResolvedCapability,
     dispatch_role,
     escalation::{AttemptTokens, DispatchAttempt, EscalationError, SessionId, WorkerResult},
     WorkerRunner,
@@ -179,7 +179,10 @@ fn commit(w: &StreamWriter, quads: Vec<Quad>) {
 
 fn seed(w: &StreamWriter) {
     commit(w, code_writer().to_quads(capability_graph()));
-    commit(w, standard_reasoning_frontier().to_quads(capability_graph()));
+    commit(
+        w,
+        standard_reasoning_frontier().to_quads(capability_graph()),
+    );
     commit(w, deep_reasoning().to_quads(capability_graph()));
     commit(w, verifier_binding().to_quads(role_binding_graph()));
 }
@@ -561,7 +564,11 @@ fn aggregate_chain_cost_carries_both_currencies() {
 
     // Build a cost-rate map covering both endpoints.
     let mut costs: BTreeMap<String, CapabilityCostRates> = BTreeMap::new();
-    for c in [code_writer(), standard_reasoning_frontier(), deep_reasoning()] {
+    for c in [
+        code_writer(),
+        standard_reasoning_frontier(),
+        deep_reasoning(),
+    ] {
         let iri = c.iri();
         costs.insert(
             iri.as_str().to_string(),
@@ -569,12 +576,14 @@ fn aggregate_chain_cost_carries_both_currencies() {
                 iri: iri.clone(),
                 cost_input_per_m: c.cost_input_per_m.parse().expect("input rate"),
                 cost_output_per_m: c.cost_output_per_m.parse().expect("output rate"),
-                cost_cache_write_5m: c.cost_cache_write_5m.as_deref().map(|s| {
-                    s.parse::<f64>().expect("cache_write rate")
-                }),
-                cost_cache_hit_per_m: c.cost_cache_hit_per_m.as_deref().map(|s| {
-                    s.parse::<f64>().expect("cache_hit rate")
-                }),
+                cost_cache_write_5m: c
+                    .cost_cache_write_5m
+                    .as_deref()
+                    .map(|s| s.parse::<f64>().expect("cache_write rate")),
+                cost_cache_hit_per_m: c
+                    .cost_cache_hit_per_m
+                    .as_deref()
+                    .map(|s| s.parse::<f64>().expect("cache_hit rate")),
                 currency: c.cost_currency.as_str().to_string(),
             },
         );
@@ -620,11 +629,13 @@ fn scaleway_only_chain_emits_no_cache_blocks() {
         (Verdict::AmendmentRequired, Some(0.6)),
         (Verdict::Approved, Some(0.95)),
     ]);
-    let chain = dispatch_role(&store, &w, "verifier", bundle, &mut runner, |_| AttemptTokens {
-        input_base: 100,
-        input_cache_write: 0,
-        input_cache_hit: 0,
-        output: 50,
+    let chain = dispatch_role(&store, &w, "verifier", bundle, &mut runner, |_| {
+        AttemptTokens {
+            input_base: 100,
+            input_cache_write: 0,
+            input_cache_hit: 0,
+            output: 50,
+        }
     })
     .expect("dispatch ok");
 

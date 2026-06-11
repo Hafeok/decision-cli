@@ -38,7 +38,10 @@ fn render_body(result: &WorkerResult, feedback: &[super::types::FeedbackArtifact
             let conf = confidence
                 .map(|c| format!("{c:.2}"))
                 .unwrap_or_else(|| "n/a".to_string());
-            format!("Verdict: {kind}\nConfidence: {conf}\n", kind = kind.as_str())
+            format!(
+                "Verdict: {kind}\nConfidence: {conf}\n",
+                kind = kind.as_str()
+            )
         }
         WorkerResult::CodeChange { applied } => format!("CodeChange.applied: {applied}\n"),
         WorkerResult::Failed => "Worker failed (no structured result).\n".to_string(),
@@ -46,7 +49,11 @@ fn render_body(result: &WorkerResult, feedback: &[super::types::FeedbackArtifact
     if !feedback.is_empty() {
         body.push_str("\nEmitted feedback:\n");
         for f in feedback {
-            let crit = if f.critical { "critical" } else { "noncritical" };
+            let crit = if f.critical {
+                "critical"
+            } else {
+                "noncritical"
+            };
             body.push_str(&format!(
                 "- class={class}, severity={crit}\n",
                 class = f.class.as_iri_value()

@@ -36,8 +36,7 @@ fn tc_249_bootstrap_deactivates_prior_bindings() {
     let bind_graph = NamedNode::new_unchecked("https://decision-cli.dev/ns/graph/role-binding");
     let v1_subject = NamedNode::new_unchecked("https://decision-cli.dev/ns/binding/test-role/v1");
     let rdf_type = NamedNode::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-    let role_binding_class =
-        NamedNode::new_unchecked("https://decision-cli.dev/ns#RoleBinding");
+    let role_binding_class = NamedNode::new_unchecked("https://decision-cli.dev/ns#RoleBinding");
     let role_id_pred = NamedNode::new_unchecked("https://decision-cli.dev/ns#role_id");
     let default_cap_pred =
         NamedNode::new_unchecked("https://decision-cli.dev/ns#default_capability");

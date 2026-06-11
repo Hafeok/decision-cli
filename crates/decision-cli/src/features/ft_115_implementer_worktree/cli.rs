@@ -16,8 +16,7 @@ pub fn handle_worktree_list(workdir: &Path, store: &Store) -> Result<()> {
         return Ok(());
     }
 
-    let entries = std::fs::read_dir(&worktrees_root)
-        .context("failed to read .dec/worktrees/")?;
+    let entries = std::fs::read_dir(&worktrees_root).context("failed to read .dec/worktrees/")?;
 
     let mut found_any = false;
 
@@ -57,8 +56,7 @@ pub fn handle_worktree_list(workdir: &Path, store: &Store) -> Result<()> {
 
 /// Handle `dec _worktree prune` — delete orphan worktrees.
 pub fn handle_worktree_prune(workdir: &Path, store: &Store) -> Result<()> {
-    let outcome = prune_orphans(workdir, store)
-        .context("failed to prune orphan worktrees")?;
+    let outcome = prune_orphans(workdir, store).context("failed to prune orphan worktrees")?;
 
     if outcome.pruned.is_empty() && outcome.kept.is_empty() {
         println!("No worktrees found.");
@@ -84,7 +82,8 @@ pub fn handle_worktree_prune(workdir: &Path, store: &Store) -> Result<()> {
 fn get_baseline_from_store(store: &Store, session_short_id: &str) -> Option<String> {
     use oxigraph::model::{NamedNode, Subject};
 
-    let baseline_pred = NamedNode::new_unchecked("https://purl.org/ddd/decision-cli#worktreeBaseline");
+    let baseline_pred =
+        NamedNode::new_unchecked("https://purl.org/ddd/decision-cli#worktreeBaseline");
 
     for quad in store.quads_for_pattern(None, Some(baseline_pred.as_ref().into()), None, None) {
         if let Ok(q) = quad {

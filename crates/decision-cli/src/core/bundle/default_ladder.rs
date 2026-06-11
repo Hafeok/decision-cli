@@ -157,22 +157,19 @@ mod tests {
 
     #[test]
     fn ontology_change_is_foundational() {
-        let ctx =
-            FocalContext::new(cls("https://example.com/anything")).ontology_change();
+        let ctx = FocalContext::new(cls("https://example.com/anything")).ontology_change();
         assert_eq!(default_stakes_for(&ctx), Stakes::Foundational);
     }
 
     #[test]
     fn new_artifact_type_is_foundational() {
-        let ctx =
-            FocalContext::new(cls("https://example.com/anything")).new_artifact_type();
+        let ctx = FocalContext::new(cls("https://example.com/anything")).new_artifact_type();
         assert_eq!(default_stakes_for(&ctx), Stakes::Foundational);
     }
 
     #[test]
     fn cross_cutting_adr_is_elevated() {
-        let ctx =
-            FocalContext::new(cls("https://example.com/adr/014")).cross_cutting_adr();
+        let ctx = FocalContext::new(cls("https://example.com/adr/014")).cross_cutting_adr();
         assert_eq!(default_stakes_for(&ctx), Stakes::Elevated);
     }
 

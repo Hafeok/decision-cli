@@ -62,7 +62,8 @@ fn missing_registry_digest_is_rejected() {
             q.object = Literal::new_simple_literal("ghcr.io/example/worker:latest").into();
         }
     }
-    let err = validate_quads(&quads).expect_err("non-digest candidate_registry_ref must fail SHACL");
+    let err =
+        validate_quads(&quads).expect_err("non-digest candidate_registry_ref must fail SHACL");
     assert!(err.report.contains("@sha256:"), "{}", err.report);
 }
 
@@ -72,7 +73,11 @@ fn missing_capability_tag_is_rejected() {
     sub.claimed_capability_tags.clear();
     let quads = sub.to_quads(worker_image_submission_graph());
     let err = validate_quads(&quads).expect_err("zero claimed_capability_tags must fail SHACL");
-    assert!(err.report.contains("claimed_capability_tag"), "{}", err.report);
+    assert!(
+        err.report.contains("claimed_capability_tag"),
+        "{}",
+        err.report
+    );
 }
 
 #[test]
@@ -85,7 +90,11 @@ fn unknown_lifecycle_state_is_rejected() {
         }
     }
     let err = validate_quads(&quads).expect_err("unknown lifecycle state must fail SHACL");
-    assert!(err.report.contains("submission_lifecycle_state"), "{}", err.report);
+    assert!(
+        err.report.contains("submission_lifecycle_state"),
+        "{}",
+        err.report
+    );
 }
 
 #[test]

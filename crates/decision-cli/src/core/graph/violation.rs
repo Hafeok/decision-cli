@@ -225,7 +225,11 @@ fn routing_quads(
     ]
 }
 
-fn evidence_quad(feedback_iri: &NamedNode, violations: &[ProvenanceViolation], g: &GraphName) -> Quad {
+fn evidence_quad(
+    feedback_iri: &NamedNode,
+    violations: &[ProvenanceViolation],
+    g: &GraphName,
+) -> Quad {
     Quad::new(
         feedback_iri.clone(),
         crate::core::vocab::evidence().into_owned(),
@@ -269,10 +273,7 @@ fn render_violations(violations: &[ProvenanceViolation]) -> String {
 /// invariants — if the constants below disappear we want a build break,
 /// not a runtime surprise.
 #[allow(dead_code)]
-const _ASSERT_VOCAB_PRESENT: &[&str] = &[
-    IRI_DEC_FEEDBACK,
-    IRI_DEC_LIFECYCLE_STATE,
-];
+const _ASSERT_VOCAB_PRESENT: &[&str] = &[IRI_DEC_FEEDBACK, IRI_DEC_LIFECYCLE_STATE];
 
 #[cfg(test)]
 mod tests {

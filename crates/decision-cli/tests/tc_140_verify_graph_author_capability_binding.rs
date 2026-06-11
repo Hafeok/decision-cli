@@ -32,8 +32,8 @@
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 
 use decision_cli::core::dispatch::capability_resolver::{
     resolve_default_capability, ResolverError,

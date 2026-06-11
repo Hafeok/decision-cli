@@ -128,7 +128,11 @@ fn commit(w: &StreamWriter, quads: Vec<Quad>) -> Result<(), String> {
 }
 
 fn seed_capabilities(w: &StreamWriter) {
-    for cap in [scaleway_capability(), frontier_capability(), deep_capability()] {
+    for cap in [
+        scaleway_capability(),
+        frontier_capability(),
+        deep_capability(),
+    ] {
         commit(w, cap.to_quads(capability_graph())).expect("seed capability");
     }
 }

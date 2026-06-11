@@ -220,7 +220,9 @@ mod tests {
     #[test]
     fn service_rejects_empty_session_id() {
         let svc = TelemetryService::new("tok", TelemetryStore::new());
-        let err = svc.accept(Some("tok"), fixture("")).expect_err("must reject");
+        let err = svc
+            .accept(Some("tok"), fixture(""))
+            .expect_err("must reject");
         assert_eq!(err, TelemetryServiceError::MissingSessionId);
     }
 

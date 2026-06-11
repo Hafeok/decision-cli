@@ -126,7 +126,11 @@ pub fn test_round(index: u32, role: &str, outcome: Outcome) -> Round {
         started_at: base_time + chrono::Duration::seconds((index * 180) as i64),
         elapsed_since_round_zero: Duration::from_secs((index * 180) as u64),
         state: RoundState {
-            verdict: if index == 0 { "NeverRun".to_string() } else { "Rejected".to_string() },
+            verdict: if index == 0 {
+                "NeverRun".to_string()
+            } else {
+                "Rejected".to_string()
+            },
             impl_open: if index == 0 { 0 } else { 7 },
             vga_open: 0,
             graph_count: index as usize,

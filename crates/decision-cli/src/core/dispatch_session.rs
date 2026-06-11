@@ -75,8 +75,7 @@ pub fn materialize(
         return Ok(false);
     }
 
-    let scope =
-        ActiveScope::load(workdir).context("loading active scope for dispatch session")?;
+    let scope = ActiveScope::load(workdir).context("loading active scope for dispatch session")?;
     let stream_iri =
         NamedNode::new(&scope.stream_iri).context("active stream iri for dispatch session")?;
     let writer = StreamWriter::open(Arc::clone(&store), stream_iri.clone())
@@ -137,9 +136,12 @@ pub fn materialize(
             g.clone(),
         ));
     }
-    writer
-        .commit(Mutation::insert(quads))
-        .with_context(|| format!("committing dispatch-session quads for {}", session_iri.as_str()))?;
+    writer.commit(Mutation::insert(quads)).with_context(|| {
+        format!(
+            "committing dispatch-session quads for {}",
+            session_iri.as_str()
+        )
+    })?;
     persist_store(&store, &dump)
         .with_context(|| format!("persisting store after dispatch-session materialise"))?;
     Ok(true)

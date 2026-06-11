@@ -18,4 +18,6 @@ pub use violation::{
     violation_feedback_quads, ProvenanceViolation, ViolationKind, DEFAULT_TARGET_ROLE,
     PROVENANCE_VIOLATION_CLASS, VIOLATION_SEVERITY,
 };
-pub use writer::{validate_and_commit, validate_only, ProvenanceRejection, ValidateAndCommitOptions};
+pub use writer::{
+    validate_and_commit, validate_only, ProvenanceRejection, ValidateAndCommitOptions,
+};

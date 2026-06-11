@@ -125,7 +125,12 @@ async fn post_telemetry(
         .expect("build request");
     let resp = app.oneshot(req).await.expect("send request");
     let status = resp.status();
-    let bytes = resp.into_body().collect().await.expect("read body").to_bytes();
+    let bytes = resp
+        .into_body()
+        .collect()
+        .await
+        .expect("read body")
+        .to_bytes();
     let parsed: Value = if bytes.is_empty() {
         Value::Null
     } else {
@@ -234,10 +239,7 @@ fn pipeline_cli_telemetry_callback_module_exists_with_expected_shape() {
             "POSTs to the /llm-call-telemetry path",
             "/llm-call-telemetry",
         ),
-        (
-            "exposes the sync success hook",
-            "def log_success_event",
-        ),
+        ("exposes the sync success hook", "def log_success_event"),
         (
             "exposes the async success hook",
             "async def async_log_success_event",
@@ -246,14 +248,8 @@ fn pipeline_cli_telemetry_callback_module_exists_with_expected_shape() {
             "exposes the async failure hook",
             "async def async_log_failure_event",
         ),
-        (
-            "reads PIPELINE_ENDPOINT from env",
-            "PIPELINE_ENDPOINT",
-        ),
-        (
-            "reads PIPELINE_TOKEN from env",
-            "PIPELINE_TOKEN",
-        ),
+        ("reads PIPELINE_ENDPOINT from env", "PIPELINE_ENDPOINT"),
+        ("reads PIPELINE_TOKEN from env", "PIPELINE_TOKEN"),
     ];
     for (claim, needle) in expectations {
         assert!(
@@ -274,17 +270,14 @@ fn bootstrap_virtual_key_script_targets_litellm_and_writes_workers_env() {
     });
     let expectations: &[(&str, &str)] = &[
         ("targets /key/generate", "/key/generate"),
+        ("sources LITELLM_MASTER_KEY from env", "LITELLM_MASTER_KEY"),
         (
-            "sources LITELLM_MASTER_KEY from env",
-            "LITELLM_MASTER_KEY",
+            "writes LITELLM_BASE_URL into workers.env",
+            "LITELLM_BASE_URL",
         ),
-        ("writes LITELLM_BASE_URL into workers.env", "LITELLM_BASE_URL"),
         ("writes LITELLM_API_KEY into workers.env", "LITELLM_API_KEY"),
         ("defaults to workers.env", "workers.env"),
-        (
-            "defaults to localhost:4000",
-            "http://localhost:4000",
-        ),
+        ("defaults to localhost:4000", "http://localhost:4000"),
     ];
     for (claim, needle) in expectations {
         assert!(
@@ -298,9 +291,17 @@ fn bootstrap_virtual_key_script_targets_litellm_and_writes_workers_env() {
 async fn telemetry_endpoint_accepts_callback_post_and_reconciles_cost_by_session_id() {
     let (app, store) = build_router();
     let payload = fixture_payload("sess-tc138");
-    let (status, body) =
-        post_telemetry(app, Some(TOKEN), serde_json::to_value(&payload).expect("body")).await;
-    assert_eq!(status, StatusCode::OK, "telemetry POST must accept: {body:?}");
+    let (status, body) = post_telemetry(
+        app,
+        Some(TOKEN),
+        serde_json::to_value(&payload).expect("body"),
+    )
+    .await;
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "telemetry POST must accept: {body:?}"
+    );
 
     let accepted: TelemetryAccepted = serde_json::from_value(body).expect("accepted shape");
     assert_eq!(accepted.ddd_session_id, "sess-tc138");
@@ -326,7 +327,10 @@ async fn telemetry_endpoint_rejects_missing_bearer_and_empty_session_id() {
     let payload = serde_json::to_value(fixture_payload("sess-x")).expect("body");
     let (status, body) = post_telemetry(app, None, payload).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED, "missing bearer => 401");
-    assert_eq!(body.get("error").and_then(Value::as_str), Some("unauthorised"));
+    assert_eq!(
+        body.get("error").and_then(Value::as_str),
+        Some("unauthorised")
+    );
 
     let (app, _store) = build_router();
     let empty_session_payload = json!({
@@ -342,7 +346,11 @@ async fn telemetry_endpoint_rejects_missing_bearer_and_empty_session_id() {
         "fallback_chain": []
     });
     let (status, body) = post_telemetry(app, Some(TOKEN), empty_session_payload).await;
-    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "empty session id => 422");
+    assert_eq!(
+        status,
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "empty session id => 422"
+    );
     assert_eq!(
         body.get("error").and_then(Value::as_str),
         Some("missing_session_id"),
@@ -388,14 +396,16 @@ async fn tc_138_litellm_proxy_routes_a_worker_call_by_capability_t() {
         serde_json::to_value(&payload).expect("body"),
     )
     .await;
-    assert_eq!(status, StatusCode::OK, "checkpoint POST must accept: {body:?}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "checkpoint POST must accept: {body:?}"
+    );
     let cost = store
         .total_cost_usd("sess-tc138-checkpoint")
         .expect("cost reconciled");
     assert!((cost - 0.0125).abs() < 1e-9);
-    let records = store
-        .for_session("sess-tc138-checkpoint")
-        .expect("records");
+    let records = store.for_session("sess-tc138-checkpoint").expect("records");
     assert_eq!(records[0].capability_tag, "frontier-reasoning");
 
     // 5. The endpoint refuses unauthenticated POSTs and empty session ids.

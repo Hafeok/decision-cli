@@ -76,11 +76,7 @@ fn write_show_required_fields(out: &mut String, fb: &Feedback) {
 
 fn write_show_optional_iri_fields(out: &mut String, fb: &Feedback) {
     push_optional(out, "source_artifact", opt_iri(&fb.source_artifact));
-    push_optional(
-        out,
-        "addressing_artifact",
-        opt_iri(&fb.addressing_artifact),
-    );
+    push_optional(out, "addressing_artifact", opt_iri(&fb.addressing_artifact));
     push_optional(out, "closed_by", opt_iri(&fb.closed_by));
     push_optional(out, "superseded_by", opt_iri(&fb.superseded_by));
     push_optional(out, "receiving_session", opt_iri(&fb.receiving_session));
@@ -90,11 +86,7 @@ fn write_show_optional_string_fields(out: &mut String, fb: &Feedback) {
     push_optional(out, "routed_at", fb.routed_at.clone());
     push_optional(out, "rejection_reason", fb.rejection_reason.clone());
     push_optional(out, "recommendation", fb.recommendation.clone());
-    push_optional(
-        out,
-        "disposition_override",
-        fb.disposition_override.clone(),
-    );
+    push_optional(out, "disposition_override", fb.disposition_override.clone());
     push_optional(
         out,
         "disposition_rationale",

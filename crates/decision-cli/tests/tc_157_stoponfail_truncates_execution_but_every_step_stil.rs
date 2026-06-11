@@ -103,11 +103,7 @@ fn seed_env(workdir: &Path) {
         id: Some(ENV_ID.into()),
         bench_type: "ephemeral-tempdir".into(),
         safety_class: "isolated".into(),
-        allowed_ops: vec![
-            "shell".into(),
-            "filesystem".into(),
-            "sparql-local".into(),
-        ],
+        allowed_ops: vec!["shell".into(), "filesystem".into(), "sparql-local".into()],
         setup: None,
         teardown: None,
         endpoint: None,
@@ -163,10 +159,7 @@ fn stop_on_fail_path() {
         vg,
         "shell-command",
         fields_of(&[
-            (
-                "command",
-                "#dec:stopOnFail\nexit 1",
-            ),
+            ("command", "#dec:stopOnFail\nexit 1"),
             ("expect-exit-code", "0"),
         ]),
     );
@@ -202,7 +195,10 @@ fn stop_on_fail_path() {
     })
     .expect("run");
     assert!(
-        matches!(response.verdict, Verdict::Rejected | Verdict::AmendmentRequired),
+        matches!(
+            response.verdict,
+            Verdict::Rejected | Verdict::AmendmentRequired
+        ),
         "verdict must reflect the failure on step 1, got {:?}",
         response.verdict
     );

@@ -197,10 +197,7 @@ pub fn seed_ft101_catalog_with(workdir: &Path, force: bool) -> Result<SeedReport
 /// invariant in `core::ontology::role_binding::read::active_for_role`
 /// trips with "N active role bindings share the same role_id". This
 /// helper deactivates the prior version.
-pub fn deactivate_role_binding(
-    workdir: &Path,
-    binding_iri: &str,
-) -> Result<bool, SeedError> {
+pub fn deactivate_role_binding(workdir: &Path, binding_iri: &str) -> Result<bool, SeedError> {
     use oxigraph::model::{Literal, NamedNodeRef, Quad, Subject, Term};
 
     let dump = orchestration_dump_path(workdir);
@@ -215,9 +212,7 @@ pub fn deactivate_role_binding(
 
     let subject = NamedNode::new(binding_iri)
         .map_err(|e| SeedError::Commit(format!("invalid binding iri: {e}")))?;
-    let active_pred = NamedNodeRef::new_unchecked(
-        crate::core::vocab::IRI_DEC_ROLE_BINDING_ACTIVE,
-    );
+    let active_pred = NamedNodeRef::new_unchecked(crate::core::vocab::IRI_DEC_ROLE_BINDING_ACTIVE);
 
     let removes: Vec<Quad> = store
         .quads_for_pattern(
@@ -281,8 +276,7 @@ fn ontology_description_present(store: &oxigraph::store::Store) -> bool {
     use oxigraph::model::NamedNodeRef;
     use oxigraph::model::Term;
     let cls = NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#OntologyDescription");
-    let rdf_type =
-        NamedNodeRef::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    let rdf_type = NamedNodeRef::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     store
         .quads_for_pattern(
             None,
@@ -341,19 +335,16 @@ fn exemplar_graphs() -> Vec<ExemplarGraph> {
     vec![
         ExemplarGraph {
             id: "EX-INIT-DOCTOR".to_string(),
-            exemplar_of: NamedNode::new_unchecked(
-                "https://decision-cli.dev/ns/graph/VG-005",
-            ),
+            exemplar_of: NamedNode::new_unchecked("https://decision-cli.dev/ns/graph/VG-005"),
             applies_to_safety_class: SafetyClassTag::Isolated,
             pattern_name: "init-then-introspect".to_string(),
-            rationale:
-                "Canonical opening for any verification graph that needs an initialised \
+            rationale: "Canonical opening for any verification graph that needs an initialised \
                  orchestration store. Step 0 runs `dec init --template engineering-development` \
                  (the only way `dec init` succeeds without a Turtle definition file in scope); \
                  Step 1 then introspects via a stable subcommand like `dec doctor --format json`. \
                  Use this pattern whenever a TC requires verifying anything about the post-init \
                  store state."
-                    .to_string(),
+                .to_string(),
             based_on_approved_result: NamedNode::new_unchecked(
                 "https://decision-cli.dev/ns/result/VGR-012",
             ),
@@ -361,9 +352,7 @@ fn exemplar_graphs() -> Vec<ExemplarGraph> {
         },
         ExemplarGraph {
             id: "EX-CLI-INSPECT".to_string(),
-            exemplar_of: NamedNode::new_unchecked(
-                "https://decision-cli.dev/ns/graph/VG-017",
-            ),
+            exemplar_of: NamedNode::new_unchecked("https://decision-cli.dev/ns/graph/VG-017"),
             applies_to_safety_class: SafetyClassTag::Isolated,
             pattern_name: "cli-help-inspection".to_string(),
             rationale:
@@ -380,18 +369,15 @@ fn exemplar_graphs() -> Vec<ExemplarGraph> {
         },
         ExemplarGraph {
             id: "EX-FILESYSTEM-GREP".to_string(),
-            exemplar_of: NamedNode::new_unchecked(
-                "https://decision-cli.dev/ns/graph/VG-008",
-            ),
+            exemplar_of: NamedNode::new_unchecked("https://decision-cli.dev/ns/graph/VG-008"),
             applies_to_safety_class: SafetyClassTag::Isolated,
             pattern_name: "filesystem-negative-grep".to_string(),
-            rationale:
-                "Pattern for asserting absence: search the repo for a forbidden symbol and \
+            rationale: "Pattern for asserting absence: search the repo for a forbidden symbol and \
                  assert exit 1 (no matches). Form: `find <dir> -name '*.py' -exec grep -l \
                  '<symbol>' {} \\;` with `dec:expectExitCode 1`. Use when the TC claims a \
                  cleanup/removal happened (e.g. \"no hardcoded model names remain in \
                  workers/\")."
-                    .to_string(),
+                .to_string(),
             based_on_approved_result: NamedNode::new_unchecked(
                 "https://decision-cli.dev/ns/result/VGR-015",
             ),

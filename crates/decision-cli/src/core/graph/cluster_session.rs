@@ -189,19 +189,9 @@ fn cluster_activity_quads(
             NamedNode::new_unchecked(IRI_DEC_CLUSTER_DISPATCH),
             g,
         ),
-        literal_quad(
-            cluster_iri,
-            PROV_STARTED_AT_TIME,
-            &started.to_rfc3339(),
-            g,
-        ),
+        literal_quad(cluster_iri, PROV_STARTED_AT_TIME, &started.to_rfc3339(), g),
         literal_quad(cluster_iri, PROV_ENDED_AT_TIME, &ended.to_rfc3339(), g),
-        literal_quad(
-            cluster_iri,
-            IRI_DEC_CLUSTER_OUTCOME,
-            outcome.as_str(),
-            g,
-        ),
+        literal_quad(cluster_iri, IRI_DEC_CLUSTER_OUTCOME, outcome.as_str(), g),
         literal_quad(
             cluster_iri,
             "https://decision-cli.dev/ns#featureId",
@@ -303,7 +293,11 @@ mod tests {
     use super::*;
     use oxigraph::model::Term;
 
-    fn make_cell(name: &str, capability_iri: &str, usage: Option<WorkerResponseUsage>) -> CellSessionRecord {
+    fn make_cell(
+        name: &str,
+        capability_iri: &str,
+        usage: Option<WorkerResponseUsage>,
+    ) -> CellSessionRecord {
         CellSessionRecord {
             iri: NamedNode::new_unchecked(format!(
                 "urn:dec:cluster-session:add-judge-worker/FT-146/{name}"
@@ -321,9 +315,7 @@ mod tests {
     /// All cache fields zero — passes FT-057 SHACL for Scaleway.
     #[test]
     fn cell_quads_emit_token_breakdown_and_links_for_scaleway() {
-        let cluster = NamedNode::new_unchecked(
-            "urn:dec:cluster-dispatch:add-judge-worker/FT-146",
-        );
+        let cluster = NamedNode::new_unchecked("urn:dec:cluster-dispatch:add-judge-worker/FT-146");
         let cell = make_cell(
             "agent_loop",
             "https://decision-cli.dev/ns/capability/scaleway-coder/v1",
@@ -344,7 +336,10 @@ mod tests {
                 && matches!(&q.object, Term::NamedNode(n)
                     if n.as_str() == "https://decision-cli.dev/ns#Session")
         });
-        assert!(has_type_session, "cell session must carry rdf:type dec:Session");
+        assert!(
+            has_type_session,
+            "cell session must carry rdf:type dec:Session"
+        );
 
         // dec:capability link to the Scaleway capability.
         let has_capability = quads.iter().any(|q| {
@@ -370,13 +365,11 @@ mod tests {
             Some("1234")
         );
         assert_eq!(
-            token_pred_value("https://decision-cli.dev/ns#input_tokens_cache_write")
-                .as_deref(),
+            token_pred_value("https://decision-cli.dev/ns#input_tokens_cache_write").as_deref(),
             Some("0")
         );
         assert_eq!(
-            token_pred_value("https://decision-cli.dev/ns#input_tokens_cache_hit")
-                .as_deref(),
+            token_pred_value("https://decision-cli.dev/ns#input_tokens_cache_hit").as_deref(),
             Some("0")
         );
         assert_eq!(
@@ -411,14 +404,9 @@ mod tests {
     /// and zero tokens. PROV-O coverage stays uniform across cell flavours.
     #[test]
     fn mechanical_cell_records_zero_tokens_and_unreported_source() {
-        let cluster = NamedNode::new_unchecked(
-            "urn:dec:cluster-dispatch:add-cli-subcommand/FT-146",
-        );
-        let mut cell = make_cell(
-            "iri_module_consts",
-            "urn:dec:capability:mechanical",
-            None,
-        );
+        let cluster =
+            NamedNode::new_unchecked("urn:dec:cluster-dispatch:add-cli-subcommand/FT-146");
+        let mut cell = make_cell("iri_module_consts", "urn:dec:capability:mechanical", None);
         cell.status = CellStatus::Mechanical;
         let g: GraphName = orchestration_graph().into_owned().into();
         let quads = cell_session_quads(&cluster, &cell, &g);
@@ -471,9 +459,7 @@ mod tests {
     /// the outcome enum.
     #[test]
     fn cluster_activity_quads_carry_type_timing_and_outcome() {
-        let cluster = NamedNode::new_unchecked(
-            "urn:dec:cluster-dispatch:add-judge-worker/FT-146",
-        );
+        let cluster = NamedNode::new_unchecked("urn:dec:cluster-dispatch:add-judge-worker/FT-146");
         let started = Utc::now();
         let ended = started + chrono::Duration::seconds(42);
         let g: GraphName = orchestration_graph().into_owned().into();

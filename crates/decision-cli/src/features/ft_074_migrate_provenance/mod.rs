@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 pub use audit::{audit_store, AuditEntry, AuditVerdict, EdgeMap};
 pub use backfill::{
     emit_backfill_quads, emit_shared_agent_quads, historical_session_iri, plan_backfill,
-    BackfillPlan, HISTORICAL_AGENT_IRI, HISTORICAL_AGENT_CLASS, HISTORICAL_SESSION_CLASS,
+    BackfillPlan, HISTORICAL_AGENT_CLASS, HISTORICAL_AGENT_IRI, HISTORICAL_SESSION_CLASS,
     IRI_DEC_MIGRATION_NOTE,
 };
 pub use cutover::{
@@ -45,10 +45,9 @@ pub use cutover::{
     IRI_DEC_VALIDATOR_CONFIG_SUBJECT, IRI_DEC_WARN_ONLY_MODE,
 };
 pub use orphan_feedback::{
-    artifact_already_marked_orphan, emit_orphan_feedback_quads,
-    feedback_already_exists_for_orphan, orphan_feedback_iri, plan_orphan_feedback,
-    OrphanFeedbackPlan, IRI_DEC_IS_MIGRATION_ORPHAN, MIGRATION_ORPHAN_FEEDBACK_CLASS,
-    ORPHAN_TARGET_ROLE,
+    artifact_already_marked_orphan, emit_orphan_feedback_quads, feedback_already_exists_for_orphan,
+    orphan_feedback_iri, plan_orphan_feedback, OrphanFeedbackPlan, IRI_DEC_IS_MIGRATION_ORPHAN,
+    MIGRATION_ORPHAN_FEEDBACK_CLASS, ORPHAN_TARGET_ROLE,
 };
 
 /// Configuration knobs for the migration run.
@@ -78,9 +77,7 @@ impl Default for MigrateArgs {
         Self {
             run_id: "default".to_string(),
             fallback_timestamp: "2026-05-25T00:00:00Z".to_string(),
-            external_origin:
-                "FT-074 provenance migration tool — fallback run identity"
-                    .to_string(),
+            external_origin: "FT-074 provenance migration tool — fallback run identity".to_string(),
             cutover_threshold: 0,
             dry_run: false,
         }

@@ -23,12 +23,12 @@ use anyhow::Result;
 
 use crate::core::drive::{Action, ArtifactKind, ArtifactRef, Goal, PlanContext};
 use crate::features::drive::execute::Executor;
-use crate::features::drive::outcome::{DriveError, DriveOutcome};
-use crate::features::drive::run::{run_with_planner_and_executor, RunArgs};
 use crate::features::drive::inspect::{
     CoveringGraphState, FeatureVerdict, GraphInspector, InspectError, PreflightStatus,
     SpecCompleteness, TcsLinkedState,
 };
+use crate::features::drive::outcome::{DriveError, DriveOutcome};
+use crate::features::drive::run::{run_with_planner_and_executor, RunArgs};
 use crate::features::ft_119_drive_def_ready::FeatureReadyPlanner;
 
 // ---------------------------------------------------------------------
@@ -60,17 +60,10 @@ impl VgaFlipInspector {
 }
 
 impl GraphInspector for VgaFlipInspector {
-    fn aggregate_verdict_for_feature(
-        &self,
-        _: &str,
-    ) -> Result<FeatureVerdict, InspectError> {
+    fn aggregate_verdict_for_feature(&self, _: &str) -> Result<FeatureVerdict, InspectError> {
         Ok(FeatureVerdict::NeverRun)
     }
-    fn open_defect_feedback_count(
-        &self,
-        _: &str,
-        _: &str,
-    ) -> Result<usize, InspectError> {
+    fn open_defect_feedback_count(&self, _: &str, _: &str) -> Result<usize, InspectError> {
         Ok(0)
     }
     fn graphs_exist_for_feature(&self, _: &str) -> Result<bool, InspectError> {
@@ -88,16 +81,10 @@ impl GraphInspector for VgaFlipInspector {
             CoveringGraphState::PendingReview { .. } => 0xA3,
         })
     }
-    fn feature_spec_completeness(
-        &self,
-        _: &str,
-    ) -> Result<SpecCompleteness, InspectError> {
+    fn feature_spec_completeness(&self, _: &str) -> Result<SpecCompleteness, InspectError> {
         Ok(SpecCompleteness::Complete)
     }
-    fn preflight_status_for_feature(
-        &self,
-        _: &str,
-    ) -> Result<PreflightStatus, InspectError> {
+    fn preflight_status_for_feature(&self, _: &str) -> Result<PreflightStatus, InspectError> {
         Ok(PreflightStatus::Clean)
     }
     fn dependency_statuses_for_feature(
@@ -106,10 +93,7 @@ impl GraphInspector for VgaFlipInspector {
     ) -> Result<Vec<(String, String)>, InspectError> {
         Ok(vec![("FT-DEP".to_string(), "complete".to_string())])
     }
-    fn tcs_linked_state_for_feature(
-        &self,
-        _: &str,
-    ) -> Result<TcsLinkedState, InspectError> {
+    fn tcs_linked_state_for_feature(&self, _: &str) -> Result<TcsLinkedState, InspectError> {
         Ok(TcsLinkedState::AllReady)
     }
     fn covering_graph_state_for_feature(
@@ -198,9 +182,8 @@ fn tc_256_vga_dispatch_then_done_when_vg_accepted() {
         max_iter: 4,
     };
 
-    let outcome: DriveOutcome =
-        run_with_planner_and_executor(&ctx, &args, &planner, &mut executor)
-            .expect("drive succeeds");
+    let outcome: DriveOutcome = run_with_planner_and_executor(&ctx, &args, &planner, &mut executor)
+        .expect("drive succeeds");
 
     // Round 0 dispatched VGA; round 1 observed accepted state and
     // returned Done.
@@ -303,8 +286,7 @@ fn tc_256_env_id_threaded_from_plan_context() {
         max_iter: 4,
     };
 
-    run_with_planner_and_executor(&ctx, &args, &planner, &mut executor)
-        .expect("drive succeeds");
+    run_with_planner_and_executor(&ctx, &args, &planner, &mut executor).expect("drive succeeds");
     assert_eq!(captured_env.borrow().as_deref(), Some("BNCH-007"));
 }
 
@@ -320,9 +302,7 @@ fn tc_256_env_id_threaded_from_plan_context() {
 // the right planner. End-to-end fixture-driven tests land alongside
 // the production inspector wiring.
 
-use crate::features::ft_111_drive_ship_all::sweep::{
-    apply_filter, Outcome, SweepInput, Tally,
-};
+use crate::features::ft_111_drive_ship_all::sweep::{apply_filter, Outcome, SweepInput, Tally};
 use std::time::Duration;
 
 #[test]

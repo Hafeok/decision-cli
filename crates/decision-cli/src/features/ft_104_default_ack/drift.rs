@@ -65,8 +65,7 @@ pub fn check_drift(
 ) -> Vec<DriftWarning> {
     let mut warnings = Vec::new();
 
-    let existing_ids: BTreeSet<&str> =
-        adr_catalog.iter().map(|a| a.adr_id.as_str()).collect();
+    let existing_ids: BTreeSet<&str> = adr_catalog.iter().map(|a| a.adr_id.as_str()).collect();
     let cross_cutting_ids: BTreeSet<&str> = adr_catalog
         .iter()
         .filter(|a| a.is_cross_cutting)
@@ -150,11 +149,7 @@ mod tests {
 
     #[test]
     fn no_drift_no_warnings() {
-        let warnings = check_drift(
-            &cfg(&["ADR-001"]),
-            &[snap("ADR-001", true)],
-            &[],
-        );
+        let warnings = check_drift(&cfg(&["ADR-001"]), &[snap("ADR-001", true)], &[]);
         assert!(warnings.is_empty(), "{warnings:?}");
     }
 
@@ -173,11 +168,7 @@ mod tests {
 
     #[test]
     fn rescoped_adr_fires_w036() {
-        let warnings = check_drift(
-            &cfg(&["ADR-RESCOPED"]),
-            &[snap("ADR-RESCOPED", false)],
-            &[],
-        );
+        let warnings = check_drift(&cfg(&["ADR-RESCOPED"]), &[snap("ADR-RESCOPED", false)], &[]);
         assert_eq!(warnings.len(), 1);
         assert_eq!(warnings[0].code, "W036");
         assert!(warnings[0].message.contains("ADR-RESCOPED"));
@@ -188,12 +179,10 @@ mod tests {
     fn stray_rejection_fires_w037() {
         let rec = FeatureRejectionRecord {
             feature_id: "FT-OPTOUT".into(),
-            rejections: vec![
-                RejectedAdr {
-                    id: "ADR-STRAY".into(),
-                    reason: "has no effect because not default-acked".into(),
-                },
-            ],
+            rejections: vec![RejectedAdr {
+                id: "ADR-STRAY".into(),
+                reason: "has no effect because not default-acked".into(),
+            }],
         };
         let warnings = check_drift(
             &cfg(&["ADR-001"]),
@@ -210,18 +199,12 @@ mod tests {
     fn valid_rejection_does_not_fire_w037() {
         let rec = FeatureRejectionRecord {
             feature_id: "FT-OPTOUT".into(),
-            rejections: vec![
-                RejectedAdr {
-                    id: "ADR-ALIVE".into(),
-                    reason: "valid rejection".into(),
-                },
-            ],
+            rejections: vec![RejectedAdr {
+                id: "ADR-ALIVE".into(),
+                reason: "valid rejection".into(),
+            }],
         };
-        let warnings = check_drift(
-            &cfg(&["ADR-ALIVE"]),
-            &[snap("ADR-ALIVE", true)],
-            &[rec],
-        );
+        let warnings = check_drift(&cfg(&["ADR-ALIVE"]), &[snap("ADR-ALIVE", true)], &[rec]);
         assert!(warnings.is_empty(), "{warnings:?}");
     }
 

@@ -23,8 +23,8 @@ use decision_cli::core::handler::Error as HandlerError;
 
 #[allow(unused_imports)]
 pub use bench::{
-    bench_list_request, bench_new_request, bench_show_request, BenchCmd, BenchListArgs, BenchNewArgs,
-    BenchShowArgs,
+    bench_list_request, bench_new_request, bench_show_request, BenchCmd, BenchListArgs,
+    BenchNewArgs, BenchShowArgs,
 };
 #[allow(unused_imports)]
 pub use graph::{

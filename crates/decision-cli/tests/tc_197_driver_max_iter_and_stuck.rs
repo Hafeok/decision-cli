@@ -7,12 +7,10 @@ use anyhow::Result;
 use std::cell::RefCell;
 use std::path::Path;
 
-use decision_cli::core::drive::{Action, ArtifactKind, ArtifactRef, Goal, PlanContext};
 use decision_cli::core::drive::planner::PlanError;
-use decision_cli::drive::{
-    run_with_planner_and_executor, DriveError, Executor, RunArgs,
-};
 use decision_cli::core::drive::Planner;
+use decision_cli::core::drive::{Action, ArtifactKind, ArtifactRef, Goal, PlanContext};
+use decision_cli::drive::{run_with_planner_and_executor, DriveError, Executor, RunArgs};
 
 struct PlannerStub {
     actions: RefCell<std::collections::VecDeque<Action>>,
@@ -86,7 +84,10 @@ fn tc_197_driver_max_iter_and_stuck() {
             // History has one entry per planner call, capped at max + 1
             // (the final call that observed we'd hit the cap). The
             // executor is called max_iter times.
-            assert_eq!(executor.call_count, 3, "executor called exactly max_iter times");
+            assert_eq!(
+                executor.call_count, 3,
+                "executor called exactly max_iter times"
+            );
             assert!(
                 history.len() >= 3,
                 "history should record at least max_iter entries; got {}",
@@ -105,7 +106,10 @@ fn tc_197_driver_max_iter_and_stuck() {
     let result = run_with_planner_and_executor(&ctx(), &args, &planner, &mut executor);
     match result {
         Err(DriveError::Stuck { reason, history }) => {
-            assert_eq!(reason, "synthetic-stuck-reason", "reason preserved verbatim");
+            assert_eq!(
+                reason, "synthetic-stuck-reason",
+                "reason preserved verbatim"
+            );
             assert_eq!(history.len(), 1, "history has exactly the Stuck entry");
             assert_eq!(executor.call_count, 0, "executor never called on Stuck");
         }

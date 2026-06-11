@@ -29,8 +29,8 @@ pub use seeds::{
     VERIFIER_ROLE_ID, VERIFIER_ROLE_IRI,
 };
 pub use verify_graph_author_seed::{
-    verify_graph_author_seed_quads, VERIFY_GRAPH_AUTHOR_CAPABILITY_ID,
-    VERIFY_GRAPH_AUTHOR_ROLE_ID, VERIFY_GRAPH_AUTHOR_ROLE_IRI,
+    verify_graph_author_seed_quads, VERIFY_GRAPH_AUTHOR_CAPABILITY_ID, VERIFY_GRAPH_AUTHOR_ROLE_ID,
+    VERIFY_GRAPH_AUTHOR_ROLE_IRI,
 };
 
 /// Raw Turtle bytes for the verifier role seed — embedded via

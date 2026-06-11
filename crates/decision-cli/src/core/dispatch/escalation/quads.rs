@@ -6,8 +6,8 @@ use crate::core::bundle::Bundle;
 use crate::core::ontology::role_binding::TriggerSignal;
 use crate::core::vocab::{
     bundle_class, bundle_graph, escalated_from_pred, escalated_to_pred, escalation_reason_pred,
-    focal_pred, input_tokens_base_pred, input_tokens_cache_hit_pred,
-    input_tokens_cache_write_pred, output_tokens_pred, session_capability_pred, stakes_pred,
+    focal_pred, input_tokens_base_pred, input_tokens_cache_hit_pred, input_tokens_cache_write_pred,
+    output_tokens_pred, session_capability_pred, stakes_pred,
 };
 
 use super::bundle_enrich::{IRI_DEC_SUPERSEDES_BUNDLE, PROV_WAS_DERIVED_FROM};

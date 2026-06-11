@@ -150,9 +150,7 @@ fn tc_155_runtime_safety_re_check_aborts_the_run_and_writes() {
 
     // Invoke the runner — the runtime safety re-check fires.
     let req = RunGraphRequest {
-        graph: NamedNode::new_unchecked(format!(
-            "https://decision-cli.dev/ns/graph/{VG_ID}"
-        )),
+        graph: NamedNode::new_unchecked(format!("https://decision-cli.dev/ns/graph/{VG_ID}")),
         triggered_by: TriggerKind::Manual,
         capture_bindings: HashMap::new(),
         run_activity: NamedNode::new_unchecked(format!(

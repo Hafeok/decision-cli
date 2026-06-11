@@ -7,12 +7,10 @@ use anyhow::Result;
 use std::cell::RefCell;
 use std::path::Path;
 
-use decision_cli::core::drive::{Action, ArtifactKind, ArtifactRef, Goal, PlanContext};
 use decision_cli::core::drive::planner::PlanError;
-use decision_cli::drive::{
-    run_with_planner_and_executor, Executor, RunArgs,
-};
 use decision_cli::core::drive::Planner;
+use decision_cli::core::drive::{Action, ArtifactKind, ArtifactRef, Goal, PlanContext};
+use decision_cli::drive::{run_with_planner_and_executor, Executor, RunArgs};
 
 struct PlannerStub {
     actions: RefCell<std::collections::VecDeque<Action>>,

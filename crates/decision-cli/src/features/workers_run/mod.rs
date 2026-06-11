@@ -23,9 +23,7 @@ use crate::core::ontology::worker_image::{
 };
 use crate::core::store::open_orchestration_store;
 
-pub use env_file::{
-    load_env_file, EnvFileError, ResolvedEnvFile, REQUIRED_ENV_VARS,
-};
+pub use env_file::{load_env_file, EnvFileError, ResolvedEnvFile, REQUIRED_ENV_VARS};
 pub use runner::{DockerRunner, RunOutcome, RunPlan, SystemDockerRunner};
 
 /// Input arguments for [`run`]. The CLI layer builds this and hands it
@@ -190,8 +188,8 @@ pub fn resolve_qualified_image(
     workdir: &Path,
     worker_image_id: &str,
 ) -> Result<WorkerImage, WorkersRunError> {
-    let store = open_orchestration_store(workdir)
-        .map_err(|e| WorkersRunError::Store(format!("{e:#}")))?;
+    let store =
+        open_orchestration_store(workdir).map_err(|e| WorkersRunError::Store(format!("{e:#}")))?;
     let mut hits = query_by_id(&store, worker_image_id)?;
     if hits.is_empty() {
         return Err(WorkersRunError::NotFound {

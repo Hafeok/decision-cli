@@ -192,9 +192,8 @@ mod tests {
 
     #[test]
     fn self_escalation_skipped() {
-        let cap_iri = NamedNode::new_unchecked(
-            "https://decision-cli.dev/ns/capability/code-writer/v1",
-        );
+        let cap_iri =
+            NamedNode::new_unchecked("https://decision-cli.dev/ns/capability/code-writer/v1");
         let binding = RoleBinding {
             role_id: "verifier".to_string(),
             default_capability: cap_iri.clone(),
@@ -224,6 +223,9 @@ mod tests {
         };
         let s = signals(Stakes::Routine, Some(0.6), vec![], false, 1);
         // 0.5 does not fire (confidence is 0.6); 0.7 does.
-        assert_eq!(pick_reason(&step, &s), Some(TriggerSignal::ConfidenceBelow07));
+        assert_eq!(
+            pick_reason(&step, &s),
+            Some(TriggerSignal::ConfidenceBelow07)
+        );
     }
 }

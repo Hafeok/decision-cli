@@ -45,10 +45,7 @@ fn add_judge_worker_topo_order() {
             .find(|c| &c.name == cell_name)
             .expect("cell exists");
         for dep in &cell.derived_from {
-            let dep_pos = order
-                .iter()
-                .position(|n| n == dep)
-                .expect("dep in order");
+            let dep_pos = order.iter().position(|n| n == dep).expect("dep in order");
             assert!(
                 dep_pos < i,
                 "{dep} must precede {cell_name} in order, got dep_pos={dep_pos} pos={i}"

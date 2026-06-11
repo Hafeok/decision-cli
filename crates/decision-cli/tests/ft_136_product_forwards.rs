@@ -139,9 +139,8 @@ fn context_assembles_bundle() {
     );
 
     // Evidence of assembled bundle: section header, ADR reference, or YAML block
-    let has_bundle_evidence = stdout.contains('#')
-        || stdout.contains("ADR-")
-        || stdout.contains("---");
+    let has_bundle_evidence =
+        stdout.contains('#') || stdout.contains("ADR-") || stdout.contains("---");
 
     assert!(
         has_bundle_evidence,
@@ -225,10 +224,7 @@ fn graph_stats_reports_counts() {
 
     // TC-339 acceptance criteria: contains numeric output and artifact type references
     let has_numbers = stdout.chars().any(|c| c.is_ascii_digit());
-    assert!(
-        has_numbers,
-        "Output should contain numeric statistics"
-    );
+    assert!(has_numbers, "Output should contain numeric statistics");
 
     let has_artifact_types = stdout.contains("features")
         || stdout.contains("adrs")

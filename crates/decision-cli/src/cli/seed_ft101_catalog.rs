@@ -6,7 +6,9 @@
 use std::path::Path;
 use std::process::ExitCode;
 
-use decision_cli::core::bootstrap::ft101_catalog::{deactivate_role_binding, seed_ft101_catalog_with};
+use decision_cli::core::bootstrap::ft101_catalog::{
+    deactivate_role_binding, seed_ft101_catalog_with,
+};
 use decision_cli::core::bootstrap::Ft101SeedReport;
 
 #[derive(Debug, clap::Args)]

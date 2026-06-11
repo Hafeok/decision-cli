@@ -8,9 +8,9 @@
 //! transitions them to `superseded` via the legal `produced → superseded`
 //! ADR-024 path, citing a `dec:supersededByTopologyChange` predicate.
 
+mod pipeline;
 mod query;
 mod transition;
-mod pipeline;
 
 pub mod cli;
 

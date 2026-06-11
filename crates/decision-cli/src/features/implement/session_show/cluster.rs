@@ -27,9 +27,8 @@ use super::DEC_NS;
 /// Render a `urn:dec:cluster-session:<task-type>/<feature>/<cell>` IRI.
 pub(super) fn render_cluster_cell(store: &Store, session_iri: &str) -> Result<String> {
     let row = fetch_cluster_cell(store, session_iri)?;
-    let row = row.ok_or_else(|| {
-        anyhow!("session-show: no cluster cell session with IRI <{session_iri}>")
-    })?;
+    let row = row
+        .ok_or_else(|| anyhow!("session-show: no cluster cell session with IRI <{session_iri}>"))?;
 
     let cluster = row.parent_cluster.as_deref().unwrap_or("(unknown)");
     let cap = row.capability.as_deref().unwrap_or("(none)");
@@ -117,7 +116,11 @@ pub(super) fn render_cluster_dispatch(store: &Store, cluster_iri: &str) -> Resul
     )
     .unwrap();
     if outcome_count > 1 {
-        writeln!(out, "Outcome        {outcome} ({outcome_count} runs aggregated)").unwrap();
+        writeln!(
+            out,
+            "Outcome        {outcome} ({outcome_count} runs aggregated)"
+        )
+        .unwrap();
     } else {
         writeln!(out, "Outcome        {outcome}").unwrap();
     }
@@ -140,7 +143,12 @@ pub(super) fn render_cluster_dispatch(store: &Store, cluster_iri: &str) -> Resul
         "  {:<22} {:<12} {:<16} {:>8} {:>5} {:>5} {:>8} {:>10}",
         "cell", "status", "src", "base", "cw", "ch", "output", "cost"
     );
-    let sep = "  ".to_string() + &"─".repeat(22) + " " + &"─".repeat(12) + " " + &"─".repeat(16)
+    let sep = "  ".to_string()
+        + &"─".repeat(22)
+        + " "
+        + &"─".repeat(12)
+        + " "
+        + &"─".repeat(16)
         + " "
         + &"─".repeat(8)
         + " "
@@ -161,14 +169,13 @@ pub(super) fn render_cluster_dispatch(store: &Store, cluster_iri: &str) -> Resul
         let status = cell.status.as_deref().unwrap_or("?");
         let src = cell.usage_source.as_deref().unwrap_or("?");
 
-        let (cost_str, currency) = match cell
-            .capability
-            .as_deref()
-            .and_then(|c| costs.get(c))
-        {
+        let (cost_str, currency) = match cell.capability.as_deref().and_then(|c| costs.get(c)) {
             Some(rates) => {
                 let c = compute_cell_cost(cell, rates);
-                (format!("{}{:.4}", currency_symbol(&rates.currency), c), Some(rates.currency.clone()))
+                (
+                    format!("{}{:.4}", currency_symbol(&rates.currency), c),
+                    Some(rates.currency.clone()),
+                )
             }
             None => {
                 unpriced_cells += 1;
@@ -179,7 +186,14 @@ pub(super) fn render_cluster_dispatch(store: &Store, cluster_iri: &str) -> Resul
         writeln!(
             out,
             "  {:<22} {:<12} {:<16} {:>8} {:>5} {:>5} {:>8} {:>10}",
-            name, status, src, cell.input_base, cell.input_cache_write, cell.input_cache_hit, cell.output, cost_str
+            name,
+            status,
+            src,
+            cell.input_base,
+            cell.input_cache_write,
+            cell.input_cache_hit,
+            cell.output,
+            cost_str
         )
         .unwrap();
 
@@ -222,7 +236,11 @@ pub(super) fn render_cluster_dispatch(store: &Store, cluster_iri: &str) -> Resul
     // Annotate only when an unpriced cell contributed non-zero tokens
     // (mechanical zero-cells are not user-actionable noise).
     let nonzero_unpriced = cells.iter().any(|c| {
-        let unpriced = c.capability.as_deref().map(|cap| !costs.contains_key(cap)).unwrap_or(true);
+        let unpriced = c
+            .capability
+            .as_deref()
+            .map(|cap| !costs.contains_key(cap))
+            .unwrap_or(true);
         unpriced && (c.input_base + c.input_cache_write + c.input_cache_hit + c.output) > 0
     });
     if unpriced_cells > 0 && nonzero_unpriced {
@@ -512,11 +530,9 @@ WHERE {{
 
 fn compute_cell_cost(cell: &CellRow, rates: &CostRates) -> f64 {
     let base = cell.input_base as f64 * rates.input_per_m / 1_000_000.0;
-    let cw = cell.input_cache_write as f64
-        * rates.cache_write_per_m.unwrap_or(rates.input_per_m)
+    let cw = cell.input_cache_write as f64 * rates.cache_write_per_m.unwrap_or(rates.input_per_m)
         / 1_000_000.0;
-    let ch = cell.input_cache_hit as f64
-        * rates.cache_hit_per_m.unwrap_or(rates.input_per_m)
+    let ch = cell.input_cache_hit as f64 * rates.cache_hit_per_m.unwrap_or(rates.input_per_m)
         / 1_000_000.0;
     let out = cell.output as f64 * rates.output_per_m / 1_000_000.0;
     base + cw + ch + out

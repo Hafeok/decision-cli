@@ -2,7 +2,7 @@
 id: TC-413
 title: FT-167 exit criteria — dec-ontology crate extracted, pure, compiling, with core facades intact
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: [FT-167]
   adrs: [ADR-086]
@@ -14,6 +14,8 @@ observes:
 - exit-code
 - stdout
 - disk-state
+last-run: 2026-06-11T13:27:53.033915894+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

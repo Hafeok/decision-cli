@@ -19,8 +19,8 @@ use thiserror::Error;
 use crate::core::vocab::{
     bundle_class, bundle_graph, input_tokens_base_pred, input_tokens_cache_hit_pred,
     input_tokens_cache_write_pred, orchestration_graph, stakes_pred, IRI_DEC_INPUT_TOKENS_BASE,
-    IRI_DEC_INPUT_TOKENS_CACHE_HIT, IRI_DEC_INPUT_TOKENS_CACHE_WRITE, IRI_DEC_SESSION, IRI_DEC_STAKES,
-    STAKES_ROUTINE,
+    IRI_DEC_INPUT_TOKENS_CACHE_HIT, IRI_DEC_INPUT_TOKENS_CACHE_WRITE, IRI_DEC_SESSION,
+    IRI_DEC_STAKES, STAKES_ROUTINE,
 };
 
 /// Errors produced by the migration helpers.
@@ -149,7 +149,9 @@ fn find_sessions_missing_breakdown(store: &Store) -> Result<Vec<NamedNode>, Migr
 }
 
 fn collect_iris(store: &Store, q: &str, var: &str) -> Result<Vec<NamedNode>, MigrateError> {
-    let QueryResults::Solutions(sols) = store.query(q).map_err(|e| MigrateError::Store(e.to_string()))?
+    let QueryResults::Solutions(sols) = store
+        .query(q)
+        .map_err(|e| MigrateError::Store(e.to_string()))?
     else {
         return Ok(Vec::new());
     };

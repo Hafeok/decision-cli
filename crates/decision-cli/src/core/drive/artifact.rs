@@ -99,7 +99,12 @@ impl ArtifactRef {
                 why: "missing numeric body after prefix",
             });
         }
-        if !body.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+        if !body
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+        {
             return Err(ParseError::Malformed {
                 input: s.to_string(),
                 why: "body after prefix must start with a digit",

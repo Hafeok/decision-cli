@@ -127,7 +127,10 @@ entrypoint = "x"
 api_key = "leak"
 "#;
     let err = parse_worker_manifest(raw).expect_err("unknown table must fail");
-    assert!(matches!(err, ManifestParseError::Syntax { .. }), "got {err:?}");
+    assert!(
+        matches!(err, ManifestParseError::Syntax { .. }),
+        "got {err:?}"
+    );
 }
 
 #[test]
@@ -273,8 +276,8 @@ fn assemble_payload_refuses_missing_build_output() {
     let m = parse_worker_manifest(CANONICAL_MANIFEST).expect("manifest parse");
     let mut outs = build_outputs();
     outs.registry_ref = String::new();
-    let err = assemble_submission_payload(&m, &outs)
-        .expect_err("empty registry_ref must be refused");
+    let err =
+        assemble_submission_payload(&m, &outs).expect_err("empty registry_ref must be refused");
     assert_eq!(
         err,
         AssembleSubmissionError::MissingBuildOutput {
@@ -317,14 +320,23 @@ fn payload_serialises_into_submission_payload_json_shape() {
     let as_json = serde_json::to_value(&payload).expect("serialise core payload");
     let lifted: SubmissionPayload =
         serde_json::from_value(as_json).expect("deserialise as SubmissionPayload");
-    assert_eq!(lifted.candidate_registry_ref, payload.candidate_registry_ref);
-    assert_eq!(lifted.claimed_capability_tags, payload.claimed_capability_tags);
+    assert_eq!(
+        lifted.candidate_registry_ref,
+        payload.candidate_registry_ref
+    );
+    assert_eq!(
+        lifted.claimed_capability_tags,
+        payload.claimed_capability_tags
+    );
     assert_eq!(lifted.claimed_sbom_ref, payload.claimed_sbom_ref);
     assert_eq!(
         lifted.claimed_signature_subject,
         payload.claimed_signature_subject
     );
-    assert_eq!(lifted.claimed_source_repo_uri, payload.claimed_source_repo_uri);
+    assert_eq!(
+        lifted.claimed_source_repo_uri,
+        payload.claimed_source_repo_uri
+    );
     // id and external_origin are derived by the handler.
     assert!(lifted.id.is_none());
     assert!(lifted.external_origin.is_none());

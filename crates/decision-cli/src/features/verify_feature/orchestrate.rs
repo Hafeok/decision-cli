@@ -137,9 +137,7 @@ fn build_per_tc(tcs: &[String], results: &[VerificationGraphResult]) -> Vec<PerT
 }
 
 fn canonical_tc_short(iri: &str) -> String {
-    iri.strip_prefix(IRI_TC_PREFIX)
-        .unwrap_or(iri)
-        .to_string()
+    iri.strip_prefix(IRI_TC_PREFIX).unwrap_or(iri).to_string()
 }
 
 fn canonicalize_tcs(iris: &[String]) -> Vec<String> {

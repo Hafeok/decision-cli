@@ -24,12 +24,12 @@
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 
 use crate::core::ontology::{
-    BOOTSTRAP_ARTIFACT, BOUNDARY_ARTIFACT_CLASS, EXTERNAL_ORIGIN_PROP,
-    IS_MIGRATION_BACKFILL_PROP, MIGRATION_BACKFILL,
+    BOOTSTRAP_ARTIFACT, BOUNDARY_ARTIFACT_CLASS, EXTERNAL_ORIGIN_PROP, IS_MIGRATION_BACKFILL_PROP,
+    MIGRATION_BACKFILL,
 };
 use crate::core::vocab::{
-    IRI_DEC_GRAPH_ORCHESTRATION, IRI_PROV_GENERATED_AT_TIME,
-    IRI_PROV_WAS_ATTRIBUTED_TO_MECHANICAL, IRI_PROV_WAS_GENERATED_BY, IRI_XSD_DATE_TIME,
+    IRI_DEC_GRAPH_ORCHESTRATION, IRI_PROV_GENERATED_AT_TIME, IRI_PROV_WAS_ATTRIBUTED_TO_MECHANICAL,
+    IRI_PROV_WAS_GENERATED_BY, IRI_XSD_DATE_TIME,
 };
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -37,7 +37,8 @@ const IRI_XSD_BOOLEAN: &str = "http://www.w3.org/2001/XMLSchema#boolean";
 
 /// Shared `HistoricalAgent` IRI — one per system. Recorded on every
 /// backfilled artifact's `prov:wasAttributedTo` triple.
-pub const HISTORICAL_AGENT_IRI: &str = "https://decision-cli.dev/ns/agent/historical-pre-discipline";
+pub const HISTORICAL_AGENT_IRI: &str =
+    "https://decision-cli.dev/ns/agent/historical-pre-discipline";
 
 /// `dec:HistoricalSession` class IRI — subclass of `:BoundaryArtifact`
 /// via `:MigrationBackfill` so the dual-provenance discipline classifies
@@ -131,12 +132,42 @@ fn synthetic_session_quads(
     g: &GraphName,
 ) -> Vec<Quad> {
     vec![
-        typed_quad(plan.session.clone(), RDF_TYPE, HISTORICAL_SESSION_CLASS, g.clone()),
-        typed_quad(plan.session.clone(), RDF_TYPE, BOUNDARY_ARTIFACT_CLASS, g.clone()),
-        typed_quad(plan.session.clone(), RDF_TYPE, MIGRATION_BACKFILL, g.clone()),
-        boolean_quad(plan.session.clone(), IS_MIGRATION_BACKFILL_PROP, true, g.clone()),
-        literal_quad(plan.session.clone(), EXTERNAL_ORIGIN_PROP, run_external_origin, g.clone()),
-        literal_quad(plan.session.clone(), IRI_DEC_MIGRATION_NOTE, &plan.migration_note, g.clone()),
+        typed_quad(
+            plan.session.clone(),
+            RDF_TYPE,
+            HISTORICAL_SESSION_CLASS,
+            g.clone(),
+        ),
+        typed_quad(
+            plan.session.clone(),
+            RDF_TYPE,
+            BOUNDARY_ARTIFACT_CLASS,
+            g.clone(),
+        ),
+        typed_quad(
+            plan.session.clone(),
+            RDF_TYPE,
+            MIGRATION_BACKFILL,
+            g.clone(),
+        ),
+        boolean_quad(
+            plan.session.clone(),
+            IS_MIGRATION_BACKFILL_PROP,
+            true,
+            g.clone(),
+        ),
+        literal_quad(
+            plan.session.clone(),
+            EXTERNAL_ORIGIN_PROP,
+            run_external_origin,
+            g.clone(),
+        ),
+        literal_quad(
+            plan.session.clone(),
+            IRI_DEC_MIGRATION_NOTE,
+            &plan.migration_note,
+            g.clone(),
+        ),
     ]
 }
 
@@ -174,12 +205,7 @@ pub fn emit_shared_agent_quads(run_external_origin: &str) -> Vec<Quad> {
     let agent = NamedNode::new_unchecked(HISTORICAL_AGENT_IRI);
     vec![
         typed_quad(agent.clone(), RDF_TYPE, HISTORICAL_AGENT_CLASS, g.clone()),
-        typed_quad(
-            agent.clone(),
-            RDF_TYPE,
-            BOUNDARY_ARTIFACT_CLASS,
-            g.clone(),
-        ),
+        typed_quad(agent.clone(), RDF_TYPE, BOUNDARY_ARTIFACT_CLASS, g.clone()),
         typed_quad(agent.clone(), RDF_TYPE, BOOTSTRAP_ARTIFACT, g.clone()),
         literal_quad(agent, EXTERNAL_ORIGIN_PROP, run_external_origin, g),
     ]
@@ -259,7 +285,10 @@ mod tests {
             "2026-05-25T20:30:00Z",
             "FT-074 backfill",
         );
-        let quads = emit_backfill_quads(&plan, "FT-074 provenance migration tool run at 2026-05-25T20:30:00Z");
+        let quads = emit_backfill_quads(
+            &plan,
+            "FT-074 provenance migration tool run at 2026-05-25T20:30:00Z",
+        );
         // At least: 3 mechanical + 3 type triples on session + isMigrationBackfill + external_origin + migrationNote = 9
         assert!(quads.len() >= 9, "expected >= 9 quads, got {}", quads.len());
         let preds: Vec<&str> = quads.iter().map(|q| q.predicate.as_str()).collect();

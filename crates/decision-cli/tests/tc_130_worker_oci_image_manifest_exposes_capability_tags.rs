@@ -24,10 +24,9 @@
 use std::collections::BTreeMap;
 
 use decision_cli::core::oci_manifest::{
-    capability_tag_label, parse_capability_tag, validate_worker_oci_manifest,
-    CAPABILITY_TAG_LABEL_PREFIX, LABEL_DDD_SDK_VERSION, LABEL_DDD_WIRE_PROTOCOL,
-    MIN_REQUIRED_PLATFORMS, OCI_ANNOTATION_REVISION, OCI_ANNOTATION_SOURCE, Platform,
-    WorkerOciManifest,
+    capability_tag_label, parse_capability_tag, validate_worker_oci_manifest, Platform,
+    WorkerOciManifest, CAPABILITY_TAG_LABEL_PREFIX, LABEL_DDD_SDK_VERSION, LABEL_DDD_WIRE_PROTOCOL,
+    MIN_REQUIRED_PLATFORMS, OCI_ANNOTATION_REVISION, OCI_ANNOTATION_SOURCE,
 };
 
 /// Construct a manifest that mirrors what `docker manifest inspect`
@@ -161,8 +160,8 @@ fn rejects_non_semver_pinned_versions() {
     let mut m = well_formed_manifest();
     m.labels
         .insert(LABEL_DDD_SDK_VERSION.to_string(), "latest".to_string());
-    let err = validate_worker_oci_manifest(&m)
-        .expect_err("non-semver ddd.sdk-version must be rejected");
+    let err =
+        validate_worker_oci_manifest(&m).expect_err("non-semver ddd.sdk-version must be rejected");
     assert!(
         err.violations.iter().any(|v| v.code == "ddd:sdk-version"),
         "{:?}",
@@ -251,8 +250,7 @@ fn tc_130_worker_oci_image_manifest_exposes_capability_tags() {
     let mut bad = m.clone();
     bad.labels
         .retain(|k, _| !k.starts_with(CAPABILITY_TAG_LABEL_PREFIX));
-    let err =
-        validate_worker_oci_manifest(&bad).expect_err("missing capability tags must fail");
+    let err = validate_worker_oci_manifest(&bad).expect_err("missing capability tags must fail");
     assert!(err
         .violations
         .iter()
@@ -268,8 +266,7 @@ fn tc_130_worker_oci_image_manifest_exposes_capability_tags() {
     // 8. Missing wire-protocol label → rejected.
     let mut bad = m.clone();
     bad.labels.remove(LABEL_DDD_WIRE_PROTOCOL);
-    let err =
-        validate_worker_oci_manifest(&bad).expect_err("missing wire-protocol must fail");
+    let err = validate_worker_oci_manifest(&bad).expect_err("missing wire-protocol must fail");
     assert!(
         err.report.contains(LABEL_DDD_WIRE_PROTOCOL),
         "{}",
@@ -306,6 +303,9 @@ fn tc_130_worker_oci_image_manifest_exposes_capability_tags() {
         "oci:annotation.revision",
         "oci:platforms",
     ] {
-        assert!(codes.contains(&required), "{required} missing from punch list {codes:?}");
+        assert!(
+            codes.contains(&required),
+            "{required} missing from punch list {codes:?}"
+        );
     }
 }

@@ -100,7 +100,8 @@ fn loads_and_validates_session_record() {
     let err = validate_quads(&stripped, std::slice::from_ref(&a))
         .expect_err("stripped wasGeneratedBy must produce a SHACL violation");
     assert!(
-        err.report.contains("http://www.w3.org/ns/prov#wasGeneratedBy"),
+        err.report
+            .contains("http://www.w3.org/ns/prov#wasGeneratedBy"),
         "violation report must name the property path; got: {}",
         err.report
     );

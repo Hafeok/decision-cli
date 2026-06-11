@@ -176,18 +176,12 @@ fn tc_070_matcher_returns_completesingle_when_one_graph_covers_all() {
 
     // Build and persist the complete graph
     let vg_complete = build_vg_z_complete(&env_iri_full);
-    insert_quads(
-        &store,
-        &vg_complete.to_quads(verify_graph_named_graph()),
-    );
+    insert_quads(&store, &vg_complete.to_quads(verify_graph_named_graph()));
     write_graph_to_disk(wd.path(), &vg_complete);
 
     // Build and persist the partial graph
     let vg_partial = build_vg_z2_partial(&env_iri_full);
-    insert_quads(
-        &store,
-        &vg_partial.to_quads(verify_graph_named_graph()),
-    );
+    insert_quads(&store, &vg_partial.to_quads(verify_graph_named_graph()));
     write_graph_to_disk(wd.path(), &vg_partial);
 
     let before = store.len().expect("len before");
@@ -230,17 +224,11 @@ fn tc_070_matcher_is_deterministic_across_repeats() {
     seed_env(&store, &env_iri_full);
 
     let vg_complete = build_vg_z_complete(&env_iri_full);
-    insert_quads(
-        &store,
-        &vg_complete.to_quads(verify_graph_named_graph()),
-    );
+    insert_quads(&store, &vg_complete.to_quads(verify_graph_named_graph()));
     write_graph_to_disk(wd.path(), &vg_complete);
 
     let vg_partial = build_vg_z2_partial(&env_iri_full);
-    insert_quads(
-        &store,
-        &vg_partial.to_quads(verify_graph_named_graph()),
-    );
+    insert_quads(&store, &vg_partial.to_quads(verify_graph_named_graph()));
     write_graph_to_disk(wd.path(), &vg_partial);
 
     let r1 = best_matching_graphs("FT-Z", env_short, &store, wd.path()).expect("r1");

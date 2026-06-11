@@ -19,9 +19,7 @@ use std::sync::Arc;
 use decision_cli::core::ontology::catalog::{
     CapabilityReference, ExemplarGraph, OntologyDescription, SafetyClassTag,
 };
-use decision_cli::core::store::{
-    load_store_from_dump, orchestration_dump_path, persist_store,
-};
+use decision_cli::core::store::{load_store_from_dump, orchestration_dump_path, persist_store};
 use decision_cli::init::{run as init_run, DefinitionSource};
 use decision_cli::verify_graph_generate::bundle::assemble_enrichment_for;
 use decision_cli::vocab::{
@@ -79,8 +77,7 @@ fn seed_catalog(workdir: &Path) {
     let store = Arc::new(load_store_from_dump(&dump).expect("load store"));
     let stream = NamedNode::new("https://decision-cli.dev/stream/decision-cli-development")
         .expect("stream iri");
-    let writer =
-        StreamWriter::bootstrap(Arc::clone(&store), stream).expect("stream writer");
+    let writer = StreamWriter::bootstrap(Arc::clone(&store), stream).expect("stream writer");
 
     // CR-001..CR-003 — three commands at dec 0.3.0.
     for (id, cmd) in [
@@ -244,13 +241,12 @@ fn tc_168_bundle_assembler_populates_the_five_adr_066_fields() {
     seed_catalog(wd.path());
     let _env_path = write_env_with_concrete(wd.path(), "BNCH-001");
     let env = decision_cli::core::ontology::verification_bench::from_turtle(
-        &wd.path()
-            .join(".dec/verify/env/BNCH-001.ttl"),
+        &wd.path().join(".dec/verify/env/BNCH-001.ttl"),
     )
     .expect("load env");
 
-    let enrichment = assemble_enrichment_for(wd.path(), Some(&env), "BNCH-001")
-        .expect("assemble enrichment");
+    let enrichment =
+        assemble_enrichment_for(wd.path(), Some(&env), "BNCH-001").expect("assemble enrichment");
 
     // cli_surface — three commands, version 0.3.0, dec_subcommands list.
     assert_eq!(
@@ -370,8 +366,8 @@ fn tc_168_scenario_b_env_without_concrete_capabilities_falls_back() {
     )
     .expect("load env");
 
-    let enrichment = assemble_enrichment_for(wd.path(), Some(&env), "BNCH-002")
-        .expect("assemble enrichment");
+    let enrichment =
+        assemble_enrichment_for(wd.path(), Some(&env), "BNCH-002").expect("assemble enrichment");
 
     // env_capabilities populated from the ephemeral-tempdir default.
     assert!(
@@ -415,8 +411,7 @@ fn tc_168_scenario_d_replay_determinism_via_bundle_hash() {
 
     // Same catalog state ⇒ same enrichment ⇒ same metadata hashes.
     assert_eq!(
-        first.bundle_metadata.catalog_hashes,
-        second.bundle_metadata.catalog_hashes,
+        first.bundle_metadata.catalog_hashes, second.bundle_metadata.catalog_hashes,
         "catalog hashes must be deterministic across replays"
     );
     assert_eq!(first, second, "full enrichment must be deterministic");

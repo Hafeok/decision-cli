@@ -109,7 +109,8 @@ fn seed_feedback(
             "https://decision-cli.dev/ns/activity/tc-183/seed",
         ),
         source_artifact: Some(NamedNode::new(source_tc_iri).expect("tc iri")),
-        addressing_artifact: addressing_artifact.map(|s| NamedNode::new(s).expect("addressing iri")),
+        addressing_artifact: addressing_artifact
+            .map(|s| NamedNode::new(s).expect("addressing iri")),
         closed_by: None,
         rejection_reason: None,
         superseded_by: None,

@@ -32,9 +32,7 @@ pub(super) fn load_capabilities_doc(
     Ok((doc, hash))
 }
 
-pub(super) fn load_bindings_doc(
-    path: &Path,
-) -> Result<(RoleBindingsDoc, String), BootstrapError> {
+pub(super) fn load_bindings_doc(path: &Path) -> Result<(RoleBindingsDoc, String), BootstrapError> {
     let bytes = std::fs::read(path).map_err(|e| BootstrapError::ReadFailed {
         path: path.to_path_buf(),
         detail: e.to_string(),

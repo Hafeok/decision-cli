@@ -148,8 +148,8 @@ fn shacl_rejects_submission_missing_registry_digest() {
             q.object = Literal::new_simple_literal("ghcr.io/example/worker:latest").into();
         }
     }
-    let err = validate_quads(&quads)
-        .expect_err("non-digest candidate_registry_ref must fail SHACL");
+    let err =
+        validate_quads(&quads).expect_err("non-digest candidate_registry_ref must fail SHACL");
     assert!(err.report.contains("@sha256:"), "{}", err.report);
 }
 
@@ -158,9 +158,12 @@ fn shacl_rejects_submission_with_zero_capability_tags() {
     let mut sub = well_formed_submission("sub-001");
     sub.claimed_capability_tags.clear();
     let quads = sub.to_quads(worker_image_submission_graph());
-    let err = validate_quads(&quads)
-        .expect_err("zero claimed_capability_tags must fail SHACL");
-    assert!(err.report.contains("claimed_capability_tag"), "{}", err.report);
+    let err = validate_quads(&quads).expect_err("zero claimed_capability_tags must fail SHACL");
+    assert!(
+        err.report.contains("claimed_capability_tag"),
+        "{}",
+        err.report
+    );
 }
 
 #[test]
@@ -204,7 +207,10 @@ fn lifecycle_admitted_round_trips() {
 
     // The produced_workerimage edge is serialised.
     let pred = "https://decision-cli.dev/ns#produced_workerimage";
-    let count = quads.iter().filter(|q| q.predicate.as_str() == pred).count();
+    let count = quads
+        .iter()
+        .filter(|q| q.predicate.as_str() == pred)
+        .count();
     assert_eq!(count, 1, "expected exactly one produced_workerimage edge");
 }
 
@@ -261,7 +267,11 @@ fn tc_129_workerimagesubmission_validates_as_a_boundaryartif() {
     bad.claimed_capability_tags.clear();
     let err = validate_quads(&bad.to_quads(worker_image_submission_graph()))
         .expect_err("zero capability tags must fail SHACL");
-    assert!(err.report.contains("claimed_capability_tag"), "{}", err.report);
+    assert!(
+        err.report.contains("claimed_capability_tag"),
+        "{}",
+        err.report
+    );
 
     // 6. SHACL rejects an unknown lifecycle state.
     let mut quads = sub.to_quads(worker_image_submission_graph());
@@ -271,7 +281,11 @@ fn tc_129_workerimagesubmission_validates_as_a_boundaryartif() {
         }
     }
     let err = validate_quads(&quads).expect_err("unknown lifecycle must fail SHACL");
-    assert!(err.report.contains("submission_lifecycle_state"), "{}", err.report);
+    assert!(
+        err.report.contains("submission_lifecycle_state"),
+        "{}",
+        err.report
+    );
 
     // 7. SHACL rejects an empty external_origin.
     let mut bad = sub.clone();

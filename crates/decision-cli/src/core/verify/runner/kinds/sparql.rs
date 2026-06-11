@@ -109,7 +109,10 @@ impl StepKindHandler for SparqlHandler {
                 return StepRunTrace::unrunnable(
                     started,
                     ended,
-                    format!("target {p} did not parse as Turtle or N-Quads", p = path.display()),
+                    format!(
+                        "target {p} did not parse as Turtle or N-Quads",
+                        p = path.display()
+                    ),
                 );
             }
         }

@@ -19,10 +19,7 @@ use super::request::RunnerError;
 
 /// Run the static op-subset check on every step of the graph. The first
 /// violation aborts the run with [`RunnerError::SafetyViolation`].
-pub(crate) fn check(
-    graph: &VerificationGraph,
-    env: &VerificationBench,
-) -> Result<(), RunnerError> {
+pub(crate) fn check(graph: &VerificationGraph, env: &VerificationBench) -> Result<(), RunnerError> {
     for step in &graph.steps {
         match check_step_against_env(step, env) {
             Ok(()) => continue,

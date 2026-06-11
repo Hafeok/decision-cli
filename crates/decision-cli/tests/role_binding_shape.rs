@@ -38,9 +38,7 @@ const STREAM_IRI: &str = "https://decision-cli.dev/stream/tc-101";
 // ---------------------------------------------------------------------------
 
 fn cap_iri(id: &str) -> NamedNode {
-    NamedNode::new_unchecked(format!(
-        "https://decision-cli.dev/ns/capability/{id}/v1"
-    ))
+    NamedNode::new_unchecked(format!("https://decision-cli.dev/ns/capability/{id}/v1"))
 }
 
 // ---------------------------------------------------------------------------
@@ -138,8 +136,7 @@ fn implementer_binding_commits_through_stream_writer() {
 fn implementer_binding_round_trips_preserving_step_order() {
     let (store, w) = writer();
     let b = implementer_binding();
-    commit_quads(&w, b.to_quads(role_binding_graph()))
-        .expect("commit succeeds");
+    commit_quads(&w, b.to_quads(role_binding_graph())).expect("commit succeeds");
 
     let loaded = active_for_role(&store, "implementer")
         .expect("read succeeds")
@@ -151,8 +148,14 @@ fn implementer_binding_round_trips_preserving_step_order() {
     // The escalation chain must preserve order: code-writer-heavy first,
     // then deep-reasoning.
     assert_eq!(loaded.escalation_steps.len(), 2);
-    assert_eq!(loaded.escalation_steps[0].step_capability, cap_iri("code-writer-heavy"));
-    assert_eq!(loaded.escalation_steps[1].step_capability, cap_iri("deep-reasoning"));
+    assert_eq!(
+        loaded.escalation_steps[0].step_capability,
+        cap_iri("code-writer-heavy")
+    );
+    assert_eq!(
+        loaded.escalation_steps[1].step_capability,
+        cap_iri("deep-reasoning")
+    );
     // Triggers on the first step include confidence-below-0.7 and
     // prior-attempts-ge-2 (order unimportant for the bag semantics,
     // but the set must match).
@@ -383,8 +386,7 @@ fn default_capability_pointing_at_eol_capability_is_rejected() {
 fn embedded_shapes_declare_role_binding_shape() {
     use decision_cli::OntologyHandle;
     let h = OntologyHandle::load().expect("load ontology");
-    let target =
-        NamedNode::new("https://decision-cli.dev/ns#RoleBinding").expect("class iri");
+    let target = NamedNode::new("https://decision-cli.dev/ns#RoleBinding").expect("class iri");
     let mut has_shape = false;
     for q in h.shapes_graph() {
         if q.predicate.as_str() == "http://www.w3.org/ns/shacl#targetClass" {
@@ -408,8 +410,7 @@ fn embedded_shapes_declare_escalation_step_and_trigger_shapes() {
     let h = OntologyHandle::load().expect("load ontology");
     let mut step_seen = false;
     let mut trigger_seen = false;
-    let step_iri =
-        NamedNode::new("https://decision-cli.dev/ns#EscalationStep").expect("step iri");
+    let step_iri = NamedNode::new("https://decision-cli.dev/ns#EscalationStep").expect("step iri");
     let trigger_iri =
         NamedNode::new("https://decision-cli.dev/ns#EscalationTrigger").expect("trigger iri");
     for q in h.shapes_graph() {

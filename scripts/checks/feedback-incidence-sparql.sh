@@ -36,12 +36,12 @@ ARTIFACT_RS="$MOD_DIR/artifact.rs"
 READ_RS="$MOD_DIR/read.rs"
 SHACL_RS="$MOD_DIR/shacl.rs"
 MOD_RS="$MOD_DIR/mod.rs"
-ONTOLOGY_TTL="crates/decision-cli/src/core/ontology/assets/ontology.ttl"
-SHAPES_TTL="crates/decision-cli/src/core/ontology/assets/shapes.ttl"
+ONTOLOGY_TTL="crates/dec-ontology/src/ontology/assets/ontology.ttl"
+SHAPES_TTL="crates/dec-ontology/src/ontology/assets/shapes.ttl"
 # vocab.rs was split into a module directory (core/vocab/<topic>.rs)
 # to stay under the ADR-013 400-line cap; the feedback-related IRIs
 # now live in core/vocab/feedback.rs and are re-exported via mod.rs.
-VOCAB_RS="crates/decision-cli/src/core/vocab/feedback.rs"
+VOCAB_RS="crates/dec-ontology/src/vocab/feedback.rs"
 
 FAILED=0
 

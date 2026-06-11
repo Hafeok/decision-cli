@@ -167,21 +167,33 @@ fn run_ship(workdir: &Path, args: ShipArgs) -> ExitCode {
                 n = outcome.iterations
             );
             for entry in &outcome.history {
-                println!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+                println!(
+                    "  [{i}] {tag}",
+                    i = entry.iteration,
+                    tag = entry.action.tag()
+                );
             }
             ExitCode::SUCCESS
         }
         Err(DriveError::Stuck { reason, history }) => {
             eprintln!("drive: stuck — {reason}");
             for entry in &history {
-                eprintln!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+                eprintln!(
+                    "  [{i}] {tag}",
+                    i = entry.iteration,
+                    tag = entry.action.tag()
+                );
             }
             ExitCode::from(3)
         }
         Err(DriveError::MaxIterations { max, history }) => {
             eprintln!("drive: hit iteration cap ({max}); not converging");
             for entry in &history {
-                eprintln!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+                eprintln!(
+                    "  [{i}] {tag}",
+                    i = entry.iteration,
+                    tag = entry.action.tag()
+                );
             }
             ExitCode::from(3)
         }
@@ -309,21 +321,33 @@ fn run_def_ready(workdir: &Path, args: DefReadyArgs) -> ExitCode {
                 n = outcome.iterations
             );
             for entry in &outcome.history {
-                println!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+                println!(
+                    "  [{i}] {tag}",
+                    i = entry.iteration,
+                    tag = entry.action.tag()
+                );
             }
             ExitCode::SUCCESS
         }
         Err(DriveError::Stuck { reason, history }) => {
             eprintln!("drive: stuck — {reason}");
             for entry in &history {
-                eprintln!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+                eprintln!(
+                    "  [{i}] {tag}",
+                    i = entry.iteration,
+                    tag = entry.action.tag()
+                );
             }
             ExitCode::from(3)
         }
         Err(DriveError::MaxIterations { max, history }) => {
             eprintln!("drive: hit iteration cap ({max}); not converging");
             for entry in &history {
-                eprintln!("  [{i}] {tag}", i = entry.iteration, tag = entry.action.tag());
+                eprintln!(
+                    "  [{i}] {tag}",
+                    i = entry.iteration,
+                    tag = entry.action.tag()
+                );
             }
             ExitCode::from(3)
         }

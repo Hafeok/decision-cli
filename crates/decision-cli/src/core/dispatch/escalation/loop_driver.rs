@@ -1,12 +1,12 @@
 //! Dispatcher loop entry point per FT-062 §Outputs.
 
+use oxi_events::Mutation;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
-use oxi_events::Mutation;
 
 use crate::core::bundle::Bundle;
-use crate::core::dispatch::capability_resolver::{resolve_default_capability, ResolvedCapability};
 use crate::core::dispatch::caching::{should_cache, split_bundle_for_caching, CacheableBlock};
+use crate::core::dispatch::capability_resolver::{resolve_default_capability, ResolvedCapability};
 use crate::core::ontology::capability::{query_by_iri, CapabilityStatus};
 use crate::core::ontology::role_binding::active_for_role;
 use crate::StreamWriter;
@@ -102,8 +102,8 @@ where
     R: WorkerRunner,
     F: FnMut(&DispatchAttempt) -> AttemptTokens,
 {
-    let binding = active_for_role(store, role_id)?
-        .ok_or_else(|| EscalationError::NoActiveBinding {
+    let binding =
+        active_for_role(store, role_id)?.ok_or_else(|| EscalationError::NoActiveBinding {
             role_id: role_id.to_string(),
         })?;
     let mut state = LoopState::initial(store, role_id, initial_bundle)?;
@@ -119,10 +119,21 @@ where
             let blocks = split_bundle_for_caching(&state.bundle, prior_attempt);
             runner.on_cache_blocks(blocks);
         }
-        let attempt =
-            runner.run(role_id, &state.bundle, &state.capability, &state.attempts, &session_id)?;
+        let attempt = runner.run(
+            role_id,
+            &state.bundle,
+            &state.capability,
+            &state.attempts,
+            &session_id,
+        )?;
         let tokens = tokens_fn(&attempt);
-        commit_session(writer, &attempt, tokens, state.prior_session.as_ref(), state.prior_reason)?;
+        commit_session(
+            writer,
+            &attempt,
+            tokens,
+            state.prior_session.as_ref(),
+            state.prior_reason,
+        )?;
         state.record_chain_head(&attempt);
 
         let signals = collect_signals(&state.bundle, &attempt, state.tier);
@@ -180,7 +191,9 @@ impl LoopState {
         let head = self
             .chain_head
             .or_else(|| self.attempts.first().map(|a| a.session_id.clone()))
-            .unwrap_or_else(|| NamedNode::new_unchecked("https://decision-cli.dev/ns/session/empty"));
+            .unwrap_or_else(|| {
+                NamedNode::new_unchecked("https://decision-cli.dev/ns/session/empty")
+            });
         ChainResult {
             final_result,
             chain_head: head,
@@ -243,10 +256,9 @@ fn resolve_capability_for_step(
     store: &Store,
     step_iri: &NamedNode,
 ) -> Result<ResolvedCapability, EscalationError> {
-    let cap = query_by_iri(store, step_iri)?
-        .ok_or_else(|| EscalationError::UnknownCapability {
-            iri: step_iri.as_str().to_string(),
-        })?;
+    let cap = query_by_iri(store, step_iri)?.ok_or_else(|| EscalationError::UnknownCapability {
+        iri: step_iri.as_str().to_string(),
+    })?;
     if cap.status == CapabilityStatus::Eol {
         return Err(EscalationError::CapabilityResolutionFailed {
             iri: step_iri.as_str().to_string(),

@@ -68,8 +68,7 @@ fn discoverable_by_capability_tag() {
     let store = Store::new().expect("memory store");
     let code_writer = qualified_image("code-writer-impl", &["code-writer", "implementer"]);
     let verifier = qualified_image("verifier-impl", &["verifier"]);
-    let general =
-        qualified_image("general-impl", &["code-writer", "verifier", "implementer"]);
+    let general = qualified_image("general-impl", &["code-writer", "verifier", "implementer"]);
 
     load_into_store(&store, &code_writer);
     load_into_store(&store, &verifier);
@@ -121,8 +120,8 @@ fn eligibility_filter_separates_qualified_from_pulled() {
     assert_eq!(ids, vec!["code-writer-impl"]);
 
     // "pulled" surfaces only the pulled image.
-    let pulled_hits = query_by_eligibility_status(&store, EligibilityStatus::Pulled)
-        .expect("query ok");
+    let pulled_hits =
+        query_by_eligibility_status(&store, EligibilityStatus::Pulled).expect("query ok");
     let ids: Vec<&str> = pulled_hits.iter().map(|i| i.id.as_str()).collect();
     assert_eq!(ids, vec!["pulled-impl"]);
 }
@@ -174,9 +173,7 @@ fn shacl_rejects_image_with_unknown_eligibility() {
     let img = qualified_image("code-writer-impl", &["code-writer"]);
     let mut quads: Vec<Quad> = img.to_quads(worker_image_graph());
     let subject = img.iri();
-    let elig = NamedNode::new_unchecked(
-        decision_cli::vocab::IRI_DEC_ELIGIBILITY_STATUS,
-    );
+    let elig = NamedNode::new_unchecked(decision_cli::vocab::IRI_DEC_ELIGIBILITY_STATUS);
     let graph: GraphName = worker_image_graph().into_owned().into();
     quads.retain(|q| q.predicate != elig);
     quads.push(Quad::new(

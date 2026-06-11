@@ -33,9 +33,7 @@ use decision_cli::core::dispatch::{
 use decision_cli::core::ontology::capability::{
     Capability, CapabilityStatus, CostCurrency, Endpoint,
 };
-use decision_cli::core::ontology::role_binding::{
-    EscalationStep, RoleBinding, TriggerSignal,
-};
+use decision_cli::core::ontology::role_binding::{EscalationStep, RoleBinding, TriggerSignal};
 use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::vocab::{capability_graph, role_binding_graph};
 use decision_cli::StreamWriter;
@@ -56,8 +54,7 @@ fn compute_routine_configurable_yields_low() {
         Some(ReasoningEffort::Low),
     );
     assert_eq!(
-        compute_reasoning_effort(Stakes::Routine, true)
-            .map(ReasoningEffort::as_str),
+        compute_reasoning_effort(Stakes::Routine, true).map(ReasoningEffort::as_str),
         Some("low"),
     );
 }
@@ -69,8 +66,7 @@ fn compute_elevated_configurable_yields_medium() {
         Some(ReasoningEffort::Medium),
     );
     assert_eq!(
-        compute_reasoning_effort(Stakes::Elevated, true)
-            .map(ReasoningEffort::as_str),
+        compute_reasoning_effort(Stakes::Elevated, true).map(ReasoningEffort::as_str),
         Some("medium"),
     );
 }
@@ -82,8 +78,7 @@ fn compute_foundational_configurable_yields_high() {
         Some(ReasoningEffort::High),
     );
     assert_eq!(
-        compute_reasoning_effort(Stakes::Foundational, true)
-            .map(ReasoningEffort::as_str),
+        compute_reasoning_effort(Stakes::Foundational, true).map(ReasoningEffort::as_str),
         Some("high"),
     );
 }
@@ -266,7 +261,10 @@ fn commit(w: &StreamWriter, quads: Vec<Quad>) {
 
 fn seed_architect(w: &StreamWriter) {
     commit(w, standard_reasoning().to_quads(capability_graph()));
-    commit(w, standard_reasoning_frontier().to_quads(capability_graph()));
+    commit(
+        w,
+        standard_reasoning_frontier().to_quads(capability_graph()),
+    );
     commit(w, deep_reasoning().to_quads(capability_graph()));
     commit(w, architect_binding().to_quads(role_binding_graph()));
 }
@@ -370,7 +368,10 @@ fn architect_routine_dispatch_records_low_on_standard_reasoning() {
 
     // Exactly one session (no escalation trigger fires under routine + high confidence).
     assert_eq!(chain.attempts.len(), 1, "expected single session");
-    assert_eq!(chain.attempts[0].capability.capability_id, "standard-reasoning");
+    assert_eq!(
+        chain.attempts[0].capability.capability_id,
+        "standard-reasoning"
+    );
 
     // The recorded payload carries reasoning_effort = "low".
     assert_eq!(runner.observations.len(), 1);
@@ -412,7 +413,10 @@ fn architect_elevated_dispatch_records_medium_then_none_on_frontier() {
 
     // Two sessions: standard-reasoning, then standard-reasoning-frontier.
     assert_eq!(chain.attempts.len(), 2, "expected two sessions");
-    assert_eq!(chain.attempts[0].capability.capability_id, "standard-reasoning");
+    assert_eq!(
+        chain.attempts[0].capability.capability_id,
+        "standard-reasoning"
+    );
     assert_eq!(
         chain.attempts[1].capability.capability_id,
         "standard-reasoning-frontier"
@@ -467,7 +471,10 @@ fn architect_foundational_dispatch_reaches_anthropic_without_reasoning_effort() 
 
     // Two sessions: standard-reasoning then deep-reasoning (Anthropic).
     assert_eq!(chain.attempts.len(), 2, "expected two sessions");
-    assert_eq!(chain.attempts[0].capability.capability_id, "standard-reasoning");
+    assert_eq!(
+        chain.attempts[0].capability.capability_id,
+        "standard-reasoning"
+    );
     assert_eq!(chain.attempts[1].capability.capability_id, "deep-reasoning");
     assert_eq!(chain.attempts[1].capability.endpoint, Endpoint::Anthropic);
 

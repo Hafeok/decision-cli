@@ -29,10 +29,8 @@ pub fn build_orphan_evidence(
     vec![
         Quad::new(
             feedback_iri.clone(),
-            NamedNodeRef::new_unchecked(
-                "https://decision-cli.dev/ns#supersededByTopologyChange",
-            )
-            .into_owned(),
+            NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#supersededByTopologyChange")
+                .into_owned(),
             NamedNode::new_unchecked(session_iri),
             g.clone(),
         ),

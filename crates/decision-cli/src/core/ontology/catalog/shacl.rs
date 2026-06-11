@@ -85,7 +85,11 @@ pub fn validate_quads_with_store(
     for s in &cr_subjects {
         violations.extend(validate_capability_reference(quads, s));
     }
-    violations.extend(check_capability_active_command_unique(quads, &cr_subjects, store));
+    violations.extend(check_capability_active_command_unique(
+        quads,
+        &cr_subjects,
+        store,
+    ));
 
     let od_subjects = subjects_of_type(quads, IRI_DEC_ONTOLOGY_DESCRIPTION);
     for s in &od_subjects {
@@ -293,8 +297,7 @@ fn check_capability_active_command_unique(
         // to the active map if they're not superseded (either already in
         // the store or being superseded by this mutation).
         let existing = active_capability_refs_in_store(store);
-        let store_superseded =
-            store_superseded_targets(store, "https://decision-cli.dev/ns/cr/");
+        let store_superseded = store_superseded_targets(store, "https://decision-cli.dev/ns/cr/");
         for (iri, command) in existing {
             // Skip if mutation supersedes this existing subject.
             if mutation_superseded.contains(&iri) || store_superseded.contains(&iri) {
@@ -314,8 +317,7 @@ fn check_capability_active_command_unique(
         }
         // Identify the existing subject (one already in the store) for
         // the diagnostic "DuplicateActive — existing: <iri>".
-        let new_in_mutation: BTreeSet<&str> =
-            new_subjects.iter().map(|n| n.as_str()).collect();
+        let new_in_mutation: BTreeSet<&str> = new_subjects.iter().map(|n| n.as_str()).collect();
         let existing: Vec<&String> = subjects
             .iter()
             .filter(|s| !new_in_mutation.contains(s.as_str()))
@@ -382,8 +384,7 @@ fn check_ontology_single_active(
         active_set.push(s.as_str().to_string());
     }
     if let Some(store) = store {
-        let store_superseded =
-            store_superseded_targets(store, "https://decision-cli.dev/ns/od/");
+        let store_superseded = store_superseded_targets(store, "https://decision-cli.dev/ns/od/");
         for iri in active_ontology_descriptions_in_store(store) {
             if mutation_superseded.contains(&iri) || store_superseded.contains(&iri) {
                 continue;
@@ -672,7 +673,10 @@ fn require_single_literal(
             shape,
             subject,
             label,
-            &format!("expected exactly one {label} literal, found {n}", n = v.len()),
+            &format!(
+                "expected exactly one {label} literal, found {n}",
+                n = v.len()
+            ),
         ));
     }
 }

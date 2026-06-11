@@ -57,8 +57,7 @@ fn tc_199_verdict_demotes_on_graph_fault_exit() {
     // Non-evidence step: failing setup is always AmendmentRequired,
     // exit code is irrelevant. (FT-097 behaviour preserved.)
     let no_evidence: Vec<Vec<String>> = vec![Vec::new()];
-    let (verdict, _) =
-        single_graph_verdict_with_exit_codes(&outcomes, &no_evidence, &[Some(1)]);
+    let (verdict, _) = single_graph_verdict_with_exit_codes(&outcomes, &no_evidence, &[Some(1)]);
     assert_eq!(
         verdict,
         Verdict::AmendmentRequired,

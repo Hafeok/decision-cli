@@ -16,7 +16,7 @@ use decision_cli::core::handler::{Error as HandlerError, Request};
 use decision_cli::core::ontology::verification_bench::to_canonical_turtle;
 use decision_cli::verify_bench_new::{self, BenchNewRequest};
 use decision_cli::verify_bench_show::{
-    self, EnvDocument, BenchShowRequest, BenchShowResponse, OutputFormat,
+    self, BenchShowRequest, BenchShowResponse, EnvDocument, OutputFormat,
 };
 use serde_json::{json, Value};
 
@@ -136,7 +136,10 @@ fn ac1_show_seeded_env_returns_full_text_render() {
     let resp = run_show(tmp.path(), req).expect("show seed");
     let text = verify_bench_show::render_text(&resp);
     // id, env-type, safety-class
-    assert!(text.contains("BNCH-001-ephemeral-cli"), "id missing: {text}");
+    assert!(
+        text.contains("BNCH-001-ephemeral-cli"),
+        "id missing: {text}"
+    );
     assert!(text.contains("ephemeral-tempdir"), "type missing: {text}");
     assert!(text.contains("isolated"), "safety missing: {text}");
     // each of the seed's allowed ops

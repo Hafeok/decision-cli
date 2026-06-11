@@ -54,7 +54,10 @@ fn tc_175_graph_check_warns_when_default_acknowledged_cross() {
         &[snap("ADR-ALIVE", true), snap("ADR-RESCOPED", true)],
         &[],
     );
-    let w035 = warnings.iter().find(|w| w.code == "W035").expect("W035 present");
+    let w035 = warnings
+        .iter()
+        .find(|w| w.code == "W035")
+        .expect("W035 present");
     assert!(
         w035.message.contains("ADR-GONE"),
         "scenario A: W035 names the missing ADR; got {:?}",
@@ -81,7 +84,10 @@ fn tc_175_graph_check_warns_when_default_acknowledged_cross() {
         ],
         &[],
     );
-    let w036 = warnings.iter().find(|w| w.code == "W036").expect("W036 present");
+    let w036 = warnings
+        .iter()
+        .find(|w| w.code == "W036")
+        .expect("W036 present");
     assert!(
         w036.message.contains("ADR-RESCOPED"),
         "scenario B: W036 names the rescoped ADR; got {:?}",
@@ -129,10 +135,7 @@ fn tc_175_graph_check_warns_when_default_acknowledged_cross() {
         ],
         &[rejection(
             "FT-OPTOUT",
-            &[
-                ("ADR-ALIVE", "valid"),
-                ("ADR-STRAY", "incoherent"),
-            ],
+            &[("ADR-ALIVE", "valid"), ("ADR-STRAY", "incoherent")],
         )],
     );
     assert_eq!(
@@ -142,7 +145,10 @@ fn tc_175_graph_check_warns_when_default_acknowledged_cross() {
         warnings
     );
     // sorted by code
-    assert_eq!(warnings[0].code, "W035", "scenario D: sorted output (W035 first)");
+    assert_eq!(
+        warnings[0].code, "W035",
+        "scenario D: sorted output (W035 first)"
+    );
     assert_eq!(warnings[1].code, "W036", "scenario D: W036 second");
     assert_eq!(warnings[2].code, "W037", "scenario D: W037 third");
 
@@ -156,10 +162,7 @@ fn tc_175_graph_check_warns_when_default_acknowledged_cross() {
     ];
     let mut rejections = vec![rejection(
         "FT-OPTOUT",
-        &[
-            ("ADR-ALIVE", "valid"),
-            ("ADR-STRAY", "incoherent"),
-        ],
+        &[("ADR-ALIVE", "valid"), ("ADR-STRAY", "incoherent")],
     )];
     config.adrs.remove("ADR-GONE");
     let warnings = check_drift(&config, &catalog, &rejections);

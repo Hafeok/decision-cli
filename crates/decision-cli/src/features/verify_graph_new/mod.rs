@@ -221,9 +221,11 @@ fn graph_iri_exists(store: &Store, id: &str) -> Result<bool, HandlerError> {
         prefix = IRI_DEC_VERIFY_GRAPH_PREFIX,
         cls = IRI_DEC_VERIFICATION_GRAPH,
     );
-    match store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("graph-exists ASK: {e}"),
-    })? {
+    match store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("graph-exists ASK: {e}"),
+        })? {
         QueryResults::Boolean(b) => Ok(b),
         _ => Err(HandlerError::Internal {
             detail: "graph-exists ASK returned non-boolean result".to_string(),
@@ -367,10 +369,9 @@ mod tests {
         // Seed a `dec:VerificationGraph` typed subject directly into
         // the verify-graph named graph — mirrors what
         // `StreamWriter::commit(graph_to_quads)` would persist.
-        let iri =
-            NamedNode::new(format!("{IRI_DEC_VERIFY_GRAPH_PREFIX}VG-T")).expect("iri");
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-            .expect("rdf:type");
+        let iri = NamedNode::new(format!("{IRI_DEC_VERIFY_GRAPH_PREFIX}VG-T")).expect("iri");
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("rdf:type");
         let cls = NamedNode::new(IRI_DEC_VERIFICATION_GRAPH).expect("cls");
         let graph = NamedNode::new(IRI_DEC_GRAPH_VERIFY_GRAPH).expect("graph");
         let quad = oxigraph::model::Quad::new(

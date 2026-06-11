@@ -13,7 +13,7 @@ use oxigraph::store::Store;
 use thiserror::Error;
 
 use crate::core::vocab::{
-    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_BENCH_PREFIX, IRI_DEC_BENCH_TYPE,
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_BENCH_PREFIX, IRI_DEC_BENCH_TYPE, IRI_DEC_ENDPOINT,
     IRI_DEC_FIXTURE_SOURCE, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP, IRI_DEC_TEARDOWN,
     IRI_DEC_VERIFICATION_BENCH,
 };
@@ -210,7 +210,8 @@ fn extract_safety_class(
 }
 
 fn id_from_iri(iri: &str) -> Option<String> {
-    iri.strip_prefix(IRI_DEC_BENCH_PREFIX).map(|s| s.to_string())
+    iri.strip_prefix(IRI_DEC_BENCH_PREFIX)
+        .map(|s| s.to_string())
 }
 
 fn single_literal(

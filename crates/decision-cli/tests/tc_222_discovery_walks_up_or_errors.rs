@@ -42,7 +42,10 @@ fn tc_222_discovery_walks_up_or_errors() {
     fs::create_dir_all(&empty_dir).unwrap();
 
     let result3 = decision_cli::init::run(&empty_dir, DefinitionSource::AutoDiscover);
-    assert!(result3.is_err(), "Discovery should fail when no .product/ found");
+    assert!(
+        result3.is_err(),
+        "Discovery should fail when no .product/ found"
+    );
 
     match result3 {
         Err(InitError::Internal(msg)) => {

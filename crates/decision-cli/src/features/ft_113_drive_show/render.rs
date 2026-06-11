@@ -59,10 +59,7 @@ fn render_round(round: &Round) -> String {
     // State line
     output.push_str(&format!(
         "  state    {} · {} impl-open · {} vga-open · {} graphs\n",
-        round.state.verdict,
-        round.state.impl_open,
-        round.state.vga_open,
-        round.state.graph_count
+        round.state.verdict, round.state.impl_open, round.state.vga_open, round.state.graph_count
     ));
 
     // Dispatch line
@@ -147,7 +144,6 @@ fn format_duration(d: std::time::Duration) -> String {
 }
 
 pub fn render_json(rounds: &[Round]) -> String {
-    serde_json::to_string_pretty(rounds).unwrap_or_else(|e| {
-        format!("{{\"error\": \"failed to serialize: {}\"}}", e)
-    })
+    serde_json::to_string_pretty(rounds)
+        .unwrap_or_else(|e| format!("{{\"error\": \"failed to serialize: {}\"}}", e))
 }

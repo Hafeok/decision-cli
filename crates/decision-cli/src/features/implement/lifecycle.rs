@@ -65,9 +65,7 @@ pub(super) fn build_dispatch_payload(
 /// `SLICE1_MODEL_ID`) on any resolver failure so pre-bootstrap stores
 /// keep dispatching. The fallback path emits a `warn!` so the operator
 /// can spot a missing binding before the worker fails downstream.
-fn resolve_implementer_endpoint_and_model(
-    store: &oxigraph::store::Store,
-) -> (String, String) {
+fn resolve_implementer_endpoint_and_model(store: &oxigraph::store::Store) -> (String, String) {
     use crate::core::dispatch::resolve_default_capability;
     // The RoleBinding's dec:role_id literal is "implementer" (per
     // config/role-bindings.yaml seeded by bootstrap_catalog.py); the
@@ -296,7 +294,13 @@ mod tests {
         );
 
         // The implementer role is seeded with these five tools (FT-121)
-        let expected_tools = vec!["read_file", "write_file", "run_build", "run_lint", "run_tests"];
+        let expected_tools = vec![
+            "read_file",
+            "write_file",
+            "run_build",
+            "run_lint",
+            "run_tests",
+        ];
         for tool in &expected_tools {
             assert!(
                 tools.contains(&tool.to_string()),

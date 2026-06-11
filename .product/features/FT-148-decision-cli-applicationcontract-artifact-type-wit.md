@@ -35,7 +35,7 @@ The contract is what makes the catalog economic model real: one archetype serves
 
 ### Outputs
 
-**Rust struct** (`crates/decision-cli/src/core/ontology/application_contract.rs`):
+**Rust struct** (`crates/dec-ontology/src/ontology/application_contract.rs`):
 
 ```rust
 pub struct ApplicationContract {
@@ -88,7 +88,7 @@ pub struct Convention {
 ### State
 
 - **New on-disk:** `application_contract.rs`, sub-module `application_contract/parser.rs`, `application_contract/emitter.rs`, `application_contract/tests.rs`, `shapes/application_contract.shacl.ttl`, `vocab/application_contract.rs`, `scripts/checks/tech-detail-binding-level.sh`.
-- **Modified on-disk:** `core/ontology/mod.rs` re-exports; SHACL shape registration in `core/graph/writer.rs`.
+- **Modified on-disk:** `crates/dec-ontology/src/ontology/mod.rs` re-exports; SHACL shape registration in `core/graph/writer.rs`.
 - **Convention bodies** live outside the orchestration store under `forge/archetypes/{archetype-id}/application/conventions/{name}.md`. The store holds the path; the file holds the convention body.
 
 ### Behaviour

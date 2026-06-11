@@ -40,9 +40,9 @@ mod validate;
 mod tests;
 
 pub use labels::{
-    capability_tag_label, parse_capability_tag, CAPABILITY_TAG_LABEL_PREFIX,
-    LABEL_DDD_SDK_VERSION, LABEL_DDD_WIRE_PROTOCOL, MIN_REQUIRED_PLATFORMS,
-    OCI_ANNOTATION_REVISION, OCI_ANNOTATION_SOURCE,
+    capability_tag_label, parse_capability_tag, CAPABILITY_TAG_LABEL_PREFIX, LABEL_DDD_SDK_VERSION,
+    LABEL_DDD_WIRE_PROTOCOL, MIN_REQUIRED_PLATFORMS, OCI_ANNOTATION_REVISION,
+    OCI_ANNOTATION_SOURCE,
 };
 pub use manifest::{Platform, WorkerOciManifest};
 pub use validate::{

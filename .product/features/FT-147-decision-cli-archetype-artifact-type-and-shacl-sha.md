@@ -28,15 +28,15 @@ Implementation rides the `add-artifact-type` TaskType from [FT-141](FT-141): six
 
 ### Inputs
 
-- The artifact-type registry the existing ontology surfaces — under `crates/decision-cli/src/core/ontology/`, witnessed by `feedback.rs`, `capability.rs`, `verification_bench.rs`, `worker_image.rs` ([FT-026](FT-026), [FT-035](FT-035), [FT-054](FT-054), [FT-086](FT-086)).
+- The artifact-type registry the existing ontology surfaces — under `crates/dec-ontology/src/ontology/`, witnessed by `feedback.rs`, `capability.rs`, `verification_bench.rs`, `worker_image.rs` ([FT-026](FT-026), [FT-035](FT-035), [FT-054](FT-054), [FT-086](FT-086)).
 - The SHACL chokepoint at GraphWriter from [ADR-041](ADR-041) — extended with the new shape.
-- The IRI vocabulary module at `crates/decision-cli/src/core/vocab/` — extended with archetype-class IRIs.
+- The IRI vocabulary module at `crates/dec-ontology/src/vocab/` — extended with archetype-class IRIs.
 - The dual-provenance shapes from [FT-072](FT-072) / [FT-073](FT-073) — every Archetype carries mechanical + motivational provenance like every other artifact.
 - The `add-artifact-type` TaskType from [FT-141](FT-141) — the cluster this slice's implementation rides.
 
 ### Outputs
 
-**Rust struct** (`crates/decision-cli/src/core/ontology/archetype.rs`):
+**Rust struct** (`crates/dec-ontology/src/ontology/archetype.rs`):
 
 ```rust
 pub struct Archetype {
@@ -64,7 +64,7 @@ pub struct ArchetypeEvidence {
 }
 ```
 
-**SHACL shape** (`crates/decision-cli/src/core/ontology/shapes/archetype.shacl.ttl`):
+**SHACL shape** (`crates/dec-ontology/src/ontology/shapes/archetype.shacl.ttl`):
 
 - `dec:ArchetypeShape sh:targetClass dec:Archetype` with one `sh:property` per field.
 - `sh:minCount 1` on `application_contract`, `infrastructure_contract_template`, `status`.
@@ -73,15 +73,15 @@ pub struct ArchetypeEvidence {
 - Datatype constraints on the EVIDENCE sub-shape.
 - Dual-provenance imports from [FT-072](FT-072) (PROV-O `wasGeneratedBy` etc.) and the motivational-predicate fragment.
 
-**IRI vocabulary** (`crates/decision-cli/src/core/vocab/archetype.rs`):
+**IRI vocabulary** (`crates/dec-ontology/src/vocab/archetype.rs`):
 
 - `ARCHETYPE_CLASS`, `ARCHETYPE_TITLE`, `ARCHETYPE_STATUS`, one per struct field.
 
-**Parser + emitter** (`crates/decision-cli/src/core/ontology/archetype/parser.rs`, `emitter.rs`):
+**Parser + emitter** (`crates/dec-ontology/src/ontology/archetype/parser.rs`, `emitter.rs`):
 
 - Quad-iterator → struct (parser); struct → `Vec<Quad>` (emitter). Symmetric coverage of every field per the coherence audit from FT-141.
 
-**Round-trip tests** (`crates/decision-cli/src/core/ontology/archetype/tests.rs`):
+**Round-trip tests** (`crates/dec-ontology/src/ontology/archetype/tests.rs`):
 
 - Positive round-trip: build an Archetype with three seam audits, emit, parse, assert structural equality.
 - Negative SHACL (`seam_audits` empty): build an Archetype with zero seam audits, run SHACL validator, assert it rejects with E102.
@@ -100,7 +100,7 @@ pub struct ArchetypeEvidence {
 ### State
 
 - **New on-disk:** `archetype.rs`, `shapes/archetype.shacl.ttl`, `vocab/archetype.rs`, `archetype/parser.rs`, `archetype/emitter.rs`, `archetype/tests.rs`.
-- **Modified on-disk:** `crates/decision-cli/src/core/ontology/mod.rs` (re-export the new module); `crates/decision-cli/src/core/graph/writer.rs` (add the typed write method).
+- **Modified on-disk:** `crates/dec-ontology/src/ontology/mod.rs` (re-export the new module); `crates/decision-cli/src/core/graph/writer.rs` (add the typed write method).
 - **Orchestration-store schema change:** new SHACL shape registered with the chokepoint; new IRI vocabulary entries. Backwards-compatible — existing archetype-free stores keep working.
 
 ### Behaviour

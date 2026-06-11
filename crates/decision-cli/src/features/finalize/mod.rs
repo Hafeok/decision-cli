@@ -22,8 +22,8 @@ mod tests;
 
 mod scope_guard;
 
-pub use scope_guard::load_scope_guard_extras;
 use scope_guard::is_always_allowed;
+pub use scope_guard::load_scope_guard_extras;
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -280,9 +280,7 @@ fn regex_escape_brackets(s: &str) -> String {
 
 /// `(status, path)` pairs from `git status --porcelain`. `status` is
 /// the first column (e.g. `M`, `A`, `D`, `R`, `??`).
-fn working_tree_modified_files(
-    repo_root: &Path,
-) -> Result<Vec<(String, String)>, FinalizeError> {
+fn working_tree_modified_files(repo_root: &Path) -> Result<Vec<(String, String)>, FinalizeError> {
     let out = Command::new("git")
         .arg("-C")
         .arg(repo_root)
@@ -312,11 +310,7 @@ fn working_tree_modified_files(
             s if s.starts_with('R') => "R".to_string(),
             s => s.chars().next().unwrap_or(' ').to_string(),
         };
-        let normalized_path = path
-            .split(" -> ")
-            .last()
-            .unwrap_or(path)
-            .to_string();
+        let normalized_path = path.split(" -> ").last().unwrap_or(path).to_string();
         rows.push((normalized_status, normalized_path));
     }
     Ok(rows)

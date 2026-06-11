@@ -31,7 +31,10 @@ pub fn build_retraction_evidence(
         Quad::new(
             feedback_iri.clone(),
             NamedNodeRef::new_unchecked("https://decision-cli.dev/ns#closedAt").into_owned(),
-            Literal::new_typed_literal(now, NamedNodeRef::new_unchecked("http://www.w3.org/2001/XMLSchema#dateTime")),
+            Literal::new_typed_literal(
+                now,
+                NamedNodeRef::new_unchecked("http://www.w3.org/2001/XMLSchema#dateTime"),
+            ),
             g.clone(),
         ),
         Quad::new(

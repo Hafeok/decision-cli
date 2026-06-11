@@ -121,10 +121,7 @@ mod tests {
 
     #[test]
     fn slice_one_mapping_covers_all_four_source_types() {
-        let mut types: Vec<&str> = SLICE_1_MAPPING
-            .iter()
-            .map(|r| r.source_type)
-            .collect();
+        let mut types: Vec<&str> = SLICE_1_MAPPING.iter().map(|r| r.source_type).collect();
         types.sort();
         types.dedup();
         assert!(types.contains(&IRI_DEC_ADR), "ADR mapping missing");

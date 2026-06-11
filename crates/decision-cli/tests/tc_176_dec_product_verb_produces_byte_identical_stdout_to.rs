@@ -139,11 +139,7 @@ fn tc_176_dec_product_verb_produces_byte_identical_stdout_to() {
             &["product", "adr", "show", "ADR-001"],
             &["adr", "show", "ADR-001"],
         ),
-        (
-            "adr list",
-            &["product", "adr", "list"],
-            &["adr", "list"],
-        ),
+        ("adr list", &["product", "adr", "list"], &["adr", "list"]),
         (
             "context FT-001",
             &["product", "context", "FT-001"],

@@ -74,10 +74,9 @@ impl ViolationKind {
             Self::SparqlNamespace => UpstreamTarget::OntologyDescription,
             // Everything else (Binary, HttpHost, FilePath, CaptureSource)
             // → the env's `dec:concreteCapabilities` block.
-            Self::Binary
-            | Self::HttpHost
-            | Self::FilePath
-            | Self::CaptureSource => UpstreamTarget::VerificationBench,
+            Self::Binary | Self::HttpHost | Self::FilePath | Self::CaptureSource => {
+                UpstreamTarget::VerificationBench
+            }
         }
     }
 }
@@ -330,8 +329,8 @@ fn validate_sparql_assertion(
                 step_index: idx,
                 kind: ViolationKind::SparqlNamespace,
                 referenced_thing: ns,
-                why_rejected:
-                    "not in ontology_vocabulary.namespaces and not in W3C whitelist".to_string(),
+                why_rejected: "not in ontology_vocabulary.namespaces and not in W3C whitelist"
+                    .to_string(),
             });
         }
     }
@@ -405,14 +404,9 @@ fn host_of(url: &str) -> Option<String> {
     let after_scheme = url
         .strip_prefix("https://")
         .or_else(|| url.strip_prefix("http://"))?;
-    let host_end = after_scheme
-        .find('/')
-        .unwrap_or(after_scheme.len());
+    let host_end = after_scheme.find('/').unwrap_or(after_scheme.len());
     let host_with_port = &after_scheme[..host_end];
-    let host = host_with_port
-        .split(':')
-        .next()
-        .unwrap_or(host_with_port);
+    let host = host_with_port.split(':').next().unwrap_or(host_with_port);
     Some(host.to_string())
 }
 
@@ -470,11 +464,7 @@ fn validate_capture(
         let Some(name) = step.fields.get("name").and_then(|v| v.as_str()) else {
             return;
         };
-        if enrichment
-            .env_capabilities
-            .environment_variables
-            .is_empty()
-        {
+        if enrichment.env_capabilities.environment_variables.is_empty() {
             return;
         }
         if !enrichment
@@ -723,21 +713,18 @@ mod tests {
             "cargo test foo"
         );
         // Semicolon separator.
-        assert_eq!(
-            strip_cd_prefix("cd /tmp ; ls"),
-            "ls"
-        );
+        assert_eq!(strip_cd_prefix("cd /tmp ; ls"), "ls");
         // No-whitespace &&.
-        assert_eq!(
-            strip_cd_prefix("cd /tmp&&ls"),
-            "ls"
-        );
+        assert_eq!(strip_cd_prefix("cd /tmp&&ls"), "ls");
     }
 
     #[test]
     fn strip_cd_prefix_leaves_non_cd_commands_alone() {
         assert_eq!(strip_cd_prefix("bash tests/x.sh"), "bash tests/x.sh");
-        assert_eq!(strip_cd_prefix("dec verify feature FT-1"), "dec verify feature FT-1");
+        assert_eq!(
+            strip_cd_prefix("dec verify feature FT-1"),
+            "dec verify feature FT-1"
+        );
         assert_eq!(strip_cd_prefix("cdup foo"), "cdup foo"); // not actually `cd`
         assert_eq!(strip_cd_prefix(""), "");
     }

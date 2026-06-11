@@ -334,11 +334,7 @@ impl Drop for MockGuard {
 }
 
 fn try_invoke_mock(payload: &DispatchPayloadJson) -> Option<Result<WorkerRun>> {
-    MOCK_WORKER.with(|cell| {
-        cell.borrow()
-            .as_ref()
-            .map(|mock| (mock)(payload))
-    })
+    MOCK_WORKER.with(|cell| cell.borrow().as_ref().map(|mock| (mock)(payload)))
 }
 
 /// FT-108 test helper: surface the `DispatchPayloadJson` shape so
@@ -348,7 +344,6 @@ fn try_invoke_mock(payload: &DispatchPayloadJson) -> Option<Result<WorkerRun>> {
 pub(crate) fn payload_defect_feedback_len(payload: &DispatchPayloadJson) -> usize {
     payload.defect_feedback.len()
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -411,15 +406,16 @@ mod tests {
         );
 
         // Check each expected tool is present (order-insensitive)
-        let expected = vec!["read_file", "write_file", "run_build", "run_lint", "run_tests"];
+        let expected = vec![
+            "read_file",
+            "write_file",
+            "run_build",
+            "run_lint",
+            "run_tests",
+        ];
         for tool in &expected {
-            let found = tools_array
-                .iter()
-                .any(|v| v.as_str() == Some(tool));
-            assert!(
-                found,
-                "expected tool {tool} in JSON allowed_tools array"
-            );
+            let found = tools_array.iter().any(|v| v.as_str() == Some(tool));
+            assert!(found, "expected tool {tool} in JSON allowed_tools array");
         }
     }
 }

@@ -88,12 +88,13 @@ pub struct BenchNewResponse {
 /// MCP delivers a `Value::Object` matching the input schema; the CLI
 /// builds the same object from clap args. Both paths land here.
 pub fn parse_request(req: &Request) -> Result<BenchNewRequest, HandlerError> {
-    let mut parsed: BenchNewRequest = serde_json::from_value(req.arguments.clone()).map_err(|e| {
-        HandlerError::InvalidArgument {
-            field: "arguments".to_string(),
-            detail: format!("malformed dec_verify_bench_new arguments: {e}"),
-        }
-    })?;
+    let mut parsed: BenchNewRequest =
+        serde_json::from_value(req.arguments.clone()).map_err(|e| {
+            HandlerError::InvalidArgument {
+                field: "arguments".to_string(),
+                detail: format!("malformed dec_verify_bench_new arguments: {e}"),
+            }
+        })?;
     if parsed.workdir.is_none() {
         parsed.workdir = std::env::current_dir().ok();
     }
@@ -201,7 +202,11 @@ pub fn run(req: &BenchNewRequest) -> Result<BenchNewResponse, HandlerError> {
 /// with the artifact still in the store — e.g. after `rm`, a gitignore
 /// mismatch, or test cleanup) used to slip past file-only detection and
 /// silently appended a second `dec:allowedOps` head, corrupting the bench.
-fn resolve_id(req: &BenchNewRequest, workdir: &Path, bench_dir: &Path) -> Result<String, HandlerError> {
+fn resolve_id(
+    req: &BenchNewRequest,
+    workdir: &Path,
+    bench_dir: &Path,
+) -> Result<String, HandlerError> {
     match &req.id {
         Some(id) => {
             let file_dup = mint::id_exists(bench_dir, id).map_err(io_err)?;

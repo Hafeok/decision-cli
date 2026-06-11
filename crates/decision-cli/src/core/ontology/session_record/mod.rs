@@ -1,24 +1,13 @@
-//! Session escalation telemetry — edges plus cache-aware token breakdown (FT-057).
+//! Store-facing glue for session escalation telemetry (FT-057).
 //!
-//! Extends `dec:Session` (a.k.a. `dec:SessionRecord`) with bidirectional
-//! escalation chain membership plus the four token-count fields needed
-//! for cache-aware cost rollups on Anthropic prompt-cached dispatches
-//! (ADR-034 / ADR-037 / [FT-065](FT-065)).
-//!
-//! This module surfaces:
-//!
-//! - [`SessionRecord`] — in-memory value carrying the new fields.
-//! - [`SessionRecord::to_quads`] / [`SessionRecord::escalated_to_quad`] —
-//!   RDF serialisation; the latter is appended on the *prior* session in
-//!   the same transaction that writes the new escalated session, so the
-//!   bidirectional invariant holds at every write boundary.
-//! - [`validate_quads`] — Rust-side SHACL validator the `StreamWriter`
-//!   invokes before persisting. Implements the three FT-057 `sh:sparql`
-//!   constraints: bidirectional escalation, escalation_reason iff
-//!   escalated_from, and Scaleway-no-cache.
+//! The pure [`SessionRecord`] value and its RDF serialisation live in
+//! [`dec_ontology::ontology::session_record`] (ADR-086); this module
+//! keeps the store-aware SHACL validator the `StreamWriter` invokes and
+//! re-exports both halves.
+
+pub use dec_ontology::ontology::session_record::*;
 
 mod shacl;
-mod types;
 
 #[cfg(test)]
 mod tests;
@@ -26,4 +15,3 @@ mod tests;
 pub use shacl::{
     validate_quads, validate_quads_with_store, SessionRecordShaclError, SessionRecordViolation,
 };
-pub use types::{SessionRecord, SessionRecordRef};

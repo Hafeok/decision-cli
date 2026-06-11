@@ -29,8 +29,7 @@ use super::mapping::{IRI_DEC_ADR, IRI_DEC_DEPENDENCY, IRI_DEC_FEATURE, IRI_DEC_T
 /// (FT-074 §Behaviour step 2 explicitly states Features remain orphans
 /// in the new vocabulary because the Feature→ADR direction isn't
 /// motivational).
-const AUDIT_TARGET_TYPES: &[&str] =
-    &[IRI_DEC_FEATURE, IRI_DEC_ADR, IRI_DEC_TC, IRI_DEC_DEPENDENCY];
+const AUDIT_TARGET_TYPES: &[&str] = &[IRI_DEC_FEATURE, IRI_DEC_ADR, IRI_DEC_TC, IRI_DEC_DEPENDENCY];
 
 /// Motivational predicates each artifact type accepts per the FT-072
 /// per-type shapes. The audit uses this table to recognise an existing

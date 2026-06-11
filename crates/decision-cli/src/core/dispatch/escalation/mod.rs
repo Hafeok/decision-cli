@@ -18,8 +18,8 @@ pub mod triggers;
 pub mod types;
 
 pub use bundle_enrich::{
-    enrich_bundle_with_prior_attempt, render_enriched_bundle_markdown,
-    render_prior_attempt_block, PROV_WAS_DERIVED_FROM, IRI_DEC_SUPERSEDES_BUNDLE,
+    enrich_bundle_with_prior_attempt, render_enriched_bundle_markdown, render_prior_attempt_block,
+    IRI_DEC_SUPERSEDES_BUNDLE, PROV_WAS_DERIVED_FROM,
 };
 pub use loop_driver::{dispatch_role, mint_session_iri, ChainResult, WorkerRunner};
 pub use quads::{build_enriched_bundle_quads, build_session_linkage_quads};

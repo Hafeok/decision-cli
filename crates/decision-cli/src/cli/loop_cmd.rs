@@ -7,7 +7,9 @@ use std::process::ExitCode;
 use clap::Subcommand;
 
 use decision_cli::loop_inspect::list::StateFilter;
-use decision_cli::loop_inspect::{ListArgs as InspectListArgs, OutputFormat, ShowArgs as InspectShowArgs};
+use decision_cli::loop_inspect::{
+    ListArgs as InspectListArgs, OutputFormat, ShowArgs as InspectShowArgs,
+};
 
 #[derive(Debug, Subcommand)]
 pub enum LoopCmd {
@@ -48,7 +50,10 @@ pub fn run(workdir: &Path, cmd: LoopCmd) -> ExitCode {
             let format = match OutputFormat::parse(&args.format) {
                 Some(f) => f,
                 None => {
-                    eprintln!("dec loop show: unknown --format {:?}; use text or json", args.format);
+                    eprintln!(
+                        "dec loop show: unknown --format {:?}; use text or json",
+                        args.format
+                    );
                     return ExitCode::from(1);
                 }
             };
@@ -65,14 +70,20 @@ pub fn run(workdir: &Path, cmd: LoopCmd) -> ExitCode {
             let state = match StateFilter::parse(&args.state) {
                 Some(s) => s,
                 None => {
-                    eprintln!("dec loop list: unknown --state {:?}; use open, closed, or all", args.state);
+                    eprintln!(
+                        "dec loop list: unknown --state {:?}; use open, closed, or all",
+                        args.state
+                    );
                     return ExitCode::from(1);
                 }
             };
             let format = match OutputFormat::parse(&args.format) {
                 Some(f) => f,
                 None => {
-                    eprintln!("dec loop list: unknown --format {:?}; use text or json", args.format);
+                    eprintln!(
+                        "dec loop list: unknown --format {:?}; use text or json",
+                        args.format
+                    );
                     return ExitCode::from(1);
                 }
             };

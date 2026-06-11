@@ -24,7 +24,7 @@ pub struct RoundState {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Dispatch {
-    pub role: String,           // e.g. "verify-graph-author", "implementer", "verifier"
+    pub role: String, // e.g. "verify-graph-author", "implementer", "verifier"
     pub session_iri: String,
 }
 
@@ -45,10 +45,7 @@ pub enum Outcome {
         remaining: usize,
     },
     #[serde(rename = "verifier-results")]
-    VerifierResults {
-        pass: usize,
-        fail: usize,
-    },
+    VerifierResults { pass: usize, fail: usize },
     #[serde(rename = "done")]
     Done,
     #[serde(rename = "stuck")]

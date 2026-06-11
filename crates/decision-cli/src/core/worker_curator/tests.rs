@@ -14,8 +14,7 @@ use super::{
     WORKER_CURATOR_AGENT_IRI,
 };
 
-const CANONICAL_DIGEST: &str =
-    "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+const CANONICAL_DIGEST: &str = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
 const CANONICAL_SBOM_DIGEST: &str =
     "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
 
@@ -61,9 +60,7 @@ fn fixture_signature_verdict(
 
 fn fixture_context() -> CuratorSessionContext {
     CuratorSessionContext {
-        session_iri: NamedNode::new_unchecked(
-            "https://decision-cli.dev/ns/session/curator-001",
-        ),
+        session_iri: NamedNode::new_unchecked("https://decision-cli.dev/ns/session/curator-001"),
         agent_iri: NamedNode::new_unchecked(WORKER_CURATOR_AGENT_IRI),
         generated_at_time: "2026-05-26T00:00:00Z".to_string(),
         in_stream: NamedNode::new_unchecked(
@@ -76,9 +73,8 @@ fn fixture_context() -> CuratorSessionContext {
 #[test]
 fn assemble_refuses_mismatched_signature_verdict() {
     let sub = fixture_submission("sub-001");
-    let other = NamedNode::new_unchecked(
-        "https://decision-cli.dev/ns/worker-image-submission/sub-999",
-    );
+    let other =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/worker-image-submission/sub-999");
     let verdict = fixture_signature_verdict(other, SignatureVerdictClass::Valid);
     let err = assemble_curator_bundle(sub, verdict, Vec::new())
         .expect_err("mismatched verdict must be refused");
@@ -102,8 +98,8 @@ fn assemble_refuses_submission_with_empty_sbom() {
 fn admit_produces_workerimage_and_audit() {
     let sub = fixture_submission("sub-001");
     let verdict = fixture_signature_verdict(sub.iri(), SignatureVerdictClass::Valid);
-    let bundle = assemble_curator_bundle(sub.clone(), verdict, Vec::new())
-        .expect("bundle assembly");
+    let bundle =
+        assemble_curator_bundle(sub.clone(), verdict, Vec::new()).expect("bundle assembly");
 
     let outcome = run_curator_session(
         &bundle,
@@ -155,8 +151,7 @@ fn admit_produces_workerimage_and_audit() {
 #[test]
 fn admit_refuses_when_signature_verdict_is_not_valid() {
     let sub = fixture_submission("sub-001");
-    let verdict =
-        fixture_signature_verdict(sub.iri(), SignatureVerdictClass::InvalidSignature);
+    let verdict = fixture_signature_verdict(sub.iri(), SignatureVerdictClass::InvalidSignature);
     let bundle = assemble_curator_bundle(sub, verdict, Vec::new()).expect("bundle assembly");
 
     let err = run_curator_session(
@@ -176,10 +171,9 @@ fn admit_refuses_when_signature_verdict_is_not_valid() {
 #[test]
 fn reject_produces_feedback_targeting_worker_author() {
     let sub = fixture_submission("sub-001");
-    let verdict =
-        fixture_signature_verdict(sub.iri(), SignatureVerdictClass::UntrustedIdentity);
-    let bundle = assemble_curator_bundle(sub.clone(), verdict, Vec::new())
-        .expect("bundle assembly");
+    let verdict = fixture_signature_verdict(sub.iri(), SignatureVerdictClass::UntrustedIdentity);
+    let bundle =
+        assemble_curator_bundle(sub.clone(), verdict, Vec::new()).expect("bundle assembly");
 
     let outcome = run_curator_session(
         &bundle,
@@ -201,10 +195,7 @@ fn reject_produces_feedback_targeting_worker_author() {
         Some(&sub.iri()),
         "rejection feedback must point at the rejected Submission"
     );
-    assert!(reject
-        .feedback
-        .evidence
-        .contains("untrusted-identity"));
+    assert!(reject.feedback.evidence.contains("untrusted-identity"));
     assert!(reject
         .feedback
         .recommendation

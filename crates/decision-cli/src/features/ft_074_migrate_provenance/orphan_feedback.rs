@@ -113,8 +113,16 @@ pub fn emit_orphan_feedback_quads(plan: &OrphanFeedbackPlan) -> Vec<Quad> {
     let mut quads = required_feedback_quads(&plan.feedback_iri, &g);
     quads.push(routing_quad(&plan.feedback_iri, &g));
     quads.push(severity_quad(&plan.feedback_iri, &g));
-    quads.push(source_artifact_quad(&plan.feedback_iri, &plan.orphan_artifact, &g));
-    quads.push(recommendation_quad(&plan.feedback_iri, &plan.recommendation, &g));
+    quads.push(source_artifact_quad(
+        &plan.feedback_iri,
+        &plan.orphan_artifact,
+        &g,
+    ));
+    quads.push(recommendation_quad(
+        &plan.feedback_iri,
+        &plan.recommendation,
+        &g,
+    ));
     quads.push(evidence_quad(&plan.feedback_iri, &plan.reasons, &g));
     quads.push(orphan_marker_quad(&plan.orphan_artifact, &g));
     quads

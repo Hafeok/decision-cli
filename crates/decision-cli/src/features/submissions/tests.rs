@@ -12,9 +12,7 @@ use crate::core::ontology::worker_image_submission::SubmissionLifecycleState;
 use crate::core::vocab::worker_image_submission_graph;
 
 use super::auth::{RepoIdentity, TokenStore};
-use super::handler::{
-    RateLimiter, SubmissionsService, SubmissionsServiceError,
-};
+use super::handler::{RateLimiter, SubmissionsService, SubmissionsServiceError};
 use super::payload::SubmissionPayload;
 
 const TOKEN: &str = "test-token-abc";
@@ -224,8 +222,7 @@ fn lifecycle_state_pinned_to_received() {
     let q = "PREFIX dec: <https://decision-cli.dev/ns#> \
              SELECT ?state WHERE { GRAPH ?g { ?s a dec:WorkerImageSubmission ; \
                                             dec:submission_lifecycle_state ?state } }";
-    let oxigraph::sparql::QueryResults::Solutions(sols) = store.query(q).expect("query ok")
-    else {
+    let oxigraph::sparql::QueryResults::Solutions(sols) = store.query(q).expect("query ok") else {
         panic!("expected solutions");
     };
     let mut seen = Vec::new();
@@ -235,7 +232,10 @@ fn lifecycle_state_pinned_to_received() {
             seen.push(lit.value().to_string());
         }
     }
-    assert_eq!(seen, vec![SubmissionLifecycleState::Received.as_str().to_string()]);
+    assert_eq!(
+        seen,
+        vec![SubmissionLifecycleState::Received.as_str().to_string()]
+    );
 }
 
 #[test]
@@ -245,7 +245,8 @@ fn graph_name_is_worker_image_submission_graph() {
     let (service, store) = build_service();
     let _ = service.accept(Some(TOKEN), baseline_payload()).expect("ok");
     let expected_graph = worker_image_submission_graph();
-    let q = "SELECT ?g WHERE { GRAPH ?g { ?s a <https://decision-cli.dev/ns#WorkerImageSubmission> } }";
+    let q =
+        "SELECT ?g WHERE { GRAPH ?g { ?s a <https://decision-cli.dev/ns#WorkerImageSubmission> } }";
     let QueryResults::Solutions(sols) = store.query(q).expect("query ok") else {
         panic!("expected solutions");
     };

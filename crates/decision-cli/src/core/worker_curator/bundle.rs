@@ -131,7 +131,10 @@ pub fn assemble_curator_bundle(
     if signature_verdict.responds_to_submission != submission_iri {
         return Err(CuratorBundleError::SignatureVerdictMismatch {
             verdict_id: signature_verdict.id.clone(),
-            verdict_subject: signature_verdict.responds_to_submission.as_str().to_string(),
+            verdict_subject: signature_verdict
+                .responds_to_submission
+                .as_str()
+                .to_string(),
             submission_iri: submission_iri.as_str().to_string(),
         });
     }

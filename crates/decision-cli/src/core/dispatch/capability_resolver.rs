@@ -61,9 +61,7 @@ pub struct ResolvedCapability {
 pub enum ResolverError {
     /// No active `dec:RoleBinding` exists for `role_id`. The dispatcher
     /// refuses to fall back to a hardcoded model per ADR-037.
-    #[error(
-        "role {role_id:?} has no active binding; run `dec init` or supersede manually"
-    )]
+    #[error("role {role_id:?} has no active binding; run `dec init` or supersede manually")]
     NoActiveBinding {
         /// Role the dispatcher tried to resolve.
         role_id: String,
@@ -153,9 +151,10 @@ pub fn resolve_default_capability(
     store: &Store,
     role_id: &str,
 ) -> Result<ResolvedCapability, ResolverError> {
-    let binding = active_for_role(store, role_id)?.ok_or_else(|| ResolverError::NoActiveBinding {
-        role_id: role_id.to_string(),
-    })?;
+    let binding =
+        active_for_role(store, role_id)?.ok_or_else(|| ResolverError::NoActiveBinding {
+            role_id: role_id.to_string(),
+        })?;
 
     let capability = query_by_iri(store, &binding.default_capability)?.ok_or_else(|| {
         ResolverError::UnknownCapability {

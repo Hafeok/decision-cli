@@ -206,8 +206,7 @@ fn workers_run_env_file_contains_all_four_required_keys() {
         env_file: Some(env_path.clone()),
         docker_binary: "docker".to_string(),
     };
-    let outcome =
-        workers_run::run(&workdir, &args, &runner).expect("happy path must succeed");
+    let outcome = workers_run::run(&workdir, &args, &runner).expect("happy path must succeed");
 
     let raw = fs::read_to_string(&outcome.env_file_path).expect("read env file");
     for required in [
@@ -241,8 +240,8 @@ fn workers_run_refuses_unknown_image_id_before_any_container_starts() {
         env_file: Some(env_path),
         docker_binary: "docker".to_string(),
     };
-    let err = workers_run::run(&workdir, &args, &runner)
-        .expect_err("unknown id must produce an error");
+    let err =
+        workers_run::run(&workdir, &args, &runner).expect_err("unknown id must produce an error");
     assert!(
         matches!(err, WorkersRunError::NotFound { ref id } if id == "does-not-exist"),
         "expected NotFound, got {err:?}"
@@ -355,5 +354,8 @@ fn workers_run_prefers_qualified_row_over_other_statuses() {
     let outcome = workers_run::run(&workdir, &args, &runner)
         .expect("mixed catalog must pick the qualified row");
     assert_eq!(outcome.image.version, "2.0.0");
-    assert_eq!(outcome.image.eligibility_status, EligibilityStatus::Qualified);
+    assert_eq!(
+        outcome.image.eligibility_status,
+        EligibilityStatus::Qualified
+    );
 }

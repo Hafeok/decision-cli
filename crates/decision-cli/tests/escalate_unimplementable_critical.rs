@@ -20,9 +20,7 @@ use decision_cli::core::feedback::FeedbackClass;
 use decision_cli::core::ontology::capability::{
     Capability, CapabilityStatus, CostCurrency, Endpoint,
 };
-use decision_cli::core::ontology::role_binding::{
-    EscalationStep, RoleBinding, TriggerSignal,
-};
+use decision_cli::core::ontology::role_binding::{EscalationStep, RoleBinding, TriggerSignal};
 use decision_cli::vocab::{capability_graph, role_binding_graph};
 use decision_cli::StreamWriter;
 use oxi_events::Mutation;
@@ -174,9 +172,14 @@ fn unimplementable_critical_escalates_to_code_writer_heavy() {
     let (store, w) = writer();
     seed(&w);
     let mut runner = CannedImplementer;
-    let chain = dispatch_role(&store, &w, "implementer", routine_bundle(), &mut runner, |_| {
-        AttemptTokens::default()
-    })
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "implementer",
+        routine_bundle(),
+        &mut runner,
+        |_| AttemptTokens::default(),
+    )
     .expect("dispatch ok");
 
     // Exactly two sessions.
@@ -202,9 +205,14 @@ fn escalation_reason_is_feedback_unimplementable_critical() {
     let (store, w) = writer();
     seed(&w);
     let mut runner = CannedImplementer;
-    let chain = dispatch_role(&store, &w, "implementer", routine_bundle(), &mut runner, |_| {
-        AttemptTokens::default()
-    })
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "implementer",
+        routine_bundle(),
+        &mut runner,
+        |_| AttemptTokens::default(),
+    )
     .expect("dispatch ok");
 
     let s2 = chain.attempts[1].session_id.as_str();
@@ -238,9 +246,14 @@ fn second_call_with_no_feedback_does_not_trigger_third_escalation() {
     let (store, w) = writer();
     seed(&w);
     let mut runner = CannedImplementer;
-    let chain = dispatch_role(&store, &w, "implementer", routine_bundle(), &mut runner, |_| {
-        AttemptTokens::default()
-    })
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "implementer",
+        routine_bundle(),
+        &mut runner,
+        |_| AttemptTokens::default(),
+    )
     .expect("dispatch ok");
     assert_eq!(chain.attempts.len(), 2);
     // chain_head is the first session.
@@ -279,9 +292,14 @@ fn non_critical_unimplementable_does_not_escalate() {
         }
     }
     let mut runner = NonCritical;
-    let chain = dispatch_role(&store, &w, "implementer", routine_bundle(), &mut runner, |_| {
-        AttemptTokens::default()
-    })
+    let chain = dispatch_role(
+        &store,
+        &w,
+        "implementer",
+        routine_bundle(),
+        &mut runner,
+        |_| AttemptTokens::default(),
+    )
     .expect("dispatch ok");
     assert_eq!(chain.attempts.len(), 1, "non-critical must not escalate");
 }

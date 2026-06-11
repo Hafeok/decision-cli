@@ -182,7 +182,10 @@ pub(super) fn run(workdir: &Path, cmd: GraphCmd) -> ExitCode {
 }
 
 /// Build a [`GraphRunRequest`] from clap args (CLI ↔ MCP twin parity).
-pub fn graph_run_request(args: &GraphRunArgs, workdir: &Path) -> Result<GraphRunRequest, HandlerError> {
+pub fn graph_run_request(
+    args: &GraphRunArgs,
+    workdir: &Path,
+) -> Result<GraphRunRequest, HandlerError> {
     let _ = GraphRunFormat::parse(&args.format).ok_or_else(|| HandlerError::InvalidArgument {
         field: "format".to_string(),
         detail: format!(

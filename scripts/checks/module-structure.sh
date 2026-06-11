@@ -76,11 +76,17 @@ fi
 
 # decision-cli's per-ADR-013 canonical modules are aspirational and
 # overlap with the FT-018 vertical-slice migration. We assert the modules
-# that are stable across both layouts: an embedded ontology module, an
-# init module, and a vocab module. Anything else (`features/`, `core/`,
-# `cli/`, etc.) is permitted but not required by this check.
+# that are stable across both layouts: an embedded ontology module (the
+# store-facing glue post-ADR-086) and an init module. The vocab module
+# moved to dec-ontology under ADR-086 (FT-167) and is asserted there.
 if [ -d crates/decision-cli ]; then
-  check_crate_modules decision-cli ontology init vocab
+  check_crate_modules decision-cli ontology init
+fi
+
+# dec-ontology canonical modules per ADR-086: the pure domain layer owns
+# the typed artifact submodules and the IRI vocabulary.
+if [ -d crates/dec-ontology ]; then
+  check_crate_modules dec-ontology ontology vocab
 fi
 
 # -- (b) main.rs line cap --------------------------------------------------

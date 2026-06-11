@@ -113,7 +113,13 @@ fn implementer_role_quads(role: &NamedNode, authority: &NamedNode, g: &GraphName
     quads.push(authority_link_quad(role, authority, g));
     quads.extend(role_tool_quads(
         role,
-        &["read_file", "write_file", "run_build", "run_lint", "run_tests"],
+        &[
+            "read_file",
+            "write_file",
+            "run_build",
+            "run_lint",
+            "run_tests",
+        ],
         g,
     ));
     quads
@@ -341,4 +347,3 @@ fn short_iri_tail(iri: &NamedNode) -> String {
         .unwrap_or("authority")
         .replace(|c: char| !c.is_ascii_alphanumeric(), "-")
 }
-

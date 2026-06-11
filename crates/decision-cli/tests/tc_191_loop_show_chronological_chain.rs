@@ -119,7 +119,9 @@ fn seed_feedback(
         in_stream: stream_iri,
     };
     let quads = fb.to_quads(orchestration_graph());
-    writer.commit(Mutation::insert(quads)).expect("commit feedback");
+    writer
+        .commit(Mutation::insert(quads))
+        .expect("commit feedback");
     persist_store(&store, &dump).expect("persist store");
 }
 
@@ -206,7 +208,11 @@ fn tc_191_loop_show_chronological_chain() {
     // AC #2: chronological sort by routed_at — entries with no
     // routed_at sort first (empty string < any timestamp), then
     // FB-3 (08:00:02), then FB-2 (08:00:03).
-    let ids: Vec<&str> = resp.entries.iter().map(|e| e.feedback_iri.as_str()).collect();
+    let ids: Vec<&str> = resp
+        .entries
+        .iter()
+        .map(|e| e.feedback_iri.as_str())
+        .collect();
     assert_eq!(
         ids,
         vec![
@@ -223,7 +229,10 @@ fn tc_191_loop_show_chronological_chain() {
         .iter()
         .find(|e| e.feedback_iri == "urn:dec:feedback:tc-191:fb-2")
         .expect("FB-2");
-    assert_eq!(fb_2.addressing_artifact_short.as_deref(), Some("VG-PATCH-1"));
+    assert_eq!(
+        fb_2.addressing_artifact_short.as_deref(),
+        Some("VG-PATCH-1")
+    );
     assert_eq!(fb_2.source_session_short, "VG-007");
     assert_eq!(fb_2.source_tc_short, "TC-T191a");
 }

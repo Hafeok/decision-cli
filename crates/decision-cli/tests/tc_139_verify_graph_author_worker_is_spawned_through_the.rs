@@ -191,10 +191,7 @@ fn tc_139_verify_graph_author_worker_is_spawned_through_the() {
     let stdin_log = wd.path().join("stdin.bin");
     let script = write_sentinel_script(wd.path(), &argv_log, &stdin_log);
 
-    let _env_guard = EnvGuard::set(
-        "VERIFY_GRAPH_AUTHOR_CMD",
-        script.to_string_lossy().as_ref(),
-    );
+    let _env_guard = EnvGuard::set("VERIFY_GRAPH_AUTHOR_CMD", script.to_string_lossy().as_ref());
 
     let resolved = resolve(entry, ResolveInputs::default());
     match &resolved {
@@ -210,9 +207,9 @@ fn tc_139_verify_graph_author_worker_is_spawned_through_the() {
                 "resolved argv must point at the sentinel script"
             );
         }
-        Resolution::Missing { diagnostics } => panic!(
-            "expected resolve() to return Resolved (env path), got Missing: {diagnostics:?}"
-        ),
+        Resolution::Missing { diagnostics } => {
+            panic!("expected resolve() to return Resolved (env path), got Missing: {diagnostics:?}")
+        }
     }
 
     // ── AC #3: end-to-end spawn — `invoke_worker` actually executes
@@ -276,25 +273,24 @@ fn tc_139_resolver_env_var_path_returns_only_the_override_argv() {
     let mut f = fs::File::create(&script).expect("noop");
     writeln!(f, "#!/usr/bin/env bash").expect("write");
     writeln!(f, "exit 0").expect("write");
-    let mut perm = fs::metadata(&script)
-        .expect("stat")
-        .permissions();
+    let mut perm = fs::metadata(&script).expect("stat").permissions();
     perm.set_mode(0o755);
     fs::set_permissions(&script, perm).expect("chmod");
 
-    let _g = EnvGuard::set(
-        "VERIFY_GRAPH_AUTHOR_CMD",
-        script.to_string_lossy().as_ref(),
-    );
+    let _g = EnvGuard::set("VERIFY_GRAPH_AUTHOR_CMD", script.to_string_lossy().as_ref());
     match resolve(entry, ResolveInputs::default()) {
         Resolution::Resolved { kind, argv, .. } => {
             assert_eq!(kind, ResolutionKind::Env);
             assert_eq!(argv, vec![script.to_string_lossy().into_owned()]);
             assert!(
-                !argv.iter().any(|a| a.contains("verify_graph_author") && a != &script.to_string_lossy()),
+                !argv
+                    .iter()
+                    .any(|a| a.contains("verify_graph_author") && a != &script.to_string_lossy()),
                 "env path must NOT smuggle in a python3 -m verify_graph_author argv"
             );
         }
-        Resolution::Missing { diagnostics } => panic!("expected Resolved, got Missing: {diagnostics:?}"),
+        Resolution::Missing { diagnostics } => {
+            panic!("expected Resolved, got Missing: {diagnostics:?}")
+        }
     }
 }

@@ -39,10 +39,7 @@ fn tc_225_env_example_bootstrap_or_preserve() {
     assert!(!created2, "Should report that .env.example was not created");
 
     let content2 = fs::read_to_string(&env_example2).unwrap();
-    assert_eq!(
-        content2, custom_content,
-        ".env.example should be unchanged"
-    );
+    assert_eq!(content2, custom_content, ".env.example should be unchanged");
 
     // 3. Verify no .env file is created
     let env_file = repo_root.join(".env");

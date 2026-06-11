@@ -166,12 +166,7 @@ mod tests {
 
     #[test]
     fn default_ack_clears_the_gap_when_not_rejected() {
-        let rows = evaluate_cross_cutting(
-            &["ADR-001".into()],
-            &[],
-            &[],
-            &cfg(&["ADR-001"]),
-        );
+        let rows = evaluate_cross_cutting(&["ADR-001".into()], &[], &[], &cfg(&["ADR-001"]));
         assert_eq!(rows[0].status, CoverageStatus::DefaultAcknowledged);
         assert!(!rows[0].status.is_gap());
     }
@@ -182,12 +177,8 @@ mod tests {
             id: "ADR-001".into(),
             reason: "feature uses alt pattern".into(),
         }];
-        let rows = evaluate_cross_cutting(
-            &["ADR-001".into()],
-            &[],
-            &rejections,
-            &cfg(&["ADR-001"]),
-        );
+        let rows =
+            evaluate_cross_cutting(&["ADR-001".into()], &[], &rejections, &cfg(&["ADR-001"]));
         assert!(matches!(
             &rows[0].status,
             CoverageStatus::Intentional { reason } if reason == "feature uses alt pattern"
@@ -202,23 +193,13 @@ mod tests {
             id: "ADR-STRAY".into(),
             reason: "has no effect because not default-acked".into(),
         }];
-        let rows = evaluate_cross_cutting(
-            &["ADR-STRAY".into()],
-            &[],
-            &rejections,
-            &cfg(&[]),
-        );
+        let rows = evaluate_cross_cutting(&["ADR-STRAY".into()], &[], &rejections, &cfg(&[]));
         assert_eq!(rows[0].status, CoverageStatus::Missing);
     }
 
     #[test]
     fn neither_linked_nor_acked_is_a_missing_gap() {
-        let rows = evaluate_cross_cutting(
-            &["ADR-001".into()],
-            &[],
-            &[],
-            &cfg(&[]),
-        );
+        let rows = evaluate_cross_cutting(&["ADR-001".into()], &[], &[], &cfg(&[]));
         assert_eq!(rows[0].status, CoverageStatus::Missing);
         assert!(rows[0].status.is_gap());
     }

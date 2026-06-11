@@ -49,11 +49,7 @@ fn escalated_session_without_reason_fails() {
     // constraint fires.
     quads.extend(s.escalated_to_quad(orchestration_graph()));
     let err = validate_quads(&quads).expect_err("missing reason must fail");
-    assert!(
-        err.report.contains("escalation_reason"),
-        "{}",
-        err.report
-    );
+    assert!(err.report.contains("escalation_reason"), "{}", err.report);
 }
 
 #[test]
@@ -70,9 +66,5 @@ fn root_session_with_reason_fails() {
     };
     let quads = s.to_quads(orchestration_graph());
     let err = validate_quads(&quads).expect_err("reason without from must fail");
-    assert!(
-        err.report.contains("escalation_reason"),
-        "{}",
-        err.report
-    );
+    assert!(err.report.contains("escalation_reason"), "{}", err.report);
 }

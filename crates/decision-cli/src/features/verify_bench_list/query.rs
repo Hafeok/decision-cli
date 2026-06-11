@@ -20,7 +20,7 @@ use crate::core::handler::Error as HandlerError;
 use crate::core::sparql::{term_iri_string, term_literal_string};
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::vocab::{
-    IRI_DEC_ALLOWED_OPS, IRI_DEC_ENDPOINT, IRI_DEC_BENCH_PREFIX, IRI_DEC_BENCH_TYPE,
+    IRI_DEC_ALLOWED_OPS, IRI_DEC_BENCH_PREFIX, IRI_DEC_BENCH_TYPE, IRI_DEC_ENDPOINT,
     IRI_DEC_FIXTURE_SOURCE, IRI_DEC_GRAPH_VERIFY_BENCH, IRI_DEC_SAFETY_CLASS, IRI_DEC_SETUP,
     IRI_DEC_TEARDOWN, IRI_DEC_VERIFICATION_BENCH,
 };
@@ -62,7 +62,10 @@ pub(super) fn query_envs(
             detail: format!("bench-list SPARQL row: {e}"),
         })?;
         let env_iri = sol.get("bench").map(term_iri_string).unwrap_or_default();
-        let Some(id) = env_iri.strip_prefix(IRI_DEC_BENCH_PREFIX).map(str::to_string) else {
+        let Some(id) = env_iri
+            .strip_prefix(IRI_DEC_BENCH_PREFIX)
+            .map(str::to_string)
+        else {
             continue;
         };
         let (allowed_ops, row_error) = read_allowed_ops_resilient(&store, &env_iri);
@@ -344,7 +347,10 @@ mod tests {
     fn sort_key_orders_numeric_tail() {
         let mut ids = vec!["BNCH-002", "BNCH-010", "BNCH-001-foo", "BNCH-007"];
         ids.sort_by_key(|s| env_sort_key(s));
-        assert_eq!(ids, vec!["BNCH-001-foo", "BNCH-002", "BNCH-007", "BNCH-010"]);
+        assert_eq!(
+            ids,
+            vec!["BNCH-001-foo", "BNCH-002", "BNCH-007", "BNCH-010"]
+        );
     }
 
     #[test]

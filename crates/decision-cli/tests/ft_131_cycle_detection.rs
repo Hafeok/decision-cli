@@ -56,7 +56,11 @@ impl GraphInspector for OscillatingInspector {
     fn pending_proposals_count(&self, _: &str) -> Result<usize, InspectError> {
         // Oscillate between 0 and 1 to simulate author->judge->author loop
         *self.iteration.borrow_mut() += 1;
-        Ok(if *self.iteration.borrow() % 2 == 0 { 0 } else { 1 })
+        Ok(if *self.iteration.borrow() % 2 == 0 {
+            0
+        } else {
+            1
+        })
     }
 }
 
@@ -82,7 +86,10 @@ fn cycle_detected_on_author_judge_oscillation() {
             }
             Action::Stuck { reason } if reason.contains("did not change state") => {
                 // Pairwise no-progress detected
-                assert!(i < max_iter - 1, "no-progress should be detected before max_iter");
+                assert!(
+                    i < max_iter - 1,
+                    "no-progress should be detected before max_iter"
+                );
                 stuck_on_cycle = true;
                 break;
             }

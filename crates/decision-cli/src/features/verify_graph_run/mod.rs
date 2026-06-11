@@ -20,7 +20,9 @@ use serde_json::json;
 
 use crate::core::handler::{Error as HandlerError, Request, Response};
 use crate::core::mcp::{ToolDescriptor, ToolHandler};
-use crate::core::ontology::verification_graph::{from_turtle as graph_from_turtle, VerificationGraph};
+use crate::core::ontology::verification_graph::{
+    from_turtle as graph_from_turtle, VerificationGraph,
+};
 use crate::core::verify::runner::{run_graph, RunGraphRequest, RunnerError, TriggerKind};
 use crate::core::vocab::IRI_DEC_VERIFY_GRAPH_PREFIX;
 
@@ -136,12 +138,13 @@ impl GraphRunResponse {
 
 /// Parse the structured `Request` envelope into [`GraphRunRequest`].
 pub fn parse_request(req: &Request) -> Result<GraphRunRequest, HandlerError> {
-    let mut parsed: GraphRunRequest = serde_json::from_value(req.arguments.clone()).map_err(|e| {
-        HandlerError::InvalidArgument {
-            field: "arguments".to_string(),
-            detail: format!("malformed dec_verify_graph_run arguments: {e}"),
-        }
-    })?;
+    let mut parsed: GraphRunRequest =
+        serde_json::from_value(req.arguments.clone()).map_err(|e| {
+            HandlerError::InvalidArgument {
+                field: "arguments".to_string(),
+                detail: format!("malformed dec_verify_graph_run arguments: {e}"),
+            }
+        })?;
     if parsed.workdir.is_none() {
         parsed.workdir = std::env::current_dir().ok();
     }
@@ -266,7 +269,10 @@ fn map_runner_error(err: RunnerError) -> HandlerError {
         RunnerError::SafetyViolation { step, op } => HandlerError::Internal {
             detail: format!("safety violation: step <{step}> requires op <{op}>"),
         },
-        RunnerError::EnvSetupFailed { exit_code, stderr_excerpt } => HandlerError::Internal {
+        RunnerError::EnvSetupFailed {
+            exit_code,
+            stderr_excerpt,
+        } => HandlerError::Internal {
             detail: format!("env setup failed (exit {exit_code}): {stderr_excerpt}"),
         },
         RunnerError::ResultWriteFailed { source } => HandlerError::Internal {

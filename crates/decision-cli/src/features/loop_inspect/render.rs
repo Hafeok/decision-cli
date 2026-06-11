@@ -34,9 +34,9 @@ impl OutputFormat {
 #[must_use]
 pub fn show_response(resp: &LoopShowResponse, format: OutputFormat) -> String {
     match format {
-        OutputFormat::Json => serde_json::to_string_pretty(resp)
-            .unwrap_or_else(|_| "{}".to_string())
-            + "\n",
+        OutputFormat::Json => {
+            serde_json::to_string_pretty(resp).unwrap_or_else(|_| "{}".to_string()) + "\n"
+        }
         OutputFormat::Text => render_show_text(resp),
     }
 }
@@ -44,9 +44,9 @@ pub fn show_response(resp: &LoopShowResponse, format: OutputFormat) -> String {
 #[must_use]
 pub fn list_response(resp: &LoopListResponse, format: OutputFormat) -> String {
     match format {
-        OutputFormat::Json => serde_json::to_string_pretty(resp)
-            .unwrap_or_else(|_| "{}".to_string())
-            + "\n",
+        OutputFormat::Json => {
+            serde_json::to_string_pretty(resp).unwrap_or_else(|_| "{}".to_string()) + "\n"
+        }
         OutputFormat::Text => render_list_text(resp),
     }
 }
@@ -95,7 +95,12 @@ fn render_show_text(resp: &LoopShowResponse) -> String {
         .filter(|e| matches!(e.state.as_str(), "produced" | "routed" | "received"))
         .count();
     let closed = resp.entries.len() - open;
-    out.push_str(&format!("\n  Total: {} ({} open, {} closed)\n", resp.entries.len(), open, closed));
+    out.push_str(&format!(
+        "\n  Total: {} ({} open, {} closed)\n",
+        resp.entries.len(),
+        open,
+        closed
+    ));
     out
 }
 

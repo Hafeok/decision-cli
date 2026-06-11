@@ -201,7 +201,9 @@ fn tc_087_internal_product_graph_source_of_truth() {
         report.cross_cutting_gaps,
     );
     assert!(
-        report.cross_cutting_linked.contains(&ADR_LINKED.to_string()),
+        report
+            .cross_cutting_linked
+            .contains(&ADR_LINKED.to_string()),
         "ADR-001 must appear in cross_cutting_linked; got {:?}",
         report.cross_cutting_linked,
     );

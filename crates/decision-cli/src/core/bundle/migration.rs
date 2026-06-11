@@ -9,10 +9,10 @@
 
 use std::sync::Arc;
 
+use oxi_events::Mutation;
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Subject, Term};
 use oxigraph::sparql::QueryResults;
 use oxigraph::store::Store;
-use oxi_events::Mutation;
 use thiserror::Error;
 
 use crate::core::stream_writer::StreamWriter;

@@ -16,5 +16,7 @@ mod plan;
 pub mod yaml;
 
 pub use catalog::{bootstrap_catalog, BootstrapError, BootstrapReport};
-pub use ft101_catalog::{seed_ft101_catalog, SeedError as Ft101SeedError, SeedReport as Ft101SeedReport};
+pub use ft101_catalog::{
+    seed_ft101_catalog, SeedError as Ft101SeedError, SeedReport as Ft101SeedReport,
+};
 pub use migrate::{migrate_bundle_stakes, migrate_session_token_breakdown};

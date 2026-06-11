@@ -225,7 +225,8 @@ fn collect_allowed_tools(store: &Store, role_iri: &str) -> Result<Vec<String>> {
         role = role_iri,
     );
     let mut out: Vec<String> = Vec::new();
-    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("allowed-tools query")? else {
+    let QueryResults::Solutions(sols) = store.query(q.as_str()).context("allowed-tools query")?
+    else {
         return Ok(out);
     };
     for sol in sols {

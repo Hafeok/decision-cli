@@ -130,9 +130,30 @@ fn add_author_worker() -> TaskTypeDecl {
         name: "add-author-worker".to_string(),
         cells: vec![
             cell("capability_binding", "n-quads", here, "", &[], ""),
-            cell("pydantic_io_models", "python-module", here, "implementer", &[], ""),
-            cell("system_prompt", "markdown", here, "implementer", &["pydantic_io_models"], ""),
-            cell("fixtures_example_inputs", "json-fixtures", here, "", &["pydantic_io_models"], ""),
+            cell(
+                "pydantic_io_models",
+                "python-module",
+                here,
+                "implementer",
+                &[],
+                "",
+            ),
+            cell(
+                "system_prompt",
+                "markdown",
+                here,
+                "implementer",
+                &["pydantic_io_models"],
+                "",
+            ),
+            cell(
+                "fixtures_example_inputs",
+                "json-fixtures",
+                here,
+                "",
+                &["pydantic_io_models"],
+                "",
+            ),
             cell(
                 "agent_loop",
                 "python-module",
@@ -146,7 +167,11 @@ fn add_author_worker() -> TaskTypeDecl {
                 "python-module",
                 here,
                 "implementer",
-                &["pydantic_io_models", "fixtures_example_inputs", "system_prompt"],
+                &[
+                    "pydantic_io_models",
+                    "fixtures_example_inputs",
+                    "system_prompt",
+                ],
                 "",
             ),
         ],
@@ -178,7 +203,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &[],
-                "crates/decision-cli/src/core/ontology/{artifact_name}.rs",
+                "crates/dec-ontology/src/ontology/{artifact_name}.rs",
             ),
             cell(
                 "shacl_shape",
@@ -186,7 +211,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["rust_struct"],
-                "crates/decision-cli/src/core/ontology/shapes/{artifact_name}.shacl.ttl",
+                "crates/dec-ontology/src/ontology/shapes/{artifact_name}.shacl.ttl",
             ),
             cell(
                 "iri_module_consts",
@@ -194,7 +219,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "",
                 &["rust_struct"],
-                "crates/decision-cli/src/core/vocab/{artifact_name}.rs",
+                "crates/dec-ontology/src/vocab/{artifact_name}.rs",
             ),
             cell(
                 "parser",
@@ -202,7 +227,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["rust_struct", "iri_module_consts"],
-                "crates/decision-cli/src/core/ontology/{artifact_name}/parser.rs",
+                "crates/dec-ontology/src/ontology/{artifact_name}/parser.rs",
             ),
             cell(
                 "emitter",
@@ -210,7 +235,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["rust_struct", "iri_module_consts"],
-                "crates/decision-cli/src/core/ontology/{artifact_name}/emitter.rs",
+                "crates/dec-ontology/src/ontology/{artifact_name}/emitter.rs",
             ),
             cell(
                 "round_trip_tests",
@@ -218,7 +243,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 here,
                 "implementer",
                 &["rust_struct", "shacl_shape", "parser", "emitter"],
-                "crates/decision-cli/src/core/ontology/{artifact_name}/tests.rs",
+                "crates/dec-ontology/src/ontology/{artifact_name}/tests.rs",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
@@ -247,7 +272,14 @@ fn add_cli_subcommand() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "add-cli-subcommand".to_string(),
         cells: vec![
-            cell("clap_args_module", "rust-source", here, "implementer", &[], ""),
+            cell(
+                "clap_args_module",
+                "rust-source",
+                here,
+                "implementer",
+                &[],
+                "",
+            ),
             cell(
                 "handler_module",
                 "rust-source",
@@ -309,7 +341,14 @@ fn extend_planner_classifier() -> TaskTypeDecl {
     TaskTypeDecl {
         name: "extend-planner-classifier".to_string(),
         cells: vec![
-            cell("inspector_trait_method", "rust-source", here, "implementer", &[], ""),
+            cell(
+                "inspector_trait_method",
+                "rust-source",
+                here,
+                "implementer",
+                &[],
+                "",
+            ),
             cell(
                 "inspector_default_impl",
                 "rust-source",
@@ -356,9 +395,7 @@ fn extend_planner_classifier() -> TaskTypeDecl {
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
-            script_path: PathBuf::from(
-                "tests/scripts/cluster-audit-extend-planner-classifier.sh",
-            ),
+            script_path: PathBuf::from("tests/scripts/cluster-audit-extend-planner-classifier.sh"),
             timeout_seconds: 60,
         },
         parameters: Vec::new(),
@@ -426,9 +463,7 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
-            script_path: PathBuf::from(
-                "scripts/checks/cluster-audit-extend-role-catalog-seed.py",
-            ),
+            script_path: PathBuf::from("scripts/checks/cluster-audit-extend-role-catalog-seed.py"),
             timeout_seconds: 60,
         },
         parameters: Vec::new(),

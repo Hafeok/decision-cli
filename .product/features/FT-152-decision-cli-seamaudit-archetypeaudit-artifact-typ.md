@@ -38,7 +38,7 @@ ArchetypeAudit is a sibling type — same shape but different scope. It checks t
 
 ### Outputs
 
-**Rust structs** (`crates/decision-cli/src/core/ontology/audit.rs`):
+**Rust structs** (`crates/dec-ontology/src/ontology/audit.rs`):
 
 ```rust
 pub struct SeamAudit {

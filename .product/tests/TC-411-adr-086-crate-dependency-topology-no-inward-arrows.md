@@ -2,7 +2,7 @@
 id: TC-411
 title: ADR-086 crate dependency topology — no inward arrows violated across the workspace
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-167
@@ -17,6 +17,8 @@ runner-timeout: 30
 observes:
 - exit-code
 - stdout
+last-run: 2026-06-11T13:27:53.033915894+00:00
+last-run-duration: 0.0s
 ---
 
 ## Purpose

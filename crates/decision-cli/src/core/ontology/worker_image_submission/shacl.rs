@@ -24,11 +24,10 @@ use crate::core::ontology::EXTERNAL_ORIGIN_PROP;
 use crate::core::sbom_referrer::validate_oci_referrer_uri;
 use crate::core::vocab::{
     IRI_DEC_CANDIDATE_REGISTRY_REF, IRI_DEC_CLAIMED_BUILD_RUN_URL, IRI_DEC_CLAIMED_CAPABILITY_TAG,
-    IRI_DEC_CLAIMED_SBOM_REF, IRI_DEC_CLAIMED_SIGNATURE_ISSUER,
-    IRI_DEC_CLAIMED_SIGNATURE_SUBJECT, IRI_DEC_CLAIMED_SOURCE_COMMIT_HASH,
-    IRI_DEC_CLAIMED_SOURCE_REPO_URI, IRI_DEC_SUBMISSION_ID, IRI_DEC_SUBMISSION_LIFECYCLE_STATE,
-    SUBMISSION_STATE_ADMITTED, SUBMISSION_STATE_RECEIVED, SUBMISSION_STATE_REJECTED,
-    SUBMISSION_STATE_UNDER_REVIEW,
+    IRI_DEC_CLAIMED_SBOM_REF, IRI_DEC_CLAIMED_SIGNATURE_ISSUER, IRI_DEC_CLAIMED_SIGNATURE_SUBJECT,
+    IRI_DEC_CLAIMED_SOURCE_COMMIT_HASH, IRI_DEC_CLAIMED_SOURCE_REPO_URI, IRI_DEC_SUBMISSION_ID,
+    IRI_DEC_SUBMISSION_LIFECYCLE_STATE, SUBMISSION_STATE_ADMITTED, SUBMISSION_STATE_RECEIVED,
+    SUBMISSION_STATE_REJECTED, SUBMISSION_STATE_UNDER_REVIEW,
 };
 
 use super::types::{RDF_TYPE, WORKER_IMAGE_SUBMISSION_CLASS_IRI};
@@ -94,7 +93,13 @@ fn submission_subjects(quads: &[Quad]) -> Vec<NamedNode> {
 
 fn validate_subject(quads: &[Quad], subject: &NamedNode) -> Vec<WorkerImageSubmissionViolation> {
     let mut v = Vec::new();
-    require_string_one(quads, subject, IRI_DEC_SUBMISSION_ID, "dec:submission_id", &mut v);
+    require_string_one(
+        quads,
+        subject,
+        IRI_DEC_SUBMISSION_ID,
+        "dec:submission_id",
+        &mut v,
+    );
     require_registry_ref(quads, subject, &mut v);
     require_min_one_capability_tag(quads, subject, &mut v);
     check_required_string_block(quads, subject, &mut v);

@@ -251,10 +251,9 @@ pub fn assemble_enrichment(
     }
 
     let store_query_surface = derive_store_query_surface(env);
-    let catalog_populated = !cli_surface.commands.is_empty()
-        || !ontology_vocabulary.namespace.is_empty();
-    let env_capabilities =
-        derive_env_capabilities(env, concrete, catalog_populated, &mut metadata);
+    let catalog_populated =
+        !cli_surface.commands.is_empty() || !ontology_vocabulary.namespace.is_empty();
+    let env_capabilities = derive_env_capabilities(env, concrete, catalog_populated, &mut metadata);
     let exemplar_graphs = query_exemplars(store, env, &mut metadata)?;
 
     Ok(EnrichmentFields {
@@ -350,9 +349,11 @@ fn query_cli_surface(
         cat = IRI_DEC_GRAPH_CATALOG,
         ver = dec_version,
     );
-    let results = store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("enrichment: query_cli_surface SPARQL failed: {e}"),
-    })?;
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("enrichment: query_cli_surface SPARQL failed: {e}"),
+        })?;
     let mut commands: Vec<CliCommand> = Vec::new();
     if let QueryResults::Solutions(sols) = results {
         for sol in sols.flatten() {
@@ -365,10 +366,7 @@ fn query_cli_surface(
                 Some(Term::Literal(ver_lit)),
             ) = (s, cmd, ver)
             {
-                let cr_id = short_id_from_iri(
-                    subject.as_str(),
-                    "https://decision-cli.dev/ns/cr/",
-                );
+                let cr_id = short_id_from_iri(subject.as_str(), "https://decision-cli.dev/ns/cr/");
                 metadata.catalog_hashes.push(CatalogHashEntry {
                     id: cr_id.clone(),
                     content_hash: content_hash_of(&format!(
@@ -434,9 +432,11 @@ fn query_ontology_vocabulary(
          }} LIMIT 1",
         cat = IRI_DEC_GRAPH_CATALOG,
     );
-    let results = store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("enrichment: query_ontology_vocabulary SPARQL failed: {e}"),
-    })?;
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("enrichment: query_ontology_vocabulary SPARQL failed: {e}"),
+        })?;
     let mut vocab = OntologyVocabulary::default();
     if let QueryResults::Solutions(sols) = results {
         for sol in sols.flatten() {
@@ -451,10 +451,7 @@ fn query_ontology_vocabulary(
                 Some(Term::Literal(body_lit)),
             ) = (s, ns, prefix, body)
             {
-                let od_id = short_id_from_iri(
-                    subject.as_str(),
-                    "https://decision-cli.dev/ns/od/",
-                );
+                let od_id = short_id_from_iri(subject.as_str(), "https://decision-cli.dev/ns/od/");
                 metadata.catalog_hashes.push(CatalogHashEntry {
                     id: od_id.clone(),
                     content_hash: content_hash_of(&format!(
@@ -667,9 +664,11 @@ fn query_exemplars(
         cat = IRI_DEC_GRAPH_CATALOG,
         sc = safety_class,
     );
-    let results = store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("enrichment: query_exemplars SPARQL failed: {e}"),
-    })?;
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("enrichment: query_exemplars SPARQL failed: {e}"),
+        })?;
     let mut out: Vec<ExemplarRecord> = Vec::new();
     if let QueryResults::Solutions(sols) = results {
         for sol in sols.flatten() {
@@ -684,8 +683,7 @@ fn query_exemplars(
                 Some(Term::Literal(rationale_lit)),
             ) = (s, vg, pattern, rationale)
             {
-                let ex_id =
-                    short_id_from_iri(subject.as_str(), "https://decision-cli.dev/ns/ex/");
+                let ex_id = short_id_from_iri(subject.as_str(), "https://decision-cli.dev/ns/ex/");
                 metadata.catalog_hashes.push(CatalogHashEntry {
                     id: ex_id.clone(),
                     content_hash: content_hash_of(&format!(
@@ -723,10 +721,7 @@ pub fn read_concrete_capabilities_from_turtle(
         return Ok(None);
     }
     let bytes = fs::read(path).map_err(|e| HandlerError::Internal {
-        detail: format!(
-            "enrichment: reading env file {p}: {e}",
-            p = path.display()
-        ),
+        detail: format!("enrichment: reading env file {p}: {e}", p = path.display()),
     })?;
     let store = Store::new().map_err(|e| HandlerError::Internal {
         detail: format!("enrichment: temp store: {e}"),
@@ -752,9 +747,11 @@ pub fn read_concrete_capabilities_from_turtle(
          }}",
         g = staging.as_str()
     );
-    let results = store.query(q.as_str()).map_err(|e| HandlerError::Internal {
-        detail: format!("enrichment: locate concreteCapabilities: {e}"),
-    })?;
+    let results = store
+        .query(q.as_str())
+        .map_err(|e| HandlerError::Internal {
+            detail: format!("enrichment: locate concreteCapabilities: {e}"),
+        })?;
     let QueryResults::Solutions(sols) = results else {
         return Ok(None);
     };
@@ -769,13 +766,27 @@ pub fn read_concrete_capabilities_from_turtle(
         return Ok(None);
     };
     let mut out = ConcreteCapabilities::default();
-    out.binaries_on_path = walk_list(&store, &subject, "https://decision-cli.dev/ns#binariesOnPath");
-    out.writable_paths = walk_list(&store, &subject, "https://decision-cli.dev/ns#writablePaths");
+    out.binaries_on_path = walk_list(
+        &store,
+        &subject,
+        "https://decision-cli.dev/ns#binariesOnPath",
+    );
+    out.writable_paths = walk_list(
+        &store,
+        &subject,
+        "https://decision-cli.dev/ns#writablePaths",
+    );
     out.allowed_hosts = walk_list(&store, &subject, "https://decision-cli.dev/ns#allowedHosts");
-    out.environment_variables =
-        walk_list(&store, &subject, "https://decision-cli.dev/ns#environmentVariables");
-    out.pre_seeded_artifacts =
-        walk_list(&store, &subject, "https://decision-cli.dev/ns#preSeededArtifacts");
+    out.environment_variables = walk_list(
+        &store,
+        &subject,
+        "https://decision-cli.dev/ns#environmentVariables",
+    );
+    out.pre_seeded_artifacts = walk_list(
+        &store,
+        &subject,
+        "https://decision-cli.dev/ns#preSeededArtifacts",
+    );
     Ok(Some(out))
 }
 
@@ -790,12 +801,7 @@ fn walk_list(store: &Store, subject: &Term, predicate: &str) -> Vec<String> {
     };
     let mut head_term: Option<Term> = None;
     for quad in store
-        .quads_for_pattern(
-            Some(subj_ref.as_ref()),
-            Some(pred.as_ref()),
-            None,
-            None,
-        )
+        .quads_for_pattern(Some(subj_ref.as_ref()), Some(pred.as_ref()), None, None)
         .filter_map(Result::ok)
     {
         head_term = Some(quad.object);
@@ -840,12 +846,7 @@ fn walk_list(store: &Store, subject: &Term, predicate: &str) -> Vec<String> {
         // rest
         let mut next: Option<Term> = None;
         for quad in store
-            .quads_for_pattern(
-                Some(cur_subj.as_ref()),
-                Some(rdf_rest.as_ref()),
-                None,
-                None,
-            )
+            .quads_for_pattern(Some(cur_subj.as_ref()), Some(rdf_rest.as_ref()), None, None)
             .filter_map(Result::ok)
         {
             next = Some(quad.object);

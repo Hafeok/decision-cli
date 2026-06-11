@@ -153,12 +153,7 @@ impl BundleBuilder {
     }
 }
 
-pub(super) fn literal_quad(
-    s: &NamedNode,
-    p: NamedNodeRef<'_>,
-    value: &str,
-    g: &GraphName,
-) -> Quad {
+pub(super) fn literal_quad(s: &NamedNode, p: NamedNodeRef<'_>, value: &str, g: &GraphName) -> Quad {
     Quad::new(
         s.clone(),
         p.into_owned(),
@@ -203,7 +198,10 @@ mod tests {
         .build();
         assert_eq!(b.stakes, Stakes::Routine);
         assert_eq!(b.hash, "abc123");
-        assert_eq!(b.iri().as_str(), "https://decision-cli.dev/ns/bundle/abc123");
+        assert_eq!(
+            b.iri().as_str(),
+            "https://decision-cli.dev/ns/bundle/abc123"
+        );
     }
 
     #[test]

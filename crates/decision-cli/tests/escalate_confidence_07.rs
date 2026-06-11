@@ -23,9 +23,7 @@ use decision_cli::core::dispatch::{
 use decision_cli::core::ontology::capability::{
     Capability, CapabilityStatus, CostCurrency, Endpoint,
 };
-use decision_cli::core::ontology::role_binding::{
-    EscalationStep, RoleBinding, TriggerSignal,
-};
+use decision_cli::core::ontology::role_binding::{EscalationStep, RoleBinding, TriggerSignal};
 use decision_cli::core::ontology::verdict::Verdict;
 use decision_cli::vocab::{capability_graph, role_binding_graph};
 use decision_cli::StreamWriter;
@@ -122,7 +120,10 @@ fn commit(w: &StreamWriter, quads: Vec<Quad>) {
 
 fn seed(w: &StreamWriter) {
     commit(w, code_writer().to_quads(capability_graph()));
-    commit(w, standard_reasoning_frontier().to_quads(capability_graph()));
+    commit(
+        w,
+        standard_reasoning_frontier().to_quads(capability_graph()),
+    );
     commit(w, verifier_binding().to_quads(role_binding_graph()));
 }
 
@@ -141,7 +142,11 @@ impl WorkerRunner for CannedVerifier {
         session_id: &SessionId,
     ) -> Result<DispatchAttempt, EscalationError> {
         let idx = prior.len();
-        let (kind, confidence) = self.calls.get(idx).copied().unwrap_or((Verdict::Approved, Some(1.0)));
+        let (kind, confidence) = self
+            .calls
+            .get(idx)
+            .copied()
+            .unwrap_or((Verdict::Approved, Some(1.0)));
         Ok(DispatchAttempt {
             session_id: session_id.clone(),
             capability: capability.clone(),
@@ -300,7 +305,9 @@ fn enriched_bundle_carries_prior_attempt_framing() {
     };
     let block = render_prior_attempt_block(&prior, 1);
     assert!(
-        block.contains("## Prior attempt (tier 1, capability code-writer, model qwen3-coder-30b-a3b-instruct)"),
+        block.contains(
+            "## Prior attempt (tier 1, capability code-writer, model qwen3-coder-30b-a3b-instruct)"
+        ),
         "missing prior-attempt header: {}",
         block
     );

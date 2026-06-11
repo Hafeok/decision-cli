@@ -45,7 +45,11 @@ fn tc_224_generator_wires_one_subscription_per_runner_type() {
         "---\nrunner: pytest\n---\n# Test\n",
     )
     .unwrap();
-    fs::write(tests_dir.join("TC-007.md"), "---\n---\n# Test with no runner\n").unwrap();
+    fs::write(
+        tests_dir.join("TC-007.md"),
+        "---\n---\n# Test with no runner\n",
+    )
+    .unwrap();
 
     let result = decision_cli::init::run(&repo_root, DefinitionSource::AutoDiscover);
     assert!(result.is_ok(), "Init should succeed");

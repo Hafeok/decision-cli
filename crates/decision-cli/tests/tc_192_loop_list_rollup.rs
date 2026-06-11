@@ -111,7 +111,9 @@ fn seed_defect(
         in_stream: stream_iri,
     };
     let quads = fb.to_quads(orchestration_graph());
-    writer.commit(Mutation::insert(quads)).expect("commit feedback");
+    writer
+        .commit(Mutation::insert(quads))
+        .expect("commit feedback");
     persist_store(&store, &dump).expect("persist store");
 }
 
@@ -131,9 +133,30 @@ fn tc_192_loop_list_rollup() {
     let tc_c = "https://decision-cli.dev/ns/tc/TC-T192C";
 
     // FT-T192a: 3 open + 1 addressed.
-    seed_defect(wd.path(), "urn:dec:feedback:tc-192:a-open-1", tc_a, "produced", None, None);
-    seed_defect(wd.path(), "urn:dec:feedback:tc-192:a-open-2", tc_a, "produced", None, None);
-    seed_defect(wd.path(), "urn:dec:feedback:tc-192:a-open-3", tc_a, "routed", Some("2026-05-27T01:00:00Z"), None);
+    seed_defect(
+        wd.path(),
+        "urn:dec:feedback:tc-192:a-open-1",
+        tc_a,
+        "produced",
+        None,
+        None,
+    );
+    seed_defect(
+        wd.path(),
+        "urn:dec:feedback:tc-192:a-open-2",
+        tc_a,
+        "produced",
+        None,
+        None,
+    );
+    seed_defect(
+        wd.path(),
+        "urn:dec:feedback:tc-192:a-open-3",
+        tc_a,
+        "routed",
+        Some("2026-05-27T01:00:00Z"),
+        None,
+    );
     seed_defect(
         wd.path(),
         "urn:dec:feedback:tc-192:a-closed-1",
@@ -144,7 +167,14 @@ fn tc_192_loop_list_rollup() {
     );
 
     // FT-T192b: 1 open.
-    seed_defect(wd.path(), "urn:dec:feedback:tc-192:b-open-1", tc_b, "produced", None, None);
+    seed_defect(
+        wd.path(),
+        "urn:dec:feedback:tc-192:b-open-1",
+        tc_b,
+        "produced",
+        None,
+        None,
+    );
 
     // FT-T192c: 2 addressed (all closed).
     seed_defect(
@@ -209,4 +239,3 @@ fn tc_192_loop_list_rollup() {
         "closed-mode only includes fully-closed features; got {closed_ids:?}"
     );
 }
-

@@ -249,11 +249,7 @@ fn happy_path_six_kinds() {
         fields_of(&[("condition", &file_step_iri), ("timeout", "PT5S")]),
     );
     // Step 5: capture.
-    add_step(
-        tmp.path(),
-        "capture",
-        fields_of(&[("bind-as", "summary")]),
-    );
+    add_step(tmp.path(), "capture", fields_of(&[("bind-as", "summary")]));
 
     // Invoke the runner.
     let req = RunGraphRequest {
@@ -281,11 +277,7 @@ fn happy_path_six_kinds() {
     let files = std::fs::read_dir(&result_dir)
         .expect("result dir")
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .map_or(false, |ext| ext == "ttl")
-        })
+        .filter(|e| e.path().extension().map_or(false, |ext| ext == "ttl"))
         .count();
     assert_eq!(files, 1, "exactly one VGR.ttl produced");
 
@@ -337,7 +329,10 @@ fn negative_path_mutated_expect_rows() {
     // important invariant is the trace pattern and that no feedback is
     // emitted — the verdict variant is a function of the linkage.
     assert!(
-        matches!(response.verdict, Verdict::AmendmentRequired | Verdict::Rejected),
+        matches!(
+            response.verdict,
+            Verdict::AmendmentRequired | Verdict::Rejected
+        ),
         "expected fail-derived verdict, got {:?}",
         response.verdict
     );

@@ -1,6 +1,8 @@
 //! Unit tests for SBOM OCI referrer URI validation and curator-bundle assembly (FT-091).
 
-use crate::core::ontology::worker_image_submission::{SubmissionLifecycleState, WorkerImageSubmission};
+use crate::core::ontology::worker_image_submission::{
+    SubmissionLifecycleState, WorkerImageSubmission,
+};
 
 use super::{
     assemble_curator_submission_bundle, validate_oci_referrer_uri, CuratorSubmissionBundleError,
@@ -44,21 +46,30 @@ fn rejects_empty_string() {
 fn rejects_mutable_tag_reference() {
     let err = validate_oci_referrer_uri("ghcr.io/example/worker:latest")
         .expect_err("mutable-tag URI must reject");
-    assert!(err.violations.iter().any(|v| v.code == "sbom:digest-pinned"));
+    assert!(err
+        .violations
+        .iter()
+        .any(|v| v.code == "sbom:digest-pinned"));
 }
 
 #[test]
 fn rejects_short_digest() {
     let err = validate_oci_referrer_uri("ghcr.io/example/worker@sha256:cafe")
         .expect_err("short-digest URI must reject");
-    assert!(err.violations.iter().any(|v| v.code == "sbom:digest-length"));
+    assert!(err
+        .violations
+        .iter()
+        .any(|v| v.code == "sbom:digest-length"));
 }
 
 #[test]
 fn rejects_uppercase_digest() {
     let s = format!("ghcr.io/example/worker@sha256:{}", "A".repeat(64));
     let err = validate_oci_referrer_uri(&s).expect_err("uppercase digest must reject");
-    assert!(err.violations.iter().any(|v| v.code == "sbom:digest-charset"));
+    assert!(err
+        .violations
+        .iter()
+        .any(|v| v.code == "sbom:digest-charset"));
 }
 
 #[test]
@@ -104,8 +115,8 @@ fn collects_every_violation_in_one_pass() {
     // digest (wrong algorithm, wrong length). The validator must surface
     // every defect so the WorkerCurator's rejection Feedback can name
     // them all at once.
-    let err = validate_oci_referrer_uri("FOO@sha512:xyz")
-        .expect_err("multi-violation URI must reject");
+    let err =
+        validate_oci_referrer_uri("FOO@sha512:xyz").expect_err("multi-violation URI must reject");
     let codes: Vec<&str> = err.violations.iter().map(|v| v.code).collect();
     assert!(
         codes.contains(&"sbom:reference-shape"),
@@ -120,10 +131,7 @@ fn collects_every_violation_in_one_pass() {
 fn well_formed_submission(id: &str, sbom_ref: &str) -> WorkerImageSubmission {
     WorkerImageSubmission {
         id: id.to_string(),
-        candidate_registry_ref: format!(
-            "ghcr.io/example/{id}@sha256:{}",
-            "deadbeef".repeat(8)
-        ),
+        candidate_registry_ref: format!("ghcr.io/example/{id}@sha256:{}", "deadbeef".repeat(8)),
         claimed_capability_tags: vec!["code-writer".to_string()],
         claimed_compatible_roles: Vec::new(),
         claimed_sbom_ref: sbom_ref.to_string(),
@@ -176,8 +184,8 @@ fn curator_bundle_refuses_whitespace_only_sbom() {
 #[test]
 fn curator_bundle_refuses_malformed_sbom() {
     let sub = well_formed_submission("sub-001", "ghcr.io/example/worker:latest");
-    let err = assemble_curator_submission_bundle(&sub)
-        .expect_err("malformed sbom_ref must be refused");
+    let err =
+        assemble_curator_submission_bundle(&sub).expect_err("malformed sbom_ref must be refused");
     assert!(matches!(
         err,
         CuratorSubmissionBundleError::SbomMalformed { .. }

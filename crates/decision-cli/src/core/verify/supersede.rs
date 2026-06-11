@@ -67,9 +67,8 @@ mod tests {
 
     #[test]
     fn rejects_self_supersession() {
-        let err =
-            supersede_graph(std::path::Path::new("/nonexistent"), "urn:vg:1", "urn:vg:1")
-                .unwrap_err();
+        let err = supersede_graph(std::path::Path::new("/nonexistent"), "urn:vg:1", "urn:vg:1")
+            .unwrap_err();
         assert!(format!("{err}").contains("cannot point at the graph itself"));
     }
 }

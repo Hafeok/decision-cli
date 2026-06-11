@@ -13,12 +13,8 @@
 use decision_cli::verify_graph_generate::enrichment::{
     CliCommand, CliSurface, EnrichmentFields, EnvCapabilities, OntologyVocabulary,
 };
-use decision_cli::verify_graph_generate::proposal::{
-    GraphProposal, NewProposal, ProposedStep,
-};
-use decision_cli::verify_graph_generate::validator::{
-    validate_proposal, ViolationKind,
-};
+use decision_cli::verify_graph_generate::proposal::{GraphProposal, NewProposal, ProposedStep};
+use decision_cli::verify_graph_generate::validator::{validate_proposal, ViolationKind};
 use serde_json::json;
 
 fn fixture_enrichment() -> EnrichmentFields {
@@ -57,10 +53,7 @@ fn fixture_enrichment() -> EnrichmentFields {
             binaries_on_path: vec!["dec".to_string(), "bash".to_string()],
             writable_paths: vec!["$DEC_VERIFY_TMP".to_string(), "./".to_string()],
             allowed_hosts: vec!["api.dec.test".to_string()],
-            environment_variables: vec![
-                "DEC_VERIFY_TMP".to_string(),
-                "PATH".to_string(),
-            ],
+            environment_variables: vec!["DEC_VERIFY_TMP".to_string(), "PATH".to_string()],
             pre_seeded_artifacts: Vec::new(),
         },
         ..EnrichmentFields::default()
@@ -134,8 +127,7 @@ fn scenario_b_unknown_binary_rejected() {
     assert_eq!(v[0].kind, ViolationKind::Binary);
     assert_eq!(v[0].referenced_thing, "curl");
     assert!(
-        v[0].why_rejected
-            .contains("binaries_on_path"),
+        v[0].why_rejected.contains("binaries_on_path"),
         "why_rejected should mention binaries_on_path; got {}",
         v[0].why_rejected
     );

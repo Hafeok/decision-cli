@@ -159,20 +159,14 @@ impl SubmissionsService {
         })
     }
 
-    fn authenticate(
-        &self,
-        token: Option<&str>,
-    ) -> Result<RepoIdentity, SubmissionsServiceError> {
+    fn authenticate(&self, token: Option<&str>) -> Result<RepoIdentity, SubmissionsServiceError> {
         let raw = token.ok_or(SubmissionsServiceError::Unauthorised)?;
         self.tokens
             .resolve(raw)
             .ok_or(SubmissionsServiceError::Unauthorised)
     }
 
-    fn enforce_rate_limit(
-        &self,
-        identity: &RepoIdentity,
-    ) -> Result<(), SubmissionsServiceError> {
+    fn enforce_rate_limit(&self, identity: &RepoIdentity) -> Result<(), SubmissionsServiceError> {
         if self.limiter.try_acquire(identity) {
             Ok(())
         } else {
@@ -207,14 +201,10 @@ fn serialise_and_validate(
     submission: &WorkerImageSubmission,
 ) -> Result<Vec<oxigraph::model::Quad>, SubmissionsServiceError> {
     let quads = submission.to_quads(worker_image_submission_graph());
-    validate_quads(&quads).map_err(|err| SubmissionsServiceError::PayloadInvalid {
-        report: err.report,
-    })?;
-    validate_boundary_artifact(&quads, &submission.iri()).map_err(|err| {
-        SubmissionsServiceError::PayloadInvalid {
-            report: err.report,
-        }
-    })?;
+    validate_quads(&quads)
+        .map_err(|err| SubmissionsServiceError::PayloadInvalid { report: err.report })?;
+    validate_boundary_artifact(&quads, &submission.iri())
+        .map_err(|err| SubmissionsServiceError::PayloadInvalid { report: err.report })?;
     Ok(quads)
 }
 
@@ -295,8 +285,7 @@ mod handler_unit_tests {
 
     #[test]
     fn rejection_render_unauthorised_maps_to_401() {
-        let (status, body) =
-            render_rejection(&SubmissionsServiceError::Unauthorised);
+        let (status, body) = render_rejection(&SubmissionsServiceError::Unauthorised);
         assert_eq!(status, StatusCode::UNAUTHORIZED);
         assert_eq!(body.0.error, "unauthorised");
     }
@@ -323,9 +312,8 @@ mod handler_unit_tests {
 
     #[test]
     fn rejection_render_rate_limited_maps_to_429() {
-        let (status, body) = render_rejection(&SubmissionsServiceError::RateLimited {
-            repo: "r".into(),
-        });
+        let (status, body) =
+            render_rejection(&SubmissionsServiceError::RateLimited { repo: "r".into() });
         assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
         assert_eq!(body.0.error, "rate_limited");
     }

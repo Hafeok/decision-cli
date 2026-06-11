@@ -33,16 +33,10 @@ fn repo_root() -> PathBuf {
 
 fn read_cargo_toml(rel: &str) -> String {
     let path = repo_root().join(rel);
-    fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+    fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
 }
 
-const FORBIDDEN_DEP_NAMES: &[&str] = &[
-    "decision-cli",
-    "decision_cli",
-    "oxi-events",
-    "oxi_events",
-];
+const FORBIDDEN_DEP_NAMES: &[&str] = &["decision-cli", "decision_cli", "oxi-events", "oxi_events"];
 
 fn assert_no_forbidden_dep_lines(cargo_toml: &str) {
     for line in cargo_toml.lines() {
@@ -75,7 +69,9 @@ fn assert_no_forbidden_use_paths(src_dir: &Path) {
     ];
     let mut stack = vec![src_dir.to_path_buf()];
     while let Some(dir) = stack.pop() {
-        for entry in fs::read_dir(&dir).unwrap_or_else(|e| panic!("read_dir {}: {e}", dir.display())) {
+        for entry in
+            fs::read_dir(&dir).unwrap_or_else(|e| panic!("read_dir {}: {e}", dir.display()))
+        {
             let entry = entry.expect("dir entry");
             let path = entry.path();
             let ftype = entry.file_type().expect("file_type");

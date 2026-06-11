@@ -50,10 +50,11 @@ pub(super) fn take_one_u32(
     label: &str,
 ) -> Result<u32, CapabilityReadError> {
     let raw = take_one_str(iri, quads, subject, predicate, label)?;
-    raw.parse::<u32>().map_err(|_| CapabilityReadError::Malformed {
-        iri: iri.to_string(),
-        detail: format!("{label} must be a non-negative integer, got {raw:?}"),
-    })
+    raw.parse::<u32>()
+        .map_err(|_| CapabilityReadError::Malformed {
+            iri: iri.to_string(),
+            detail: format!("{label} must be a non-negative integer, got {raw:?}"),
+        })
 }
 
 pub(super) fn take_optional_u8(

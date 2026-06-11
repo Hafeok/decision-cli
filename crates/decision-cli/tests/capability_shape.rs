@@ -365,9 +365,8 @@ fn commit_quads(w: &StreamWriter, quads: Vec<Quad>) -> Result<(), String> {
 fn every_prd_5_2_capability_passes_shacl() {
     for cap in prd_5_2_catalog() {
         let quads = cap.to_quads(capability_graph());
-        validate_quads(&quads).unwrap_or_else(|err| {
-            panic!("capability {id:?} must pass SHACL: {err}", id = cap.id)
-        });
+        validate_quads(&quads)
+            .unwrap_or_else(|err| panic!("capability {id:?} must pass SHACL: {err}", id = cap.id));
     }
 }
 
@@ -532,7 +531,8 @@ fn duplicate_active_id_and_version_is_rejected() {
     let mut quads_a = a.to_quads(capability_graph());
     let mut quads_b = b.to_quads(capability_graph());
     // Distinct subject IRIs to genuinely exercise the cross-subject constraint.
-    let new_subject = NamedNode::new_unchecked("https://decision-cli.dev/ns/capability/code-writer/v1#alt");
+    let new_subject =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/capability/code-writer/v1#alt");
     for q in quads_b.iter_mut() {
         let oxigraph::model::Subject::NamedNode(_) = &q.subject else {
             continue;

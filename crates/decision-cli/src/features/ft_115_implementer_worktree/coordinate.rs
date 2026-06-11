@@ -6,7 +6,7 @@ use oxi_events::Mutation;
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Subject};
 use oxigraph::store::Store;
 
-use super::{abort_worktree, WorktreePath, WorktreeError};
+use super::{abort_worktree, WorktreeError, WorktreePath};
 
 /// Namespace for worktree predicates.
 const DEC_NS: &str = "https://purl.org/ddd/decision-cli#";
@@ -53,7 +53,9 @@ pub fn record_worktree_created(
 
     writer
         .commit(mutation.with_cause("worktree created"))
-        .map_err(|e| WorktreeError::StoreError(format!("failed to commit worktree creation: {}", e)))?;
+        .map_err(|e| {
+            WorktreeError::StoreError(format!("failed to commit worktree creation: {}", e))
+        })?;
 
     // Persist to disk
     persist_store(store, dump_path)?;
@@ -107,7 +109,9 @@ pub fn record_worktree_merged(
 
     writer
         .commit(mutation.with_cause("worktree merged"))
-        .map_err(|e| WorktreeError::StoreError(format!("failed to commit worktree merge: {}", e)))?;
+        .map_err(|e| {
+            WorktreeError::StoreError(format!("failed to commit worktree merge: {}", e))
+        })?;
 
     persist_store(store, dump_path)?;
 
@@ -160,7 +164,9 @@ pub fn record_worktree_aborted(
 
     writer
         .commit(mutation.with_cause("worktree aborted"))
-        .map_err(|e| WorktreeError::StoreError(format!("failed to commit worktree abort: {}", e)))?;
+        .map_err(|e| {
+            WorktreeError::StoreError(format!("failed to commit worktree abort: {}", e))
+        })?;
 
     persist_store(store, dump_path)?;
 
@@ -192,8 +198,7 @@ pub fn prune_orphans(workdir: &Path, store: &Store) -> Result<PruneOutcome, Work
     }
 
     // Enumerate worktree directories
-    let entries = std::fs::read_dir(&worktrees_root)
-        .map_err(|e| WorktreeError::Io(e))?;
+    let entries = std::fs::read_dir(&worktrees_root).map_err(|e| WorktreeError::Io(e))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| WorktreeError::Io(e))?;
@@ -269,13 +274,16 @@ fn persist_store(store: &Store, dump_path: &Path) -> Result<(), WorktreeError> {
     use std::fs::File;
     use std::io::BufWriter;
 
-    let file = File::create(dump_path).map_err(|e| {
-        WorktreeError::StoreError(format!("failed to create dump file: {}", e))
-    })?;
+    let file = File::create(dump_path)
+        .map_err(|e| WorktreeError::StoreError(format!("failed to create dump file: {}", e)))?;
     let writer = BufWriter::new(file);
 
     store
-        .dump_graph_to_writer(&GraphName::DefaultGraph, oxigraph::io::RdfFormat::NQuads, writer)
+        .dump_graph_to_writer(
+            &GraphName::DefaultGraph,
+            oxigraph::io::RdfFormat::NQuads,
+            writer,
+        )
         .map_err(|e| WorktreeError::StoreError(format!("failed to dump graph: {}", e)))?;
 
     Ok(())

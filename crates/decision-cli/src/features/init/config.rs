@@ -1,5 +1,4 @@
 ///! config.toml generation (ADR-068).
-
 use std::fs;
 use std::path::Path;
 

@@ -167,8 +167,7 @@ pub fn run_generate(req: &GenerateRequest) -> Result<GenerateResponse, HandlerEr
         report.kind,
         MatchKind::CompleteSingle | MatchKind::CompleteMultiple
     ) {
-        let defects =
-            defect_feedback::load_for(workdir, &req.feature_id, &req.environment_id);
+        let defects = defect_feedback::load_for(workdir, &req.feature_id, &req.environment_id);
         if defects.is_empty() {
             return Ok(build_match_response(&report));
         }
@@ -359,13 +358,12 @@ fn resolve_verify_graph_author_capability(
     workdir: &Path,
 ) -> Result<ResolvedCapability, HandlerError> {
     let dump = orchestration_dump_path(workdir);
-    let store: Store =
-        load_store_from_dump(&dump).map_err(|e| HandlerError::Internal {
-            detail: format!(
-                "capability: opening orchestration store at {p}: {e}",
-                p = dump.display()
-            ),
-        })?;
+    let store: Store = load_store_from_dump(&dump).map_err(|e| HandlerError::Internal {
+        detail: format!(
+            "capability: opening orchestration store at {p}: {e}",
+            p = dump.display()
+        ),
+    })?;
     resolve_default_capability(&store, "verify-graph-author").map_err(resolver_to_handler_error)
 }
 

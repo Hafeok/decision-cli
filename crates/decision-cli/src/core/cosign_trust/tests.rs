@@ -106,9 +106,10 @@ fn rejects_subject_without_github_prefix() {
 
 #[test]
 fn rejects_subject_missing_at_separator() {
-    let err =
-        parse_github_actions_subject("https://github.com/example/worker/.github/workflows/release.yml")
-            .unwrap_err();
+    let err = parse_github_actions_subject(
+        "https://github.com/example/worker/.github/workflows/release.yml",
+    )
+    .unwrap_err();
     assert_eq!(err, SubjectParseError::MissingRefSeparator);
 }
 
@@ -154,7 +155,10 @@ fn rejects_entry_with_malformed_repo() {
         note: None,
     };
     let err = TrustList::from_entries(vec![e]).unwrap_err();
-    assert!(matches!(err, TrustListError::MalformedRepo { index: 0, .. }));
+    assert!(matches!(
+        err,
+        TrustListError::MalformedRepo { index: 0, .. }
+    ));
 }
 
 #[test]
@@ -221,7 +225,10 @@ fn rejects_identity_from_wrong_repo() {
         GITHUB_ACTIONS_ISSUER_URI,
     );
     let err = match_signature_identity(&cand, &tl).unwrap_err();
-    assert!(matches!(err, IdentityMatchError::NoEntryAdmitsSubject { .. }));
+    assert!(matches!(
+        err,
+        IdentityMatchError::NoEntryAdmitsSubject { .. }
+    ));
 }
 
 #[test]
@@ -241,7 +248,10 @@ fn rejects_identity_from_wrong_workflow_path() {
         GITHUB_ACTIONS_ISSUER_URI,
     );
     let err = match_signature_identity(&cand, &tl).unwrap_err();
-    assert!(matches!(err, IdentityMatchError::NoEntryAdmitsSubject { .. }));
+    assert!(matches!(
+        err,
+        IdentityMatchError::NoEntryAdmitsSubject { .. }
+    ));
 }
 
 #[test]
@@ -261,7 +271,10 @@ fn rejects_identity_with_non_matching_tag_pattern() {
         GITHUB_ACTIONS_ISSUER_URI,
     );
     let err = match_signature_identity(&cand, &tl).unwrap_err();
-    assert!(matches!(err, IdentityMatchError::NoEntryAdmitsSubject { .. }));
+    assert!(matches!(
+        err,
+        IdentityMatchError::NoEntryAdmitsSubject { .. }
+    ));
 }
 
 #[test]
@@ -281,7 +294,10 @@ fn rejects_branch_ref_when_entry_requires_tag_pattern() {
         GITHUB_ACTIONS_ISSUER_URI,
     );
     let err = match_signature_identity(&cand, &tl).unwrap_err();
-    assert!(matches!(err, IdentityMatchError::NoEntryAdmitsSubject { .. }));
+    assert!(matches!(
+        err,
+        IdentityMatchError::NoEntryAdmitsSubject { .. }
+    ));
 }
 
 #[test]
@@ -317,7 +333,10 @@ fn rejects_local_key_identity_with_different_subject() {
     let tl = TrustList::from_entries(vec![local_key_entry("dev@example.com")]).unwrap();
     let cand = SignatureIdentity::new("attacker@example.com", LOCAL_KEY_ISSUER_SENTINEL);
     let err = match_signature_identity(&cand, &tl).unwrap_err();
-    assert!(matches!(err, IdentityMatchError::NoEntryAdmitsSubject { .. }));
+    assert!(matches!(
+        err,
+        IdentityMatchError::NoEntryAdmitsSubject { .. }
+    ));
 }
 
 #[test]
@@ -328,11 +347,7 @@ fn matcher_short_circuits_on_first_matching_entry() {
         ".github/workflows/release.yml",
         "implementer-v*.*.*",
     );
-    let second_broader = ghactions_entry(
-        "example/worker",
-        ".github/workflows/release.yml",
-        "*",
-    );
+    let second_broader = ghactions_entry("example/worker", ".github/workflows/release.yml", "*");
     let tl = TrustList::from_entries(vec![first, second_broader]).unwrap();
     let cand = SignatureIdentity::new(
         keyless_subject(
@@ -371,10 +386,7 @@ fn note_is_propagated_into_match_outcome() {
 
 #[test]
 fn rekor_default_is_sigstore_public_instance() {
-    let r = RekorEntryRef::sigstore_default(
-        "0".repeat(64),
-        Some(1234),
-    );
+    let r = RekorEntryRef::sigstore_default("0".repeat(64), Some(1234));
     assert_eq!(r.rekor_url, "https://rekor.sigstore.dev");
     assert_eq!(r.log_index, Some(1234));
     validate_rekor_entry_ref(&r).expect("default ref must validate");

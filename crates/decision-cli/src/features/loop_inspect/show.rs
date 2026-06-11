@@ -65,12 +65,11 @@ pub fn run(req: &LoopShowRequest) -> Result<LoopShowResponse, HandlerError> {
         .unwrap_or_else(|| req.workdir.clone());
 
     // 1. Resolve the feature's TC IRIs.
-    let tc_shorts =
-        resolve_feature_tcs_short(&product_root, &req.feature_id).map_err(|e| {
-            HandlerError::Internal {
-                detail: format!("loop show: resolving TC list: {e}"),
-            }
-        })?;
+    let tc_shorts = resolve_feature_tcs_short(&product_root, &req.feature_id).map_err(|e| {
+        HandlerError::Internal {
+            detail: format!("loop show: resolving TC list: {e}"),
+        }
+    })?;
     let tc_iris: std::collections::HashSet<String> =
         tc_shorts.iter().map(|s| tc_iri_for(s)).collect();
 
@@ -108,12 +107,18 @@ pub fn run(req: &LoopShowRequest) -> Result<LoopShowResponse, HandlerError> {
             source_session,
             source_tc_short: super::resolver::short_for_tc(&source_tc_str),
             source_tc: source_tc_str,
-            addressing_artifact: fb.addressing_artifact.as_ref().map(|n| n.as_str().to_string()),
+            addressing_artifact: fb
+                .addressing_artifact
+                .as_ref()
+                .map(|n| n.as_str().to_string()),
             addressing_artifact_short: fb
                 .addressing_artifact
                 .as_ref()
                 .map(|n| super::resolver::short_for_artifact(n.as_str())),
-            receiving_session: fb.receiving_session.as_ref().map(|n| n.as_str().to_string()),
+            receiving_session: fb
+                .receiving_session
+                .as_ref()
+                .map(|n| n.as_str().to_string()),
             receiving_session_short: fb
                 .receiving_session
                 .as_ref()

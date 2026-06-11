@@ -50,10 +50,8 @@ use decision_cli::vocab::{
     IRI_DEC_PRODUCED_WORKERIMAGE, IRI_DEC_WORKER_IMAGE, IRI_DEC_WORKER_IMAGE_SUBMISSION,
 };
 
-const CANDIDATE_DIGEST: &str =
-    "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
-const SBOM_DIGEST: &str =
-    "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
+const CANDIDATE_DIGEST: &str = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+const SBOM_DIGEST: &str = "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
 
 const EXTERNAL_ORIGIN_IRI: &str = "https://decision-cli.dev/ns#external_origin";
 
@@ -74,7 +72,9 @@ fn fixture_submission(id: &str) -> WorkerImageSubmission {
         claimed_source_commit_hash: "abc123def4567890abcdef0123456789abcdef01".to_string(),
         claimed_build_run_url: format!("https://github.com/example/{id}/actions/runs/1"),
         lifecycle_state: SubmissionLifecycleState::Received,
-        external_origin: format!("brief:worker-distribution-slice-1/github-actions:example/{id}/runs/1"),
+        external_origin: format!(
+            "brief:worker-distribution-slice-1/github-actions:example/{id}/runs/1"
+        ),
         produced_workerimage: None,
         produced_feedback: None,
     }
@@ -117,10 +117,9 @@ fn fixture_context(session_label: &str) -> CuratorSessionContext {
 /// after the writes.
 fn drive_admit_into_store(id: &str) -> (Store, NamedNode, NamedNode, NamedNode) {
     let sub = fixture_submission(id);
-    let verdict =
-        fixture_signature_verdict("valid-001", sub.iri(), SignatureVerdictClass::Valid);
-    let bundle = assemble_curator_bundle(sub.clone(), verdict, Vec::new())
-        .expect("admit bundle assembly");
+    let verdict = fixture_signature_verdict("valid-001", sub.iri(), SignatureVerdictClass::Valid);
+    let bundle =
+        assemble_curator_bundle(sub.clone(), verdict, Vec::new()).expect("admit bundle assembly");
 
     let outcome = run_curator_session(
         &bundle,
@@ -171,8 +170,8 @@ fn drive_reject_into_store(id: &str) -> (Store, NamedNode, NamedNode) {
         sub.iri(),
         SignatureVerdictClass::UntrustedIdentity,
     );
-    let bundle = assemble_curator_bundle(sub.clone(), verdict, Vec::new())
-        .expect("reject bundle assembly");
+    let bundle =
+        assemble_curator_bundle(sub.clone(), verdict, Vec::new()).expect("reject bundle assembly");
 
     let outcome = run_curator_session(
         &bundle,
@@ -180,8 +179,7 @@ fn drive_reject_into_store(id: &str) -> (Store, NamedNode, NamedNode) {
             rationale: "Untrusted signer: signing identity is not on the operator's trust list."
                 .to_string(),
             disqualification_evidence:
-                "SignatureVerdict class=untrusted-identity per FT-090 classification"
-                    .to_string(),
+                "SignatureVerdict class=untrusted-identity per FT-090 classification".to_string(),
         },
         &fixture_context("reject"),
     )
@@ -202,7 +200,11 @@ fn drive_reject_into_store(id: &str) -> (Store, NamedNode, NamedNode) {
         store.insert(&q).expect("insert updated submission quad");
     }
 
-    (store, reject.feedback.iri.clone(), reject.updated_submission.iri())
+    (
+        store,
+        reject.feedback.iri.clone(),
+        reject.updated_submission.iri(),
+    )
 }
 
 fn count_typed_subjects(store: &Store, class_iri: &str) -> usize {
@@ -240,7 +242,10 @@ fn admit_produces_workerimage_and_conformance_audit_in_store() {
         count_typed_subjects(&store, IRI_DEC_CONFORMANCE_AUDIT_CLASS),
         1
     );
-    assert_eq!(count_typed_subjects(&store, IRI_DEC_WORKER_IMAGE_SUBMISSION), 1);
+    assert_eq!(
+        count_typed_subjects(&store, IRI_DEC_WORKER_IMAGE_SUBMISSION),
+        1
+    );
 
     // WorkerImage is qualified.
     let q = format!(
@@ -363,9 +368,8 @@ fn admit_refuses_when_signature_verdict_is_invalid() {
 #[test]
 fn assemble_refuses_signature_verdict_for_other_submission() {
     let sub = fixture_submission("sub-001");
-    let other_submission_iri = NamedNode::new_unchecked(
-        "https://decision-cli.dev/ns/worker-image-submission/sub-other",
-    );
+    let other_submission_iri =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/worker-image-submission/sub-other");
     let verdict = fixture_signature_verdict(
         "wrong-target-001",
         other_submission_iri,
@@ -446,8 +450,7 @@ fn tc_134_workercurator_session_admits_a_clean_submission_an() {
     ));
 
     // (2) Reject path.
-    let (reject_store, feedback_iri, reject_sub_iri) =
-        drive_reject_into_store("sub-tc-134-reject");
+    let (reject_store, feedback_iri, reject_sub_iri) = drive_reject_into_store("sub-tc-134-reject");
     assert_eq!(count_typed_subjects(&reject_store, IRI_DEC_FEEDBACK), 1);
     assert_eq!(
         count_typed_subjects(&reject_store, IRI_DEC_WORKER_IMAGE),
@@ -500,9 +503,8 @@ fn tc_134_workercurator_session_admits_a_clean_submission_an() {
     // (4) Bundle assembly refuses a SignatureVerdict whose
     // `dec:respondsTo` points at a different Submission.
     let sub = fixture_submission("sub-x");
-    let other = NamedNode::new_unchecked(
-        "https://decision-cli.dev/ns/worker-image-submission/sub-other",
-    );
+    let other =
+        NamedNode::new_unchecked("https://decision-cli.dev/ns/worker-image-submission/sub-other");
     let verdict = fixture_signature_verdict("wrong-001", other, SignatureVerdictClass::Valid);
     let err = assemble_curator_bundle(sub, verdict, Vec::new())
         .expect_err("verdict bound to other submission must be refused");

@@ -66,8 +66,7 @@ const TOKEN: &str = "tc-135-test-token";
 const REPO: &str = "https://github.com/example/implementer";
 const REGISTRY_DIGEST_HEX: &str =
     "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
-const SBOM_DIGEST_HEX: &str =
-    "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
+const SBOM_DIGEST_HEX: &str = "cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe";
 const COMMIT_SHA: &str = "abc123def4567890abcdef0123456789abcdef01";
 
 /// Repo-root path resolution. `CARGO_MANIFEST_DIR` for the
@@ -182,9 +181,7 @@ fn capability_tags_in_graph(store: &Store) -> Vec<String> {
 }
 
 fn single_literal(store: &Store, predicate: &str) -> String {
-    let q = format!(
-        "SELECT ?o WHERE {{ GRAPH ?g {{ ?s <{predicate}> ?o }} }}"
-    );
+    let q = format!("SELECT ?o WHERE {{ GRAPH ?g {{ ?s <{predicate}> ?o }} }}");
     let QueryResults::Solutions(sols) = store.query(&q).expect("query ok") else {
         panic!("expected solutions for {predicate}");
     };
@@ -195,7 +192,11 @@ fn single_literal(store: &Store, predicate: &str) -> String {
             out.push(lit.value().to_string());
         }
     }
-    assert_eq!(out.len(), 1, "expected exactly one literal for {predicate}, got {out:?}");
+    assert_eq!(
+        out.len(),
+        1,
+        "expected exactly one literal for {predicate}, got {out:?}"
+    );
     out.pop().expect("non-empty")
 }
 
@@ -220,12 +221,15 @@ fn canonical_manifest_fixture_parses_into_subscribed_implementer() {
 fn assembler_output_round_trips_through_submission_payload_json() {
     let raw = std::fs::read_to_string(canonical_manifest_path()).expect("manifest");
     let manifest = parse_worker_manifest(&raw).expect("parse");
-    let payload = assemble_submission_payload(&manifest, &canonical_build_outputs())
-        .expect("assembly");
+    let payload =
+        assemble_submission_payload(&manifest, &canonical_build_outputs()).expect("assembly");
     let as_json = serde_json::to_value(&payload).expect("serialise");
     let lifted: SubmissionPayload =
         serde_json::from_value(as_json).expect("SubmissionPayload deserialise");
-    assert_eq!(lifted.candidate_registry_ref, payload.candidate_registry_ref);
+    assert_eq!(
+        lifted.candidate_registry_ref,
+        payload.candidate_registry_ref
+    );
     assert_eq!(lifted.claimed_sbom_ref, payload.claimed_sbom_ref);
     assert_eq!(
         lifted.claimed_capability_tags,
@@ -289,7 +293,10 @@ async fn assembled_payload_lands_in_graph_via_submissions_endpoint() {
     );
     // External origin default for FT-094 is the build run URL.
     assert_eq!(
-        single_literal(&harness.store, "https://decision-cli.dev/ns#external_origin"),
+        single_literal(
+            &harness.store,
+            "https://decision-cli.dev/ns#external_origin"
+        ),
         outputs.build_run_url
     );
     // Signature subject preserved.
@@ -327,9 +334,15 @@ fn release_workflow_yaml_declares_the_full_release_primitive_set() {
         ),
         ("POST /submissions step", "POST /submissions"),
         ("candidate_registry_ref jq field", "candidate_registry_ref"),
-        ("claimed_capability_tags jq field", "claimed_capability_tags"),
+        (
+            "claimed_capability_tags jq field",
+            "claimed_capability_tags",
+        ),
         ("claimed_sbom_ref jq field", "claimed_sbom_ref"),
-        ("claimed_signature_subject jq field", "claimed_signature_subject"),
+        (
+            "claimed_signature_subject jq field",
+            "claimed_signature_subject",
+        ),
         ("bearer-token auth header", "Authorization: Bearer"),
     ];
     for (claim, needle) in expectations {

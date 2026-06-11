@@ -37,10 +37,18 @@ pub fn run(workdir: &Path, args: SupersedeMisroutedArgs) -> ExitCode {
 }
 
 fn print_report(report: &SupersedeReport, dry_run: bool) {
-    let verb = if dry_run { "would supersede" } else { "superseded" };
+    let verb = if dry_run {
+        "would supersede"
+    } else {
+        "superseded"
+    };
     println!(
         "{verb} {n} of {matched} matched defect feedback(s) (scanned {scanned})",
-        n = if dry_run { report.matched } else { report.superseded },
+        n = if dry_run {
+            report.matched
+        } else {
+            report.superseded
+        },
         matched = report.matched,
         scanned = report.scanned,
     );

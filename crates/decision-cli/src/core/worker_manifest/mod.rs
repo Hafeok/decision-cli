@@ -40,9 +40,7 @@ mod types;
 #[cfg(test)]
 mod tests;
 
-pub use assemble::{
-    assemble_submission_payload, AssembleSubmissionError, ReleaseBuildOutputs,
-};
+pub use assemble::{assemble_submission_payload, AssembleSubmissionError, ReleaseBuildOutputs};
 pub use parse::{parse_worker_manifest, ManifestParseError};
 pub use types::{
     Capabilities, RuntimeKind, RuntimeSpec, WorkerManifest, WorkerSection,

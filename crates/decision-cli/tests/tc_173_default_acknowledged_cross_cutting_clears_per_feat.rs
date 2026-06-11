@@ -21,9 +21,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use decision_cli::default_ack::{
-    evaluate_cross_cutting, load_default_acknowledge, CoverageStatus,
-};
+use decision_cli::default_ack::{evaluate_cross_cutting, load_default_acknowledge, CoverageStatus};
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -100,12 +98,7 @@ fn tc_173_default_acknowledged_cross_cutting_clears_per_feat() {
     );
 
     // FT-LINKED: explicit link still wins (no special annotation).
-    let rows = evaluate_cross_cutting(
-        &[ADR_CC.into()],
-        &[ADR_CC.into()],
-        &[],
-        &cfg,
-    );
+    let rows = evaluate_cross_cutting(&[ADR_CC.into()], &[ADR_CC.into()], &[], &cfg);
     assert_eq!(
         rows[0].status,
         CoverageStatus::Linked,
@@ -113,12 +106,7 @@ fn tc_173_default_acknowledged_cross_cutting_clears_per_feat() {
     );
 
     // FT-UNLINKED: gap is cleared by default-ack and tagged.
-    let rows = evaluate_cross_cutting(
-        &[ADR_CC.into()],
-        &[],
-        &[],
-        &cfg,
-    );
+    let rows = evaluate_cross_cutting(&[ADR_CC.into()], &[], &[], &cfg);
     assert_eq!(
         rows[0].status,
         CoverageStatus::DefaultAcknowledged,
@@ -158,12 +146,7 @@ fn tc_173_default_acknowledged_cross_cutting_clears_per_feat() {
         !cfg.acknowledges(ADR_CC),
         "scenario D: removed entry → no longer default-acked"
     );
-    let rows = evaluate_cross_cutting(
-        &[ADR_CC.into()],
-        &[],
-        &[],
-        &cfg,
-    );
+    let rows = evaluate_cross_cutting(&[ADR_CC.into()], &[], &[], &cfg);
     assert_eq!(
         rows[0].status,
         CoverageStatus::Missing,

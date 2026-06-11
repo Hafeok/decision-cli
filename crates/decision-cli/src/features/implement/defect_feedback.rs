@@ -123,7 +123,8 @@ mod tests {
 
     #[test]
     fn extract_graph_short_id_pulls_vg_from_verify_graph_run_uri() {
-        let uri = "https://decision-cli.dev/ns/activity/verify-graph-run/VG-097/ts-1779887801534721139";
+        let uri =
+            "https://decision-cli.dev/ns/activity/verify-graph-run/VG-097/ts-1779887801534721139";
         assert_eq!(extract_graph_short_id(uri), Some("VG-097".to_string()));
     }
 

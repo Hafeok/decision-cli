@@ -74,7 +74,9 @@ pub enum ManifestParseError {
     },
     /// A value taken from the manifest is not in the controlled
     /// vocabulary (currently only `runtime.kind`).
-    #[error("worker.toml key `{key}` in table [{table}] carries unsupported value {value:?}: {detail}")]
+    #[error(
+        "worker.toml key `{key}` in table [{table}] carries unsupported value {value:?}: {detail}"
+    )]
     UnsupportedValue {
         /// Table name.
         table: String,
@@ -149,12 +151,13 @@ fn parse_table_header(s: &str, line: usize) -> Result<Option<String>, ManifestPa
     if !s.starts_with('[') {
         return Ok(None);
     }
-    let inner = s.strip_prefix('[').and_then(|t| t.strip_suffix(']')).ok_or_else(|| {
-        ManifestParseError::Syntax {
+    let inner = s
+        .strip_prefix('[')
+        .and_then(|t| t.strip_suffix(']'))
+        .ok_or_else(|| ManifestParseError::Syntax {
             line,
             detail: format!("malformed table header {s:?}; expected `[name]`"),
-        }
-    })?;
+        })?;
     let name = inner.trim();
     if name.is_empty() || name.contains('.') || name.contains('[') || name.contains(']') {
         return Err(ManifestParseError::Syntax {
@@ -168,10 +171,12 @@ fn parse_table_header(s: &str, line: usize) -> Result<Option<String>, ManifestPa
 }
 
 fn parse_kv(s: &str, line: usize) -> Result<(String, RawValue), ManifestParseError> {
-    let (raw_key, raw_value) = s.split_once('=').ok_or_else(|| ManifestParseError::Syntax {
-        line,
-        detail: format!("missing `=` in key/value line {s:?}"),
-    })?;
+    let (raw_key, raw_value) = s
+        .split_once('=')
+        .ok_or_else(|| ManifestParseError::Syntax {
+            line,
+            detail: format!("missing `=` in key/value line {s:?}"),
+        })?;
     let key = raw_key.trim();
     if key.is_empty() || key.contains('.') || key.contains('[') {
         return Err(ManifestParseError::Syntax {
@@ -253,21 +258,25 @@ fn parse_string_array(body: &str, line: usize) -> Result<Vec<String>, ManifestPa
 }
 
 fn lift(mut doc: Document) -> Result<WorkerManifest, ManifestParseError> {
-    let worker = lift_worker(doc.remove("worker").ok_or_else(|| {
-        ManifestParseError::MissingTable {
-            table: "worker".to_string(),
-        }
-    })?)?;
+    let worker =
+        lift_worker(
+            doc.remove("worker")
+                .ok_or_else(|| ManifestParseError::MissingTable {
+                    table: "worker".to_string(),
+                })?,
+        )?;
     let capabilities = lift_capabilities(doc.remove("capabilities").ok_or_else(|| {
         ManifestParseError::MissingTable {
             table: "capabilities".to_string(),
         }
     })?)?;
-    let runtime = lift_runtime(doc.remove("runtime").ok_or_else(|| {
-        ManifestParseError::MissingTable {
-            table: "runtime".to_string(),
-        }
-    })?)?;
+    let runtime =
+        lift_runtime(
+            doc.remove("runtime")
+                .ok_or_else(|| ManifestParseError::MissingTable {
+                    table: "runtime".to_string(),
+                })?,
+        )?;
     if let Some((extra, _)) = doc.into_iter().next() {
         return Err(ManifestParseError::Syntax {
             line: 0,
@@ -283,9 +292,7 @@ fn lift(mut doc: Document) -> Result<WorkerManifest, ManifestParseError> {
     })
 }
 
-fn lift_worker(
-    mut table: BTreeMap<String, RawValue>,
-) -> Result<WorkerSection, ManifestParseError> {
+fn lift_worker(mut table: BTreeMap<String, RawValue>) -> Result<WorkerSection, ManifestParseError> {
     let name = take_string(&mut table, "worker", "name")?;
     let sdk_version = take_string(&mut table, "worker", "sdk_version")?;
     let wire_protocol = take_optional_string(&mut table, "worker", "wire_protocol")?
@@ -311,9 +318,7 @@ fn lift_capabilities(
     })
 }
 
-fn lift_runtime(
-    mut table: BTreeMap<String, RawValue>,
-) -> Result<RuntimeSpec, ManifestParseError> {
+fn lift_runtime(mut table: BTreeMap<String, RawValue>) -> Result<RuntimeSpec, ManifestParseError> {
     let raw_kind = take_string(&mut table, "runtime", "kind")?;
     let entrypoint = take_string(&mut table, "runtime", "entrypoint")?;
     reject_extras(&table, "runtime")?;

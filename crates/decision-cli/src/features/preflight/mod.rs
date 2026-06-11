@@ -33,10 +33,10 @@ use oxigraph::sparql::QueryResults;
 use oxigraph::store::Store;
 use thiserror::Error;
 
+use self::query::iris::{PM, PM_FEATURE};
 use self::query::{
     query_cross_cutting, query_dep_availability, query_domain_gaps, split_cross_cutting,
 };
-use self::query::iris::{PM, PM_FEATURE};
 
 /// Errors `dec preflight` may surface to the operator.
 #[derive(Debug, Error)]

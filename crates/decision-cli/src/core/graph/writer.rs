@@ -153,7 +153,9 @@ fn materialise_if_requested(
     };
     let subjects = artifact_subjects_needing_mechanical(&mutation.inserts);
     for subject in subjects {
-        let g = oxigraph::model::NamedNodeRef::new_unchecked(crate::core::vocab::IRI_DEC_GRAPH_ORCHESTRATION);
+        let g = oxigraph::model::NamedNodeRef::new_unchecked(
+            crate::core::vocab::IRI_DEC_GRAPH_ORCHESTRATION,
+        );
         for q in materialise_quads(&subject, attribution, g) {
             mutation.inserts.push(q);
         }
@@ -226,11 +228,10 @@ fn emit_violation_feedback(
         &report.violations,
         Some(writer.active_stream()),
     );
-    let mutation = Mutation::insert(quads.iter().cloned())
-        .with_cause(format!(
-            "FT-073: emitting provenance-violation feedback for {} violation(s)",
-            report.violations.len()
-        ));
+    let mutation = Mutation::insert(quads.iter().cloned()).with_cause(format!(
+        "FT-073: emitting provenance-violation feedback for {} violation(s)",
+        report.violations.len()
+    ));
     writer
         .inner()
         .commit(mutation)

@@ -29,7 +29,7 @@ if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   cd "$REPO_ROOT"
 fi
 
-ONTOLOGY="crates/decision-cli/src/core/ontology/assets/ontology.ttl"
+ONTOLOGY="crates/dec-ontology/src/ontology/assets/ontology.ttl"
 if [ ! -f "$ONTOLOGY" ]; then
   echo "ERROR: expected $ONTOLOGY (ADR-017 anchor file)"
   exit 1
