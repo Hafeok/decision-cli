@@ -14,6 +14,8 @@
 //! live here under [`ontology`], which re-exports the pure halves so
 //! consumers see one surface.
 
+#![deny(clippy::unwrap_used)]
+
 pub mod bundle;
 pub mod graph;
 pub mod ontology;

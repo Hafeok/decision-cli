@@ -2,7 +2,7 @@
 id: TC-415
 title: FT-169 exit criteria — dec-harness crate extracted, decision-cli reduced to wiring and slices, facades intact
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: [FT-169]
   adrs: [ADR-086]
@@ -14,6 +14,8 @@ observes:
 - exit-code
 - stdout
 - disk-state
+last-run: 2026-06-11T14:06:27.760040469+00:00
+last-run-duration: 4.3s
 ---
 
 ## Purpose

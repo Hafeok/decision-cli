@@ -13,5 +13,7 @@
 //! GraphWriter chokepoint (ADR-041), and SPARQL execution live above
 //! this crate in `dec-graph` / `decision-cli`.
 
+#![deny(clippy::unwrap_used)]
+
 pub mod ontology;
 pub mod vocab;

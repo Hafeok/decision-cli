@@ -18,6 +18,7 @@ product-mcp = { workspace = true }
 oxigraph = { workspace = true }
 dec-ontology = { workspace = true }
 dec-graph = { workspace = true }
+dec-harness = { workspace = true }
 tokio = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }

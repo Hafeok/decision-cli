@@ -2,7 +2,7 @@
 id: FT-169
 title: 'decision-cli: Extract dec-harness crate — dispatch loop, cluster dispatch, drive planners, and worker contract'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-168
 adrs:
@@ -11,12 +11,14 @@ adrs:
 tests:
 - TC-411
 - TC-415
+- TC-419
+- TC-420
 domains: []
 domains-acknowledged:
   ADR-083: ADR-083 governs tech-detail binding levels for archetypes. FT-169 is a pure relocation of harness machinery; no tech detail is bound at any level.
-  ADR-084: ADR-084 mandates seam audits for archetypes. FT-169 ships no archetype; the three-scope audit pipeline (FT-153) lands later in dec-harness.
-  ADR-082: ADR-082 governs archetype-layer semantics. FT-169 relocates orchestration machinery; archetype-dispatch behaviour (FT-153, FT-157) lands later in the crate this slice creates.
   ADR-081: ADR-081 governs CLI enumerate/lookup verb pairs. FT-169 relocates dispatch/drive/worker machinery into crates/dec-harness adding no CLI verbs; clap trees stay in decision-cli unchanged.
+  ADR-082: ADR-082 governs archetype-layer semantics. FT-169 relocates orchestration machinery; archetype-dispatch behaviour (FT-153, FT-157) lands later in the crate this slice creates.
+  ADR-084: ADR-084 mandates seam audits for archetypes. FT-169 ships no archetype; the three-scope audit pipeline (FT-153) lands later in dec-harness.
 ---
 
 ## Description

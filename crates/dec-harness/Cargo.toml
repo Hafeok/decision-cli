@@ -1,0 +1,35 @@
+[package]
+name = "dec-harness"
+version = "0.1.0"
+description = "decision-cli orchestration machinery: dispatch loop, drive planners, worker contract, subscriptions, role catalog (ADR-086)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# ADR-086: dec-harness composes the stable layers beneath it (dec-graph,
+# dec-ontology, oxi-events) and is itself composed by the decision-cli
+# binary. It never depends on decision-cli or clap. Enforced by
+# scripts/checks/crate-dependency-topology.sh (TC-411).
+[dependencies]
+dec-graph = { workspace = true }
+dec-ontology = { workspace = true }
+oxi-events = { workspace = true }
+oxigraph = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+sha2 = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

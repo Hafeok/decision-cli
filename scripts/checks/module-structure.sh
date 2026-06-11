@@ -95,6 +95,11 @@ if [ -d crates/dec-graph ]; then
   check_crate_modules dec-graph store stream_writer graph ontology
 fi
 
+# dec-harness canonical modules per ADR-086: the orchestration machinery.
+if [ -d crates/dec-harness ]; then
+  check_crate_modules dec-harness dispatch drive worker subscriptions role_catalog
+fi
+
 # -- (b) main.rs line cap --------------------------------------------------
 MAIN_RS="crates/decision-cli/src/main.rs"
 if [ -f "$MAIN_RS" ]; then

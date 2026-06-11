@@ -3,7 +3,7 @@
 use std::path::Path;
 use std::process::ExitCode;
 
-use super::pipeline::retract_stale_defects;
+use super::retract_stale_defects;
 
 /// Execute the `_retract-stale-defects` diagnostic command.
 pub fn run(workdir: &Path, graph_id: &str, dry_run: bool) -> ExitCode {
