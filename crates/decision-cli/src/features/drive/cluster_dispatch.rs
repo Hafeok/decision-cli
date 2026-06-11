@@ -233,6 +233,7 @@ fn run_cells(
     let mut active: std::collections::BTreeSet<String> = only
         .cloned()
         .unwrap_or_else(|| order.iter().cloned().collect());
+    let mut placement_retries: BTreeMap<String, u32> = BTreeMap::new();
     for cell_name in order {
         if !active.contains(cell_name) {
             continue;
@@ -268,28 +269,62 @@ fn run_cells(
             "urn:dec:cluster-session:{}/{}/{}",
             tt.name, feature_id, cell.name
         ));
-        let started_at = Utc::now();
+        let mut started_at = Utc::now();
+        let mut attempt_context: Option<String> = audit_context.map(str::to_string);
 
-        let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
-            if cell.model_binding_capability_id.is_empty() {
-                let body = emit_mechanical_cell(tt, cell, cell_outputs);
-                let capability = NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
-                Ok((body, None, capability))
-            } else {
-                emit_llm_cell(
-                    ctx,
-                    argv,
-                    store,
-                    tt,
-                    feature_id,
-                    cell,
-                    cluster_dir,
-                    feature_framing,
-                    cell_outputs,
-                    &resolved_cell_path,
-                    audit_context,
-                )
-            };
+        let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> = loop {
+            started_at = Utc::now();
+            let attempt: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
+                if cell.model_binding_capability_id.is_empty() {
+                    let body = emit_mechanical_cell(tt, cell, cell_outputs);
+                    let capability =
+                        NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
+                    Ok((body, None, capability))
+                } else {
+                    emit_llm_cell(
+                        ctx,
+                        argv,
+                        store,
+                        tt,
+                        feature_id,
+                        cell,
+                        cluster_dir,
+                        feature_framing,
+                        cell_outputs,
+                        &resolved_cell_path,
+                        attempt_context.as_deref(),
+                    )
+                };
+            match attempt {
+                Err(err)
+                    if placement_retries.get(&cell.name).copied().unwrap_or(0)
+                        < MAX_CELL_RETRIES =>
+                {
+                    if let Some(diagnostic) = placement_retry_context(&err) {
+                        *placement_retries.entry(cell.name.clone()).or_insert(0) += 1;
+                        // Record the failed attempt for FT-146 cost rollups.
+                        let capability = cell_capability_iri_or_fallback(store, cell);
+                        cell_sessions.push(CellSessionRecord {
+                            iri: cell_iri.clone(),
+                            capability,
+                            usage: None,
+                            status: CellStatus::Failed,
+                            started_at,
+                            ended_at: Utc::now(),
+                        });
+                        tracing::info!(
+                            feature_id,
+                            cell = %cell.name,
+                            "cell placement failed; retrying with the diagnostic (FT-171)"
+                        );
+                        attempt_context = Some(diagnostic);
+                        continue;
+                    }
+                    break Err(err);
+                }
+                other => break other,
+            }
+        };
 
         match output_result {
             Ok((output, usage, capability)) => {
@@ -875,6 +910,20 @@ fn load_orchestration_store(workdir: &Path) -> Result<Store> {
     })
 }
 
+/// FT-171 (extension witnessed on the second hardened FT-148 run): a
+/// placement failure (FT-170 cases 3/4 — nothing at the resolved path,
+/// or ambiguous candidates) is the cell's own defect with a re-promptable
+/// diagnostic, so it earns the same per-cell retry as an audit failure
+/// instead of failing the whole cluster.
+fn placement_retry_context(err: &anyhow::Error) -> Option<String> {
+    let msg = format!("{err:#}");
+    if msg.contains("refusing to guess") || msg.contains("produced no ") {
+        Some(msg)
+    } else {
+        None
+    }
+}
+
 /// FT-171: structured audit verdict so the repair loop can map FAIL
 /// lines back to cells. Unrunnable audits stay hard errors.
 enum AuditOutcome {
@@ -1205,6 +1254,24 @@ mod tests {
             let cell = tt.cells.iter().find(|c| &c.name == d).unwrap();
             assert!(cell.derived_from.iter().any(|x| x == "rust_struct"));
         }
+    }
+
+    /// FT-171 extension: placement failures (FT-170 cases 3/4) carry a
+    /// re-promptable diagnostic; other errors do not retry.
+    #[test]
+    fn ft_171_placement_failures_are_retryable_with_diagnostic() {
+        let ambiguous = anyhow!(
+            "cluster_dispatch: cell tt/parser wrote 8 candidate files but none at the \
+             resolved path x/parser.rs; refusing to guess: a.rs, b.rs"
+        );
+        let ctx = placement_retry_context(&ambiguous).expect("ambiguity retries");
+        assert!(ctx.contains("refusing to guess"), "{ctx}");
+
+        let missing = anyhow!("cluster_dispatch: cell tt/parser produced no rs file; expected x");
+        assert!(placement_retry_context(&missing).is_some());
+
+        let unrelated = anyhow!("dispatch code-writer for cell tt/parser: spawn failed");
+        assert!(placement_retry_context(&unrelated).is_none());
     }
 
     /// FT-170 case 1: the worker honoured the resolved path — no-op,
