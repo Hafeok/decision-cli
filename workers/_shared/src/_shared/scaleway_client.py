@@ -81,7 +81,19 @@ def build_client() -> Any:
             category="config",
         )
     api_key = os.environ[SCALEWAY_KEY_ENV]
-    return OpenAI(base_url=SCALEWAY_BASE_URL, api_key=api_key)
+    # Witnessed on the FT-148 cluster run: without an explicit timeout a
+    # request can block in ssl-read indefinitely when the endpoint queues
+    # or the connection dies (the SDK's 600s default is far beyond any
+    # useful turn budget for cluster cells, and a dead peer can hold an
+    # ESTAB socket past even that). Bound every request and let the SDK
+    # retry transient failures; override via SCW_LLM_TIMEOUT_SECONDS.
+    timeout_seconds = float(os.environ.get("SCW_LLM_TIMEOUT_SECONDS", "240"))
+    return OpenAI(
+        base_url=SCALEWAY_BASE_URL,
+        api_key=api_key,
+        timeout=timeout_seconds,
+        max_retries=2,
+    )
 
 
 def _extract_message_content(response: Any) -> str:

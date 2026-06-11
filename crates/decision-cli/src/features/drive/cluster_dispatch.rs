@@ -551,16 +551,20 @@ fn place_cell_output(
                 .unwrap_or_else(|| "output".to_string()),
             resolved_rel.display(),
         )),
-        // Case 2 — exactly one stray: the harness owns placement.
+        // Case 2 — exactly one stray: the harness owns placement. The
+        // resolved path is THIS cell's declared slot (the registry
+        // guarantees distinct paths per cell), so any pre-existing
+        // content there is this cell's own stale prior attempt —
+        // witnessed on the first hardened FT-148 run, where a killed
+        // worker's partial output blocked its replacement. Replace it.
         [stray] => {
             let target = cluster_dir.join(resolved_rel);
             if before.contains(resolved_rel) {
-                return Err(anyhow!(
-                    "cluster_dispatch: cell {cell_label} would overwrite pre-existing {} \
-                     (stray candidate at {}); refusing to clobber a prior cell's output",
-                    resolved_rel.display(),
-                    stray.display(),
-                ));
+                tracing::info!(
+                    cell = cell_label,
+                    path = %resolved_rel.display(),
+                    "replacing the cell's stale prior output at its resolved slot (FT-170)"
+                );
             }
             if let Some(parent) = target.parent() {
                 fs::create_dir_all(parent)?;
@@ -1271,22 +1275,24 @@ mod tests {
         assert!(msg.contains("a.rs") && msg.contains("b.rs"), "{msg}");
     }
 
-    /// FT-170 invariant: relocation refuses to clobber a file that
-    /// existed before the cell ran (a prior cell's placed output).
+    /// FT-170 invariant (amended by the witnessed FT-148 run): the
+    /// resolved path is this cell's own slot, so stale content there —
+    /// a prior attempt's partial output — is replaced by the fresh
+    /// stray, never protected.
     #[test]
-    fn ft_170_placement_refuses_to_overwrite_prior_output() {
+    fn ft_170_placement_replaces_stale_own_output() {
         let tmp = tempfile::tempdir().expect("tmpdir");
         let resolved = PathBuf::from("thing.rs");
-        fs::write(tmp.path().join(&resolved), "prior cell output").unwrap();
+        fs::write(tmp.path().join(&resolved), "stale prior attempt").unwrap();
         let before = snapshot_files(tmp.path()).unwrap();
-        // This cell drifts AND its resolved path is already occupied.
-        fs::write(tmp.path().join("stray.rs"), "new content").unwrap();
+        // The retried cell drifts while its slot still holds old content.
+        fs::write(tmp.path().join("stray.rs"), "fresh content").unwrap();
 
-        let err = place_cell_output(tmp.path(), &resolved, &before, "tt/cell")
-            .expect_err("collision must fail");
-        assert!(err.to_string().contains("refusing to clobber"), "{err}");
+        place_cell_output(tmp.path(), &resolved, &before, "tt/cell")
+            .expect("stale own output is replaced");
         let body = fs::read_to_string(tmp.path().join(&resolved)).unwrap();
-        assert_eq!(body, "prior cell output", "prior output must be untouched");
+        assert_eq!(body, "fresh content");
+        assert!(!tmp.path().join("stray.rs").exists());
     }
 
     /// FT-163 TC: pins the framing-cap constant so changes are explicit.

@@ -14,8 +14,8 @@ observes:
 - exit-code
 - stdout
 - disk-state
-last-run: 2026-06-11T18:05:26.271295372+00:00
-last-run-duration: 1.5s
+last-run: 2026-06-11T18:55:52.916349280+00:00
+last-run-duration: 1.4s
 ---
 
 ## Purpose
