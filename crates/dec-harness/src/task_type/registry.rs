@@ -248,7 +248,8 @@ fn add_artifact_type() -> TaskTypeDecl {
         ],
         coherence_audit: CoherenceAuditSpec {
             script_path: PathBuf::from("scripts/checks/cluster-audit-add-artifact-type.py"),
-            timeout_seconds: 60,
+            // FT-172: the compile probe runs cargo check in a worktree.
+            timeout_seconds: 300,
         },
         parameters: vec![TaskTypeParameter {
             name: "artifact_name".to_string(),

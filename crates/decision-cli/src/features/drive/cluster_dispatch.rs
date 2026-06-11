@@ -148,7 +148,14 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
     );
 
     let audit_result = dispatch_result.and_then(|()| {
-        run_coherence_audit(tt, &ctx.workdir, &cluster_dir, feature_id, task_type_name)
+        run_coherence_audit(
+            tt,
+            &ctx.workdir,
+            &cluster_dir,
+            feature_id,
+            task_type_name,
+            &params,
+        )
     });
 
     let cluster_ended = Utc::now();
@@ -801,6 +808,7 @@ fn run_coherence_audit(
     cluster_dir: &Path,
     feature_id: &str,
     task_type_name: &str,
+    params: &BTreeMap<String, String>,
 ) -> Result<()> {
     let audit = &tt.coherence_audit;
     let audit_path = workdir.join(&audit.script_path);
@@ -813,11 +821,22 @@ fn run_coherence_audit(
         );
         return Ok(());
     }
+    // FT-172: pass each cell's resolved output path (relative to the
+    // fixture) after the fixture dir so content checks (compile probe,
+    // namespace) audit exactly the declared cell set and ignore any
+    // worker-fabricated extras. Pre-FT-172 audits ignore extra argv.
+    let mut cell_paths = Vec::new();
+    for cell in &tt.cells {
+        if let Ok(p) = resolve_cell_output_path(cell, params) {
+            cell_paths.push(p);
+        }
+    }
     let output = Command::new(&audit_path)
         .current_dir(workdir)
         // Pass the cluster sandbox dir explicitly — audits expect a
         // fixture path as $1.
         .arg(cluster_dir)
+        .args(&cell_paths)
         .output()
         .with_context(|| format!("invoke coherence audit at {}", audit_path.display()))?;
     match output.status.code() {

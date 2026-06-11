@@ -2,12 +2,16 @@
 id: FT-172
 title: 'decision-cli: cluster coherence audits gain compile and canonical-namespace checks for Rust-emitting TaskTypes'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-170
 adrs:
 - ADR-080
-tests: []
+tests:
+- TC-429
+- TC-430
+- TC-431
+- TC-432
 domains: []
 domains-acknowledged: {}
 ---
