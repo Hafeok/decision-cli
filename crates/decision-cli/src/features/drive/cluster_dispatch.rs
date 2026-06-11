@@ -70,6 +70,15 @@ const MAX_FRAMING_CHARS: usize = 50_000;
 /// legitimate work. See FT-164 §Description for the cost analysis.
 const MAX_CELL_TURNS: u32 = 40;
 
+/// FT-171: audit-repair rounds per cluster run. Each round re-dispatches
+/// only the cells implicated by the failed audit checks against the
+/// preserved sandbox; after the cap the cluster fails and the drive's
+/// outer loop decides on a full re-run.
+const MAX_AUDIT_REPAIR_ROUNDS: usize = 2;
+
+/// FT-171: per-cell retry cap within one cluster run.
+const MAX_CELL_RETRIES: u32 = 2;
+
 /// Execute the cluster for `task_type_name` against `feature_id`.
 ///
 /// Steps:
@@ -133,6 +142,7 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
     let cluster_started = Utc::now();
     let mut cell_sessions: Vec<CellSessionRecord> = Vec::new();
 
+    let mut cell_outputs: BTreeMap<String, String> = BTreeMap::new();
     let dispatch_result: Result<()> = run_cells(
         ctx,
         &argv,
@@ -145,16 +155,28 @@ pub fn run(ctx: &PlanContext, feature_id: &str, task_type_name: &str) -> Result<
         &feature_framing,
         &params,
         &mut cell_sessions,
+        &mut cell_outputs,
+        None,
+        None,
     );
 
+    // FT-171: audit with per-cell repair — audit failure preserves the
+    // sandbox and re-dispatches only the implicated cells (with the
+    // audit diagnostic as corrective context) before re-auditing.
     let audit_result = dispatch_result.and_then(|()| {
-        run_coherence_audit(
+        audit_with_repair(
+            ctx,
+            &argv,
+            &store,
             tt,
-            &ctx.workdir,
-            &cluster_dir,
             feature_id,
             task_type_name,
+            &order,
+            &cluster_dir,
+            &feature_framing,
             &params,
+            &mut cell_sessions,
+            &mut cell_outputs,
         )
     });
 
@@ -201,9 +223,20 @@ fn run_cells(
     feature_framing: &str,
     params: &BTreeMap<String, String>,
     cell_sessions: &mut Vec<CellSessionRecord>,
+    cell_outputs: &mut BTreeMap<String, String>,
+    only: Option<&std::collections::BTreeSet<String>>,
+    audit_context: Option<&str>,
 ) -> Result<()> {
-    let mut cell_outputs: BTreeMap<String, String> = BTreeMap::new();
+    // FT-171: when repairing, `active` starts as the implicated set and
+    // grows with the dependents of any retried cell whose output changed
+    // (their bundles consumed the stale upstream).
+    let mut active: std::collections::BTreeSet<String> = only
+        .cloned()
+        .unwrap_or_else(|| order.iter().cloned().collect());
     for cell_name in order {
+        if !active.contains(cell_name) {
+            continue;
+        }
         let cell = tt
             .cells
             .iter()
@@ -220,6 +253,17 @@ fn run_cells(
         // back to the FT-139 flat-path convention.
         let resolved_cell_path = resolve_cell_output_path(cell, params)?;
 
+        // FT-171: a retried cell's prior output is removed so FT-170's
+        // snapshot diff sees the worker's fresh write.
+        if only.is_some() {
+            let prior = cluster_dir.join(&resolved_cell_path);
+            if prior.exists() {
+                fs::remove_file(&prior).with_context(|| {
+                    format!("remove prior output of retried cell at {}", prior.display())
+                })?;
+            }
+        }
+
         let cell_iri = NamedNode::new_unchecked(format!(
             "urn:dec:cluster-session:{}/{}/{}",
             tt.name, feature_id, cell.name
@@ -228,7 +272,7 @@ fn run_cells(
 
         let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
             if cell.model_binding_capability_id.is_empty() {
-                let body = emit_mechanical_cell(tt, cell, &cell_outputs);
+                let body = emit_mechanical_cell(tt, cell, cell_outputs);
                 let capability = NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
                 Ok((body, None, capability))
             } else {
@@ -241,8 +285,9 @@ fn run_cells(
                     cell,
                     cluster_dir,
                     feature_framing,
-                    &cell_outputs,
+                    cell_outputs,
                     &resolved_cell_path,
+                    audit_context,
                 )
             };
 
@@ -270,6 +315,16 @@ fn run_cells(
                 fs::write(&cell_path, &output).with_context(|| {
                     format!("write cell {} to {}", cell.name, cell_path.display())
                 })?;
+                // FT-171: a retried cell whose content changed staleness
+                // its dependents — their bundles consumed the old output.
+                let changed = cell_outputs
+                    .get(&cell.name)
+                    .is_some_and(|prior| prior != &output);
+                if only.is_some() && changed {
+                    for dep in dependents_of(tt, &cell.name) {
+                        active.insert(dep);
+                    }
+                }
                 cell_outputs.insert(cell.name.clone(), output);
                 tracing::info!(
                     feature_id,
@@ -597,6 +652,7 @@ fn emit_llm_cell(
     feature_framing: &str,
     upstream: &BTreeMap<String, String>,
     resolved_cell_path: &Path,
+    audit_context: Option<&str>,
 ) -> Result<(String, Option<WorkerResponseUsage>, NamedNode)> {
     let cap = resolve_default_capability(store, &cell.model_binding_capability_id).with_context(
         || {
@@ -619,6 +675,7 @@ fn emit_llm_cell(
         feature_framing,
         upstream,
         resolved_cell_path,
+        audit_context,
     );
 
     // The worker's workspace_path is the cluster sandbox dir. It writes
@@ -708,6 +765,7 @@ fn build_cell_bundle(
     feature_framing: &str,
     upstream: &BTreeMap<String, String>,
     target_filename: &Path,
+    audit_context: Option<&str>,
 ) -> String {
     let mut out = String::new();
     out.push_str(&format!(
@@ -725,6 +783,17 @@ fn build_cell_bundle(
             out.push_str(upstream.get(dep).map(String::as_str).unwrap_or(""));
             out.push_str("\n```\n\n");
         }
+    }
+    // FT-171: a retried cell sees exactly why the audit rejected the
+    // prior attempt — the diagnostic is corrective context, not noise.
+    if let Some(audit) = audit_context {
+        out.push_str("## Prior audit failure\n\n");
+        out.push_str(
+            "Your previous output for this cell failed the cluster's coherence audit. \
+             Fix the issue the audit names below — change only what the diagnostic requires.\n\n```\n",
+        );
+        out.push_str(audit);
+        out.push_str("\n```\n\n");
     }
     out.push_str("## Your task\n\n");
     out.push_str(&format!(
@@ -802,6 +871,178 @@ fn load_orchestration_store(workdir: &Path) -> Result<Store> {
     })
 }
 
+/// FT-171: structured audit verdict so the repair loop can map FAIL
+/// lines back to cells. Unrunnable audits stay hard errors.
+enum AuditOutcome {
+    Pass,
+    Fail {
+        fail_lines: Vec<String>,
+        raw: String,
+    },
+}
+
+/// FT-171: direct dependents of `cell_name` in the TaskType's
+/// `derived_from` graph.
+fn dependents_of(tt: &TaskTypeDecl, cell_name: &str) -> Vec<String> {
+    tt.cells
+        .iter()
+        .filter(|c| c.derived_from.iter().any(|d| d == cell_name))
+        .map(|c| c.name.clone())
+        .collect()
+}
+
+/// FT-171: map the audit's `FAIL check=<name>: <detail>` lines to the
+/// cells to re-dispatch. Two signals, in order of precision:
+///
+/// 1. Path evidence — a detail mentioning a cell's resolved output_path
+///    implicates that cell (canonical_namespace and compile_probe carry
+///    file:line diagnostics).
+/// 2. Check-name evidence — a check named after a cell (or prefixed by
+///    one, e.g. `shacl_field_coverage` → `shacl_shape`) implicates it.
+///
+/// A FAIL line carrying neither implicates every cell — degrading to
+/// today's everything-again semantics rather than silently narrowing.
+fn implicate_cells(
+    tt: &TaskTypeDecl,
+    params: &BTreeMap<String, String>,
+    fail_lines: &[String],
+) -> std::collections::BTreeSet<String> {
+    let mut implicated = std::collections::BTreeSet::new();
+    let resolved: Vec<(String, String)> = tt
+        .cells
+        .iter()
+        .filter_map(|c| {
+            resolve_cell_output_path(c, params)
+                .ok()
+                .map(|p| (c.name.clone(), p.to_string_lossy().into_owned()))
+        })
+        .collect();
+
+    for line in fail_lines {
+        let mut matched = false;
+        for (cell, path) in &resolved {
+            if !path.is_empty() && line.contains(path.as_str()) {
+                implicated.insert(cell.clone());
+                matched = true;
+            }
+        }
+        if !matched {
+            if let Some(check) = line
+                .split("check=")
+                .nth(1)
+                .and_then(|rest| rest.split([':', ' ']).next())
+            {
+                for c in &tt.cells {
+                    if check == c.name || check.starts_with(&format!("{}_", prefix_of(&c.name))) {
+                        implicated.insert(c.name.clone());
+                        matched = true;
+                    }
+                }
+            }
+        }
+        if !matched {
+            // Unmapped failure — conservative: everything re-runs.
+            implicated.extend(tt.cells.iter().map(|c| c.name.clone()));
+        }
+    }
+    implicated
+}
+
+/// First underscore-delimited token of a cell name (`shacl_shape` →
+/// `shacl`), used to match family checks like `shacl_field_coverage`.
+fn prefix_of(cell_name: &str) -> &str {
+    cell_name.split('_').next().unwrap_or(cell_name)
+}
+
+/// FT-171: audit → repair → re-audit loop. The sandbox is preserved
+/// across rounds; only implicated cells re-dispatch, with the audit
+/// diagnostic appended to their bundles as corrective context.
+#[allow(clippy::too_many_arguments)]
+fn audit_with_repair(
+    ctx: &PlanContext,
+    argv: &[String],
+    store: &Store,
+    tt: &TaskTypeDecl,
+    feature_id: &str,
+    task_type_name: &str,
+    order: &[String],
+    cluster_dir: &Path,
+    feature_framing: &str,
+    params: &BTreeMap<String, String>,
+    cell_sessions: &mut Vec<CellSessionRecord>,
+    cell_outputs: &mut BTreeMap<String, String>,
+) -> Result<()> {
+    let mut retry_counts: BTreeMap<String, u32> = BTreeMap::new();
+    for round in 0..=MAX_AUDIT_REPAIR_ROUNDS {
+        let outcome = run_coherence_audit(
+            tt,
+            &ctx.workdir,
+            cluster_dir,
+            feature_id,
+            task_type_name,
+            params,
+        )?;
+        let (fail_lines, raw) = match outcome {
+            AuditOutcome::Pass => return Ok(()),
+            AuditOutcome::Fail { fail_lines, raw } => (fail_lines, raw),
+        };
+        let audit_err = || {
+            anyhow!(
+                "cluster_dispatch::run: audit failed for TaskType {:?} on {}: {}",
+                task_type_name,
+                feature_id,
+                raw
+            )
+        };
+        if round == MAX_AUDIT_REPAIR_ROUNDS || fail_lines.is_empty() {
+            return Err(audit_err());
+        }
+        let implicated = implicate_cells(tt, params, &fail_lines);
+        if implicated.is_empty() {
+            return Err(audit_err());
+        }
+        for cell in &implicated {
+            let count = retry_counts.entry(cell.clone()).or_insert(0);
+            if *count >= MAX_CELL_RETRIES {
+                return Err(anyhow!(
+                    "cluster_dispatch::run: audit failed for TaskType {:?} on {} and cell {}                      exhausted its {} retries: {}",
+                    task_type_name,
+                    feature_id,
+                    cell,
+                    MAX_CELL_RETRIES,
+                    raw
+                ));
+            }
+            *count += 1;
+        }
+        tracing::info!(
+            feature_id,
+            task_type = task_type_name,
+            round,
+            cells = ?implicated,
+            "cluster audit failed; re-dispatching implicated cells with the diagnostic (FT-171)"
+        );
+        let audit_context = fail_lines.join("\n");
+        run_cells(
+            ctx,
+            argv,
+            store,
+            tt,
+            feature_id,
+            task_type_name,
+            order,
+            cluster_dir,
+            feature_framing,
+            params,
+            cell_sessions,
+            cell_outputs,
+            Some(&implicated),
+            Some(&audit_context),
+        )?;
+    }
+    unreachable!("loop returns on pass, cap, or unmapped failure");
+}
+
 fn run_coherence_audit(
     tt: &TaskTypeDecl,
     workdir: &Path,
@@ -809,7 +1050,7 @@ fn run_coherence_audit(
     feature_id: &str,
     task_type_name: &str,
     params: &BTreeMap<String, String>,
-) -> Result<()> {
+) -> Result<AuditOutcome> {
     let audit = &tt.coherence_audit;
     let audit_path = workdir.join(&audit.script_path);
     if !audit_path.exists() {
@@ -819,7 +1060,7 @@ fn run_coherence_audit(
             script = %audit.script_path.display(),
             "cluster_dispatch: audit script not present; treating as deferred"
         );
-        return Ok(());
+        return Ok(AuditOutcome::Pass);
     }
     // FT-172: pass each cell's resolved output path (relative to the
     // fixture) after the fixture dir so content checks (compile probe,
@@ -840,13 +1081,16 @@ fn run_coherence_audit(
         .output()
         .with_context(|| format!("invoke coherence audit at {}", audit_path.display()))?;
     match output.status.code() {
-        Some(0) => Ok(()),
-        Some(1) => Err(anyhow!(
-            "cluster_dispatch::run: audit failed for TaskType {:?} on {}: {}",
-            task_type_name,
-            feature_id,
-            String::from_utf8_lossy(&output.stderr).trim()
-        )),
+        Some(0) => Ok(AuditOutcome::Pass),
+        Some(1) => {
+            let raw = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            let fail_lines = raw
+                .lines()
+                .filter(|l| l.contains("FAIL check="))
+                .map(str::to_string)
+                .collect();
+            Ok(AuditOutcome::Fail { fail_lines, raw })
+        }
         Some(2) => Err(anyhow!(
             "cluster_dispatch::run: audit unrunnable for TaskType {:?} on {}: {}",
             task_type_name,
@@ -873,6 +1117,91 @@ pub fn planned_cell_order(task_type_name: &str) -> Option<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn add_artifact_type_tt() -> &'static TaskTypeDecl {
+        task_type::lookup("add-artifact-type").expect("registry has add-artifact-type")
+    }
+
+    fn archetype_params() -> BTreeMap<String, String> {
+        let mut p = BTreeMap::new();
+        p.insert("artifact_name".to_string(), "archetype".to_string());
+        p
+    }
+
+    /// FT-171: a FAIL line carrying a cell's resolved output_path
+    /// implicates exactly that cell (path evidence beats check names).
+    #[test]
+    fn ft_171_implicate_by_path_evidence() {
+        let tt = add_artifact_type_tt();
+        let lines = vec![
+            "FAIL check=canonical_namespace: non-canonical IRI base(s): \
+             crates/dec-ontology/src/vocab/archetype.rs:3: https://bad.example/x"
+                .to_string(),
+        ];
+        let got = implicate_cells(tt, &archetype_params(), &lines);
+        assert_eq!(got.len(), 1, "{got:?}");
+        assert!(
+            got.contains("iri_module_consts") || got.contains("iri_constants"),
+            "{got:?}"
+        );
+    }
+
+    /// FT-171: a FAIL whose check name matches a cell (or its prefix
+    /// family) implicates that cell.
+    #[test]
+    fn ft_171_implicate_by_check_name() {
+        let tt = add_artifact_type_tt();
+        let lines = vec!["FAIL check=shacl_field_coverage: missing sh:path".to_string()];
+        let got = implicate_cells(tt, &archetype_params(), &lines);
+        assert!(got.contains("shacl_shape"), "{got:?}");
+        assert!(
+            got.len() < tt.cells.len(),
+            "must not degrade to all cells: {got:?}"
+        );
+    }
+
+    /// FT-171: an unmapped FAIL implicates every cell — degrading to
+    /// today's everything-again semantics, never silently narrower.
+    #[test]
+    fn ft_171_unmapped_failure_implicates_all_cells() {
+        let tt = add_artifact_type_tt();
+        let lines = vec!["FAIL check=mystery: something nobody owns".to_string()];
+        let got = implicate_cells(tt, &archetype_params(), &lines);
+        assert_eq!(got.len(), tt.cells.len(), "{got:?}");
+    }
+
+    /// FT-171: a retried cell's prompt carries the audit diagnostic as
+    /// a dedicated section.
+    #[test]
+    fn ft_171_bundle_carries_prior_audit_failure() {
+        let tt = add_artifact_type_tt();
+        let cell = &tt.cells[0];
+        let upstream = BTreeMap::new();
+        let bundle = build_cell_bundle(
+            tt,
+            cell,
+            "FT-T171",
+            "framing",
+            &upstream,
+            &PathBuf::from("x.rs"),
+            Some("FAIL check=compile_probe: expected `;`"),
+        );
+        assert!(bundle.contains("## Prior audit failure"), "{bundle}");
+        assert!(bundle.contains("FAIL check=compile_probe"), "{bundle}");
+    }
+
+    /// FT-171: dependents_of walks the derived_from graph one level.
+    #[test]
+    fn ft_171_dependents_of_direct_edges() {
+        let tt = add_artifact_type_tt();
+        // rust_struct feeds shacl_shape/parser/emitter in this cluster.
+        let deps = dependents_of(tt, "rust_struct");
+        assert!(!deps.is_empty(), "{deps:?}");
+        for d in &deps {
+            let cell = tt.cells.iter().find(|c| &c.name == d).unwrap();
+            assert!(cell.derived_from.iter().any(|x| x == "rust_struct"));
+        }
+    }
 
     /// FT-170 case 1: the worker honoured the resolved path — no-op,
     /// file content untouched, stray extras tolerated.
@@ -1153,6 +1482,7 @@ max_turns = "high"
             "## Description\nFixture.\n",
             &upstream,
             &PathBuf::from("emitter.rs"),
+            None,
         )
     }
 

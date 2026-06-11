@@ -2,12 +2,16 @@
 id: FT-171
 title: 'decision-cli: cluster_dispatch retries only failed cells — audit failure preserves the sandbox and re-dispatches the offending cell'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-170
 adrs:
 - ADR-080
-tests: []
+tests:
+- TC-433
+- TC-434
+- TC-435
+- TC-436
 domains: []
 domains-acknowledged: {}
 ---
