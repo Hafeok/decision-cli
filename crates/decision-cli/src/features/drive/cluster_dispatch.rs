@@ -420,6 +420,113 @@ fn resolve_cell_output_path(cell: &CellDecl, params: &BTreeMap<String, String>) 
     Ok(PathBuf::from(resolved))
 }
 
+/// FT-170: collect every file currently under `root`, as paths relative
+/// to `root`. The before/after diff of two snapshots identifies exactly
+/// the files one cell's worker created.
+fn snapshot_files(root: &Path) -> Result<std::collections::BTreeSet<PathBuf>> {
+    fn walk(root: &Path, dir: &Path, acc: &mut std::collections::BTreeSet<PathBuf>) -> Result<()> {
+        for entry in fs::read_dir(dir).with_context(|| format!("read dir {}", dir.display()))? {
+            let path = entry?.path();
+            if path.is_dir() {
+                walk(root, &path, acc)?;
+            } else if let Ok(rel) = path.strip_prefix(root) {
+                acc.insert(rel.to_path_buf());
+            }
+        }
+        Ok(())
+    }
+    let mut acc = std::collections::BTreeSet::new();
+    if root.exists() {
+        walk(root, root, &mut acc)?;
+    }
+    Ok(acc)
+}
+
+/// FT-170: deterministic cell-output placement. The harness resolved
+/// `output_path` before dispatch; the worker's chosen `write_file` path
+/// is advisory. After the worker returns, the cell's primary artifact is
+/// guaranteed to sit at the resolved path or the cell fails loudly:
+///
+/// 1. Worker wrote the resolved path → no-op (stray extras tolerated).
+/// 2. Worker wrote exactly one new file of the right kind elsewhere →
+///    relocated to the resolved path, with the drift logged (the signal
+///    feeds prompt tuning).
+/// 3. Worker wrote nothing of the right kind → fail naming the expected
+///    path (previously this surfaced later, at read-back or audit time).
+/// 4. Multiple candidates and no resolved file → fail listing them;
+///    ambiguity is never silently resolved.
+///
+/// The relocation refuses to overwrite a file that existed before the
+/// cell ran — a prior cell's placed output is never clobbered.
+fn place_cell_output(
+    cluster_dir: &Path,
+    resolved_rel: &Path,
+    before: &std::collections::BTreeSet<PathBuf>,
+    cell_label: &str,
+) -> Result<()> {
+    let after = snapshot_files(cluster_dir)?;
+    let new_files: Vec<&PathBuf> = after.difference(before).collect();
+
+    // Case 1 — the worker honoured the resolved path.
+    if new_files.iter().any(|p| p.as_path() == resolved_rel) {
+        return Ok(());
+    }
+
+    let wanted_ext = resolved_rel.extension();
+    let candidates: Vec<&PathBuf> = new_files
+        .iter()
+        .copied()
+        .filter(|p| p.extension() == wanted_ext)
+        .collect();
+
+    match candidates.as_slice() {
+        // Case 3 — nothing of the right kind was produced.
+        [] => Err(anyhow!(
+            "cluster_dispatch: cell {cell_label} produced no {} file; expected {} \
+             (worker may not have invoked write_file)",
+            wanted_ext
+                .map(|e| e.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "output".to_string()),
+            resolved_rel.display(),
+        )),
+        // Case 2 — exactly one stray: the harness owns placement.
+        [stray] => {
+            let target = cluster_dir.join(resolved_rel);
+            if before.contains(resolved_rel) {
+                return Err(anyhow!(
+                    "cluster_dispatch: cell {cell_label} would overwrite pre-existing {} \
+                     (stray candidate at {}); refusing to clobber a prior cell's output",
+                    resolved_rel.display(),
+                    stray.display(),
+                ));
+            }
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::rename(cluster_dir.join(stray), &target)
+                .with_context(|| format!("relocate {} to {}", stray.display(), target.display()))?;
+            tracing::info!(
+                cell = cell_label,
+                from = %stray.display(),
+                to = %resolved_rel.display(),
+                "cluster cell output relocated to resolved output_path (FT-170)"
+            );
+            Ok(())
+        }
+        // Case 4 — ambiguous.
+        many => Err(anyhow!(
+            "cluster_dispatch: cell {cell_label} wrote {} candidate files but none at the \
+             resolved path {}; refusing to guess: {}",
+            many.len(),
+            resolved_rel.display(),
+            many.iter()
+                .map(|p| p.display().to_string())
+                .collect::<Vec<_>>()
+                .join(", "),
+        )),
+    }
+}
+
 /// Emit a deterministic-template cell (no LLM). For now, mechanical
 /// cells produce a placeholder that names their derived_from inputs —
 /// enough for the audit to detect the file's presence. Full template
@@ -546,6 +653,10 @@ fn emit_llm_cell(
         allowed_tools: vec!["read_file".to_string(), "write_file".to_string()],
     };
 
+    // FT-170: snapshot the sandbox before dispatch so placement can
+    // identify exactly the files this cell's worker created.
+    let before = snapshot_files(cluster_dir)?;
+
     let WorkerRun {
         response,
         raw_stdout: _,
@@ -556,7 +667,17 @@ fn emit_llm_cell(
         )
     })?;
 
-    // Read back what the worker wrote.
+    // FT-170: the harness owns placement — the worker's chosen path is
+    // advisory; the artifact ends up at the resolved path or the cell
+    // fails with a diagnostic naming the expectation. Cells with an
+    // empty output_path (FT-145-era flat convention) keep the FT-139
+    // read-back behaviour unchanged.
+    if !cell.output_path.as_os_str().is_empty() {
+        let cell_label = format!("{}/{}", tt.name, cell.name);
+        place_cell_output(cluster_dir, resolved_cell_path, &before, &cell_label)?;
+    }
+
+    // Read back what the worker wrote (post-placement, guaranteed path).
     let written_path = cluster_dir.join(resolved_cell_path);
     let body = fs::read_to_string(&written_path).with_context(|| {
         format!(
@@ -733,6 +854,92 @@ pub fn planned_cell_order(task_type_name: &str) -> Option<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// FT-170 case 1: the worker honoured the resolved path — no-op,
+    /// file content untouched, stray extras tolerated.
+    #[test]
+    fn ft_170_placement_noop_when_resolved_path_written() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let before = snapshot_files(tmp.path()).unwrap();
+        let resolved = PathBuf::from("crates/x/src/thing.rs");
+        fs::create_dir_all(tmp.path().join("crates/x/src")).unwrap();
+        fs::write(tmp.path().join(&resolved), "pub struct T;").unwrap();
+        fs::write(tmp.path().join("crates/x/src/extra.rs"), "// helper").unwrap();
+
+        place_cell_output(tmp.path(), &resolved, &before, "tt/cell").expect("case 1 is a no-op");
+        let body = fs::read_to_string(tmp.path().join(&resolved)).unwrap();
+        assert_eq!(body, "pub struct T;");
+    }
+
+    /// FT-170 case 2: one stray of the right kind — relocated to the
+    /// resolved path with content preserved; the stray is gone.
+    #[test]
+    fn ft_170_placement_relocates_single_stray() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let before = snapshot_files(tmp.path()).unwrap();
+        let resolved = PathBuf::from("crates/x/src/shapes/thing.shacl.ttl");
+        // Worker drifted: wrote under a nested dir of its own invention.
+        let stray = PathBuf::from("crates/x/src/thing/shapes/thing.shacl.ttl");
+        fs::create_dir_all(tmp.path().join(stray.parent().unwrap())).unwrap();
+        fs::write(tmp.path().join(&stray), "@prefix dec: <x> .").unwrap();
+
+        place_cell_output(tmp.path(), &resolved, &before, "tt/cell").expect("case 2 relocates");
+        let body = fs::read_to_string(tmp.path().join(&resolved)).unwrap();
+        assert_eq!(body, "@prefix dec: <x> .");
+        assert!(
+            !tmp.path().join(&stray).exists(),
+            "stray must be moved, not copied"
+        );
+    }
+
+    /// FT-170 case 3: nothing of the right kind — the cell fails with a
+    /// diagnostic naming the expected path.
+    #[test]
+    fn ft_170_placement_fails_when_nothing_of_right_kind() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let before = snapshot_files(tmp.path()).unwrap();
+        let resolved = PathBuf::from("crates/x/src/thing.rs");
+        // Worker wrote only a different kind of file.
+        fs::write(tmp.path().join("notes.md"), "thoughts").unwrap();
+
+        let err = place_cell_output(tmp.path(), &resolved, &before, "tt/cell")
+            .expect_err("case 3 must fail");
+        assert!(err.to_string().contains("crates/x/src/thing.rs"), "{err}");
+    }
+
+    /// FT-170 case 4: several candidates and none at the resolved path —
+    /// ambiguity is never silently resolved; the diagnostic lists them.
+    #[test]
+    fn ft_170_placement_fails_on_ambiguous_candidates() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let before = snapshot_files(tmp.path()).unwrap();
+        let resolved = PathBuf::from("thing.rs");
+        fs::write(tmp.path().join("a.rs"), "a").unwrap();
+        fs::write(tmp.path().join("b.rs"), "b").unwrap();
+
+        let err = place_cell_output(tmp.path(), &resolved, &before, "tt/cell")
+            .expect_err("case 4 must fail");
+        let msg = err.to_string();
+        assert!(msg.contains("a.rs") && msg.contains("b.rs"), "{msg}");
+    }
+
+    /// FT-170 invariant: relocation refuses to clobber a file that
+    /// existed before the cell ran (a prior cell's placed output).
+    #[test]
+    fn ft_170_placement_refuses_to_overwrite_prior_output() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let resolved = PathBuf::from("thing.rs");
+        fs::write(tmp.path().join(&resolved), "prior cell output").unwrap();
+        let before = snapshot_files(tmp.path()).unwrap();
+        // This cell drifts AND its resolved path is already occupied.
+        fs::write(tmp.path().join("stray.rs"), "new content").unwrap();
+
+        let err = place_cell_output(tmp.path(), &resolved, &before, "tt/cell")
+            .expect_err("collision must fail");
+        assert!(err.to_string().contains("refusing to clobber"), "{err}");
+        let body = fs::read_to_string(tmp.path().join(&resolved)).unwrap();
+        assert_eq!(body, "prior cell output", "prior output must be untouched");
+    }
 
     /// FT-163 TC: pins the framing-cap constant so changes are explicit.
     /// 50k chars covers every current feature_spec (longest ≈ 12k) with

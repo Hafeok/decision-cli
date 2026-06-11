@@ -2,12 +2,16 @@
 id: FT-170
 title: 'decision-cli: cluster cells get deterministic output placement — the harness writes resolved output_path, worker paths are advisory'
 phase: 4
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-008
 - ADR-080
-tests: []
+tests:
+- TC-425
+- TC-426
+- TC-427
+- TC-428
 domains: []
 domains-acknowledged: {}
 ---
