@@ -9,33 +9,33 @@
 //! library, and the worker resolution chain.
 
 pub mod bootstrap;
-pub mod bundle;
+pub use dec_graph::bundle;
 pub mod bundled;
+pub mod cluster_session;
 pub mod cosign_trust;
 pub mod dispatch;
 pub mod dispatch_session;
 pub mod drive;
 pub mod feedback;
-pub mod graph;
+pub use dec_graph::graph;
 pub mod handler;
 pub mod identity_verifier;
 pub mod mcp;
 pub mod metrics;
 pub mod oci_manifest;
-pub mod ontology;
-pub mod queries;
+pub use dec_graph::ontology;
+pub use dec_graph::queries;
 pub mod role_catalog;
-pub mod sbom_referrer;
-pub mod scope;
-pub mod sparql;
-pub mod store;
-pub mod stream_writer;
-mod stream_writer_validations;
+pub use dec_graph::sbom_referrer;
+pub use dec_graph::scope;
+pub use dec_graph::sparql;
+pub use dec_graph::store;
+pub use dec_graph::stream_writer;
 pub mod subscriptions;
 pub mod task_type;
 pub mod verify;
-// ADR-086: the IRI vocabulary is pure domain data and lives in dec-ontology.
-// Re-exported so existing crate::core::vocab::… paths keep working.
+// ADR-086: the IRI vocabulary (dec-ontology) and the graph-access layer
+// (dec-graph) are re-exported so existing crate::core::… paths keep working.
 pub use dec_ontology::vocab;
 pub mod worker;
 pub mod worker_curator;

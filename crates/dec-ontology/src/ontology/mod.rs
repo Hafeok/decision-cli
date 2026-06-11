@@ -13,6 +13,7 @@ pub mod capability;
 pub mod catalog;
 pub mod conformance_audit;
 pub mod coverage_waiver;
+pub mod feedback;
 pub mod mechanical_provenance;
 pub mod per_type_shapes;
 pub mod role_binding;

@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/oxi-events",
     "crates/dec-ontology",
+    "crates/dec-graph",
     "crates/decision-cli",
 ]
 
@@ -59,6 +60,7 @@ tempfile = "3"
 # Internal
 oxi-events = { path = "crates/oxi-events" }
 dec-ontology = { path = "crates/dec-ontology" }
+dec-graph = { path = "crates/dec-graph" }
 
 # FT-136: Consume product-core and product-mcp as Cargo git dependencies (ADR-077)
 product-core = { git = "https://github.com/Hafeok/product-cli", rev = "5fad7aa11ca8787ff74e87bb00e1cc0bdfb8b2c1" }

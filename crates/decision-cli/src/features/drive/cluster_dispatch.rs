@@ -30,12 +30,12 @@ use chrono::Utc;
 use oxigraph::model::NamedNode;
 use oxigraph::store::Store;
 
+use crate::core::cluster_session::{
+    persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
+};
 use crate::core::dispatch::escalation::triggers::capability_iri;
 use crate::core::dispatch::resolve_default_capability;
 use crate::core::drive::PlanContext;
-use crate::core::graph::cluster_session::{
-    persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
-};
 use crate::core::store::{load_store_from_dump, orchestration_dump_path};
 use crate::core::task_type::{self, CellDecl, TaskTypeDecl};
 use crate::features::implement::{

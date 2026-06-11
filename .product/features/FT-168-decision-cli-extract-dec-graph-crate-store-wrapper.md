@@ -2,7 +2,7 @@
 id: FT-168
 title: 'decision-cli: Extract dec-graph crate — store wrapper, SPARQL execution, and the SHACL GraphWriter chokepoint'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-167
 adrs:
@@ -11,12 +11,14 @@ adrs:
 tests:
 - TC-411
 - TC-414
+- TC-417
+- TC-418
 domains: []
 domains-acknowledged:
+  ADR-081: ADR-081 governs CLI enumerate/lookup verb pairs. FT-168 is a pure relocation of graph/store/SPARQL machinery into crates/dec-graph adding no CLI verbs; the dec command surface is unchanged.
+  ADR-083: ADR-083 governs tech-detail binding levels for archetypes. FT-168 is a pure relocation of store/SPARQL machinery; no tech detail is bound at any level.
   ADR-084: ADR-084 mandates seam audits for archetypes. FT-168 ships no archetype; E102 enforcement arrives with FT-147 through the chokepoint this slice relocates.
   ADR-082: ADR-082 governs archetype-layer semantics. FT-168 relocates graph-access machinery; it implements no archetype behaviour. The GraphWriter chokepoint it moves will later host archetype SHACL shapes (FT-147), unchanged in mechanism.
-  ADR-083: ADR-083 governs tech-detail binding levels for archetypes. FT-168 is a pure relocation of store/SPARQL machinery; no tech detail is bound at any level.
-  ADR-081: ADR-081 governs CLI enumerate/lookup verb pairs. FT-168 is a pure relocation of graph/store/SPARQL machinery into crates/dec-graph adding no CLI verbs; the dec command surface is unchanged.
 ---
 
 ## Description

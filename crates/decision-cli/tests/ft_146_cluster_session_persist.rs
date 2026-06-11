@@ -20,7 +20,7 @@ use decision_cli::init::{run as init_run, DefinitionSource};
 use oxigraph::model::NamedNode;
 use oxigraph::sparql::QueryResults;
 
-use decision_cli::core::graph::cluster_session::{
+use decision_cli::core::cluster_session::{
     persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome, IRI_DEC_CELL_STATUS,
     IRI_DEC_CLUSTER_DISPATCH, IRI_DEC_CLUSTER_OUTCOME, IRI_DEC_USAGE_SOURCE,
 };

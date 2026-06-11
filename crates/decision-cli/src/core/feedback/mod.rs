@@ -1,36 +1,21 @@
-//! Feedback artifact type per FT-026 / ADR-022.
+//! Store-facing glue for the Feedback artifact type (FT-026 / ADR-022).
 //!
-//! Per the slice-level SDP convention in `CLAUDE.md`, every consumer
-//! (FT-027 lifecycle, FT-028 vocabulary, FT-029 routing, FT-031 worker
-//! SDK, FT-032 dispatch interaction, FT-033 CLI) imports from this
-//! module — no consumer imports from sibling features.
-//!
-//! Scope of FT-026 is intentionally the schema substrate: the in-memory
-//! shape, RDF (de)serialisation, the ADR-022 SHACL shape (required
-//! fields and cardinality), and a small read API. The richer rules —
-//! class controlled vocabulary (FT-028), lifecycle state machine
-//! (FT-027), routing (FT-029) — are owned by later features and layer
-//! on top of the contract defined here.
+//! The pure schema substrate — typed shape, quad emission, SHACL,
+//! class vocabulary (FT-028), lifecycle state machine (FT-027) — lives
+//! in [`dec_ontology::ontology::feedback`] (ADR-086); this module keeps
+//! the store-backed read API, routing (FT-029), transition application,
+//! and address walking, and re-exports both halves.
+
+pub use dec_ontology::ontology::feedback::*;
 
 pub mod address_walk;
-pub mod artifact;
-pub mod class;
-pub mod defect_record;
-pub mod lifecycle;
-mod lifecycle_shacl;
 pub mod read;
 pub mod routing;
-pub mod shacl;
 pub mod supersede_misrouted;
 pub mod transition;
 
 #[cfg(test)]
 mod tests;
 
-pub use artifact::{Feedback, Severity};
-pub use class::{Disposition, FeedbackClass};
-pub use defect_record::DefectFeedbackRecord;
-pub use lifecycle::{next_states, validate_transition, LifecycleState, TransitionError};
 pub use read::{get, list_by_class, list_by_target, list_open, FeedbackReadError};
-pub use shacl::{validate_quads, FeedbackShaclError, FeedbackViolation};
 pub use transition::{apply, read_prior_state, ApplyError, Evidence};

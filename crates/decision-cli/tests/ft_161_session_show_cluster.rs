@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
 use chrono::Utc;
-use decision_cli::core::graph::cluster_session::{
+use decision_cli::core::cluster_session::{
     persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
 };
 use decision_cli::core::scope::ActiveScope;

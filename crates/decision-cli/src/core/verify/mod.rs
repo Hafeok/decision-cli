@@ -12,9 +12,9 @@ pub mod aggregate;
 pub mod chain_integrity;
 pub mod coverage;
 pub mod matcher;
-pub mod quads;
 pub mod runner;
-pub mod safety;
+// ADR-086: quads + safety moved to dec-graph (the chokepoint consumes them).
+pub use dec_graph::verify::{quads, safety};
 pub mod supersede;
 
 pub use aggregate::{

@@ -1,0 +1,32 @@
+[package]
+name = "dec-graph"
+version = "0.1.0"
+description = "decision-cli graph-access layer: orchestration store, SPARQL execution, bundle CONSTRUCT, and the SHACL-enforced write chokepoint (ADR-086)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# ADR-086: dec-graph sits between the pure domain (dec-ontology) and the
+# orchestration harness. It may open the store and route mutations through
+# oxi-events, but never depends on dec-harness, decision-cli, or clap.
+# Enforced by scripts/checks/crate-dependency-topology.sh (TC-411).
+[dependencies]
+dec-ontology = { workspace = true }
+oxi-events = { workspace = true }
+oxigraph = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+sha2 = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

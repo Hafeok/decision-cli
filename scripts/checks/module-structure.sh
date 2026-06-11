@@ -75,18 +75,24 @@ if [ -d crates/oxi-events ]; then
 fi
 
 # decision-cli's per-ADR-013 canonical modules are aspirational and
-# overlap with the FT-018 vertical-slice migration. We assert the modules
-# that are stable across both layouts: an embedded ontology module (the
-# store-facing glue post-ADR-086) and an init module. The vocab module
-# moved to dec-ontology under ADR-086 (FT-167) and is asserted there.
+# overlap with the FT-018 vertical-slice migration. We assert the module
+# that is stable across layouts: the init slice. Ontology and vocab
+# moved down the ADR-086 stack (FT-167/FT-168) and are asserted in
+# their owning crates below.
 if [ -d crates/decision-cli ]; then
-  check_crate_modules decision-cli ontology init
+  check_crate_modules decision-cli init
 fi
 
 # dec-ontology canonical modules per ADR-086: the pure domain layer owns
 # the typed artifact submodules and the IRI vocabulary.
 if [ -d crates/dec-ontology ]; then
   check_crate_modules dec-ontology ontology vocab
+fi
+
+# dec-graph canonical modules per ADR-086: store access, the stream
+# writer chokepoint, and the store-facing ontology glue.
+if [ -d crates/dec-graph ]; then
+  check_crate_modules dec-graph store stream_writer graph ontology
 fi
 
 # -- (b) main.rs line cap --------------------------------------------------

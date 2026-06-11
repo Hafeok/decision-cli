@@ -2,7 +2,7 @@
 id: TC-414
 title: FT-168 exit criteria — dec-graph crate extracted with the GraphWriter chokepoint, compiling, facades intact
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: [FT-168]
   adrs: [ADR-086]
@@ -14,6 +14,8 @@ observes:
 - exit-code
 - stdout
 - disk-state
+last-run: 2026-06-11T13:46:50.631871209+00:00
+last-run-duration: 0.2s
 ---
 
 ## Purpose

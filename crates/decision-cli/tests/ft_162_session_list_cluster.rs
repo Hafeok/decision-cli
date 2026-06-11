@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use chrono::Utc;
-use decision_cli::core::graph::cluster_session::{
+use decision_cli::core::cluster_session::{
     persist_cluster_run, CellSessionRecord, CellStatus, ClusterOutcome,
 };
 use decision_cli::features::implement::session_show;

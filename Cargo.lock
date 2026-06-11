@@ -353,6 +353,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "dec-graph"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "dec-ontology",
+ "oxi-events",
+ "oxigraph",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "dec-ontology"
 version = "0.1.0"
 dependencies = [
@@ -372,6 +391,7 @@ dependencies = [
  "chrono",
  "clap",
  "ctrlc",
+ "dec-graph",
  "dec-ontology",
  "http-body-util",
  "oxi-events",
