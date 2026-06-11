@@ -1,0 +1,122 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dec: <https://decisionframework.org/ns/decision#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+dec:ArchetypeShape
+    a sh:NodeShape ;
+    sh:targetClass dec:Archetype ;
+    sh:property [
+        sh:path dec:archetypeId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeTitle ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeStatus ;
+        sh:in (dec:candidate dec:standard dec:quarantined) ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationContract ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureContractTemplate ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureContractInstances ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path dec:applicationTaskTypes ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path dec:infrastructureTaskTypes ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path dec:archetypeAudits ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path dec:seamAudits ;
+        sh:nodeKind sh:IRI ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path dec:evidence ;
+        sh:nodeKind sh:BlankNode ;
+        sh:minCount 1 ;
+        sh:property [
+            sh:path dec:archetypeLayerEstimate ;
+            sh:datatype xsd:float ;
+            sh:minCount 1 ;
+        ] ;
+        sh:property [
+            sh:path dec:instanceVariance ;
+            sh:in (dec:low dec:medium dec:high) ;
+            sh:minCount 1 ;
+        ] ;
+        sh:property [
+            sh:path dec:applicationContractHeldInvariant ;
+            sh:datatype xsd:boolean ;
+            sh:minCount 1 ;
+        ] ;
+        sh:property [
+            sh:path dec:coverageNote ;
+            sh:datatype xsd:string ;
+            sh:minCount 1 ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path dec:provenance ;
+        sh:nodeKind sh:BlankNode ;
+        sh:minCount 1 ;
+        sh:property [
+            sh:path dec:mechanical ;
+            sh:nodeKind sh:BlankNode ;
+            sh:minCount 0 ;
+            sh:property [
+                sh:path dec:generatedBy ;
+                sh:nodeKind sh:IRI ;
+                sh:minCount 1 ;
+            ] ;
+            sh:property [
+                sh:path dec:generatedAt ;
+                sh:datatype xsd:string ;
+                sh:minCount 1 ;
+            ] ;
+            sh:property [
+                sh:path dec:generatedVia ;
+                sh:nodeKind sh:IRI ;
+                sh:minCount 1 ;
+            ] ;
+        ] ;
+        sh:property [
+            sh:path dec:motivational ;
+            sh:nodeKind sh:BlankNode ;
+            sh:minCount 0 ;
+            sh:property [
+                sh:path dec:motivatedBy ;
+                sh:nodeKind sh:IRI ;
+                sh:minCount 1 ;
+            ] ;
+            sh:property [
+                sh:path dec:motivatedVia ;
+                sh:nodeKind sh:IRI ;
+                sh:minCount 1 ;
+            ] ;
+        ] ;
+    ] .

@@ -1,51 +1,67 @@
-use clap::{Parser, Subcommand};
-use std::process;
+use clap::Parser;
 
+/// The main CLI application for dec commands
 #[derive(Parser)]
-#[clap(name = "dec")]
-#[clap(bin_name = "dec")]
+#[command(name = "dec")]
+#[command(about = "Decision tool for managing product features")]
 pub struct DecCli {
     #[clap(subcommand)]
     pub command: Commands,
 }
 
-#[derive(Subcommand)]
+/// Available commands
+#[derive(clap::Subcommand)]
 pub enum Commands {
-    /// Manage product information
-    Product(ProductSubcommand),
+    /// Manage product features
+    Product(ProductCommands),
 }
 
-#[derive(Subcommand)]
-pub enum ProductSubcommand {
+/// Product-related commands
+#[derive(clap::Subcommand)]
+pub enum ProductCommands {
     /// Show product status
     Status(StatusArgs),
 }
 
+/// Arguments for the status command
 #[derive(Parser)]
 pub struct StatusArgs {
     /// Output format
-    #[clap(long, default_value = "text")]
-    pub format: String,
+    #[arg(long, value_enum, default_value = "text")]
+    pub format: OutputFormat,
     
     /// Filter by phase
-    #[clap(long)]
+    #[arg(long)]
     pub phase: Option<u32>,
 }
 
-fn main() {
-    let cli = DecCli::parse();
-    
-    match &cli.command {
-        Commands::Product(product_cmd) => {
-            match product_cmd {
-                ProductSubcommand::Status(args) => {
-                    // Import and call the handler function
-                    if let Err(e) = crate::features::product_cmd::handle_status(args) {
-                        eprintln!("Error: {}", e);
-                        process::exit(1);
-                    }
-                }
-            }
-        }
+/// Output format options
+#[derive(clap::ValueEnum, Clone, Debug)]
+pub enum OutputFormat {
+    Text,
+    Json,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_status_args_parse() {
+        let args = StatusArgs::try_parse_from(["dec", "status"]).unwrap();
+        assert_eq!(args.format, OutputFormat::Text);
+        assert_eq!(args.phase, None);
+    }
+
+    #[test]
+    fn test_status_args_with_format() {
+        let args = StatusArgs::try_parse_from(["dec", "status", "--format", "json"]).unwrap();
+        assert_eq!(args.format, OutputFormat::Json);
+    }
+
+    #[test]
+    fn test_status_args_with_phase() {
+        let args = StatusArgs::try_parse_from(["dec", "status", "--phase", "2"]).unwrap();
+        assert_eq!(args.phase, Some(2));
     }
 }

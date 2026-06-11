@@ -1,24 +1,24 @@
 use clap::{Parser, Subcommand};
 
-#[derive(Debug, Parser)]
+#[derive(Parser, Debug)]
 pub struct ProductArgs {
     #[clap(subcommand)]
-    pub command: ProductSubcommands,
+    pub command: ProductCommand,
 }
 
-#[derive(Debug, Subcommand)]
-pub enum ProductSubcommands {
-    /// Show the status of the project
+#[derive(Subcommand, Debug)]
+pub enum ProductCommand {
+    /// Show project status information
     Status(StatusArgs),
 }
 
-#[derive(Debug, Parser)]
+#[derive(Parser, Debug)]
 pub struct StatusArgs {
     /// Output format
     #[clap(long = "format", default_value = "text")]
     pub format: String,
 
-    /// Filter by phase
+    /// Filter by phase number
     #[clap(long = "phase")]
     pub phase: Option<u32>,
 }

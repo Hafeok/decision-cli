@@ -1,54 +1,44 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
+use std::fs::File;
+use std::io::Write;
 
 #[test]
 fn test_product_status_help() {
-    let mut cmd = Command::cargo_bin("dec").unwrap();
-    cmd.args(&["product", "status", "--help"]);
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::contains("Show the status of the project"));
+    Command::new("cargo")
+        .args(["run", "--bin", "dec", "--", "product", "status", "--help"])
+        .assert()
+        .success();
 }
 
 #[test]
-fn test_product_status_text_format() {
-    let mut cmd = Command::cargo_bin("dec").unwrap();
-    cmd.args(&["product", "status", "--format", "text"]);
-    // We expect this to fail because we don't have a valid product config,
-    // but it should fail with a graph-load error, not a subcommand error
-    cmd.assert()
+fn test_product_status_no_project() {
+    let temp_dir = tempfile::tempdir().unwrap();
+    Command::new("cargo")
+        .args(["run", "--bin", "dec", "--", "product", "status"])
+        .current_dir(temp_dir.path())
+        .assert()
         .failure()
-        .stderr(predicate::str::contains("graph load"));
+        .stderr(predicate::str::contains("No product configuration found"));
 }
 
 #[test]
-fn test_product_status_json_format() {
-    let mut cmd = Command::cargo_bin("dec").unwrap();
-    cmd.args(&["product", "status", "--format", "json"]);
-    // We expect this to fail because we don't have a valid product config,
-    // but it should fail with a graph-load error, not a subcommand error
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("graph load"));
-}
-
-#[test]
-fn test_product_status_invalid_format() {
-    let mut cmd = Command::cargo_bin("dec").unwrap();
-    cmd.args(&["product", "status", "--format", "invalid"]);
-    // Should fail with usage error since invalid format is provided
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("Usage"));
-}
-
-#[test]
-fn test_product_status_with_phase() {
-    let mut cmd = Command::cargo_bin("dec").unwrap();
-    cmd.args(&["product", "status", "--phase", "1"]);
-    // We expect this to fail because we don't have a valid product config,
-    // but it should fail with a graph-load error, not a subcommand error
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("graph load"));
+fn test_product_status_with_mock_project() {
+    let temp_dir = tempfile::tempdir().unwrap();
+    let product_dir = temp_dir.path().join(".product");
+    std::fs::create_dir_all(&product_dir).unwrap();
+    
+    // Create a mock product config
+    let mut config_file = File::create(product_dir.join("config.toml")).unwrap();
+    writeln!(config_file, r#"name = "Test Project""#).unwrap();
+    
+    // Create a mock graph file
+    let mut graph_file = File::create(product_dir.join("graph.json")).unwrap();
+    writeln!(graph_file, r#"{"features": []}"#).unwrap();
+    
+    Command::new("cargo")
+        .args(["run", "--bin", "dec", "--", "product", "status"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
 }

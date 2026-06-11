@@ -1,72 +1,17 @@
-use crate::features::product_cmd::StatusArgs;
-use crate::product::ProductConfig;
-use anyhow::Result;
-use std::collections::HashMap;
+use crate::cli::product::StatusArgs;
+use crate::config::ProductConfig;
+use crate::error::CliResult;
+use crate::output::format_status_output;
 
-pub fn handle_status(args: &StatusArgs) -> Result<()> {
-    let product_config = ProductConfig::discover()?;
+pub fn handle_product_status(args: &StatusArgs) -> CliResult<()> {
+    let config = ProductConfig::discover()?;
     
-    // Simulate fetching project status data
-    let mut status_data = HashMap::new();
+    // Load the product graph
+    let graph = config.load_graph()?;
     
-    // Add per-phase counts (mock data)
-    status_data.insert("phase_1", vec!["ready", "blocked", "in_progress"]);
-    status_data.insert("phase_2", vec!["ready", "in_progress"]);
-    status_data.insert("phase_3", vec!["blocked"]);
-    
-    // Add gate states (mock data)
-    status_data.insert("gates", vec!["ready", "blocked"]);
-    
-    // Add exit criteria coverage (mock data)
-    status_data.insert("exit_criteria", vec!["covered", "partial", "not_covered"]);
-    
-    // Add features by status (mock data)
-    status_data.insert("features_by_status", vec!["ready", "blocked", "in_progress"]);
-    
-    // Format output based on --format flag
-    match args.format.as_str() {
-        "json" => {
-            let json_output = serde_json::to_string_pretty(&status_data)?;
-            println!("{}", json_output);
-        }
-        _ => {
-            // Default to text format
-            println!("Project Status Summary:");
-            println!("=======================");
-            
-            // Print per-phase counts
-            println!("\nPhase Status:");
-            for (phase, statuses) in &status_data {
-                if phase.starts_with("phase_") {
-                    println!("  {}: {:?}", phase, statuses);
-                }
-            }
-            
-            // Print gate states
-            if let Some(gates) = status_data.get("gates") {
-                println!("\nGates:");
-                for gate in gates {
-                    println!("  {}", gate);
-                }
-            }
-            
-            // Print exit criteria coverage
-            if let Some(criteria) = status_data.get("exit_criteria") {
-                println!("\nExit Criteria Coverage:");
-                for criterion in criteria {
-                    println!("  {}", criterion);
-                }
-            }
-            
-            // Print features by status
-            if let Some(features) = status_data.get("features_by_status") {
-                println!("\nFeatures by Status:");
-                for feature in features {
-                    println!("  {}", feature);
-                }
-            }
-        }
-    }
+    // Format and output based on args
+    let output = format_status_output(&graph, args)?;
+    println!("{}", output);
     
     Ok(())
 }
