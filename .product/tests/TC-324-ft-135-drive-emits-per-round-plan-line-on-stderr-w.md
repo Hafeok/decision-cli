@@ -2,17 +2,19 @@
 id: TC-324
 title: 'FT-135: drive emits per-round plan line on stderr with feature id and action tag'
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-135
   adrs: []
 phase: 1
-runner: bash
-runner-args: scripts/checks/tc-324-drive-per-round-stderr.sh
-runner-timeout: 60
+runner: cargo-test
+runner-args: -p decision-cli ft_135_plan_line_per_round
+runner-timeout: 300
 observes:
 - stderr
+last-run: 2026-06-12T12:53:43.885714192+00:00
+last-run-duration: 152.7s
 ---
 
 ## Acceptance criteria

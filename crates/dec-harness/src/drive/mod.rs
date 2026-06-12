@@ -28,4 +28,4 @@ pub use action::Action;
 pub use artifact::{ArtifactKind, ArtifactRef};
 pub use context::PlanContext;
 pub use goal::Goal;
-pub use planner::Planner;
+pub use planner::{PlanError, Planner};

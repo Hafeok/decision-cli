@@ -77,6 +77,8 @@ pub struct SweepInput {
     /// constructing `SweepInput` without this field via
     /// `..Default::default()`) keep the slice-1 behaviour.
     pub goal: Goal,
+    /// FT-135: suppress per-feature live progress on stderr.
+    pub quiet: bool,
 }
 
 impl Default for SweepInput {
@@ -87,6 +89,7 @@ impl Default for SweepInput {
             max_iter: 0,
             per_item_timeout: Duration::from_secs(0),
             goal: Goal::Ship,
+            quiet: false,
         }
     }
 }
@@ -145,12 +148,13 @@ pub async fn run_sweep(
         };
 
         // Run the drive under timeout
+        let quiet = input.quiet;
         let outcome = match tokio::time::timeout(
             input.per_item_timeout,
             tokio::task::spawn_blocking({
                 let ctx = ctx.clone();
                 let args = run_args.clone();
-                move || run(&ctx, &args)
+                move || crate::features::drive::run::run_quiet_aware(&ctx, &args, quiet)
             }),
         )
         .await

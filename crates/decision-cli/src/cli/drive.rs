@@ -267,6 +267,7 @@ fn run_sweep_all(workdir: &Path, args: ShipArgs) -> ExitCode {
         max_iter: args.max_iter.unwrap_or(6), // FT-111 default is 6, not 5
         per_item_timeout: Duration::from_secs(args.per_feature_timeout),
         goal: Goal::Ship,
+        quiet: false,
     };
 
     let runtime = match tokio::runtime::Runtime::new() {
@@ -403,6 +404,7 @@ fn run_def_ready_sweep(workdir: &Path, args: DefReadyArgs) -> ExitCode {
         max_iter: args.max_iter.unwrap_or(6),
         per_item_timeout: Duration::from_secs(args.per_feature_timeout),
         goal: Goal::DefReady,
+        quiet: false,
     };
     let runtime = match tokio::runtime::Runtime::new() {
         Ok(r) => r,

@@ -2,7 +2,7 @@
 id: FT-135
 title: 'decision-cli: dec drive live progress feedback (per-round + per-worker stderr stream)'
 phase: 4
-status: planned
+status: complete
 depends-on:
 - FT-110
 - FT-111
@@ -17,8 +17,8 @@ domains:
 - api
 - observability
 domains-acknowledged:
-  observability: 'Adds structured progress events emitted via the existing `tracing` crate at `target: "dec::drive::progress"`, mirrored to stderr through a `ProgressSink` trait. Reuses the same tracing infrastructure that already covers the escalation paths (`features/drive/execute.rs:77,104`) and the inspector warnings (`features/drive/inspect.rs:746`). Does not introduce a new sink, formatter, or filter syntax — operators tune verbosity with `RUST_LOG` exactly as today.'
   api: Extends the existing `dec drive *` surface with a `--quiet`/`-q` flag and a documented stderr line format. No new verbs, no new artifact contract, no MCP twin needed — progress is a runtime concern, not a graph mutation. Honours ADR-011 (single-command CLI shape) by keeping every variant of `dec drive` consistent in flag set and line format.
+  observability: 'Adds structured progress events emitted via the existing `tracing` crate at `target: "dec::drive::progress"`, mirrored to stderr through a `ProgressSink` trait. Reuses the same tracing infrastructure that already covers the escalation paths (`features/drive/execute.rs:77,104`) and the inspector warnings (`features/drive/inspect.rs:746`). Does not introduce a new sink, formatter, or filter syntax — operators tune verbosity with `RUST_LOG` exactly as today.'
 ---
 
 ## Description

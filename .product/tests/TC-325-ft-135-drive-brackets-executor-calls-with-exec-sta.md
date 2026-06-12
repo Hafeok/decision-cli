@@ -2,17 +2,19 @@
 id: TC-325
 title: 'FT-135: drive brackets executor calls with exec start + exec ok/fail lines carrying elapsed time'
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-135
   adrs: []
 phase: 1
-runner: bash
-runner-args: scripts/checks/tc-325-drive-exec-bracket.sh
-runner-timeout: 120
+runner: cargo-test
+runner-args: -p decision-cli ft_135_exec_bracket_lines
+runner-timeout: 300
 observes:
 - stderr
+last-run: 2026-06-12T12:53:43.885714192+00:00
+last-run-duration: 4.1s
 ---
 
 ## Acceptance criteria

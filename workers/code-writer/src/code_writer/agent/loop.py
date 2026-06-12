@@ -117,6 +117,15 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
 
     # Main loop
     for turn in range(payload.max_turns):
+        # FT-135: heartbeat — one line per turn on stderr so the harness
+        # can distinguish a working/throttled worker from a wedged one
+        # (the kill budget is inactivity-based) and the operator sees
+        # live progress.
+        print(
+            f"dec-progress: turn {turn + 1}/{payload.max_turns}",
+            file=sys.stderr,
+            flush=True,
+        )
         try:
             # Call LiteLLM
             # Witnessed on the FT-148 cluster runs: without an explicit

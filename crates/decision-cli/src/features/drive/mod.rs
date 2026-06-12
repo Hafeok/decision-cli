@@ -17,4 +17,7 @@ pub mod run;
 pub use execute::{Executor, ProductionExecutor};
 pub use outcome::{DriveError, DriveOutcome, HistoryEntry};
 pub use registry::planner_for;
-pub use run::{run, run_with_executor, run_with_planner_and_executor, RunArgs, DEFAULT_MAX_ITER};
+pub use run::{
+    run, run_quiet_aware, run_with_executor, run_with_planner_and_executor, RunArgs,
+    DEFAULT_MAX_ITER,
+};

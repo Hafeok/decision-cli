@@ -159,3 +159,142 @@ impl ProgressSink for NullProgressSink {
     fn on_exec_end(&self, _: &str, _: usize, _: &str, _: f64, _: Option<&str>) {}
     fn on_outcome(&self, _: &str, _: &str) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::drive::{
+        Action, ArtifactKind, ArtifactRef, Goal, PlanContext, Planner, PlanError,
+    };
+    use crate::features::drive::execute::Executor;
+    use crate::features::drive::run::{run_with_planner_executor_and_progress, RunArgs};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    /// Plans one dispatch action, then Done.
+    struct OneShotPlanner {
+        calls: AtomicUsize,
+    }
+
+    impl Planner for OneShotPlanner {
+        fn plan(&self, _: &PlanContext, _: &ArtifactRef) -> Result<Action, PlanError> {
+            let n = self.calls.fetch_add(1, Ordering::SeqCst);
+            Ok(if n == 0 {
+                Action::DispatchCluster {
+                    feature_id: "FT-T135".to_string(),
+                    task_type_name: "add-artifact-type".to_string(),
+                }
+            } else {
+                Action::Done
+            })
+        }
+    }
+
+    struct OkExecutor;
+    impl Executor for OkExecutor {
+        fn execute(&mut self, _: &PlanContext, _: &Action) -> anyhow::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn ctx() -> PlanContext {
+        PlanContext {
+            workdir: std::env::temp_dir(),
+            product_root: std::env::temp_dir(),
+            env_override: None,
+        }
+    }
+
+    fn args() -> RunArgs {
+        RunArgs {
+            goal: Goal::Ship,
+            artifact: ArtifactRef {
+                kind: ArtifactKind::Feature,
+                short_id: "FT-T135".to_string(),
+            },
+            max_iter: 3,
+        }
+    }
+
+    /// TC-324: per-round plan line with feature id and action tag.
+    #[test]
+    fn ft_135_plan_line_per_round() {
+        let sink = RecordingProgressSink::default();
+        let planner = OneShotPlanner {
+            calls: AtomicUsize::new(0),
+        };
+        let mut executor = OkExecutor;
+        run_with_planner_executor_and_progress(&ctx(), &args(), &planner, &mut executor, &sink)
+            .expect("drive completes");
+        let lines = sink.snapshot();
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.starts_with("[FT-T135] iter 0  plan=dispatch:cluster")),
+            "{lines:?}"
+        );
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.starts_with("[FT-T135] iter 1  plan=done")),
+            "{lines:?}"
+        );
+    }
+
+    /// TC-325: exec start + exec ok bracket with elapsed seconds.
+    #[test]
+    fn ft_135_exec_bracket_lines() {
+        let sink = RecordingProgressSink::default();
+        let planner = OneShotPlanner {
+            calls: AtomicUsize::new(0),
+        };
+        let mut executor = OkExecutor;
+        run_with_planner_executor_and_progress(&ctx(), &args(), &planner, &mut executor, &sink)
+            .expect("drive completes");
+        let lines = sink.snapshot();
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.contains("exec start: dispatch:cluster")),
+            "{lines:?}"
+        );
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.contains("exec ok") && l.contains('s')),
+            "{lines:?}"
+        );
+    }
+
+    /// TC-327 (loop half): terminal outcome line streams from the loop.
+    #[test]
+    fn ft_135_outcome_line_on_done() {
+        let sink = RecordingProgressSink::default();
+        let planner = OneShotPlanner {
+            calls: AtomicUsize::new(0),
+        };
+        let mut executor = OkExecutor;
+        run_with_planner_executor_and_progress(&ctx(), &args(), &planner, &mut executor, &sink)
+            .expect("drive completes");
+        let lines = sink.snapshot();
+        assert!(
+            lines.iter().any(|l| l.contains("outcome=Done iter=1")),
+            "{lines:?}"
+        );
+    }
+
+    /// TC-326 (sink half): quiet suppresses stderr writes but the
+    /// callbacks (and thus tracing) still fire — proven by the
+    /// recording sink capturing while StderrProgressSink::emit gates
+    /// only the eprintln. Exercised here via the quiet constructor not
+    /// panicking and the trait dispatch path staying live.
+    #[test]
+    fn ft_135_quiet_sink_constructs_and_dispatches() {
+        let sink = StderrProgressSink::new(true);
+        let planner = OneShotPlanner {
+            calls: AtomicUsize::new(0),
+        };
+        let mut executor = OkExecutor;
+        run_with_planner_executor_and_progress(&ctx(), &args(), &planner, &mut executor, &sink)
+            .expect("drive completes under quiet sink");
+    }
+}

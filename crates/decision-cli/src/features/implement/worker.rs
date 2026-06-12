@@ -246,19 +246,42 @@ pub fn run_worker(argv: &[String], payload: &DispatchPayloadJson) -> Result<Work
         let _ = stdout_pipe.read_to_end(&mut buf);
         buf
     });
+    // FT-135: stderr drains line-by-line — each line is forwarded to the
+    // operator (live worker narration) and counts as activity for the
+    // inactivity-based kill budget, so a throttled-but-alive worker
+    // (heartbeating "dec-progress:"/"agent throttle:" lines) is never
+    // killed mid-starvation while a silent wedge still is.
+    let last_activity = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+    let activity_marker = std::sync::Arc::clone(&last_activity);
+    let start_instant = std::time::Instant::now();
     let stderr_thread = std::thread::spawn(move || {
-        use std::io::Read;
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stderr_pipe);
         let mut buf = Vec::new();
-        let _ = stderr_pipe.read_to_end(&mut buf);
+        for line in reader.lines() {
+            let Ok(line) = line else { break };
+            activity_marker.store(
+                start_instant.elapsed().as_secs(),
+                std::sync::atomic::Ordering::Relaxed,
+            );
+            eprintln!("[worker] {line}");
+            buf.extend_from_slice(line.as_bytes());
+            buf.push(b'\n');
+        }
         buf
     });
 
     let budget = std::time::Duration::from_secs(u64::from(payload.timeout_seconds.max(60)));
-    let deadline = std::time::Instant::now() + budget;
+    let absolute_cap = budget * 4;
     let status = loop {
+        let now = start_instant.elapsed();
+        let last = std::time::Duration::from_secs(
+            last_activity.load(std::sync::atomic::Ordering::Relaxed),
+        );
+        let inactive = now.saturating_sub(last);
         match child.try_wait().context("polling worker subprocess")? {
             Some(status) => break status,
-            None if std::time::Instant::now() >= deadline => {
+            None if inactive >= budget || now >= absolute_cap => {
                 let _ = child.kill();
                 let _ = child.wait();
                 let _ = stdout_thread.join();
@@ -268,8 +291,10 @@ pub fn run_worker(argv: &[String], payload: &DispatchPayloadJson) -> Result<Work
                     .unwrap_or_default();
                 let tail_start = stderr.len().saturating_sub(500);
                 return Err(anyhow!(
-                    "code-writer worker exceeded its {}s budget and was killed. stderr tail: {}",
+                    "code-writer worker killed: {}s without activity (budget {}s, absolute cap {}s). stderr tail: {}",
+                    inactive.as_secs(),
                     budget.as_secs(),
+                    absolute_cap.as_secs(),
                     &stderr[tail_start..]
                 ));
             }

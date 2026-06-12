@@ -313,6 +313,7 @@ fn tc_257_sweep_input_carries_goal_field() {
         max_iter: 4,
         per_item_timeout: Duration::from_secs(10),
         goal: Goal::DefReady,
+        quiet: false,
     };
     assert_eq!(input.goal, Goal::DefReady);
 }
