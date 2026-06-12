@@ -707,6 +707,22 @@ fn emit_llm_cell(
     // instruction telling the worker exactly what to write (FT-166: the
     // resolved path may include subdirectories — the bundle surfaces it
     // verbatim and the worker creates intermediate dirs via write_file).
+    // FT-178: distill the TaskType's context files from the live tree.
+    let mut crate_interfaces = String::new();
+    for cf in &tt.context_files {
+        match fs::read_to_string(ctx.workdir.join(cf)) {
+            Ok(src) => {
+                crate_interfaces.push_str(&format!("// {}\n", cf.display()));
+                crate_interfaces.push_str(&distill_rust_public_surface(&src));
+                crate_interfaces.push('\n');
+            }
+            Err(err) => tracing::warn!(
+                file = %cf.display(),
+                error = %err,
+                "context file unreadable; omitting from cell bundle (FT-178)"
+            ),
+        }
+    }
     let bundle = build_cell_bundle(
         tt,
         cell,
@@ -715,6 +731,7 @@ fn emit_llm_cell(
         upstream,
         resolved_cell_path,
         audit_context,
+        &crate_interfaces,
     );
 
     // The worker's workspace_path is the cluster sandbox dir. It writes
@@ -887,6 +904,7 @@ fn build_cell_bundle(
     upstream: &BTreeMap<String, String>,
     target_filename: &Path,
     audit_context: Option<&str>,
+    crate_interfaces: &str,
 ) -> String {
     let mut out = String::new();
     out.push_str(&format!(
@@ -919,6 +937,20 @@ fn build_cell_bundle(
                  Derive ONLY from them — do not invent additional types, files, or vocabulary.\n\n",
             );
         }
+    }
+    // FT-178: the cell knows which crate it writes into — dependency
+    // universe + the distilled surfaces of the existing interfaces it
+    // must call (the witnessed FT-148 compile failures were all guesses
+    // at exactly these).
+    if !tt.crate_contract.is_empty() {
+        out.push_str("## Crate contract\n\n");
+        out.push_str(&tt.crate_contract);
+        out.push_str("\n\n");
+    }
+    if !crate_interfaces.is_empty() {
+        out.push_str("## Existing crate interfaces — use exactly these\n\n```\n");
+        out.push_str(crate_interfaces);
+        out.push_str("\n```\n\n");
     }
     if !cell.derived_from.is_empty() {
         out.push_str("## Upstream cells\n\n");
@@ -1356,6 +1388,7 @@ mod tests {
             &upstream,
             &PathBuf::from("x.rs"),
             Some("FAIL check=compile_probe: expected `;`"),
+            "",
         );
         assert!(bundle.contains("## Prior audit failure"), "{bundle}");
         assert!(bundle.contains("FAIL check=compile_probe"), "{bundle}");
@@ -1372,6 +1405,81 @@ mod tests {
             let cell = tt.cells.iter().find(|c| &c.name == d).unwrap();
             assert!(cell.derived_from.iter().any(|x| x == "rust_struct"));
         }
+    }
+
+    /// FT-178: every add-artifact-type LLM cell bundle carries the
+    /// crate contract (dependency universe; oxrdf not oxigraph) and the
+    /// distilled existing-interface section.
+    #[test]
+    fn ft_178_bundle_carries_crate_contract_and_interfaces() {
+        let tt = add_artifact_type_tt();
+        assert!(tt.crate_contract.contains("oxrdf"));
+        assert!(tt.crate_contract.contains("NEVER import `oxigraph`"));
+        assert!(!tt.context_files.is_empty());
+        let cell = tt
+            .cells
+            .iter()
+            .find(|c| c.name == "parser")
+            .expect("parser");
+        let upstream = BTreeMap::new();
+        let bundle = build_cell_bundle(
+            tt,
+            cell,
+            "FT-T178",
+            "framing",
+            &upstream,
+            &PathBuf::from("x/parser.rs"),
+            None,
+            "pub struct Provenance { pub was_generated_by: NamedNode }",
+        );
+        assert!(bundle.contains("## Crate contract"), "{bundle}");
+        assert!(bundle.contains("NEVER import `oxigraph`"), "{bundle}");
+        assert!(
+            bundle.contains("Existing crate interfaces — use exactly these"),
+            "{bundle}"
+        );
+        assert!(bundle.contains("pub struct Provenance"), "{bundle}");
+    }
+
+    /// FT-178: the declared context files exist in the live tree —
+    /// a renamed provenance.rs would silently drop the section.
+    #[test]
+    fn ft_178_registry_context_files_exist_on_disk() {
+        let tt = add_artifact_type_tt();
+        for cf in &tt.context_files {
+            assert!(
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../..")
+                    .join(cf)
+                    .exists(),
+                "context file missing: {}",
+                cf.display()
+            );
+        }
+    }
+
+    /// FT-178: distilling the real provenance.rs yields the Provenance
+    /// surface without implementation bodies.
+    #[test]
+    fn ft_178_real_provenance_surface_distills() {
+        let src = std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../crates/dec-ontology/src/ontology/provenance.rs"),
+        )
+        .expect("provenance.rs readable");
+        let d = distill_rust_public_surface(&src);
+        assert!(d.contains("pub struct Provenance"), "{d}");
+        assert!(d.contains("pub fn to_quads"), "{d}");
+        assert!(!d.contains("quads.push"), "bodies must be dropped: {d}");
+    }
+
+    /// FT-178: only add-artifact-type opts in; other TaskTypes carry no
+    /// crate contract and are bundle-identical to pre-FT-178.
+    #[test]
+    fn ft_178_other_task_types_unaffected() {
+        let tt = task_type::lookup("add-cli-subcommand").expect("registry");
+        assert!(tt.crate_contract.is_empty());
+        assert!(tt.context_files.is_empty());
     }
 
     /// FT-177: the distiller keeps public shape and drops bodies.
@@ -1433,6 +1541,7 @@ mod tests {
             &upstream,
             &PathBuf::from("x/parser.rs"),
             None,
+            "",
         );
         assert!(!bundle.contains("UNIQUE_SPEC_PROSE_MARKER"), "{bundle}");
         assert!(
@@ -1734,6 +1843,8 @@ max_turns = "high"
                 timeout_seconds: 60,
             },
             parameters: vec![],
+            crate_contract: String::new(),
+            context_files: vec![],
         };
         let cell = CellDecl {
             name: "emitter".to_string(),
@@ -1754,6 +1865,7 @@ max_turns = "high"
             &upstream,
             &PathBuf::from("emitter.rs"),
             None,
+            "",
         )
     }
 
@@ -1910,6 +2022,8 @@ max_turns = "high"
                 description: "Test required parameter.".to_string(),
                 default: None,
             }],
+            crate_contract: String::new(),
+            context_files: vec![],
         };
         // Tempdir has no .dec/task-types.toml → param absent.
         let tmp = tempfile::tempdir().unwrap();

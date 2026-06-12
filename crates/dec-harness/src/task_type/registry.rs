@@ -123,6 +123,8 @@ fn add_judge_worker() -> TaskTypeDecl {
             timeout_seconds: 60,
         },
         parameters: Vec::new(),
+        crate_contract: String::new(),
+        context_files: vec![],
     }
 }
 
@@ -190,6 +192,8 @@ fn add_author_worker() -> TaskTypeDecl {
             timeout_seconds: 60,
         },
         parameters: Vec::new(),
+        crate_contract: String::new(),
+        context_files: vec![],
     }
 }
 
@@ -282,6 +286,22 @@ fn add_artifact_type() -> TaskTypeDecl {
                     .to_string(),
             default: None,
         }],
+        // FT-178: every LLM cell knows which crate it writes into — the
+        // witnessed FT-148 compile failures were all guesses at the
+        // dependency universe (oxigraph vs oxrdf) and at existing
+        // interfaces (Provenance's real location).
+        crate_contract: "You are writing code INSIDE the `dec-ontology` crate \
+(crates/dec-ontology). Its dependency universe is EXACTLY: `oxrdf` (RDF model \
+types: NamedNode, NamedNodeRef, Quad, Literal, Term, Subject, GraphName), \
+`thiserror`, `serde`, `chrono`, `uuid`. NEVER import `oxigraph`, `tokio`, \
+`reqwest`, `anyhow`, or do IO — this crate is pure data. Dual provenance uses \
+the EXISTING `crate::ontology::provenance::{Provenance, MotivationalEdge}` \
+(surface below) — do not define your own provenance types. IRI constants live \
+in `crate::vocab` and use the `https://decision-cli.dev/ns#` namespace."
+            .to_string(),
+        context_files: vec![PathBuf::from(
+            "crates/dec-ontology/src/ontology/provenance.rs",
+        )],
     }
 }
 
@@ -351,6 +371,8 @@ fn add_cli_subcommand() -> TaskTypeDecl {
             timeout_seconds: 60,
         },
         parameters: Vec::new(),
+        crate_contract: String::new(),
+        context_files: vec![],
     }
 }
 
@@ -424,6 +446,8 @@ fn extend_planner_classifier() -> TaskTypeDecl {
             timeout_seconds: 60,
         },
         parameters: Vec::new(),
+        crate_contract: String::new(),
+        context_files: vec![],
     }
 }
 
@@ -492,6 +516,8 @@ fn extend_role_catalog_seed() -> TaskTypeDecl {
             timeout_seconds: 60,
         },
         parameters: Vec::new(),
+        crate_contract: String::new(),
+        context_files: vec![],
     }
 }
 

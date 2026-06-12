@@ -101,7 +101,8 @@ ALLOWED_IRI_BASES = (
     "http://www.w3.org/",
     "http://purl.org/dc/",
     "https://github.com/",  # provenance links in doc comments
-    "urn:dec:",
+    "urn:dec:",  # includes urn:dec:test: — the sanctioned base for
+    # deliberately-invalid fixture references in negative tests.
 )
 
 IRI_RE = re.compile(r"""(?:https?:)//[^\s"'<>()\\]+|urn:dec:[^\s"'<>()\\]+""")
@@ -125,8 +126,11 @@ def check_canonical_namespace(fixture: Path, cell_paths: list[Path]) -> None:
     if offenders:
         die(
             "canonical_namespace",
-            "non-canonical IRI base(s) in emitted files (expected "
-            "https://decision-cli.dev/ns…): " + "; ".join(offenders[:10]),
+            "non-canonical IRI base(s) in emitted files. Use "
+            "https://decision-cli.dev/ns… for real vocabulary; for "
+            "deliberately-invalid references in negative-test fixtures use "
+            "urn:dec:test:… ; declare no unused prefixes. Offenders: "
+            + "; ".join(offenders[:10]),
         )
 
 

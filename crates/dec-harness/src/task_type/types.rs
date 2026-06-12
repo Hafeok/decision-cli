@@ -22,6 +22,13 @@ pub struct TaskTypeDecl {
     /// Empty list ≡ no parameters; cluster falls back to FT-139 flat
     /// convention regardless of feature.
     pub parameters: Vec<TaskTypeParameter>,
+    /// FT-178: fixed crate-contract text rendered into every LLM cell
+    /// bundle — names the target crate, its allowed dependency universe,
+    /// and its forbidden crates. Empty ≡ none.
+    pub crate_contract: String,
+    /// FT-178: repo-relative files whose distilled public surface is
+    /// appended to every LLM cell bundle ("existing crate interfaces").
+    pub context_files: Vec<PathBuf>,
 }
 
 /// FT-166: a parameter a TaskType's cells can interpolate into their
