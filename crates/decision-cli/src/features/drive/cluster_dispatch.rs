@@ -774,6 +774,25 @@ fn emit_llm_cell(
         )
     })?;
 
+    // The worker reports its own outcome in-band (status + error). A
+    // worker-reported failure is the true diagnostic — surfacing it
+    // beats the placement error it would otherwise masquerade as
+    // (witnessed on FT-148 run 5: three rounds of "produced no rs file"
+    // hiding the worker's actual error).
+    if response.status != "success" {
+        let detail = response
+            .error
+            .as_ref()
+            .map(|e| format!("{}: {} {}", e.category, e.message, e.detail))
+            .unwrap_or_else(|| "worker reported no error detail".to_string());
+        return Err(anyhow!(
+            "cell {}/{} worker reported status {:?}: {detail}",
+            tt.name,
+            cell.name,
+            response.status,
+        ));
+    }
+
     // FT-170: the harness owns placement — the worker's chosen path is
     // advisory; the artifact ends up at the resolved path or the cell
     // fails with a diagnostic naming the expectation. Cells with an
