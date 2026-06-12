@@ -24,4 +24,4 @@ pub mod tests;
 
 pub use registry::{lookup, registered_names};
 pub use topo::{topo_order, TopoError};
-pub use types::{CellDecl, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};
+pub use types::{CellDecl, CellFraming, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};

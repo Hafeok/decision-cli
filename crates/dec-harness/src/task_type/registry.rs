@@ -55,6 +55,8 @@ fn add_judge_worker() -> TaskTypeDecl {
                 model_binding_capability_id: String::new(), // mechanical / no LLM
                 derived_from: Vec::new(),
                 output_path: PathBuf::new(),
+                framing: super::types::CellFraming::default(),
+                distill_upstream: false,
             },
             CellDecl {
                 name: "pydantic_io_models".to_string(),
@@ -66,6 +68,8 @@ fn add_judge_worker() -> TaskTypeDecl {
                 model_binding_capability_id: "implementer".to_string(),
                 derived_from: Vec::new(),
                 output_path: PathBuf::new(),
+                framing: super::types::CellFraming::default(),
+                distill_upstream: false,
             },
             CellDecl {
                 name: "system_prompt".to_string(),
@@ -77,6 +81,8 @@ fn add_judge_worker() -> TaskTypeDecl {
                 model_binding_capability_id: "implementer".to_string(),
                 derived_from: vec!["pydantic_io_models".to_string()],
                 output_path: PathBuf::new(),
+                framing: super::types::CellFraming::default(),
+                distill_upstream: false,
             },
             CellDecl {
                 name: "agent_loop".to_string(),
@@ -92,6 +98,8 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "capability_binding".to_string(),
                 ],
                 output_path: PathBuf::new(),
+                framing: super::types::CellFraming::default(),
+                distill_upstream: false,
             },
             CellDecl {
                 name: "unit_tests".to_string(),
@@ -106,6 +114,8 @@ fn add_judge_worker() -> TaskTypeDecl {
                     "system_prompt".to_string(),
                 ],
                 output_path: PathBuf::new(),
+                framing: super::types::CellFraming::default(),
+                distill_upstream: false,
             },
         ],
         coherence_audit: CoherenceAuditSpec {
@@ -205,7 +215,11 @@ fn add_artifact_type() -> TaskTypeDecl {
                 &[],
                 "crates/dec-ontology/src/ontology/{artifact_name}.rs",
             ),
-            cell(
+            // FT-177: every downstream cell is SPMC — minimal framing
+            // (the upstream artifacts ARE the spec; witnessed FT-148
+            // hallucinations all traced to spec prose in the bundle)
+            // and distilled upstream surfaces.
+            spmc_cell(
                 "shacl_shape",
                 "turtle",
                 here,
@@ -213,7 +227,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 &["rust_struct"],
                 "crates/dec-ontology/src/ontology/shapes/{artifact_name}.shacl.ttl",
             ),
-            cell(
+            spmc_cell(
                 "iri_module_consts",
                 "rust-source",
                 here,
@@ -221,7 +235,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 &["rust_struct"],
                 "crates/dec-ontology/src/vocab/{artifact_name}.rs",
             ),
-            cell(
+            spmc_cell(
                 "parser",
                 "rust-source",
                 here,
@@ -229,7 +243,7 @@ fn add_artifact_type() -> TaskTypeDecl {
                 &["rust_struct", "iri_module_consts"],
                 "crates/dec-ontology/src/ontology/{artifact_name}/parser.rs",
             ),
-            cell(
+            spmc_cell(
                 "emitter",
                 "rust-source",
                 here,
@@ -237,13 +251,23 @@ fn add_artifact_type() -> TaskTypeDecl {
                 &["rust_struct", "iri_module_consts"],
                 "crates/dec-ontology/src/ontology/{artifact_name}/emitter.rs",
             ),
-            cell(
-                "round_trip_tests",
+            // FT-177: the oversized test cell split into two narrow,
+            // single-purpose cells with separate output files.
+            spmc_cell(
+                "round_trip_test",
                 "rust-source",
                 here,
                 "implementer",
-                &["rust_struct", "shacl_shape", "parser", "emitter"],
+                &["rust_struct", "parser", "emitter"],
                 "crates/dec-ontology/src/ontology/{artifact_name}/tests.rs",
+            ),
+            spmc_cell(
+                "shacl_negative_tests",
+                "rust-source",
+                here,
+                "implementer",
+                &["rust_struct", "shacl_shape"],
+                "crates/dec-ontology/src/ontology/{artifact_name}/negative_tests.rs",
             ),
         ],
         coherence_audit: CoherenceAuditSpec {
@@ -490,5 +514,31 @@ fn cell(
         model_binding_capability_id: capability_id.to_string(),
         derived_from: derived_from.iter().map(|s| (*s).to_string()).collect(),
         output_path: PathBuf::from(output_path),
+        framing: super::types::CellFraming::default(),
+        distill_upstream: false,
     }
+}
+
+/// FT-177: an SPMC cell — minimal framing (no spec prose; the upstream
+/// artifacts are the spec) and upstream `.rs` content distilled to its
+/// public surface.
+fn spmc_cell(
+    name: &str,
+    artifact_type: &str,
+    template_dir: &str,
+    capability_id: &str,
+    derived_from: &[&str],
+    output_path: &str,
+) -> super::types::CellDecl {
+    let mut c = cell(
+        name,
+        artifact_type,
+        template_dir,
+        capability_id,
+        derived_from,
+        output_path,
+    );
+    c.framing = super::types::CellFraming::Minimal;
+    c.distill_upstream = true;
+    c
 }

@@ -19,6 +19,8 @@ fn cell(name: &str, derived_from: &[&str]) -> CellDecl {
         model_binding_capability_id: String::new(),
         derived_from: derived_from.iter().map(|s| (*s).to_string()).collect(),
         output_path: PathBuf::new(),
+        framing: super::types::CellFraming::default(),
+        distill_upstream: false,
     }
 }
 

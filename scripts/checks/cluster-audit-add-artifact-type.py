@@ -164,7 +164,8 @@ def wire_module_path(worktree: Path, rs_file: Path) -> None:
     body = decl_target.read_text(encoding="utf-8")
     if re.search(rf"\bmod\s+{re.escape(name)}\s*;", body):
         return
-    decl = f"#[cfg(test)]\nmod {name};\n" if name == "tests" else f"pub mod {name};\n"
+    is_test_mod = name == "tests" or name.endswith("_tests")
+    decl = f"#[cfg(test)]\nmod {name};\n" if is_test_mod else f"pub mod {name};\n"
     decl_target.write_text(body + "\n" + decl, encoding="utf-8")
 
 

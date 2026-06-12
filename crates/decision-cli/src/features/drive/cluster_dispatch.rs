@@ -830,6 +830,55 @@ fn emit_llm_cell(
 /// feature + upstream cell outputs + a precise instruction line. Each
 /// cell sees only what it needs from upstream — the architectural win
 /// over the broad worker's whole-feature bundle.
+/// FT-177: slice the `### Outputs` section out of a feature-spec body.
+/// Returns `None` when the heading is absent (caller falls back to the
+/// capped full body with a warning).
+fn slice_outputs_section(body: &str) -> Option<String> {
+    let start = body.find("### Outputs")?;
+    let rest = &body[start..];
+    let end = rest[12..].find("\n### ").map_or(rest.len(), |i| i + 12);
+    Some(rest[..end].to_string())
+}
+
+/// FT-177: distill Rust source to its public surface — `pub struct` /
+/// `pub enum` blocks (bodies kept: fields are interface), `pub const`
+/// lines, `pub fn` signatures (bodies dropped), `pub use` lines.
+/// Deterministic text processing; the SPMC that keeps test/parser cells
+/// from drowning in upstream implementation bodies.
+fn distill_rust_public_surface(source: &str) -> String {
+    fn brace_delta(line: &str) -> i64 {
+        line.matches('{').count() as i64 - line.matches('}').count() as i64
+    }
+    let mut out = String::new();
+    let mut keep_depth: i64 = 0; // > 0 while inside a kept struct/enum block
+    for line in source.lines() {
+        let t = line.trim_start();
+        if keep_depth > 0 {
+            out.push_str(line);
+            out.push('\n');
+            keep_depth = (keep_depth + brace_delta(line)).max(0);
+            continue;
+        }
+        if t.starts_with("pub struct") || t.starts_with("pub enum") {
+            out.push_str(line);
+            out.push('\n');
+            keep_depth = brace_delta(line).max(0);
+        } else if t.starts_with("pub const")
+            || t.starts_with("pub use")
+            || t.starts_with("pub type")
+        {
+            out.push_str(line);
+            out.push('\n');
+        } else if t.starts_with("pub fn") || t.starts_with("pub(crate) fn") {
+            // Signature only: up to the opening brace.
+            let sig = line.split('{').next().unwrap_or(line).trim_end();
+            out.push_str(sig);
+            out.push_str(";\n");
+        }
+    }
+    out
+}
+
 fn build_cell_bundle(
     tt: &TaskTypeDecl,
     cell: &CellDecl,
@@ -845,14 +894,50 @@ fn build_cell_bundle(
         tt.name, cell.name
     ));
     out.push_str(&format!("**Feature:** `{feature_id}`\n\n"));
-    out.push_str("## Feature framing\n\n");
-    out.push_str(feature_framing);
-    out.push_str("\n\n");
+    // FT-177: per-cell framing contract. Spec prose reaches only the
+    // cell that transcribes it; for every other cell the upstream
+    // artifacts ARE the specification (witnessed FT-148 hallucinations
+    // all traced to spec prose in downstream bundles).
+    match cell.framing {
+        task_type::CellFraming::SpecOutputs => {
+            out.push_str("## Feature framing\n\n");
+            match slice_outputs_section(feature_framing) {
+                Some(outputs) => out.push_str(&outputs),
+                None => {
+                    tracing::warn!(
+                        cell = %cell.name,
+                        "spec body has no ### Outputs heading; falling back to capped body (FT-177)"
+                    );
+                    out.push_str(feature_framing);
+                }
+            }
+            out.push_str("\n\n");
+        }
+        task_type::CellFraming::Minimal => {
+            out.push_str(
+                "The upstream artifacts below are the complete specification for this cell. \
+                 Derive ONLY from them — do not invent additional types, files, or vocabulary.\n\n",
+            );
+        }
+    }
     if !cell.derived_from.is_empty() {
         out.push_str("## Upstream cells\n\n");
         for dep in &cell.derived_from {
-            out.push_str(&format!("### {dep}\n\n```\n"));
-            out.push_str(upstream.get(dep).map(String::as_str).unwrap_or(""));
+            let raw = upstream.get(dep).map(String::as_str).unwrap_or("");
+            let dep_is_rust = tt
+                .cells
+                .iter()
+                .find(|c| &c.name == dep)
+                .is_some_and(|c| c.artifact_type == "rust-source");
+            if cell.distill_upstream && dep_is_rust {
+                out.push_str(&format!(
+                    "### {dep} (public surface only — the full body exists on disk)\n\n```\n"
+                ));
+                out.push_str(&distill_rust_public_surface(raw));
+            } else {
+                out.push_str(&format!("### {dep}\n\n```\n"));
+                out.push_str(raw);
+            }
             out.push_str("\n```\n\n");
         }
     }
@@ -1289,6 +1374,84 @@ mod tests {
         }
     }
 
+    /// FT-177: the distiller keeps public shape and drops bodies.
+    #[test]
+    fn ft_177_distiller_keeps_public_surface_only() {
+        let src = "use std::fmt;\n\npub struct Thing {\n    pub a: String,\n    b: u32,\n}\n\npub const X: &str = \"x\";\n\npub fn parse(input: &str) -> Result<Thing, String> {\n    let secret = 42;\n    Ok(Thing { a: input.into(), b: secret })\n}\n\nfn private_helper() {}\n";
+        let d = distill_rust_public_surface(src);
+        assert!(d.contains("pub struct Thing"), "{d}");
+        assert!(
+            d.contains("pub a: String"),
+            "struct fields are interface: {d}"
+        );
+        assert!(
+            d.contains("pub fn parse(input: &str) -> Result<Thing, String>;"),
+            "{d}"
+        );
+        assert!(!d.contains("secret"), "fn bodies must be dropped: {d}");
+        assert!(!d.contains("private_helper"), "private items dropped: {d}");
+        assert!(!d.contains("use std::fmt"), "non-pub imports dropped: {d}");
+    }
+
+    /// FT-177: the Outputs slicer cuts from the heading to the next
+    /// same-level heading; absent heading degrades to None.
+    #[test]
+    fn ft_177_outputs_slicer() {
+        let body = "## Description\nprose\n\n### Inputs\nstuff\n\n### Outputs\nThe shape.\n\n### State\nmore\n";
+        let sliced = slice_outputs_section(body).expect("outputs present");
+        assert!(sliced.contains("The shape."), "{sliced}");
+        assert!(!sliced.contains("### State"), "{sliced}");
+        assert!(!sliced.contains("prose"), "{sliced}");
+        assert!(slice_outputs_section("## Description only").is_none());
+    }
+
+    /// FT-177: a Minimal-framed cell's bundle carries no spec prose —
+    /// the witnessed hallucination source.
+    #[test]
+    fn ft_177_minimal_framing_excludes_spec_body() {
+        let tt = add_artifact_type_tt();
+        let cell = tt
+            .cells
+            .iter()
+            .find(|c| c.name == "parser")
+            .expect("parser cell");
+        assert_eq!(cell.framing, task_type::CellFraming::Minimal);
+        let mut upstream = BTreeMap::new();
+        upstream.insert(
+            "rust_struct".to_string(),
+            "pub struct X { pub a: u8 }".to_string(),
+        );
+        upstream.insert(
+            "iri_module_consts".to_string(),
+            "pub const I: &str = \"i\";".to_string(),
+        );
+        let bundle = build_cell_bundle(
+            tt,
+            cell,
+            "FT-T177",
+            "UNIQUE_SPEC_PROSE_MARKER about Convention and TaskType",
+            &upstream,
+            &PathBuf::from("x/parser.rs"),
+            None,
+        );
+        assert!(!bundle.contains("UNIQUE_SPEC_PROSE_MARKER"), "{bundle}");
+        assert!(
+            bundle.contains("complete specification for this cell"),
+            "{bundle}"
+        );
+        assert!(bundle.contains("pub struct X"), "{bundle}");
+    }
+
+    /// FT-177: the split test cells exist with narrow derive sets and
+    /// the legacy oversized cell is gone.
+    #[test]
+    fn ft_177_test_cell_is_split() {
+        let tt = add_artifact_type_tt();
+        assert!(tt.cells.iter().any(|c| c.name == "round_trip_test"));
+        assert!(tt.cells.iter().any(|c| c.name == "shacl_negative_tests"));
+        assert!(!tt.cells.iter().any(|c| c.name == "round_trip_tests"));
+    }
+
     /// FT-171 extension: placement failures (FT-170 cases 3/4) carry a
     /// re-promptable diagnostic; other errors do not retry.
     #[test]
@@ -1579,6 +1742,8 @@ max_turns = "high"
             model_binding_capability_id: "implementer".to_string(),
             derived_from: vec![],
             output_path: PathBuf::new(),
+            framing: task_type::CellFraming::default(),
+            distill_upstream: false,
         };
         let upstream = BTreeMap::new();
         build_cell_bundle(
@@ -1703,6 +1868,8 @@ max_turns = "high"
             model_binding_capability_id: "implementer".to_string(),
             derived_from: vec![],
             output_path: PathBuf::from("crates/dec-ontology/src/ontology/{artifact_name}.rs"),
+            framing: task_type::CellFraming::default(),
+            distill_upstream: false,
         };
         let resolved = resolve_cell_output_path(&cell_templated, &params).unwrap();
         assert_eq!(
@@ -1718,6 +1885,8 @@ max_turns = "high"
             model_binding_capability_id: "implementer".to_string(),
             derived_from: vec![],
             output_path: PathBuf::new(),
+            framing: task_type::CellFraming::default(),
+            distill_upstream: false,
         };
         let resolved_flat = resolve_cell_output_path(&cell_flat, &params).unwrap();
         assert_eq!(resolved_flat, PathBuf::from("clap_args_module.rs"));
@@ -1772,6 +1941,8 @@ max_turns = "high"
             model_binding_capability_id: "implementer".to_string(),
             derived_from: vec![],
             output_path: PathBuf::from("crates/{artifact_name}.rs"),
+            framing: task_type::CellFraming::default(),
+            distill_upstream: false,
         };
         let err = resolve_cell_output_path(&cell, &params).expect_err("traversal must reject");
         let msg = format!("{err}");

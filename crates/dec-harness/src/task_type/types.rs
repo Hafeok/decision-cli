@@ -41,6 +41,19 @@ pub struct TaskTypeParameter {
     pub default: Option<String>,
 }
 
+/// FT-177: per-cell feature-spec framing contract. Hallucination means
+/// the context was too big or unspecific — only the cell that
+/// transcribes the spec's prescribed shape sees spec prose.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CellFraming {
+    /// The spec's `### Outputs` section (fallback: capped full body).
+    /// Default — pre-FT-177 TaskTypes keep today's behaviour.
+    #[default]
+    SpecOutputs,
+    /// One line of feature identity; no spec body at all.
+    Minimal,
+}
+
 /// One cell in a cluster. Each cell emits one typed artifact via one
 /// prompt + one model binding, derived from zero or more upstream
 /// cells (the contract surface the cluster audits).
@@ -58,6 +71,12 @@ pub struct CellDecl {
     /// time. Empty string for cells that do not invoke an LLM
     /// (mechanical / deterministic templates).
     pub model_binding_capability_id: String,
+    /// FT-177: how much feature-spec framing this cell's bundle carries.
+    pub framing: CellFraming,
+    /// FT-177: when true, upstream `.rs` cell outputs are distilled to
+    /// their public surface (SPMC) instead of arriving whole. Turtle
+    /// upstreams always arrive whole.
+    pub distill_upstream: bool,
     /// Names of upstream cells this cell derives from. Used by
     /// `topo::topo_order` to compute dispatch order.
     pub derived_from: Vec<String>,

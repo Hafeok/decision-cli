@@ -61,6 +61,19 @@ For the full architectural picture, read [`docs/ddd/Implementing_DDD.md`](docs/d
 
 Direct file edits in `crates/` and `workers/` should happen only as the *implementation* of an existing feature_spec, after the spec has been authored in product-cli and any required ADRs are in place. If you find yourself wanting to make a structural change with no corresponding feature_spec or ADR, stop and author one first.
 
+## Hallucination is a context defect (governing rule for all problem solving)
+
+**When an LLM-backed step hallucinates, drifts, or fails to converge, the diagnosis is always the same: the context was too big or not specific enough. The fix is context surgery — never a bigger model.**
+
+This applies to every dispatch in the system — cluster cells, broad workers, judges, authors — and to how you debug them:
+
+1. **Audit the bundle before blaming the model.** Diff what the step *received* against what its task *requires*. Hallucinated content can almost always be traced to a bundle ingredient the step never needed (witnessed: a parser cell invented vocab files for `Convention`/`TaskType` — types mentioned only in feature-spec prose its bundle should never have carried; see FT-177).
+2. **Apply SPMC — Single-Purpose, Minimal Context.** Each dispatched unit gets exactly the context its single purpose requires: interfaces instead of implementation bodies, the relevant spec *section* instead of the whole body, distilled deterministic extracts instead of raw artifacts. If a unit needs "everything upstream," the unit is too big — split it (the cell pattern applied recursively).
+3. **Escalation is for reasoning depth, not over-fed bundles.** The capability funnel (ADR-037) reserves bigger models for genuinely deeper reasoning at the same context size. Reaching for a stronger model to compensate for a bloated bundle hides the defect and raises cost; it is the rejected alternative, not the fix.
+4. **Make the context contract explicit and graph-resident.** Framing modes, distillation flags, and upstream selections belong on the dispatched unit's declaration (e.g. `CellDecl.framing` / `distill_upstream`, FT-177) so the contract is auditable — not implicit in prompt-builder code.
+
+Worked example: FT-177 (SPMC cell bundles) — nine witnessed FT-148 cluster runs failed only on the two cells whose bundles carried full spec prose plus five full upstream artifacts; the fix was per-cell framing contracts, deterministic public-surface distillation, and splitting the oversized cell. Not a model change.
+
 ## Definition of done (read this before touching code)
 
 **A feature is complete if and only if `product verify FT-XXX` exits 0.** Nothing else counts. Not "cargo test passes," not "I wrote the code and a test," not `product feature status FT-XXX complete` — that command only flips a status field; it does not certify anything. The verify pipeline does.

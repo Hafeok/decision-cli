@@ -55,4 +55,4 @@ completeness-severity = "warning"
 # respects it; per-feature acknowledgement is noise.
 # ADR-086 (crate topology) is a workspace-wide structural rule enforced by
 # Cargo + TC-411/TC-412; per-feature acknowledgement is likewise noise.
-default-acknowledged-cross-cutting = ["ADR-072", "ADR-086"]
+default-acknowledged-cross-cutting = ["ADR-072", "ADR-086", "ADR-091"]
