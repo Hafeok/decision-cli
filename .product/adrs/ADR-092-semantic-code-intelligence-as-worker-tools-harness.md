@@ -9,7 +9,11 @@ domains:
 - api
 - workers
 scope: domain
-content-hash: sha256:81b2e7d6a34734d93103fbf74898e06c9300540d570ce5228808dbc94092cfa7
+content-hash: sha256:d9acf679b31b4205361aebd3c1a0b03512db347b84f3da9bba20ff894becb80d
+amendments:
+- date: 2026-06-12T12:14:51Z
+  reason: 'Add the language-server capability catalog: graph-resident dec:LanguageServer entries with per-tool support declarations verified against the live ServerCapabilities handshake; effective surface becomes role ∩ cell ∩ language capability; get_diagnostics gains fast/full modes sharing the FT-172 cargo-check logic; explicit indexing→ready service state with structured index-warming results.'
+  previous-hash: sha256:81b2e7d6a34734d93103fbf74898e06c9300540d570ce5228808dbc94092cfa7
 ---
 
 **Status:** Proposed
@@ -43,6 +47,9 @@ Relation to [ADR-091](ADR-091) (SPMC): complementary, not overlapping. SPMC *pus
 5. **Grants via the role catalog, split read from write.** The tools enter the worker registry and the role catalog as ordinary `dec:roleTool` entries ([ADR-070](ADR-070)), narrowable per cell ([ADR-088](ADR-088)). Read tools seed to implementer *and* verifier roles; write tools, when they land, seed to the implementer only. The structural read/write separation the factory achieves with two servers, we achieve with the catalog — which is already the enforcement point.
 6. **Real workspaces first.** Slice one serves broad dispatches and worktree dispatches ([FT-115](FT-115)). Cluster-cell support requires the FT-172 worktree-overlay graft and arrives with slice two; until then cells keep their SPMC-distilled bundles ([FT-177](FT-177)) as the interface view.
 7. **Fail-open absence.** A worker granted semantic tools but receiving no `code_intel_url` (legacy harness, service failed to start) drops the tools from the exposed registry and proceeds with the textual tools — semantic intelligence is an accelerator, not a dispatch precondition. The omission is recorded in worker telemetry.
+8. **Language support is a graph-resident capability catalog** *(amendment)*. Each language server is a `dec:LanguageServer` catalog entry ([ADR-036](ADR-036) pattern): language ids and file globs (rust → `**/*.rs`), binary and minimum version, and a per-tool support declaration (`full | partial | absent` per semantic tool). The effective semantic surface of a dispatch is the three-way intersection **role surface ([ADR-070](ADR-070)) ∩ cell narrowing ([ADR-088](ADR-088)) ∩ language capability** for the files the dispatch targets. A workspace or cell whose language has no catalog entry gets no semantic tools — structurally absent, never erroring at call time. Multi-language workspaces route per file glob; the service multiplexes server instances.
+9. **The static catalog is verified by the dynamic handshake** *(amendment)*. LSP servers advertise their actual capabilities in the `initialize` response (`ServerCapabilities`). At spawn, the service checks the catalog's declarations against the live capabilities and degrades per tool: a server that does not advertise a declared capability drops exactly that tool from the surface, with the mismatch recorded in telemetry and on the session record. The catalog states intent; the handshake states truth; the intersection ships.
+10. **Diagnostics are two-mode; readiness is explicit** *(amendment)*. `get_diagnostics` exposes `fast` (the server's native pull diagnostics — sub-second, incomplete for rust-analyzer) and `full` (flycheck / `cargo check --message-format=json` — the same truth as the [FT-172](FT-172) compile probe, with which it shares invocation logic). The service runs an explicit `indexing → ready` state machine keyed on the server's quiescence signal (`experimental/serverStatus` for rust-analyzer); semantic calls during indexing return a structured *index-warming* result the model can act on (do textual work, retry) rather than blocking the turn. Cache-served results remain available while the live index warms.
 
 ## Rationale
 
@@ -50,6 +57,7 @@ Relation to [ADR-091](ADR-091) (SPMC): complementary, not overlapping. SPMC *pus
 - **Per-edit diagnostics shorten the correction loop.** Today the first signal that an edit broke the build is a full `run_build` (broad path) or a failed audit round costing re-dispatches (cluster path). `get_diagnostics` moves that signal inside the same worker turn.
 - **Run-scoped service fits the architecture we have.** It needs no resident daemon (none exists in slice 1), keeps the worker contract bundle-in/artifact-out, and the content-hash cache recovers the persistence benefit a daemon would give.
 - **Read-first sequencing matches the risk.** The read tools are rust-analyzer's strong suite and carry no mutation risk; the write tools are both the harder LSP territory and the security-sensitive half. Proving value on the cheap, safe half first is the same graduated posture as ADR-085.
+- **The capability catalog makes "what do we support" a graph query** *(amendment)*. Language support is declared, verified, and queryable — `dec` can render the support matrix by joining the catalog with the last handshake result. Adding a language (pyright for `workers/`) becomes a catalog entry plus a binary, not a worker code change; the model never sees a tool that cannot work for the files at hand.
 
 ## Rejected alternatives
 
@@ -58,6 +66,8 @@ Relation to [ADR-091](ADR-091) (SPMC): complementary, not overlapping. SPMC *pus
 - **Harness-side pre-computation only (no interactive tools).** Pure push: embed outlines/diagnostics in the bundle and skip the service. Cheaper, but it re-creates the over-feeding problem SPMC just removed — the harness must guess what the worker will need. FT-177's distillation already covers the push side; the gap is precisely the on-demand half.
 - **MCP servers like the factory (separate processes per concern).** Our workers are in-process agentic loops ([ADR-069](ADR-069)), not `claude -p` with `.mcp.json`; bolting an MCP client into the worker adds a protocol layer with no consumer besides ourselves. Thin HTTP against a harness service keeps the surface minimal. The factory's *split* survives via catalog grants; its *transport* does not need to.
 - **Skip LSP, extend deterministic distillation.** `distill_rust_public_surface` is a text heuristic; it cannot answer references, definitions, or diagnostics, and growing it toward those answers re-implements a compiler badly.
+- **Hardcoded per-language tool lists in the worker** *(amendment)*. Re-creates the `cluster_dispatch.rs:760` defect [ADR-088](ADR-088) just removed, one layer down: a Rust literal becomes the truth about language support while the graph says nothing. The catalog keeps the graph authoritative.
+- **Trusting the static catalog without the handshake** *(amendment)*. Server upgrades change capability sets; a catalog stale by one version would produce runtime tool failures mid-dispatch. Verifying at spawn costs one already-mandatory request and turns version drift into a recorded, per-tool degradation.
 
 ## Test coverage
 
@@ -66,3 +76,5 @@ Relation to [ADR-091](ADR-091) (SPMC): complementary, not overlapping. SPMC *pus
 - Role-catalog seeds grant read tools to implementer and verifier; write tools absent everywhere in slice one (graph-level assertion).
 - `get_diagnostics` reports a deliberately broken fixture edit within the worker session, with no `run_build` invocation in the telemetry.
 - Absent `code_intel_url`, granted semantic tools are dropped from the exposed registry, the dispatch proceeds textually, and telemetry records the omission.
+- A dispatch over files whose language has no catalog entry exposes no semantic tools; a handshake that fails to advertise a declared capability drops exactly that tool, with the mismatch recorded *(amendment)*.
+- Semantic calls during index warm-up return the structured index-warming result; cache-served outlines remain available *(amendment)*.

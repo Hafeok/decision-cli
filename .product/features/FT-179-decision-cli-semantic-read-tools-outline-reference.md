@@ -15,15 +15,16 @@ tests:
 - TC-462
 - TC-463
 - TC-464
+- TC-469
 domains:
 - api
 - workers
 domains-acknowledged:
-  ADR-084: No archetype ships or changes status; seam audits untouched.
   ADR-081: No CLI enumerate/lookup verb pair is added; the tools are worker-facing, not dec subcommands.
-  ADR-082: Tool plumbing below the TaskType layer; archetype contracts unaffected.
-  ADR-087: Worker read tools and the code-intel service emit no audits; verdict consumption is unaffected.
   ADR-083: The service and tools are dispatch infrastructure, not a tech detail binding at archetype/instance/feature level.
+  ADR-082: Tool plumbing below the TaskType layer; archetype contracts unaffected.
+  ADR-084: No archetype ships or changes status; seam audits untouched.
+  ADR-087: Worker read tools and the code-intel service emit no audits; verdict consumption is unaffected.
 ---
 
 ## Description
@@ -36,11 +37,14 @@ Slice one of [ADR-092](ADR-092): the worker gains six semantic read tools — `g
 
 - The dispatch's workspace (real checkout or [FT-115](FT-115) worktree) as the LSP root.
 - Role catalog seeds: the six read tools as `dec:roleTool` entries on implementer and verifier ([ADR-070](ADR-070)); narrowable per cell ([ADR-088](ADR-088)).
+- A `dec:LanguageServer` capability catalog (ADR-092 §8, amendment), seeded with one entry: rust-analyzer — language `rust`, glob `**/*.rs`, minimum version, and per-tool declarations (`outline/symbol-body/definition/references/search: full`; `diagnostics: partial` native, `full` via flycheck).
 - `DispatchPayload` extended with optional `code_intel_url`.
 
 ### Outputs
 
-- A code-intel service module in the harness: lazy rust-analyzer spawn on first semantic call, local HTTP endpoint for the run's duration, unconditional teardown with the run.
+- A code-intel service module in the harness: lazy rust-analyzer spawn on first semantic call, local HTTP endpoint for the run's duration, unconditional teardown with the run. The service runs an explicit `indexing → ready` state machine keyed on rust-analyzer's quiescence signal (`experimental/serverStatus`); calls during warm-up return a structured *index-warming* result while cache-served answers remain available.
+- Capability resolution: the dispatch's semantic surface is **role ∩ cell ∩ language capability** for the targeted files; at spawn the catalog's declarations are verified against the `initialize` response's `ServerCapabilities`, and unadvertised tools are dropped per-tool with the mismatch recorded (ADR-092 §9).
+- `get_diagnostics` in two modes: `fast` (native pull diagnostics, `textDocument/diagnostic`) and `full` (flycheck / `cargo check --message-format=json`), the latter sharing invocation logic with the [FT-172](FT-172) compile probe.
 - An on-disk symbol cache keyed `(relative_path, content_hash)`, surviving across runs; per-file invalidation on content change.
 - Six thin-client tools in the worker registry (`agent/tools.py`), enforcing the granted-surface rules unchanged.
 - Structured symbol-not-found errors listing the symbols present in the file.
@@ -63,6 +67,7 @@ Slice one of [ADR-092](ADR-092): the worker gains six semantic read tools — `g
 - No semantic write tool ships in this slice; `write_file` remains the only mutation path.
 - The service never mutates the workspace; all six tools are read-only against the index.
 - Cache correctness: a stale entry for changed content is never served (content-hash keying makes this structural).
+- The worker never sees a semantic tool that cannot work for the dispatch's files: no catalog entry for the language → no semantic tools exposed; a declared-but-unadvertised capability → exactly that tool dropped. Support is queryable from the graph (catalog joined with the last handshake result).
 
 ### Error handling
 
