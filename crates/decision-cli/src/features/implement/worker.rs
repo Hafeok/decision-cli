@@ -224,18 +224,69 @@ pub fn run_worker(argv: &[String], payload: &DispatchPayloadJson) -> Result<Work
         .spawn()
         .context("spawning code-writer worker subprocess")?;
     write_payload_to_stdin(&mut child, payload)?;
-    let output = child
-        .wait_with_output()
-        .context("waiting for worker subprocess")?;
-    if !output.status.success() && output.stdout.is_empty() {
-        let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+
+    // Witnessed on the FT-148 cluster runs: `wait_with_output` has no
+    // bound, so a worker wedged on a dead LLM connection blocked the
+    // cell forever, and killed drives left orphaned workers racing the
+    // sandbox. Drain the pipes on threads (a large response must not
+    // deadlock against the poll loop), poll with a deadline derived from
+    // the payload budget, and kill the child on expiry so the cell fails
+    // loudly into the FT-171 retry path instead of hanging.
+    let mut stdout_pipe = child
+        .stdout
+        .take()
+        .ok_or_else(|| anyhow!("worker stdout pipe missing"))?;
+    let mut stderr_pipe = child
+        .stderr
+        .take()
+        .ok_or_else(|| anyhow!("worker stderr pipe missing"))?;
+    let stdout_thread = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = Vec::new();
+        let _ = stdout_pipe.read_to_end(&mut buf);
+        buf
+    });
+    let stderr_thread = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = Vec::new();
+        let _ = stderr_pipe.read_to_end(&mut buf);
+        buf
+    });
+
+    let budget = std::time::Duration::from_secs(u64::from(payload.timeout_seconds.max(60)));
+    let deadline = std::time::Instant::now() + budget;
+    let status = loop {
+        match child.try_wait().context("polling worker subprocess")? {
+            Some(status) => break status,
+            None if std::time::Instant::now() >= deadline => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = stdout_thread.join();
+                let stderr = stderr_thread
+                    .join()
+                    .map(|b| String::from_utf8_lossy(&b).into_owned())
+                    .unwrap_or_default();
+                let tail_start = stderr.len().saturating_sub(500);
+                return Err(anyhow!(
+                    "code-writer worker exceeded its {}s budget and was killed. stderr tail: {}",
+                    budget.as_secs(),
+                    &stderr[tail_start..]
+                ));
+            }
+            None => std::thread::sleep(std::time::Duration::from_millis(500)),
+        }
+    };
+    let stdout = stdout_thread.join().unwrap_or_default();
+    let stderr_bytes = stderr_thread.join().unwrap_or_default();
+
+    if !status.success() && stdout.is_empty() {
+        let stderr = String::from_utf8_lossy(&stderr_bytes).into_owned();
         return Err(anyhow!(
-            "code-writer worker exited with {} and no stdout. stderr: {stderr}",
-            output.status
+            "code-writer worker exited with {status} and no stdout. stderr: {stderr}"
         ));
     }
-    let raw_stdout = String::from_utf8_lossy(&output.stdout).into_owned();
-    let response = parse_worker_response(&output.stdout)?;
+    let raw_stdout = String::from_utf8_lossy(&stdout).into_owned();
+    let response = parse_worker_response(&stdout)?;
     Ok(WorkerRun {
         response,
         raw_stdout,

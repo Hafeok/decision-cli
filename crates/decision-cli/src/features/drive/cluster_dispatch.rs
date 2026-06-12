@@ -749,7 +749,11 @@ fn emit_llm_cell(
         workspace_path,
         model_id: cap.model_identifier,
         endpoint: cap.endpoint.as_str().to_string(),
-        timeout_seconds: 600,
+        // Hard kill-bound for the whole cell (run_worker enforces it
+        // since the FT-148 runs). Generous: per-turn LLM calls are
+        // already bounded at 240s worker-side; this only catches a
+        // fully wedged worker.
+        timeout_seconds: 1800,
         max_turns,
         authority,
         defect_feedback: Vec::new(),

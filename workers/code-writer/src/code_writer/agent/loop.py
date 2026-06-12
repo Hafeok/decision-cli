@@ -119,12 +119,18 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
     for turn in range(payload.max_turns):
         try:
             # Call LiteLLM
+            # Witnessed on the FT-148 cluster runs: without an explicit
+            # timeout a turn can block in ssl-read for 25+ minutes when
+            # the endpoint queues or the connection dies. Bound every
+            # call; a timeout raises and the turn's error handling (plus
+            # the harness's cell retry) takes over.
             response = litellm.completion(
                 model=litellm_model,
                 messages=[{"role": "system", "content": system_prompt}] + messages,
                 tools=list(available_tools.values()),
                 api_key=litellm_key,
                 base_url=litellm_base_url,
+                timeout=float(os.environ.get("DEC_LLM_TURN_TIMEOUT_SECONDS", "240")),
             )
             # Proactive throttle on Scaleway's x-ratelimit-* headers — back
             # off before the 429 hits when the per-minute window is nearly
