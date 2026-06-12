@@ -6,6 +6,7 @@
 
 #![allow(missing_docs)]
 
+mod application_contract;
 mod archetype;
 mod auto_dispatch;
 mod capability;
@@ -24,6 +25,7 @@ mod waiver;
 mod worker_image;
 mod worker_image_submission;
 
+pub use application_contract::*;
 pub use archetype::*;
 pub use auto_dispatch::*;
 pub use capability::*;

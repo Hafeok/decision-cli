@@ -18,9 +18,9 @@ use oxigraph::store::Store;
 
 use crate::ontology::session_record::validate_quads_with_store as validate_session_record_quads_with_store;
 use crate::stream_writer_validations::{
-    validate_archetypes, validate_bundles, validate_capabilities, validate_catalog, validate_envs,
-    validate_feedback, validate_graphs, validate_results, validate_role_bindings,
-    validate_verdicts, validate_waivers,
+    validate_application_contracts, validate_archetypes, validate_bundles, validate_capabilities,
+    validate_catalog, validate_envs, validate_feedback, validate_graphs, validate_results,
+    validate_role_bindings, validate_verdicts, validate_waivers,
 };
 use crate::verify::quads::{check_inserts_against_store, touches_verification_artifacts};
 use dec_ontology::ontology::feedback::lifecycle::{validate_transition, LifecycleState};
@@ -97,6 +97,7 @@ impl StreamWriter {
         self.validate_safety(&mutation.inserts)?;
         validate_verdicts(&mutation.inserts)?;
         validate_archetypes(&mutation.inserts)?;
+        validate_application_contracts(&mutation.inserts)?;
         validate_feedback(&mutation.inserts)?;
         validate_envs(&mutation.inserts)?;
         validate_graphs(&mutation.inserts)?;

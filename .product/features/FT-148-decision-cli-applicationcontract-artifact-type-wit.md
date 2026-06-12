@@ -2,14 +2,18 @@
 id: FT-148
 title: 'decision-cli: ApplicationContract artifact type with checkable-convention schema'
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-147
 - FT-167
 adrs:
 - ADR-082
 - ADR-083
-tests: []
+tests:
+- TC-474
+- TC-475
+- TC-476
+- TC-477
 domains:
 - api
 - data-model

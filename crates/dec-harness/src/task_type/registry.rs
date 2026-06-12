@@ -231,11 +231,17 @@ fn add_artifact_type() -> TaskTypeDecl {
                 &["rust_struct"],
                 "crates/dec-ontology/src/ontology/shapes/{artifact_name}.shacl.ttl",
             ),
+            // Witnessed across every FT-148 run: the mechanical-template
+            // system only emits placeholder stubs (emit_mechanical_cell
+            // doc: "full template rendering is a follow-on"), so this
+            // cell's vocab constants never existed and seeded unresolved-
+            // name errors in each compile probe. LLM-backed until the
+            // template renderer lands.
             spmc_cell(
                 "iri_module_consts",
                 "rust-source",
                 here,
-                "",
+                "implementer",
                 &["rust_struct"],
                 "crates/dec-ontology/src/vocab/{artifact_name}.rs",
             ),

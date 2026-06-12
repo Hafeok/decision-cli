@@ -1,0 +1,29 @@
+# FT-148 / ADR-082 §3 — dec:ApplicationContract + dec:Convention shapes.
+#
+# Rust-side mirror enforced at the chokepoint:
+# dec_ontology::ontology::application_contract::shacl.
+
+@prefix dec: <https://decision-cli.dev/ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+dec:ApplicationContractShape
+    a sh:NodeShape ;
+    sh:targetClass dec:ApplicationContract ;
+    sh:property [ sh:path dec:archetype ; sh:nodeKind sh:IRI ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:languageRuntime ; sh:nodeKind sh:IRI ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:layeringRule ; sh:nodeKind sh:IRI ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:featureOrganisation ; sh:nodeKind sh:IRI ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:persistenceModel ; sh:nodeKind sh:IRI ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:endpointConvention ; sh:nodeKind sh:IRI ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:crossCutting ; sh:nodeKind sh:IRI ] .
+
+dec:ConventionShape
+    a sh:NodeShape ;
+    sh:targetClass dec:Convention ;
+    sh:property [ sh:path dec:conventionName ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:conventionBodyPath ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+    sh:property [ sh:path dec:conventionAuditId ; sh:nodeKind sh:IRI ] ;
+    # checkable:false is valid — dependent TaskTypes inherit
+    # not-safely-dispatchable downstream (FT-150 / FT-153).
+    sh:property [ sh:path dec:conventionCheckable ; sh:datatype xsd:boolean ; sh:minCount 1 ] .
