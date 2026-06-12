@@ -774,7 +774,13 @@ fn emit_llm_cell(
         max_turns,
         authority,
         defect_feedback: Vec::new(),
-        allowed_tools: vec!["read_file".to_string(), "write_file".to_string()],
+        // ADR-091/FT-178: the bundle IS the cell's context contract.
+        // read_file let the model re-ingest full file bodies the bundle
+        // had deliberately distilled — witnessed on runs 12/13 where the
+        // final cell's turns each consumed the entire 200k TPM window
+        // re-sending self-read content. Cluster cells write; they do
+        // not browse.
+        allowed_tools: vec!["write_file".to_string()],
     };
 
     // FT-170: snapshot the sandbox before dispatch so placement can
@@ -1439,6 +1445,23 @@ mod tests {
             "{bundle}"
         );
         assert!(bundle.contains("pub struct Provenance"), "{bundle}");
+    }
+
+    /// ADR-091: cluster cells cannot re-ingest context the bundle
+    /// distilled — write_file is the only tool.
+    #[test]
+    fn ft_178_cluster_cells_are_write_only() {
+        let src = include_str!("cluster_dispatch.rs");
+        let payload_block = src
+            .split("allowed_tools: vec![")
+            .nth(1)
+            .expect("allowed_tools literal present");
+        let list = payload_block.split(']').next().unwrap_or("");
+        assert!(list.contains("write_file"), "{list}");
+        assert!(
+            !list.contains("read_file"),
+            "cluster cells must not browse: {list}"
+        );
     }
 
     /// FT-178: the declared context files exist in the live tree —
