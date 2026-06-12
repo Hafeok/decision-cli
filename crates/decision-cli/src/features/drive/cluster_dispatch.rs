@@ -218,7 +218,7 @@ fn run_cells(
     tt: &TaskTypeDecl,
     feature_id: &str,
     task_type_name: &str,
-    order: &[String],
+    _order: &[String],
     cluster_dir: &Path,
     feature_framing: &str,
     params: &BTreeMap<String, String>,
@@ -227,166 +227,313 @@ fn run_cells(
     only: Option<&std::collections::BTreeSet<String>>,
     audit_context: Option<&str>,
 ) -> Result<()> {
-    // FT-171: when repairing, `active` starts as the implicated set and
-    // grows with the dependents of any retried cell whose output changed
-    // (their bundles consumed the stale upstream).
+    // FT-181: execute the topo graph by level — cells within a level
+    // have no mutual edges and dispatch concurrently under a bounded
+    // pool. FT-171: when repairing, `active` starts as the implicated
+    // set and grows with the dependents of any retried cell whose
+    // output changed (their bundles consumed the stale upstream).
+    let levels = task_type::topo_levels(&tt.cells)
+        .map_err(|e| anyhow!("cluster_dispatch: topo levels: {e}"))?;
+    let max_parallel = read_max_parallel_cells(&ctx.workdir);
     let mut active: std::collections::BTreeSet<String> = only
         .cloned()
-        .unwrap_or_else(|| order.iter().cloned().collect());
-    let mut placement_retries: BTreeMap<String, u32> = BTreeMap::new();
-    for cell_name in order {
-        if !active.contains(cell_name) {
+        .unwrap_or_else(|| tt.cells.iter().map(|c| c.name.clone()).collect());
+
+    for level in &levels {
+        let run_now: Vec<&CellDecl> = level
+            .iter()
+            .filter(|name| active.contains(*name))
+            .map(|name| {
+                tt.cells
+                    .iter()
+                    .find(|c| &c.name == name)
+                    .expect("topo_levels names come from tt.cells")
+            })
+            .collect();
+        if run_now.is_empty() {
             continue;
         }
-        let cell = tt
-            .cells
-            .iter()
-            .find(|c| &c.name == cell_name)
-            .ok_or_else(|| {
-                anyhow!(
-                    "cluster_dispatch: cell {:?} missing from registry (registry bug)",
-                    cell_name
-                )
-            })?;
 
-        // FT-166: resolve the cell's output path within the sandbox via
-        // {parameter} substitution. Cells with empty output_path fall
-        // back to the FT-139 flat-path convention.
-        let resolved_cell_path = resolve_cell_output_path(cell, params)?;
+        // Upstream snapshot for this level — same-level cells never
+        // depend on each other, so a frozen view is sound and keeps the
+        // hot path lock-free.
+        let upstream_view = cell_outputs.clone();
+        let mut level_results: Vec<(String, CellRunOutput)> = Vec::with_capacity(run_now.len());
 
-        // FT-171: a retried cell's prior output is removed so FT-170's
-        // snapshot diff sees the worker's fresh write.
-        if only.is_some() {
-            let prior = cluster_dir.join(&resolved_cell_path);
-            if prior.exists() {
-                fs::remove_file(&prior).with_context(|| {
-                    format!("remove prior output of retried cell at {}", prior.display())
-                })?;
-            }
+        for chunk in run_now.chunks(max_parallel.max(1)) {
+            let chunk_results: Vec<(String, CellRunOutput)> = std::thread::scope(|scope| {
+                let handles: Vec<_> = chunk
+                    .iter()
+                    .map(|cell| {
+                        let upstream = &upstream_view;
+                        scope.spawn(move || {
+                            (
+                                cell.name.clone(),
+                                run_one_cell(
+                                    ctx,
+                                    argv,
+                                    store,
+                                    tt,
+                                    feature_id,
+                                    cell,
+                                    cluster_dir,
+                                    feature_framing,
+                                    params,
+                                    upstream,
+                                    only.is_some(),
+                                    audit_context,
+                                ),
+                            )
+                        })
+                    })
+                    .collect();
+                handles
+                    .into_iter()
+                    .map(|h| {
+                        h.join().unwrap_or_else(|panic| {
+                            let detail = panic
+                                .downcast_ref::<String>()
+                                .cloned()
+                                .or_else(|| panic.downcast_ref::<&str>().map(ToString::to_string))
+                                .unwrap_or_else(|| "cell thread panicked".to_string());
+                            (
+                                "<panicked>".to_string(),
+                                CellRunOutput {
+                                    output: None,
+                                    sessions: Vec::new(),
+                                    error: Some(anyhow!("cell thread panicked: {detail}")),
+                                },
+                            )
+                        })
+                    })
+                    .collect()
+            });
+            level_results.extend(chunk_results);
         }
 
-        let cell_iri = NamedNode::new_unchecked(format!(
-            "urn:dec:cluster-session:{}/{}/{}",
-            tt.name, feature_id, cell.name
-        ));
-        let mut started_at = Utc::now();
-        let mut attempt_context: Option<String> = audit_context.map(str::to_string);
-
-        let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> = loop {
-            started_at = Utc::now();
-            let attempt: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
-                if cell.model_binding_capability_id.is_empty() {
-                    let body = emit_mechanical_cell(tt, cell, cell_outputs);
-                    let capability =
-                        NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
-                    Ok((body, None, capability))
-                } else {
-                    emit_llm_cell(
-                        ctx,
-                        argv,
-                        store,
-                        tt,
-                        feature_id,
-                        cell,
-                        cluster_dir,
-                        feature_framing,
-                        cell_outputs,
-                        &resolved_cell_path,
-                        attempt_context.as_deref(),
-                    )
-                };
-            match attempt {
-                Err(err)
-                    if placement_retries.get(&cell.name).copied().unwrap_or(0)
-                        < MAX_CELL_RETRIES =>
-                {
-                    if let Some(diagnostic) = placement_retry_context(&err) {
-                        *placement_retries.entry(cell.name.clone()).or_insert(0) += 1;
-                        // Record the failed attempt for FT-146 cost rollups.
-                        let capability = cell_capability_iri_or_fallback(store, cell);
-                        cell_sessions.push(CellSessionRecord {
-                            iri: cell_iri.clone(),
-                            capability,
-                            usage: None,
-                            status: CellStatus::Failed,
-                            started_at,
-                            ended_at: Utc::now(),
-                        });
-                        tracing::info!(
-                            feature_id,
-                            cell = %cell.name,
-                            "cell placement failed; retrying with the diagnostic (FT-171)"
-                        );
-                        attempt_context = Some(diagnostic);
-                        continue;
-                    }
-                    break Err(err);
-                }
-                other => break other,
-            }
-        };
-
-        match output_result {
-            Ok((output, usage, capability)) => {
-                let ended_at = Utc::now();
-                let status = if cell.model_binding_capability_id.is_empty() {
-                    CellStatus::Mechanical
-                } else {
-                    CellStatus::Succeeded
-                };
-                cell_sessions.push(CellSessionRecord {
-                    iri: cell_iri,
-                    capability,
-                    usage,
-                    status,
-                    started_at,
-                    ended_at,
-                });
-
-                let cell_path = cluster_dir.join(&resolved_cell_path);
-                if let Some(parent) = cell_path.parent() {
-                    fs::create_dir_all(parent)?;
-                }
-                fs::write(&cell_path, &output).with_context(|| {
-                    format!("write cell {} to {}", cell.name, cell_path.display())
-                })?;
-                // FT-171: a retried cell whose content changed staleness
-                // its dependents — their bundles consumed the old output.
+        // Collect level outcomes: session rows, outputs, dependent
+        // expansion; first failure aborts after the level joined.
+        let mut level_err: Option<anyhow::Error> = None;
+        for (name, out) in level_results {
+            cell_sessions.extend(out.sessions);
+            if let Some(output) = out.output {
                 let changed = cell_outputs
-                    .get(&cell.name)
+                    .get(&name)
                     .is_some_and(|prior| prior != &output);
                 if only.is_some() && changed {
-                    for dep in dependents_of(tt, &cell.name) {
+                    for dep in dependents_of(tt, &name) {
                         active.insert(dep);
                     }
                 }
-                cell_outputs.insert(cell.name.clone(), output);
+                cell_outputs.insert(name.clone(), output);
                 tracing::info!(
                     feature_id,
                     task_type = task_type_name,
-                    cell = %cell.name,
-                    path = %cell_path.display(),
+                    cell = %name,
                     "cluster cell emitted"
                 );
             }
-            Err(err) => {
-                let ended_at = Utc::now();
-                // FT-146: record a failed SessionRecord before bubbling
-                // the error — PROV-O coverage stays uniform.
-                let capability = cell_capability_iri_or_fallback(store, cell);
-                cell_sessions.push(CellSessionRecord {
-                    iri: cell_iri,
-                    capability,
-                    usage: None,
-                    status: CellStatus::Failed,
-                    started_at,
-                    ended_at,
-                });
-                return Err(err);
+            if let Some(err) = out.error {
+                if level_err.is_none() {
+                    level_err = Some(err);
+                }
             }
+        }
+        if let Some(err) = level_err {
+            return Err(err);
         }
     }
     Ok(())
+}
+
+/// FT-181: `.dec/task-types.toml` `[concurrency] max_parallel_cells`
+/// (default 3; 1 reproduces sequential dispatch exactly).
+fn read_max_parallel_cells(workdir: &Path) -> usize {
+    let path = workdir.join(".dec").join("task-types.toml");
+    let Ok(raw) = fs::read_to_string(path) else {
+        return 3;
+    };
+    let Ok(value) = raw.parse::<toml::Value>() else {
+        return 3;
+    };
+    value
+        .get("concurrency")
+        .and_then(|c| c.get("max_parallel_cells"))
+        .and_then(toml::Value::as_integer)
+        .map_or(3, |n| usize::try_from(n.max(1)).unwrap_or(3))
+}
+
+/// One cell's collected result: the artifact body plus the FT-146
+/// session rows its attempts produced (failed retries included).
+struct CellRunOutput {
+    /// `Some` on success; `None` when the cell failed (see `error`).
+    output: Option<String>,
+    /// Every attempt's FT-146 row, failures included.
+    sessions: Vec<CellSessionRecord>,
+    /// The failure, when the cell did not produce an artifact.
+    error: Option<anyhow::Error>,
+}
+
+/// Execute one cell (mechanical or LLM) with the FT-171 placement-retry
+/// loop. Thread-safe: writes only into the cell's own workspace and the
+/// shared sandbox at the cell's registry-unique resolved path.
+#[allow(clippy::too_many_arguments)]
+fn run_one_cell(
+    ctx: &PlanContext,
+    argv: &[String],
+    store: &Store,
+    tt: &TaskTypeDecl,
+    feature_id: &str,
+    cell: &CellDecl,
+    cluster_dir: &Path,
+    feature_framing: &str,
+    params: &BTreeMap<String, String>,
+    upstream: &BTreeMap<String, String>,
+    is_repair: bool,
+    audit_context: Option<&str>,
+) -> CellRunOutput {
+    // FT-166: resolve the cell's output path within the sandbox via
+    // {parameter} substitution. Cells with empty output_path fall
+    // back to the FT-139 flat-path convention.
+    let resolved_cell_path = match resolve_cell_output_path(cell, params) {
+        Ok(p) => p,
+        Err(err) => {
+            return CellRunOutput {
+                output: None,
+                sessions: Vec::new(),
+                error: Some(err),
+            }
+        }
+    };
+
+    // FT-171: a retried cell's prior output is removed so placement
+    // sees the worker's fresh write.
+    if is_repair {
+        let prior = cluster_dir.join(&resolved_cell_path);
+        if prior.exists() {
+            if let Err(err) = fs::remove_file(&prior).with_context(|| {
+                format!("remove prior output of retried cell at {}", prior.display())
+            }) {
+                return CellRunOutput {
+                    output: None,
+                    sessions: Vec::new(),
+                    error: Some(err),
+                };
+            }
+        }
+    }
+
+    let cell_iri = NamedNode::new_unchecked(format!(
+        "urn:dec:cluster-session:{}/{}/{}",
+        tt.name, feature_id, cell.name
+    ));
+    let mut sessions = Vec::new();
+    let mut attempt_context: Option<String> = audit_context.map(str::to_string);
+    let mut retries = 0u32;
+
+    let output_result: Result<(String, Option<WorkerResponseUsage>, NamedNode)> = loop {
+        let started_at = Utc::now();
+        let attempt: Result<(String, Option<WorkerResponseUsage>, NamedNode)> =
+            if cell.model_binding_capability_id.is_empty() {
+                let body = emit_mechanical_cell(tt, cell, upstream);
+                let capability = NamedNode::new_unchecked(MECHANICAL_CAPABILITY_IRI.to_string());
+                Ok((body, None, capability))
+            } else {
+                emit_llm_cell(
+                    ctx,
+                    argv,
+                    store,
+                    tt,
+                    feature_id,
+                    cell,
+                    cluster_dir,
+                    feature_framing,
+                    upstream,
+                    &resolved_cell_path,
+                    attempt_context.as_deref(),
+                )
+            };
+        match attempt {
+            Err(err) if retries < MAX_CELL_RETRIES => {
+                if let Some(diagnostic) = placement_retry_context(&err) {
+                    retries += 1;
+                    // Record the failed attempt for FT-146 cost rollups.
+                    let capability = cell_capability_iri_or_fallback(store, cell);
+                    sessions.push(CellSessionRecord {
+                        iri: cell_iri.clone(),
+                        capability,
+                        usage: None,
+                        status: CellStatus::Failed,
+                        started_at,
+                        ended_at: Utc::now(),
+                    });
+                    tracing::info!(
+                        feature_id,
+                        cell = %cell.name,
+                        "cell placement failed; retrying with the diagnostic (FT-171)"
+                    );
+                    attempt_context = Some(diagnostic);
+                    continue;
+                }
+                break Err(err);
+            }
+            other => break other,
+        }
+    };
+
+    match output_result {
+        Ok((output, usage, capability)) => {
+            let status = if cell.model_binding_capability_id.is_empty() {
+                CellStatus::Mechanical
+            } else {
+                CellStatus::Succeeded
+            };
+            sessions.push(CellSessionRecord {
+                iri: cell_iri,
+                capability,
+                usage,
+                status,
+                started_at: Utc::now(),
+                ended_at: Utc::now(),
+            });
+            let cell_path = cluster_dir.join(&resolved_cell_path);
+            if let Some(parent) = cell_path.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            if let Err(err) = fs::write(&cell_path, &output)
+                .with_context(|| format!("write cell {} to {}", cell.name, cell_path.display()))
+            {
+                return CellRunOutput {
+                    output: None,
+                    sessions,
+                    error: Some(err),
+                };
+            }
+            CellRunOutput {
+                output: Some(output),
+                sessions,
+                error: None,
+            }
+        }
+        Err(err) => {
+            // FT-146: record the failed row — PROV-O coverage stays
+            // uniform; the caller persists rows from both paths.
+            let capability = cell_capability_iri_or_fallback(store, cell);
+            sessions.push(CellSessionRecord {
+                iri: cell_iri,
+                capability,
+                usage: None,
+                status: CellStatus::Failed,
+                started_at: Utc::now(),
+                ended_at: Utc::now(),
+            });
+            CellRunOutput {
+                output: None,
+                sessions,
+                error: Some(err),
+            }
+        }
+    }
 }
 
 /// Best-effort capability resolution for a *failed* cell — used to fill
@@ -561,11 +708,35 @@ fn place_cell_output(
     before: &std::collections::BTreeSet<PathBuf>,
     cell_label: &str,
 ) -> Result<()> {
-    let after = snapshot_files(cluster_dir)?;
+    place_cell_output_into(cluster_dir, cluster_dir, resolved_rel, before, cell_label)
+}
+
+/// FT-181: placement with separate search and target roots — each cell
+/// works in an isolated workspace (`search_root`) so concurrent cells'
+/// snapshot diffs never see each other's files, and the artifact is
+/// moved into the shared sandbox (`target_root`) at its declared path.
+fn place_cell_output_into(
+    search_root: &Path,
+    target_root: &Path,
+    resolved_rel: &Path,
+    before: &std::collections::BTreeSet<PathBuf>,
+    cell_label: &str,
+) -> Result<()> {
+    let after = snapshot_files(search_root)?;
     let new_files: Vec<&PathBuf> = after.difference(before).collect();
 
-    // Case 1 — the worker honoured the resolved path.
+    // Case 1 — the worker honoured the resolved path (within its own
+    // workspace). When the roots differ, move it into the sandbox.
     if new_files.iter().any(|p| p.as_path() == resolved_rel) {
+        if search_root != target_root {
+            let target = target_root.join(resolved_rel);
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::rename(search_root.join(resolved_rel), &target).with_context(|| {
+                format!("move cell artifact into sandbox at {}", target.display())
+            })?;
+        }
         return Ok(());
     }
 
@@ -593,7 +764,7 @@ fn place_cell_output(
         // witnessed on the first hardened FT-148 run, where a killed
         // worker's partial output blocked its replacement. Replace it.
         [stray] => {
-            let target = cluster_dir.join(resolved_rel);
+            let target = target_root.join(resolved_rel);
             if before.contains(resolved_rel) {
                 tracing::info!(
                     cell = cell_label,
@@ -604,7 +775,7 @@ fn place_cell_output(
             if let Some(parent) = target.parent() {
                 fs::create_dir_all(parent)?;
             }
-            fs::rename(cluster_dir.join(stray), &target)
+            fs::rename(search_root.join(stray), &target)
                 .with_context(|| format!("relocate {} to {}", stray.display(), target.display()))?;
             tracing::info!(
                 cell = cell_label,
@@ -734,9 +905,13 @@ fn emit_llm_cell(
         &crate_interfaces,
     );
 
-    // The worker's workspace_path is the cluster sandbox dir. It writes
-    // the cell's output file directly there via the write_file tool.
-    let workspace_path = cluster_dir.to_string_lossy().into_owned();
+    // FT-181: each cell works in an ISOLATED workspace so concurrent
+    // cells' FT-170 snapshot diffs never see each other's files. The
+    // artifact moves into the shared sandbox at placement time.
+    let cell_workspace = cluster_dir.join(".cells").join(&cell.name);
+    fs::create_dir_all(&cell_workspace)
+        .with_context(|| format!("create cell workspace {}", cell_workspace.display()))?;
+    let workspace_path = cell_workspace.to_string_lossy().into_owned();
 
     // Authority is left as None — cell dispatches don't carry an
     // escalation hierarchy in this slice; FT-062's escalation paths
@@ -783,9 +958,9 @@ fn emit_llm_cell(
         allowed_tools: vec!["write_file".to_string()],
     };
 
-    // FT-170: snapshot the sandbox before dispatch so placement can
-    // identify exactly the files this cell's worker created.
-    let before = snapshot_files(cluster_dir)?;
+    // FT-170: snapshot the cell workspace before dispatch so placement
+    // can identify exactly the files this cell's worker created.
+    let before = snapshot_files(&cell_workspace)?;
 
     let WorkerRun {
         response,
@@ -823,7 +998,14 @@ fn emit_llm_cell(
             .as_ref()
             .is_some_and(|e| e.category.contains("timeout"));
         let artifact_present = cluster_dir.join(resolved_cell_path).exists()
-            || place_cell_output(cluster_dir, resolved_cell_path, &before, "probe").is_ok();
+            || place_cell_output_into(
+                &cell_workspace,
+                cluster_dir,
+                resolved_cell_path,
+                &before,
+                "probe",
+            )
+            .is_ok();
         if timeout_class && artifact_present {
             tracing::warn!(
                 cell = %cell.name,
@@ -851,7 +1033,13 @@ fn emit_llm_cell(
     // read-back behaviour unchanged.
     if !cell.output_path.as_os_str().is_empty() {
         let cell_label = format!("{}/{}", tt.name, cell.name);
-        place_cell_output(cluster_dir, resolved_cell_path, &before, &cell_label)?;
+        place_cell_output_into(
+            &cell_workspace,
+            cluster_dir,
+            resolved_cell_path,
+            &before,
+            &cell_label,
+        )?;
     }
 
     // Read back what the worker wrote (post-placement, guaranteed path).
@@ -1479,6 +1667,33 @@ mod tests {
         assert!(
             !list.contains("read_file"),
             "cluster cells must not browse: {list}"
+        );
+    }
+
+    /// FT-181: concurrency defaults to 3; `[concurrency]
+    /// max_parallel_cells` in .dec/task-types.toml overrides; 1 is the
+    /// sequential floor.
+    #[test]
+    fn ft_181_max_parallel_cells_config() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        assert_eq!(read_max_parallel_cells(tmp.path()), 3, "default");
+        let dec = tmp.path().join(".dec");
+        fs::create_dir_all(&dec).unwrap();
+        fs::write(
+            dec.join("task-types.toml"),
+            "[concurrency]\nmax_parallel_cells = 2\n",
+        )
+        .unwrap();
+        assert_eq!(read_max_parallel_cells(tmp.path()), 2);
+        fs::write(
+            dec.join("task-types.toml"),
+            "[concurrency]\nmax_parallel_cells = 0\n",
+        )
+        .unwrap();
+        assert_eq!(
+            read_max_parallel_cells(tmp.path()),
+            1,
+            "floor at sequential"
         );
     }
 

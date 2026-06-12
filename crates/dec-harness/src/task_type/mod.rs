@@ -23,5 +23,5 @@ pub mod types;
 pub mod tests;
 
 pub use registry::{lookup, registered_names};
-pub use topo::{topo_order, TopoError};
+pub use topo::{topo_levels, topo_order, TopoError};
 pub use types::{CellDecl, CellFraming, CoherenceAuditSpec, TaskTypeDecl, TaskTypeParameter};

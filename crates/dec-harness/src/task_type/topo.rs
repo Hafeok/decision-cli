@@ -108,3 +108,44 @@ pub fn topo_order(cells: &[CellDecl]) -> Result<Vec<String>, TopoError> {
 
     Ok(order)
 }
+
+/// FT-181: group cells by dependency depth — every cell in level N has
+/// all of its `derived_from` upstreams in levels < N. Deterministic:
+/// cells sorted lexicographically within a level. Errors mirror
+/// [`topo_order`] (missing cells, duplicates, cycles).
+pub fn topo_levels(cells: &[CellDecl]) -> Result<Vec<Vec<String>>, TopoError> {
+    // Reuse topo_order for validation (missing/dup/cycle detection).
+    let _ = topo_order(cells)?;
+    let mut depth: BTreeMap<String, usize> = BTreeMap::new();
+    let by_name: BTreeMap<&str, &CellDecl> = cells.iter().map(|c| (c.name.as_str(), c)).collect();
+
+    fn depth_of(
+        name: &str,
+        by_name: &BTreeMap<&str, &CellDecl>,
+        depth: &mut BTreeMap<String, usize>,
+    ) -> usize {
+        if let Some(d) = depth.get(name) {
+            return *d;
+        }
+        let cell = by_name.get(name).expect("validated by topo_order");
+        let d = cell
+            .derived_from
+            .iter()
+            .map(|up| depth_of(up, by_name, depth) + 1)
+            .max()
+            .unwrap_or(0);
+        depth.insert(name.to_string(), d);
+        d
+    }
+
+    for c in cells {
+        depth_of(&c.name, &by_name, &mut depth);
+    }
+    let max_depth = depth.values().copied().max().unwrap_or(0);
+    let mut levels: Vec<Vec<String>> = vec![Vec::new(); max_depth + 1];
+    for (name, d) in &depth {
+        levels[*d].push(name.clone());
+    }
+    // BTreeMap iteration is already sorted; keep the per-level vectors so.
+    Ok(levels.into_iter().filter(|l| !l.is_empty()).collect())
+}

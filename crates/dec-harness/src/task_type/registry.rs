@@ -302,9 +302,16 @@ tests, EVERY fixture IRI must be under `https://decision-cli.dev/ns/…` (or \
 `urn:dec:test:…` for deliberately-invalid references) — never example.com or \
 any other host."
             .to_string(),
-        context_files: vec![PathBuf::from(
-            "crates/dec-ontology/src/ontology/provenance.rs",
-        )],
+        // FT-178 anticipated example-by-pattern context "only if the
+        // witnessed runs show interface context alone is insufficient" —
+        // run 16's compile probe (105 rustc errors on interface-correct
+        // bundles) met that condition. The archetype module is the house
+        // pattern every new artifact type imitates.
+        context_files: vec![
+            PathBuf::from("crates/dec-ontology/src/ontology/provenance.rs"),
+            PathBuf::from("crates/dec-ontology/src/ontology/archetype/parser.rs"),
+            PathBuf::from("crates/dec-ontology/src/ontology/archetype/emitter.rs"),
+        ],
     }
 }
 

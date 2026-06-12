@@ -174,3 +174,53 @@ fn planner_classifier_topo_order() {
 fn role_catalog_seed_topo_order() {
     assert_topo_invariants("extend-role-catalog-seed", 6);
 }
+
+/// FT-181: levels group cells by dependency depth, deterministically.
+#[test]
+fn ft_181_topo_levels_for_add_artifact_type() {
+    let tt = super::lookup("add-artifact-type").expect("registry");
+    let levels = super::topo_levels(&tt.cells).expect("levels");
+    assert_eq!(levels[0], vec!["rust_struct".to_string()]);
+    assert!(levels[1].contains(&"shacl_shape".to_string()));
+    assert!(levels[1].contains(&"iri_module_consts".to_string()));
+    assert!(levels[2].contains(&"parser".to_string()));
+    assert!(levels[2].contains(&"emitter".to_string()));
+    assert!(levels[2].contains(&"shacl_negative_tests".to_string()));
+    assert!(levels[3].contains(&"round_trip_test".to_string()));
+    // Every cell appears exactly once across levels.
+    let total: usize = levels.iter().map(Vec::len).sum();
+    assert_eq!(total, tt.cells.len());
+    // Deterministic: a second computation is identical.
+    assert_eq!(levels, super::topo_levels(&tt.cells).expect("levels again"));
+}
+
+/// FT-181: every cell's upstreams sit in strictly earlier levels.
+#[test]
+fn ft_181_topo_levels_respect_derived_from() {
+    for name in [
+        "add-artifact-type",
+        "add-cli-subcommand",
+        "add-judge-worker",
+        "add-author-worker",
+    ] {
+        let Some(tt) = super::lookup(name) else {
+            continue;
+        };
+        let levels = super::topo_levels(&tt.cells).expect("levels");
+        let level_of = |cell: &str| -> usize {
+            levels
+                .iter()
+                .position(|l| l.iter().any(|c| c == cell))
+                .expect("cell present")
+        };
+        for cell in &tt.cells {
+            for up in &cell.derived_from {
+                assert!(
+                    level_of(up) < level_of(&cell.name),
+                    "{name}: {up} must precede {}",
+                    cell.name
+                );
+            }
+        }
+    }
+}
