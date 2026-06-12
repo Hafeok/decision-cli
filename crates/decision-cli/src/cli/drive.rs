@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use clap::Subcommand;
 use decision_cli::core::drive::{ArtifactRef, Goal, PlanContext};
-use decision_cli::drive::{run as drive_run, DriveError, RunArgs, DEFAULT_MAX_ITER};
+use decision_cli::drive::{run_quiet_aware, DriveError, RunArgs, DEFAULT_MAX_ITER};
 use decision_cli::ft_111_drive_ship_all::{
     apply_filter, render, resolve_features, run_sweep, Format, SweepInput,
 };
@@ -58,6 +58,9 @@ pub struct ShipArgs {
     /// Retire non-approved graphs before sweep (--all only).
     #[arg(long, requires = "all")]
     pub retire_failing_graphs: bool,
+    /// FT-135: suppress live progress lines on stderr.
+    #[arg(long, short = 'q')]
+    pub quiet: bool,
 }
 
 #[derive(Debug, clap::Args)]
@@ -68,6 +71,9 @@ pub struct DefReadyArgs {
     /// Sweep every feature whose dependencies have shipped.
     #[arg(long, conflicts_with = "artifact")]
     pub all: bool,
+    /// FT-135: suppress live progress lines on stderr.
+    #[arg(long, short = 'q')]
+    pub quiet: bool,
     /// Bail out after N planner iterations (default 5).
     #[arg(long)]
     pub max_iter: Option<usize>,
@@ -110,6 +116,10 @@ pub struct ShowArgs {
     /// Show all drives instead of just the most recent.
     #[arg(long)]
     pub all_drives: bool,
+    /// FT-135: accepted for verb-family uniformity (ADR-011); `show` is
+    /// post-hoc and emits no progress regardless.
+    #[arg(long, short = 'q')]
+    pub quiet: bool,
 }
 
 pub fn run(workdir: &Path, cmd: DriveCmd) -> ExitCode {
@@ -160,7 +170,7 @@ fn run_ship(workdir: &Path, args: ShipArgs) -> ExitCode {
         max_iter: args.max_iter.unwrap_or(DEFAULT_MAX_ITER),
     };
 
-    match drive_run(&ctx, &run_args) {
+    match run_quiet_aware(&ctx, &run_args, args.quiet) {
         Ok(outcome) => {
             println!(
                 "drive: reached goal in {n} iteration(s)",
@@ -314,7 +324,7 @@ fn run_def_ready(workdir: &Path, args: DefReadyArgs) -> ExitCode {
         artifact,
         max_iter: args.max_iter.unwrap_or(DEFAULT_MAX_ITER),
     };
-    match drive_run(&ctx, &run_args) {
+    match run_quiet_aware(&ctx, &run_args, args.quiet) {
         Ok(outcome) => {
             println!(
                 "drive: reached def-ready in {n} iteration(s)",

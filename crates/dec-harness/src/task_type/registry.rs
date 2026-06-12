@@ -297,7 +297,10 @@ types: NamedNode, NamedNodeRef, Quad, Literal, Term, Subject, GraphName), \
 `reqwest`, `anyhow`, or do IO — this crate is pure data. Dual provenance uses \
 the EXISTING `crate::ontology::provenance::{Provenance, MotivationalEdge}` \
 (surface below) — do not define your own provenance types. IRI constants live \
-in `crate::vocab` and use the `https://decision-cli.dev/ns#` namespace."
+in `crate::vocab` and use the `https://decision-cli.dev/ns#` namespace. In \
+tests, EVERY fixture IRI must be under `https://decision-cli.dev/ns/…` (or \
+`urn:dec:test:…` for deliberately-invalid references) — never example.com or \
+any other host."
             .to_string(),
         context_files: vec![PathBuf::from(
             "crates/dec-ontology/src/ontology/provenance.rs",
