@@ -766,7 +766,7 @@ fn emit_llm_cell(
 
     let WorkerRun {
         response,
-        raw_stdout: _,
+        raw_stdout,
     } = run_worker(argv, &payload).with_context(|| {
         format!(
             "dispatch code-writer for cell {}/{} (feature {})",
@@ -780,6 +780,16 @@ fn emit_llm_cell(
     // (witnessed on FT-148 run 5: three rounds of "produced no rs file"
     // hiding the worker's actual error).
     if response.status != "ok" {
+        // Persist the full worker response for forensics — the wire
+        // telemetry the harness deserialises is a summary, but spins
+        // like the witnessed max_turns loops are only explainable from
+        // the tool-call sequence in the raw JSON.
+        let debug_dir = cluster_dir.join(".cell-debug");
+        let _ = fs::create_dir_all(&debug_dir);
+        let _ = fs::write(
+            debug_dir.join(format!("{}.response.json", cell.name)),
+            &raw_stdout,
+        );
         let detail = response
             .error
             .as_ref()
