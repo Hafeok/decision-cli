@@ -231,14 +231,29 @@ def run_agent(payload: DispatchPayload) -> WorkerResponse:
             except Exception:
                 tool_args = {}
 
-            # Dispatch to tool
-            if tool_name not in TOOL_REGISTRY:
-                result_content = f"unknown tool: {tool_name}"
+            # Dispatch to tool. FT-135/ADR-091: enforcement, not just
+            # schema filtering — a tool outside allowed_tools must not
+            # execute even when the model knows its name by habit.
+            if tool_name not in TOOL_REGISTRY or tool_name not in available_tools:
+                result_content = (
+                    f"tool '{tool_name}' is not available in this dispatch. "
+                    "Everything you need is already in the bundle above. "
+                    "Call write_file with the complete artifact, then stop."
+                )
                 is_error = True
                 file_write = None
             else:
                 dispatcher = TOOL_REGISTRY[tool_name]
                 result_content, is_error, file_write = dispatcher(workspace, tool_args)
+                # Witnessed: a cell made 40 successful write_file calls,
+                # endlessly revising. Successful writes carry an explicit
+                # stop signal.
+                if tool_name == "write_file" and not is_error:
+                    result_content = (
+                        f"{result_content} The file is written. STOP NOW: do not "
+                        "call any more tools and do not revise — end your turn "
+                        "with a one-line summary."
+                    )
 
             # Record tool call
             tool_calls.append(

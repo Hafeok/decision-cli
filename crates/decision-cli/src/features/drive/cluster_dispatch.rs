@@ -813,17 +813,35 @@ fn emit_llm_cell(
             debug_dir.join(format!("{}.response.json", cell.name)),
             &raw_stdout,
         );
-        let detail = response
+        // Witnessed: a max_turns "failure" whose 40 turns were all
+        // successful write_file calls — the artifact was on disk and
+        // whole. Timeout-class self-reports with a produced artifact are
+        // judged by the deterministic gates (placement + audit), not by
+        // the worker's own verdict.
+        let timeout_class = response
             .error
             .as_ref()
-            .map(|e| format!("{}: {} {}", e.category, e.message, e.detail))
-            .unwrap_or_else(|| "worker reported no error detail".to_string());
-        return Err(anyhow!(
-            "cell {}/{} worker reported status {:?}: {detail}",
-            tt.name,
-            cell.name,
-            response.status,
-        ));
+            .is_some_and(|e| e.category.contains("timeout"));
+        let artifact_present = cluster_dir.join(resolved_cell_path).exists()
+            || place_cell_output(cluster_dir, resolved_cell_path, &before, "probe").is_ok();
+        if timeout_class && artifact_present {
+            tracing::warn!(
+                cell = %cell.name,
+                "worker self-reported timeout but its artifact landed; deferring to the audit (FT-171)"
+            );
+        } else {
+            let detail = response
+                .error
+                .as_ref()
+                .map(|e| format!("{}: {} {}", e.category, e.message, e.detail))
+                .unwrap_or_else(|| "worker reported no error detail".to_string());
+            return Err(anyhow!(
+                "cell {}/{} worker reported status {:?}: {detail}",
+                tt.name,
+                cell.name,
+                response.status,
+            ));
+        }
     }
 
     // FT-170: the harness owns placement — the worker's chosen path is

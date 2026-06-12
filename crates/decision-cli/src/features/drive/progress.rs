@@ -164,7 +164,7 @@ impl ProgressSink for NullProgressSink {
 mod tests {
     use super::*;
     use crate::core::drive::{
-        Action, ArtifactKind, ArtifactRef, Goal, PlanContext, Planner, PlanError,
+        Action, ArtifactKind, ArtifactRef, Goal, PlanContext, PlanError, Planner,
     };
     use crate::features::drive::execute::Executor;
     use crate::features::drive::run::{run_with_planner_executor_and_progress, RunArgs};
