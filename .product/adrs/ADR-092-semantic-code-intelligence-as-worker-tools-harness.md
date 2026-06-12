@@ -1,7 +1,7 @@
 ---
 id: ADR-092
 title: 'Semantic code intelligence as worker tools: harness-owned LSP service, read tools first, symbol-level writes as a second slice'
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
@@ -9,6 +9,7 @@ domains:
 - api
 - workers
 scope: domain
+content-hash: sha256:81b2e7d6a34734d93103fbf74898e06c9300540d570ce5228808dbc94092cfa7
 ---
 
 **Status:** Proposed
