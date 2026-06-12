@@ -779,7 +779,7 @@ fn emit_llm_cell(
     // beats the placement error it would otherwise masquerade as
     // (witnessed on FT-148 run 5: three rounds of "produced no rs file"
     // hiding the worker's actual error).
-    if response.status != "success" {
+    if response.status != "ok" {
         let detail = response
             .error
             .as_ref()
